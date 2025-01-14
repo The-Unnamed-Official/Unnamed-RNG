@@ -143,6 +143,63 @@ body {
     scale: 1.1;
 }
 
+#saveButton {
+    background-color: #7a99f4;
+    transition: background-color 0.2s ease, scale 0.2s ease;
+}
+
+#saveButton:hover {
+    background-color: #6742ee;
+    scale: 1.05;
+}
+
+#importButton {
+    background-color: #848da9;
+    transition: background-color 0.2s ease, scale 0.2s ease;
+}
+
+#importButton:hover {
+    background-color: #625785;
+    scale: 1.05;
+}
+
+.statusImport {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.statusImport.showStatus {
+    display: block;
+    opacity: 1;
+}
+
+@keyframes shakeRoll {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+}
+
+.shakeRolls {
+    animation: shakeRoll 0.5s ease-in-out;
+    color: red;
+}
+
 #settingsMenu {
     position: fixed;
     top: 50%;

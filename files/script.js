@@ -274,6 +274,23 @@ function musicLoad() {
   veilAudio.currentTime = 0;
 }
 
+function formatRollCount(count) {
+  if (count >= 1_000_000) {
+      return (count / 1_000_000).toFixed(count >= 10_000_000 ? 0 : 2) + 'm';
+  } else if (count >= 100_000) {
+      return (count / 1_000).toFixed(0) + 'k';
+  } else if (count >= 1_000) {
+      return (count / 1_000).toFixed(2) + 'k';
+  }
+  return count.toString();
+}
+
+function updateRollCount(increment = 1) {
+  rollCount += increment;
+  const display = document.getElementById('rollCountDisplay');
+  display.textContent = formatRollCount(rollCount);
+}
+
 let cooldownTime = 690;
 
 document.getElementById("rollButton").addEventListener("click", function () {
@@ -4828,7 +4845,65 @@ function createSnowflake() {
     }, 5000);
 }
 
-setInterval(createSnowflake, 100);
+setInterval(createSnowflake, 133);
+
+document.getElementById('saveButton').addEventListener('click', () => {
+  const data = JSON.stringify(localStorage);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'localStorageData.json';
+  a.click();
+
+  URL.revokeObjectURL(url);
+});
+
+
+function showStatusMessage(message, duration = 2000) {
+  const status = document.getElementById('status');
+  status.textContent = message;
+  status.classList.add('showStatus');
+
+  setTimeout(() => {
+      status.classList.remove('showStatus');
+      setTimeout(() => (status.style.display = 'none'), 500);
+  }, duration);
+}
+
+document.getElementById('importButton').addEventListener('click', () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+
+  input.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+              try {
+                  const importedData = JSON.parse(e.target.result);
+
+                  Object.keys(importedData).forEach(key => {
+                      localStorage.setItem(key, importedData[key]);
+                  });
+
+                  showStatusMessage("Data imported successfully! Refreshing...", 1500);
+
+                  setTimeout(() => {
+                      location.reload();
+                  }, 1500);
+              } catch (error) {
+                  showStatusMessage("Error: Invalid file format.");
+              }
+          };
+          reader.readAsText(file);
+      }
+  });
+
+  input.click();
+});
 
 document
   .getElementById("deleteAllCommonButton")
