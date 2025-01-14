@@ -47,6 +47,7 @@ function musicLoad() {
   let polarrSuspenceAudio = document.getElementById("polarrSuspenceAudio");
   let scareSuspenceAudio = document.getElementById("scareSuspenceAudio");
   let bigSuspenceAudio = document.getElementById("bigSuspenceAudio");
+  let lubjubAudio = document.getElementById("lubjubAudio");
   let plabreAudio = document.getElementById("plabreAudio");
   let isekaiAudio = document.getElementById("isekaiAudio");
   let fircraAudio = document.getElementById("fircraAudio");
@@ -123,6 +124,7 @@ function musicLoad() {
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  lubjubAudio.pause();
   demsoAudio.pause();
   fircraAudio.pause();
   plabreAudio.pause();
@@ -201,6 +203,7 @@ function musicLoad() {
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
   demsoAudio.currentTime = 0;
+  lubjubAudio.currentTime = 0;
   fircraAudio.currentTime = 0;
   plabreAudio.currentTime = 0;
   harvAudio.currentTime = 0;
@@ -305,6 +308,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  lubjubAudio.pause();
   plabreAudio.pause();
   demsoAudio.pause();
   harvAudio.pause();
@@ -382,6 +386,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   geezerSuspenceAudio.currentTime = 0;
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
+  lubjubAudio.currentTime = 0;
   demsoAudio.currentTime = 0;
   plabreAudio.currentTime = 0;
   harvAudio.currentTime = 0;
@@ -492,6 +497,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Devil's Heart [1 in 66,666]" ||
     rarity.type === "Found Soul [1 in 5,000]" ||
     rarity.type === "Haunted Reality [1 in 5,500]" ||
+    rarity.type === "LubbyJubby's Cherry Grove [1 in 5,666]" ||
     rarity.type === "Arcane Pulse [1 in 77,777]" ||
     rarity.type === "Celestial Chorus [1 in 202,020]" ||
     rarity.type === "Eonbreak [1 in 20,000]" ||
@@ -540,6 +546,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Hellish Fire [1 in 6,666]") {
       bigSuspenceAudio.play();
+    } else if (rarity.type === "LubbyJubby's Cherry Grove [1 in 5,666]") {
+      hugeSuspenceAudio.play();
     } else if (rarity.type === "Demon Soul [1 in 9,999]") {
       bigSuspenceAudio.play();
     } else if (rarity.type === "Devil's Heart [1 in 66,666]") {
@@ -1176,6 +1184,134 @@ document.getElementById("rollButton").addEventListener("click", function () {
           rollCount++;
           titleCont.style.visibility = "visible";
           harvAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
+    } else if (rarity.type === "LubbyJubby's Cherry Grove [1 in 5,666]") {
+      document.body.className = "blackBg";
+      disableChange();
+      startAnimationA5();
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+    
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-cyan";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+    
+      const squareInterval = setInterval(() => {
+        createGravitySquare();
+      }, 100);
+    
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 9350); // Stop after 9.35 seconds
+    
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+    
+        const starClasses = [
+          "pink-star",
+          "cyan-star",
+          "blue-star"
+        ];
+        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+    
+        star.innerHTML = "◌";
+        star.style.left = Math.random() * 100 + "vw";
+    
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+    
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+    
+        star.style.animationDelay = i * 0.08 + "s";
+    
+        container.appendChild(star);
+    
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          titleCont.style.visibility = "visible";
+          lubjubAudio.play();
         }, 100);
         enableChange();
       }, 10750); // Wait for 10.75 seconds
@@ -3551,6 +3687,12 @@ function rollRarity() {
       titles: ["Twisted Light"],
     },
     {
+      type: "LubbyJubby's Cherry Grove [1 in 5,666]",
+      class: "lubjubBgImg",
+      chance: 0.02,
+      titles: ["LubJub"],
+    },
+    {
       type: "Ethereal Pulse [1 in 6,000]",
       class: "ethpulBgImg",
       chance: 0.017,
@@ -3959,6 +4101,7 @@ const backgroundDetails = {
   belivBgImg: { image: "files/backgrounds/beliv.png", audio: null },
   plabreBgImg: { image: "files/backgrounds/plabre.png", audio: "plabreAudio" },
   wanspiBgImg: { image: "files/backgrounds/wanspi.png", audio: "wanspiAudio" },
+  lubjubBgImg: { image: "files/backgrounds/lubjub.gif", audio: "lubjubAudio" },
   froBgImg: { image: "files/backgrounds/fro.png", audio: "froAudio" },
   mysBgImg: { image: "files/backgrounds/mys.png", audio: "mysAudio" },
   forgBgImg: { image: "files/backgrounds/forg.png", audio: "forgAudio" },
@@ -5090,6 +5233,9 @@ document
 document
   .getElementById("deleteAllH1diButton")
   .addEventListener("click", () => deleteAllByRarity("h1diBgImg"));
+document
+  .getElementById("deleteAllLubJubButton")
+  .addEventListener("click", () => deleteAllByRarity("lubjubBgImg"));
 document
   .getElementById("deleteAllHarvButton")
   .addEventListener("click", () => deleteAllByRarity("harvBgImg"));
