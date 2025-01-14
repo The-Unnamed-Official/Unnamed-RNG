@@ -28,8 +28,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 load();
 
-document.getElementById("rollCountDisplay").innerText = rollCount;
-
 function load() {
   document.addEventListener("DOMContentLoaded", (event) => {
     const storedInventory = localStorage.getItem("inventory");
@@ -38,6 +36,7 @@ function load() {
     }
     renderInventory();
     musicLoad();
+    updateRollCount();
   });
 }
 
@@ -456,7 +455,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   veilAudio.currentTime = 0;
   fircraAudio.currentTime = 0;
 
-  document.getElementById("rollCountDisplay").innerText = rollCount;
+  document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
 
   let rarity = rollRarity();
   let title = selectTitle(rarity);
