@@ -52,6 +52,7 @@ function musicLoad() {
   let isekaiAudio = document.getElementById("isekaiAudio");
   let fircraAudio = document.getElementById("fircraAudio");
   let emerAudio = document.getElementById("emerAudio");
+  let shadAudio = document.getElementById("shadAudio");
   let samuraiAudio = document.getElementById("samuraiAudio");
   let contAudio = document.getElementById("contAudio");
   let unstoppableAudio = document.getElementById("unstoppableAudio");
@@ -82,7 +83,7 @@ function musicLoad() {
   let mysAudio = document.getElementById("mysAudio");
   let voiAudio = document.getElementById("voiAudio");
   let endAudio = document.getElementById("endAudio");
-  let shadAudio = document.getElementById("shadAudio");
+  let shaAudio = document.getElementById("shadAudio");
   let twiligAudio = document.getElementById("twiligAudio");
   let specAudio = document.getElementById("specAudio");
   let silAudio = document.getElementById("silAudio");
@@ -124,6 +125,7 @@ function musicLoad() {
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  shaAudio.pause();
   lubjubAudio.pause();
   demsoAudio.pause();
   fircraAudio.pause();
@@ -202,6 +204,7 @@ function musicLoad() {
   geezerSuspenceAudio.currentTime = 0;
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
+  shaAudio.currentTime = 0;
   demsoAudio.currentTime = 0;
   lubjubAudio.currentTime = 0;
   fircraAudio.currentTime = 0;
@@ -308,6 +311,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  shaAudio.pause();
   lubjubAudio.pause();
   plabreAudio.pause();
   demsoAudio.pause();
@@ -386,6 +390,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   geezerSuspenceAudio.currentTime = 0;
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
+  shaAudio.currentTime = 0;
   lubjubAudio.currentTime = 0;
   demsoAudio.currentTime = 0;
   plabreAudio.currentTime = 0;
@@ -495,6 +500,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Haunted Soul [1 in 2,000]" ||
     rarity.type === "Lost Soul [1 in 3,333]" ||
     rarity.type === "Devil's Heart [1 in 66,666]" ||
+    rarity.type === "Shad0w [1 in 4,444]" ||
     rarity.type === "Found Soul [1 in 5,000]" ||
     rarity.type === "Haunted Reality [1 in 5,500]" ||
     rarity.type === "LubbyJubby's Cherry Grove [1 in 5,666]" ||
@@ -547,6 +553,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Hellish Fire [1 in 6,666]") {
       bigSuspenceAudio.play();
     } else if (rarity.type === "LubbyJubby's Cherry Grove [1 in 5,666]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Shad0w [1 in 4,444]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Demon Soul [1 in 9,999]") {
       bigSuspenceAudio.play();
@@ -1312,6 +1320,134 @@ document.getElementById("rollButton").addEventListener("click", function () {
           rollCount++;
           titleCont.style.visibility = "visible";
           lubjubAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
+    } else if (rarity.type === "Shad0w [1 in 4,444]") {
+      document.body.className = "blackBg";
+      disableChange();
+      startAnimationA5();
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+    
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-blue";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+    
+      const squareInterval = setInterval(() => {
+        createGravitySquare();
+      }, 100);
+    
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 9350); // Stop after 9.35 seconds
+    
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+    
+        const starClasses = [
+          "pink-star",
+          "cyan-star",
+          "blue-star"
+        ];
+        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+    
+        star.innerHTML = "◊";
+        star.style.left = Math.random() * 100 + "vw";
+    
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+    
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+    
+        star.style.animationDelay = i * 0.08 + "s";
+    
+        container.appendChild(star);
+    
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          titleCont.style.visibility = "visible";
+          shaAudio.play();
         }, 100);
         enableChange();
       }, 10750); // Wait for 10.75 seconds
@@ -3729,6 +3865,12 @@ function rollRarity() {
       titles: ["Fear"],
     },
     {
+      type: "Shad0w [1 in 4,444]",
+      class: "shaBgImg",
+      chance: 0.02250225022,
+      titles: ["Galactic", "Mysterious", "Friendly"],
+    },
+    {
       type: "Haunted Soul [1 in 2,000]",
       class: "hauBgImg",
       chance: 0.05,
@@ -4131,6 +4273,7 @@ const backgroundDetails = {
   emerBgImg: { image: "files/backgrounds/emergencies.png", audio: "emerAudio" },
   demsoBgImg: { image: "files/backgrounds/demso.png", audio: "demsoAudio" },
   fircraBgImg: { image: "files/backgrounds/fircra.gif", audio: "fircraAudio" },
+  shaBgImg: { image: "files/backgrounds/sha.png", audio: "shaAudio" },
   samuraiBgImg: {
     image: "files/backgrounds/samurai.png",
     audio: "samuraiAudio",
@@ -5167,6 +5310,9 @@ document
 document
   .getElementById("deleteAllShadowVeilButton")
   .addEventListener("click", () => deleteAllByRarity("shadBgImg"));
+document
+  .getElementById("deleteAllShad0wButton")
+  .addEventListener("click", () => deleteAllByRarity("shaBgImg"));
 document
   .getElementById("deleteAllUnnamedButton")
   .addEventListener("click", () => deleteAllByRarity("unnamedBgImg"));
