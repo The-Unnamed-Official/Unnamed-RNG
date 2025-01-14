@@ -613,6 +613,12 @@ body {
     font-weight: bold;
 }
 
+.lubjubBgImg {
+    background: url(backgrounds/lubjub.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
 .commonBgImg {
     background: url(backgrounds/common.png);
     background-size: cover;
