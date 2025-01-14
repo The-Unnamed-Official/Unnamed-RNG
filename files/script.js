@@ -3689,7 +3689,7 @@ function rollRarity() {
     {
       type: "LubbyJubby's Cherry Grove [1 in 5,666]",
       class: "lubjubBgImg",
-      chance: 0.02,
+      chance: 0.01764913519,
       titles: ["LubJub"],
     },
     {
