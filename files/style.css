@@ -143,6 +143,63 @@ body {
     scale: 1.1;
 }
 
+#saveButton {
+    background-color: #7a99f4;
+    transition: background-color 0.2s ease, scale 0.2s ease;
+}
+
+#saveButton:hover {
+    background-color: #6742ee;
+    scale: 1.05;
+}
+
+#importButton {
+    background-color: #848da9;
+    transition: background-color 0.2s ease, scale 0.2s ease;
+}
+
+#importButton:hover {
+    background-color: #625785;
+    scale: 1.05;
+}
+
+.statusImport {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 500px;
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.statusImport.showStatus {
+    display: block;
+    opacity: 1;
+}
+
+@keyframes shakeRoll {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+    75% { transform: translateX(-5px); }
+}
+
+.shakeRolls {
+    animation: shakeRoll 0.5s ease-in-out;
+    color: red;
+}
+
 #settingsMenu {
     position: fixed;
     top: 50%;
@@ -559,423 +616,507 @@ body {
 .commonBgImg {
     background: url(backgrounds/common.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .rareBgImg {
     background: url(backgrounds/rare.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .epicBgImg {
     background: url(backgrounds/epic.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .legendaryBgImg {
     background: url(backgrounds/legendary.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .impossibleBgImg {
     background: url(backgrounds/impossible.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .poweredBgImg {
     background: url(backgrounds/powered.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .plabreBgImg {
     background: url(backgrounds/plabre.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .solarpowerBgImg {
     background: url(backgrounds/solarpower.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .flickerBgImg {
     background: url(backgrounds/flicker.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .belivBgImg {
     background: url(backgrounds/beliv.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .toxBgImg {
     background: url(backgrounds/toxic.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .isekaiBgImg {
     background: url(backgrounds/isekai.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .emerBgImg {
     background: url(backgrounds/emergencies.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .samuraiBgImg {
     background: url(backgrounds/samurai.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .contBgImg {
     background: url(backgrounds/contortions.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .unstoppableBgImg {
     background: url(backgrounds/unstoppable.gif);
     background-size: cover;
+    object-fit: contain;
 }
 
 .gargBgImg {
     background: url(backgrounds/gargantua.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .spectralBgImg {
     background: url(backgrounds/spectral.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .memBgImg {
     background: url(backgrounds/memory.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .oblBgImg {
     background: url(backgrounds/oblivion.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .phaBgImg {
     background: url(backgrounds/phantomstride.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .hellBgImg {
     background: url(backgrounds/hell.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .starfallBgImg {
     background: url(backgrounds/starfall.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .frightBgImg {
     background: url(backgrounds/fright.png);
     background-size: cover;
+    object-fit: contain;
 
 }
 
 .unnamedBgImg {
     background: url(backgrounds/unnamed.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .eonbreakBgImg {
     background: url(backgrounds/eonbreak.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .celestialchorusBgImg {
     background: url(backgrounds/celestialchorus.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .harvBgImg {
     background: url(backgrounds/harv.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .arcanepulseBgImg {
     background: url(backgrounds/arcanepulse.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .seraphwingBgImg {
     background: url(backgrounds/seraphwing.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .overtureBgImg {
     background: url(backgrounds/overture.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .impeachedBgImg {
     background: url(backgrounds/impeached.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .rng_masterBgImg {
     background: url(backgrounds/rng_master.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .cursedmirageBgImg {
     background: url(backgrounds/cursed.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .ethershiftBgImg {
     background: url(backgrounds/ether.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .silcarBgImg {
     background: url(backgrounds/sillycar.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .gregBgImg {
     background: url(backgrounds/greg.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .mintllieBgImg {
     background: url(backgrounds/mintllie.png);
     background-size: cover;
+    object-fit: contain;
 
 }
 
 .geezerBgGif {
     background: url(backgrounds/geezer.gif);
     background-size: cover;
+    object-fit: contain;
 }
 
 .polarrBgImg {
     background: url(backgrounds/polarr.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .oppBgImg {
     background: url(backgrounds/oppre.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .wanspiBgImg {
     background: url(backgrounds/wanspi.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .froBgImg {
     background: url(backgrounds/fro.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .mysBgImg {
     background: url(backgrounds/mys.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .forgBgImg {
     background: url(backgrounds/forg.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .curartBgImg {
     background: url(backgrounds/curart.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .specBgImg {
     background: url(backgrounds/spec.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .shadBgImg {
     background: url(backgrounds/shad.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .nighBgImg {
     background: url(backgrounds/nigh.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .voiBgImg {
     background: url(backgrounds/voi.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .silBgImg {
     background: url(backgrounds/sil.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .ghoBgImg {
     background: url(backgrounds/gho.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .endBgImg {
     background: url(backgrounds/end.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .abysBgImg {
     background: url(backgrounds/abys.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .darBgImg {
     background: url(backgrounds/dar.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .twiligBgImg {
     background: url(backgrounds/twilig.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .ethpulBgImg {
     background: url(backgrounds/ethpul.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .eniBgImg {
     background: url(backgrounds/eni.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .griBgImg {
     background: url(backgrounds/gri.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .celdawBgImg {
     background: url(backgrounds/celdaw.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .fatreBgImg {
     background: url(backgrounds/fatre.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .pumpkinBgImg {
     background: url(backgrounds/pumpkin.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .fearBgImg {
     background: url(backgrounds/fear.gif);
     background-size: cover;
+    object-fit: contain;
 }
 
 .h1diBgImg {
     background: url(backgrounds/h1di.gif);
     background-size: cover;
+    object-fit: contain;
 }
 
 .hauBgImg {
     background: url(backgrounds/hau.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .lostsBgImg {
     background: url(backgrounds/losts.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .foundsBgImg {
     background: url(backgrounds/founds.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .hauntBgImg {
     background: url(backgrounds/haunt.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .devilBgImg {
     background: url(backgrounds/devil.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .silnigBgImg {
     background: url(backgrounds/silnig.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .ginharBgImg {
     background: url(backgrounds/ginhar.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .cristoBgImg {
     background: url(backgrounds/cristo.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .holcheBgImg {
     background: url(backgrounds/holche.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .reidasBgImg {
     background: url(backgrounds/reidas.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .frogarBgImg {
     background: url(backgrounds/frogar.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .sanclaBgImg {
     background: url(backgrounds/sancla.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .norstaBgImg {
     background: url(backgrounds/norsta.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .cancansymBgImg {
     background: url(backgrounds/cancansym.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .jolbelBgImg {
     background: url(backgrounds/jolbel.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .expBgImg {
     background: url(backgrounds/exp.gif);
     background-size: cover;
+    object-fit: contain;
 }
 
 .veilBgImg {
     background: url(backgrounds/veil.gif);
     background-size: cover;
+    object-fit: contain;
 }
 
 .demsoBgImg {
     background: url(backgrounds/demso.png);
     background-size: cover;
+    object-fit: contain;
 }
 
 .fircraBgImg {
     background: url(backgrounds/fircra.gif);
     background-size: cover;
+    object-fit: contain;
 }
 
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
+    object-fit: contain;
 }
 
 .blackBg {
