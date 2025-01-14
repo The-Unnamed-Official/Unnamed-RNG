@@ -613,6 +613,12 @@ body {
     font-weight: bold;
 }
 
+.shaBgImg {
+    background: url(backgrounds/sha.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 .lubjubBgImg {
     background: url(backgrounds/lubjub.gif);
     background-size: cover;
