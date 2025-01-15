@@ -3688,7 +3688,7 @@ function rollRarity() {
     {
       type: "Common [1 in 2.5]",
       class: "commonBgImg",
-      chance: 30,
+      chance: 40,
       titles: ["Good", "Natural", "Simple", "Basic", "Plain", "Average", "Ordinary", "Usual", "Regular", "Standard"],
     },
     {
@@ -3904,7 +3904,7 @@ function rollRarity() {
     {
       type: "Shad0w [1 in 4,444]",
       class: "shaBgImg",
-      chance: 10.02250225022,
+      chance: 0.02250225022,
       titles: ["Galactic", "Mysterious", "Friendly"],
     },
     {
