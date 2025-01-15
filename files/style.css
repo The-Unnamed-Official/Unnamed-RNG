@@ -1881,3 +1881,65 @@ body.griCutsceneBgImg {
         background-position: 0% 80%;
     }
 }
+
+
+.black-hole {
+    position: absolute;
+    left: 51%;
+    top: 51%;
+    width: 10px;
+    height: 10px;
+    background: black;
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0);
+}
+
+.black-hole.active {
+    animation: blackHoleGrow 11.4s forwards;
+}
+
+.particle-system {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 10px;
+    height: 10px;
+}
+
+.particle {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    opacity: 0;
+    transform-origin: 0 0;
+}
+
+.particle.active {
+    opacity: 0.8;
+    animation: orbit var(--duration) linear infinite var(--delay);
+}
+
+@keyframes blackHoleGrow {
+    0%, 50% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    75% { transform: translate(-50%, -50%) scale(30); opacity: 1; }
+    85% { transform: translate(-50%, -50%) scale(40); opacity: 1; }
+    90% { transform: translate(-50%, -50%) scale(45); opacity: 0; }
+    91% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    100% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+}
+
+@keyframes orbit {
+    0% {
+      transform: 
+        rotate(var(--start-angle)) 
+        translateX(var(--orbit-radius)) 
+        rotate(calc(var(--start-angle) * -1));
+    }
+    100% {
+      transform: 
+        rotate(calc(var(--start-angle) + var(--rotation-amount))) 
+        translateX(calc(var(--orbit-radius) * var(--scale-factor))) 
+        rotate(calc((var(--start-angle) + var(--rotation-amount)) * -1));
+    }
+}

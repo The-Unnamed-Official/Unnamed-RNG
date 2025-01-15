@@ -1331,7 +1331,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Shad0w [1 in 4,444]") {
       document.body.className = "blackBg";
       disableChange();
-      startAnimationA5();
+      startAnimationBlackHole();
     
       const container1 = document.getElementById("squareContainer");
       const container = document.getElementById("starContainer");
@@ -3688,7 +3688,7 @@ function rollRarity() {
     {
       type: "Common [1 in 2.5]",
       class: "commonBgImg",
-      chance: 40,
+      chance: 30,
       titles: ["Good", "Natural", "Simple", "Basic", "Plain", "Average", "Ordinary", "Usual", "Regular", "Standard"],
     },
     {
@@ -3904,7 +3904,7 @@ function rollRarity() {
     {
       type: "Shad0w [1 in 4,444]",
       class: "shaBgImg",
-      chance: 0.02250225022,
+      chance: 10.02250225022,
       titles: ["Galactic", "Mysterious", "Friendly"],
     },
     {
@@ -4983,6 +4983,27 @@ function startAnimation11() {
   }, 7000);
 }
 
+function startAnimationBlackHole() {
+  createParticleGroup();
+  
+  const blackHole = document.querySelector('.black-hole');
+  const particles = document.querySelectorAll('.particle');
+  
+  blackHole.classList.remove('active');
+  particles.forEach(p => p.classList.remove('active'));
+  
+  void blackHole.offsetWidth;
+  
+  blackHole.classList.add('active');
+  particles.forEach(p => p.classList.add('active'));
+  
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, 9350);
+  });
+}
+
 function createCooldownButton() {
   if (document.getElementById("cooldownButton")) {
     return;
@@ -5698,3 +5719,49 @@ function animate() {
 setInterval(launchFirework, 3333);
 
 animate();
+
+
+function createParticle(minRadius, maxRadius, minSize, maxSize, speed, rotationRange) {
+  const particle = document.createElement('div');
+  particle.className = 'particle';
+  
+  const size = minSize + Math.random() * (maxSize - minSize);
+  particle.style.width = `${size}px`;
+  particle.style.height = `${size}px`;
+  
+  const radius = minRadius + Math.random() * (maxRadius - minRadius);
+  const startAngle = Math.random() * 360;
+  const rotationAmount = 270 + Math.random() * rotationRange;
+  const scaleFactor = 0.2 + Math.random() * 0.3;
+  const duration = speed + Math.random() * 2;
+  const delay = Math.random() * -4;
+  
+  particle.style.setProperty('--orbit-radius', `${radius}px`);
+  particle.style.setProperty('--start-angle', `${startAngle}deg`);
+  particle.style.setProperty('--rotation-amount', `${rotationAmount}deg`);
+  particle.style.setProperty('--scale-factor', scaleFactor);
+  particle.style.setProperty('--duration', `${duration}s`);
+  particle.style.setProperty('--delay', `${delay}s`);
+  
+  return particle;
+}
+
+function createParticleGroup() {
+  const system = document.querySelector('.particle-system');
+  system.innerHTML = '';
+  
+  for (let i = 0; i < 10; i++) {
+    const particle = createParticle(10, 30, 1, 2, 2, 720);
+    system.appendChild(particle);
+  }
+  
+  for (let i = 0; i < 30; i++) {
+    const particle = createParticle(30, 70, 1.5, 2.5, 3, 540);
+    system.appendChild(particle);
+  }
+  
+  for (let i = 0; i < 50; i++) {
+    const particle = createParticle(70, 120, 2, 3, 4, 360);
+    system.appendChild(particle);
+  }
+}
