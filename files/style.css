@@ -51,7 +51,7 @@
     position: absolute;
     bottom: 10px;
     left: 10px;
-    width: 305px;
+    width: 355px;
     display: inline-block;
     color: #fff;
     padding: 15px;
@@ -73,11 +73,16 @@
     list-style: none;
     padding: 0;
     margin: 0;
+    background: #6495ed;
+    border-radius: 20px;
 }
 
 #historyList li {
     font-size: 16px;
     line-height: 1.6;
+    border-radius: 10px;
+    padding-bottom: 10px;
+    padding-top: 10px;
 }
 
 body {
@@ -111,7 +116,7 @@ body {
 .container1 {
     position: absolute;
     bottom: 10px;
-    left: 333px;
+    left: 383px;
     width: 200px;
     height: 112.5px;
     display: inline-block;
@@ -166,7 +171,7 @@ body {
     padding: 10px;
     cursor: pointer;
     bottom: 20px;
-    left: 345px;
+    left: 395px;
     z-index: 9999999;
     transition: background-color 0.2s ease, scale 0.2s ease;
 }
@@ -1301,7 +1306,7 @@ body.griCutsceneBgImg {
     padding: 10px;
     cursor: pointer;
     bottom: 20px;
-    left: 423px;
+    left: 473px;
     z-index: 999999;
     transition: scale 0.2s ease;
     z-index: 9999999;
@@ -1436,7 +1441,7 @@ body.griCutsceneBgImg {
 .rollsCount {
     position: absolute;
     background: #ffffff77;
-    left: 345px;
+    left: 395px;
     bottom: 45px;
     margin-bottom: 20px;
     border-radius: 15px;
