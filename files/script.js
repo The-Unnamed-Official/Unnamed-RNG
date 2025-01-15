@@ -888,6 +888,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
           displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
@@ -985,6 +986,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -1059,6 +1061,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
           displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
@@ -1187,6 +1190,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
           displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
@@ -1315,6 +1319,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
           displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
@@ -1443,6 +1448,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
           displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
@@ -1570,6 +1576,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
           displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
@@ -1692,6 +1699,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -1815,6 +1823,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -1886,6 +1895,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -1957,6 +1967,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2027,6 +2038,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2070,6 +2082,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2145,6 +2158,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2208,6 +2222,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2253,6 +2268,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         document.body.className = "whiteFlash";
         setTimeout(() => {
           document.body.className = rarity.class;
+          updateRollingHistory(title, rarity.type);
           addToInventory(title, rarity.class);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
@@ -2309,6 +2325,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2365,6 +2382,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2468,6 +2486,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2509,6 +2528,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2550,6 +2570,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2591,6 +2612,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2633,6 +2655,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
           displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
@@ -2673,6 +2696,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2714,6 +2738,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2769,6 +2794,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -2913,6 +2939,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -3036,6 +3063,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
           displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
@@ -3134,6 +3162,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -3278,6 +3307,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -3295,6 +3325,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -3364,6 +3395,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           setTimeout(() => {
               document.body.className = rarity.class;
               addToInventory(title, rarity.class);
+              updateRollingHistory(title, rarity.type);
               displayResult(title, rarity.type);
               changeBackground(rarity.class);
               rollButton.disabled = false;
@@ -3428,6 +3460,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -3493,6 +3526,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -3565,6 +3599,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -3625,6 +3660,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           rollButton.disabled = false;
@@ -3636,6 +3672,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   } else {
     addToInventory(title, rarity.class);
     displayResult(title, rarity.type);
+    updateRollingHistory(title, rarity.type);
     changeBackground(rarity.class);
     rollCount++;
     setTimeout(() => {
@@ -5198,6 +5235,117 @@ document.getElementById('importButton').addEventListener('click', () => {
 
   input.click();
 });
+
+const rollingHistory = [];
+
+function updateRollingHistory(title, rarity) {
+    const historyList = document.getElementById('historyList');
+
+    rollingHistory.unshift({ title, rarity });
+
+    if (rollingHistory.length > 10) {
+        rollingHistory.pop();
+    }
+
+    historyList.innerHTML = '';
+    rollingHistory.forEach((roll) => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${roll.rarity} - ${roll.title}`;
+
+        const rarityClass = getClassForRarity(roll.rarity);
+        if (rarityClass) {
+            listItem.classList.add(rarityClass);
+        }
+
+        historyList.appendChild(listItem);
+    });
+}
+
+function getClassForRarity(rarity) {
+  const rarityClasses = {
+      'Common': 'under100',
+      'Rare': 'under100',
+      'Epic': 'under100',
+      'Legendary': 'under100',
+      'Impossible': 'under100',
+      'Powered': 'under100',
+      'Toxic': 'under100',
+      'Solarpower': 'under100',
+      'Flicker': 'under100',
+      'Believer': 'under100',
+      'Planet Breaker': 'under100',
+      'Unstoppable': 'under1k',
+      'Gargantua': 'under1k',
+      'Wandering Spirit': 'under1k',
+      'Memory': 'under1k',
+      'Oblivion': 'under1k',
+      'Frozen Fate': 'under1k',
+      'Spectral Whisper': 'under1k',
+      'Mysterious Echo': 'under1k',
+      'Isekai': 'under1k',
+      'Forgotten Whisper': 'under1k',
+      'Emergencies': 'under1k',
+      'Starfall': 'under1k',
+      'Cursed Artifact': 'under1k',
+      'Samurai': 'under1k',
+      'Spectral Glare': 'under1k',
+      'Phantom Stride': 'under1k',
+      'Contortions': 'under1k',
+      'Shadow Veil': 'under10k',
+      'Fright': 'under10k',
+      'Nightfall': 'under10k',
+      'Fear': 'under10k',
+      'Seraph\'s Wing': 'under10k',
+      'Void Walker': 'under10k',
+      'Haunted Soul': 'under10k',
+      'Silent Listener': 'under10k',
+      'Ghostly Embrace': 'under10k',
+      'Endless Twilight': 'under10k',
+      'Lost Soul': 'under10k',
+      'Abyssal Shade': 'under10k',
+      'Darkened Sky': 'under10k',
+      'Shad0w': 'under10k',
+      'Twisted Light': 'under10k',
+      'Found Soul': 'under10k',
+      'Haunted Reality': 'under10k',
+      'LubbyJubby\'s Cherry Grove': 'under10k',
+      'Ether Shift': 'under10k',
+      'Ethereal Pulse': 'under10k',
+      'Hellish Fire': 'under10k',
+      'Enigmatic Dream': 'under10k',
+      'Grim Destiny': 'under10k',
+      'Demon Soul': 'under10k',
+      'Pumpkin': 'eventTitleHalloween',
+      'Crimson Stockings': 'eventTitleXmas',
+      'Holiday Cheer': 'eventTitleXmas',
+      'Reindeer Dash': 'eventTitleXmas',
+      'Gingerbread Harmony': 'eventTitleXmas',
+      'Silent Night': 'eventTitleXmas',
+      'Frosted Garland': 'eventTitleXmas',
+      'Candy Cane Symphony': 'eventTitleXmas',
+      'Santa Claus': 'eventTitleXmas',
+      'Jolly Bells': 'eventTitleXmas',
+      'North Star': 'eventTitleXmas',
+      'Firecracker': 'eventTitle',
+      'Veil': 'special',
+      'Experiment': 'special',
+      'Cursed Mirage': 'under100k',
+      'Celestial Dawn': 'under100k',
+      'Unnamed': 'under100k',
+      'Fate\'s Requiem': 'under100k',
+      'Eonbreak': 'under100k',
+      'Overture': 'under100k',
+      'HARV': 'under100k',
+      'Devil\'s Heart': 'under100k',
+      'Arcane Pulse': 'under100k',
+      'Impeached': 'under1m',
+      'Celestial Chorus': 'under1m',
+      'Silly Car :3': 'under10ms',
+      'H1di': 'under10m',
+  };
+
+  return rarityClasses[rarity] || null;
+}
 
 document
   .getElementById("deleteAllCommonButton")

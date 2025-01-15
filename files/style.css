@@ -47,6 +47,39 @@
     align-items: center;
 }
 
+#rollingHistory {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    width: 305px;
+    display: inline-block;
+    color: #fff;
+    padding: 15px;
+    background: url(backgrounds/rng_master.png);
+    border-style: groove;
+    background-size: cover;
+    background-position: center;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #0000001a;
+    z-index: 20000002;
+}
+
+#rollingHistory h3 {
+    margin: 0 0 10px;
+    font-size: 18px;
+}
+
+#historyList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#historyList li {
+    font-size: 16px;
+    line-height: 1.6;
+}
+
 body {
     justify-content: center;
     align-items: center;
@@ -78,7 +111,7 @@ body {
 .container1 {
     position: absolute;
     bottom: 10px;
-    left: 10px;
+    left: 333px;
     width: 200px;
     height: 112.5px;
     display: inline-block;
@@ -133,7 +166,7 @@ body {
     padding: 10px;
     cursor: pointer;
     bottom: 20px;
-    left: 20px;
+    left: 345px;
     z-index: 9999999;
     transition: background-color 0.2s ease, scale 0.2s ease;
 }
@@ -1268,7 +1301,7 @@ body.griCutsceneBgImg {
     padding: 10px;
     cursor: pointer;
     bottom: 20px;
-    left: 100px;
+    left: 423px;
     z-index: 999999;
     transition: scale 0.2s ease;
     z-index: 9999999;
@@ -1403,7 +1436,7 @@ body.griCutsceneBgImg {
 .rollsCount {
     position: absolute;
     background: #ffffff77;
-    left: 20px;
+    left: 345px;
     bottom: 45px;
     margin-bottom: 20px;
     border-radius: 15px;
