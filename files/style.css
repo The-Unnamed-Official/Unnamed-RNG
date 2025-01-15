@@ -118,7 +118,7 @@ body {
     bottom: 10px;
     left: 383px;
     width: 200px;
-    height: 112.5px;
+    height: 185px;
     display: inline-block;
     padding: 20px;
     background: url(backgrounds/rng_master.png);
@@ -163,16 +163,14 @@ body {
 }
 
 #settingsButton {
-    position: absolute;
     background-color: #ff6347;
     color: #ffffff;
     border-radius: 5px;
     border: none;
     padding: 10px;
     cursor: pointer;
-    bottom: 20px;
-    left: 395px;
     z-index: 9999999;
+    margin-bottom: 10px;
     transition: background-color 0.2s ease, scale 0.2s ease;
 }
 
@@ -354,9 +352,23 @@ body {
     background-color: #ff6347;
     color: white;
     transition: scale 0.3s ease, background-color 0.3s ease ;
+    margin-right: 5px;
 }
 
 #toggleRollDisplayBtn:hover {
+    background-color: #bb4935;
+    color: white;
+    scale: 1.1;
+}
+
+#toggleRollHistoryBtn {
+    background-color: #ff6347;
+    color: white;
+    transition: scale 0.3s ease, background-color 0.3s ease ;
+    margin-left: 5px;
+}
+
+#toggleRollHistoryBtn:hover {
     background-color: #bb4935;
     color: white;
     scale: 1.1;
@@ -1298,15 +1310,12 @@ body.griCutsceneBgImg {
 }
 
 #autoRollButton {
-    position: absolute;
     background-color: #ff6347;
     color: #ffffff;
     border-radius: 5px;
     border: none;
     padding: 10px;
     cursor: pointer;
-    bottom: 20px;
-    left: 473px;
     z-index: 999999;
     transition: scale 0.2s ease;
     z-index: 9999999;
@@ -1439,10 +1448,7 @@ body.griCutsceneBgImg {
 }
 
 .rollsCount {
-    position: absolute;
     background: #ffffff77;
-    left: 395px;
-    bottom: 45px;
     margin-bottom: 20px;
     border-radius: 15px;
     padding: 10px 6px;

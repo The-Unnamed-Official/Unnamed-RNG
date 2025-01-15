@@ -4265,7 +4265,25 @@ document
       inventorySection.style.visibility = "visible";
       this.textContent = "Hide Roll & Display";
     }
-  });
+});
+
+document
+  .getElementById("toggleRollHistoryBtn")
+  .addEventListener("click", function () {
+    const historySection = document.querySelector(".historySection");
+    const container = document.querySelector(".container1");
+    const isVisible = historySection.style.visibility !== "hidden";
+
+    if (isVisible) {
+      historySection.style.visibility = "hidden";
+      this.textContent = "Show Roll History";
+      container.style.left = "10px";
+    } else {
+      historySection.style.visibility = "visible";
+      this.textContent = "Hide Roll History";
+      container.style.left = "383px";
+    }
+});
 
 const backgroundDetails = {
   commonBgImg: { image: "files/backgrounds/common.png", audio: null },

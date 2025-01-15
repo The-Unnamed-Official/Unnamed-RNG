@@ -32,6 +32,7 @@
         </div>
         <div class="setting-item">
             <button id="toggleRollDisplayBtn" class="settingsBtns">Hide Roll & Display</button>
+            <button id="toggleRollHistoryBtn" class="settingsBtns">Hide Roll History</button>
         </div>
 
         <div class="settings-item">
@@ -64,22 +65,20 @@
 
     <div class="ui">
 
-        <div id="rollingHistory">
+        <div class="historySection" id="rollingHistory">
             <h3>Rolling History</h3>
             <ul id="historyList"></ul>
         </div>
         
         <div class="container1">
+            <div class="rollsCount">
+                <h3 class="count">Rolls: <a class="totalCount" id="rollCountDisplay">0</a></h3>
+            </div>
+    
+            <button id="settingsButton" class="orange-button">Settings</button>
+            <button id="autoRollButton" class="toggle-button off">Auto Roll: Off</button>
         </div>
 
-        <div class="rollsCount">
-            <h3 class="count">Rolls: <a class="totalCount" id="rollCountDisplay">0</a></h3>
-        </div>
-
-        <button id="settingsButton" class="orange-button">Settings</button>
-
-        <button id="autoRollButton" class="toggle-button off">Auto Roll: Off</button>
-        
         <div class="info2">
             <div class="creator">
                 <h3 class="cu1">Game created by:</h3>
