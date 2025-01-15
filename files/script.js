@@ -5132,9 +5132,14 @@ function createSnowflake() {
 
 setInterval(createSnowflake, 133);
 
+const secretKey = 'ImpeachedGlazer';
+
 document.getElementById('saveButton').addEventListener('click', () => {
   const data = JSON.stringify(localStorage);
-  const blob = new Blob([data], { type: 'application/json' });
+
+  const encryptedData = CryptoJS.AES.encrypt(data, secretKey).toString();
+
+  const blob = new Blob([encryptedData], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
 
   const a = document.createElement('a');
@@ -5144,7 +5149,6 @@ document.getElementById('saveButton').addEventListener('click', () => {
 
   URL.revokeObjectURL(url);
 });
-
 
 function showStatusMessage(message, duration = 2000) {
   const status = document.getElementById('status');
@@ -5163,16 +5167,21 @@ document.getElementById('importButton').addEventListener('click', () => {
   input.accept = '.json';
 
   input.addEventListener('change', (event) => {
-      const file = event.target.files[0];
-      if (file) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-              try {
-                  const importedData = JSON.parse(e.target.result);
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const encryptedData = e.target.result;
 
-                  Object.keys(importedData).forEach(key => {
-                      localStorage.setItem(key, importedData[key]);
-                  });
+          const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
+          const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+
+          const importedData = JSON.parse(decryptedData);
+
+          Object.keys(importedData).forEach(key => {
+            localStorage.setItem(key, importedData[key]);
+          });
 
                   showStatusMessage("Data imported successfully! Refreshing...", 1500);
 
