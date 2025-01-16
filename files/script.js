@@ -4226,7 +4226,7 @@ function rollRarity() {
   let randomNum = Math.random() * 180;
   let cumulativeChance = 0.012;
 
-  if (rollCount % 2 === 0) {
+  if (rollCount % 20 === 0) {
     cumulativeChance += abominationRarity.chance;
     if (randomNum <= cumulativeChance) {
       return abominationRarity;
