@@ -47,6 +47,7 @@ function musicLoad() {
   let polarrSuspenceAudio = document.getElementById("polarrSuspenceAudio");
   let scareSuspenceAudio = document.getElementById("scareSuspenceAudio");
   let bigSuspenceAudio = document.getElementById("bigSuspenceAudio");
+  let aboAudio = document.getElementById("aboAudio");
   let lubjubAudio = document.getElementById("lubjubAudio");
   let plabreAudio = document.getElementById("plabreAudio");
   let isekaiAudio = document.getElementById("isekaiAudio");
@@ -125,6 +126,7 @@ function musicLoad() {
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  aboAudio.pause();
   shaAudio.pause();
   lubjubAudio.pause();
   demsoAudio.pause();
@@ -204,6 +206,7 @@ function musicLoad() {
   geezerSuspenceAudio.currentTime = 0;
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
+  aboAudio.currentTime = 0;
   shaAudio.currentTime = 0;
   demsoAudio.currentTime = 0;
   lubjubAudio.currentTime = 0;
@@ -311,6 +314,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  aboAudio.pause();
   shaAudio.pause();
   lubjubAudio.pause();
   plabreAudio.pause();
@@ -390,6 +394,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   geezerSuspenceAudio.currentTime = 0;
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
+  aboAudio.currentTime = 0;
   shaAudio.currentTime = 0;
   lubjubAudio.currentTime = 0;
   demsoAudio.currentTime = 0;
@@ -532,8 +537,9 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "H1di [1 in 9,890,089]" ||
     rarity.type === "Firecracker [1 in 2,025]" ||
     rarity.type === "HARV [1 in 33,333]" ||
-    rarity.type === "Experiment [1 in 100,000]" ||
-    rarity.type === "Veil [1 in 50,000]"
+    rarity.type === "Experiment [1 in 100,000/10th]" ||
+    rarity.type === "Veil [1 in 50,000/5th]" ||
+    rarity.type === "Abomination [1 in 1,000,000/20th]"
   ) {
     document.getElementById("result").innerText = "";
     const titleCont = document.querySelector(".container");
@@ -592,12 +598,14 @@ document.getElementById("rollButton").addEventListener("click", function () {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "HARV [1 in 33,333]") {
       hugeSuspenceAudio.play();
-    } else if (rarity.type === "Experiment [1 in 100,000]") {
+    } else if (rarity.type === "Experiment [1 in 100,000/10th]") {
       expOpeningAudio.play();
     } else if (rarity.type === "H1di [1 in 9,890,089]") {
       h1diAudio.play();
-    } else if (rarity.type === "Veil [1 in 50,000]") {
+    } else if (rarity.type === "Veil [1 in 50,000/5th]") {
       veilAudio.play();
+    } else if (rarity.type === "Abomination [1 in 1,000,000/20th]") {
+      aboAudio.play();
     } else if (rarity.type === "Celestial Chorus [1 in 202,020]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Geezer [1 in 5,000,000,000]") {
@@ -996,7 +1004,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         }, 100);
         enableChange();
       }, 10750); // Wait for 10.75 seconds
-    } else if (rarity.type === "Experiment [1 in 100,000]") {
+    } else if (rarity.type === "Experiment [1 in 100,000/10th]") {
       disableChange();
 
       setTimeout(() => {
@@ -2167,7 +2175,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         }, 100);
         enableChange();
       }, 14000); // Wait for 14 seconds
-    } else if (rarity.type === "Veil [1 in 50,000]") {
+    } else if (rarity.type === "Veil [1 in 50,000/5th]") {
       document.body.className = "blackBg";
       disableChange();
       startAnimation06();
@@ -2231,6 +2239,70 @@ document.getElementById("rollButton").addEventListener("click", function () {
         }, 100);
         enableChange();
       }, 13700); // Wait for 13.7 seconds
+    } else if (rarity.type === "Abomination [1 in 1,000,000/20th]") {
+      document.body.className = "blackBg";
+      disableChange();
+      startAnimation06Fast();
+
+      const container1 = document.getElementById("squareContainer");
+
+      function createSquare(colorClass) {
+        const square = document.createElement("div");
+        square.className = `animated-square-${colorClass}`;
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+        container1.appendChild(square);
+        square.addEventListener("animationend", () => square.remove());
+      }
+
+      const container = document.getElementById("starContainer");
+
+      function createStars(colorClass, count) {
+        for (let i = 0; i < count; i++) {
+          const star = document.createElement("span");
+          star.className = `${colorClass}-star`;
+          star.innerHTML = "◊";
+          star.style.left = Math.random() * 100 + "vw";
+          star.style.setProperty(
+            "--randomX",
+            (Math.random() - 0.25) * 20 + "vw"
+          );
+          star.style.setProperty(
+            "--randomRotation",
+            (Math.random() - 0.5) * 720 + "deg"
+          );
+          star.style.animationDelay = i * 0.04 + "s";
+          container.appendChild(star);
+          star.addEventListener("animationend", () => star.remove());
+        }
+      }
+
+      createStars("purple", 500);
+      createStars("pink", 500);
+
+      const squareInterval = setInterval(() => {
+        createSquare("purple");
+        createSquare("pink");
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 18700);
+
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
+          displayResult(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          titleCont.style.visibility = "visible";
+        }, 100);
+        enableChange();
+      }, 18800); // Wait for 18.8 seconds
     } else if (rarity.type === "Gargantua [1 in 143]") {
       document.body.className = "blackBg";
       disableChange();
@@ -4107,8 +4179,15 @@ function rollRarity() {
     }
   ];
 
+  const abominationRarity = {
+    type: "Abomination [1 in 1,000,000/20th]",
+    class: "aboBgImg",
+    chance: 0.002,
+    titles: ["Chaos", "Experiment: 902", "Damaged", "Assistance"],
+  };
+
   const experimentRarity = {
-    type: "Experiment [1 in 100,000]",
+    type: "Experiment [1 in 100,000/10th]",
     class: "expBgImg",
     chance: 0.0075,
     titles: ["1106", "1073", "1105", "905", "302", "1130", "1263", "1005", "1473", "1748",
@@ -4117,16 +4196,21 @@ function rollRarity() {
   };
 
   const veilRarity = {
-    type: "Veil [1 in 50,000]",
+    type: "Veil [1 in 50,000/5th]",
     class: "veilBgImg",
     chance: 0.0025,
     titles: ["Fight", "Peace"],
   };
 
   let randomNum = Math.random() * 180;
-  let cumulativeChance = 0.01;
+  let cumulativeChance = 0.012;
 
-  if (rollCount % 10 === 0) {
+  if (rollCount % 20 === 0) {
+    cumulativeChance += abominationRarity.chance;
+    if (randomNum <= cumulativeChance) {
+      return abominationRarity;
+    }
+  } else if (rollCount % 10 === 0) {
     cumulativeChance += experimentRarity.chance;
     if (randomNum <= cumulativeChance) {
       return experimentRarity;
@@ -4144,7 +4228,7 @@ function rollRarity() {
       }
     }
   }
-
+  
   return rarities[0];
 };
 
@@ -4416,6 +4500,7 @@ const backgroundDetails = {
   holcheBgImg: { image: "files/backgrounds/holche.png", audio: null },
   cristoBgImg: { image: "files/backgrounds/cristo.png", audio: null },
   harvBgImg: { image: "files/backgrounds/harv.png", audio: "harvAudio" },
+  aboBgImg: { image: "files/backgrounds/abo.gif", audio: "aboAudio" },
   expBgImg: { image: "files/backgrounds/exp.gif", audio: "expAudio" },
   veilBgImg: { image: "files/backgrounds/veil.gif", audio: "veilAudio" },
 };
@@ -4832,6 +4917,27 @@ function startAnimation06() {
     star.classList.remove("spin-slow");
     star.classList.remove("spin");
   }, 14000);
+}
+
+function startAnimation06Fast() {
+  const star = document.getElementById("starBig");
+
+  star.classList.add("spin");
+
+  setTimeout(() => {
+    star.classList.add("spinF");
+  }, 9000);
+
+  setTimeout(() => {
+    star.classList.add("scale-up-and-vanish");
+  }, 18000);
+
+  setTimeout(() => {
+    star.classList.add("cutsceneStarBig");
+    star.classList.remove("scale-up-and-vanish");
+    star.classList.remove("spinF");
+    star.classList.remove("spin");
+  }, 18500);
 }
 
 function startAnimation7() {
