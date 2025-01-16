@@ -624,6 +624,11 @@ body {
     transition: scale 0.5s ease-in;
 }
 
+.spinF {
+    transform: translate(-50%, -50%);
+    animation: spin 0.1s linear infinite;
+}
+
 .spin-slow {
     transform: translate(-50%, -50%);
     animation-duration: 4s;
@@ -1159,6 +1164,12 @@ body {
 
 .veilBgImg {
     background: url(backgrounds/veil.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.aboBgImg {
+    background: url(backgrounds/abo.gif);
     background-size: cover;
     object-fit: contain;
 }
