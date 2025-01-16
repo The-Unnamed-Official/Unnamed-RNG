@@ -606,6 +606,25 @@ document.getElementById("rollButton").addEventListener("click", function () {
       veilAudio.play();
     } else if (rarity.type === "Abomination [1 in 1,000,000/20th]") {
       aboAudio.play();
+      let warningPopup = document.getElementById("warningPopup");
+      setTimeout(function () {
+        warningPopup.style.display = "block";
+      }, 100);
+      setTimeout(function () {
+        warningPopup.style.display = "none";
+      }, 400);
+      setTimeout(function () {
+        warningPopup.style.display = "block";
+      }, 700);
+      setTimeout(function () {
+        warningPopup.style.display = "none";
+      }, 1000);
+      setTimeout(function () {
+        warningPopup.style.display = "block";
+      }, 1300);
+      setTimeout(function () {
+        warningPopup.style.display = "none";
+      }, 1600);
     } else if (rarity.type === "Celestial Chorus [1 in 202,020]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Geezer [1 in 5,000,000,000]") {
@@ -2240,9 +2259,15 @@ document.getElementById("rollButton").addEventListener("click", function () {
         enableChange();
       }, 13700); // Wait for 13.7 seconds
     } else if (rarity.type === "Abomination [1 in 1,000,000/20th]") {
-      document.body.className = "blackBg";
       disableChange();
-      startAnimation06Fast();
+      document.body.style.backgroundImage = "url('files/backgrounds/gri_cutscene.gif')";
+
+      setTimeout(() => {
+        document.body.style.backgroundImage = "url('files/backgrounds/abo_cutscene.gif')";
+        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundRepeat = "no-repeat";
+        document.body.style.backgroundPosition = "center";
+      }, 1800)
 
       const container1 = document.getElementById("squareContainer");
 
@@ -2283,28 +2308,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
       const squareInterval = setInterval(() => {
         createSquare("purple");
         createSquare("pink");
-      }, 50);
-
-      
-
-      let flashTimes = [
-        9000, 9100, 9200, 9300, 9400, 9500, 9600, 9700, 9800, 9900, 10000,
-        10100, 10200, 10300, 10400, 10500, 10600, 10700, 10800, 10900, 11000,
-        11100, 11200, 11300, 11400, 11500, 11600, 11700, 11800, 11900, 12000,
-        12100, 12200, 12300, 12400, 12500, 12600, 12700, 12800, 12900, 13000,
-        13100, 13200, 13300, 13400, 13500, 13600, 13700, 13800, 13900, 14000,
-        14100, 14200, 14300, 14400, 14500, 14600, 14700, 14800, 14900, 15000,
-        15100, 15200, 15300, 15400, 15500, 15600, 15700, 15800, 15900, 16000,
-        16100, 16200, 16300, 16400, 16500, 16600, 16700, 16800, 16900, 17000,
-        17100, 17200, 17300, 17400, 17500, 17600, 17700, 17800, 17900, 18000,
-        18100, 18200, 18300, 18400, 18500, 18600, 18700
-    ];    
-
-      flashTimes.forEach((time, index) => {
-        setTimeout(() => {
-          document.body.className = index % 2 === 0 ? "whiteFlash" : "blackBg";
-        }, time);
-      });
+      }, 50); 
 
       setTimeout(() => {
         clearInterval(squareInterval);
@@ -2312,6 +2316,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       setTimeout(() => {
         document.body.className = "whiteFlash";
+        document.body.style.backgroundImage = "";
         setTimeout(() => {
           document.body.className = rarity.class;
           addToInventory(title, rarity.class);
@@ -5484,6 +5489,7 @@ function getClassForRarity(rarity) {
       'Firecracker [1 in 2,025]': 'eventTitle',
       'Veil [1 in 50,000/5th]': 'special',
       'Experiment [1 in 100,000/10th]': 'special',
+      'Abomination [1 in 1,000,000/20th]': 'special',
       'Cursed Mirage [1 in 11,000]': 'under100k',
       'Celestial Dawn [1 in 12,000]': 'under100k',
       'Unnamed [1 in 13,889]': 'under100k',
@@ -5703,6 +5709,9 @@ document
 document
   .getElementById("deleteAllExperimentButton")
   .addEventListener("click", () => deleteAllByRarity("expBgImg"));
+document
+  .getElementById("deleteAllAbominationButton")
+  .addEventListener("click", () => deleteAllByRarity("aboBgImg"));
 document
   .getElementById("deleteAllJollyBellsButton")
   .addEventListener("click", () => deleteAllByRarity("jolbelBgImg"));
