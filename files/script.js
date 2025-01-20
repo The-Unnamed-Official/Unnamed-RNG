@@ -4364,7 +4364,7 @@ function rollRarity() {
   const iridocyclitisVeilRarity = {
     type: "Iridocyclitis Veil [1 in 5,000/50th]",
     class: "iriBgImg",
-    chance: 10.02,
+    chance: 0.02,
     titles: ["Cyclithe", "Veilborne", "Hemovail", "Iris: 902", "Abomination: 902"],
   };
 
@@ -4385,7 +4385,7 @@ function rollRarity() {
   };
 
   let randomNum = Math.random() * 180;
-  let cumulativeChance = 10.012;
+  let cumulativeChance = 0.012;
 
   if (rollCount % 50 === 0) {
     cumulativeChance += iridocyclitisVeilRarity.chance;
@@ -4600,7 +4600,7 @@ const backgroundDetails = {
   demsoBgImg: { image: "files/backgrounds/demso.png", audio: "demsoAudio" },
   fircraBgImg: { image: "files/backgrounds/fircra.gif", audio: "fircraAudio" },
   shaBgImg: { image: "files/backgrounds/sha.png", audio: "shaAudio" },
-  iriBgImg: { image: "files/backgrounds/iri.jpg", audio: "iriAudio" },
+  iriBgImg: { image: "files/backgrounds/iri.gif", audio: "iriAudio" },
   samuraiBgImg: {
     image: "files/backgrounds/samurai.png",
     audio: "samuraiAudio",

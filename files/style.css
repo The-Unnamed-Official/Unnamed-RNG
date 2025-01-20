@@ -700,7 +700,7 @@ body {
 }
 
 .iriBgImg {
-    background: url(backgrounds/iri.jpg);
+    background: url(backgrounds/iri.gif);
     background-size: cover;
     object-fit: contain;
 }
