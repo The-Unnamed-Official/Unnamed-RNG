@@ -6,6 +6,25 @@
     z-index: 99999;
 }
 
+.version {
+    color: #fff;
+    position: absolute;
+    bottom: 10px;
+    width: 100%;
+    z-index: 0;
+}
+
+.vNumber {
+    font-weight: bold;
+    font-size: large;
+    left: 50%;
+    z-index: 99999999;
+    width: 100px;
+    padding: 20px;
+    background-color: #00000069;
+    border-radius: 25px;
+}
+
 #fireworksCanvas {
     position: fixed; 
     top: 0;
@@ -676,6 +695,12 @@ body {
 
 .lubjubBgImg {
     background: url(backgrounds/lubjub.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.iriBgImg {
+    background: url(backgrounds/iri.gif);
     background-size: cover;
     object-fit: contain;
 }
