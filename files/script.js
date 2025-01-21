@@ -540,6 +540,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Geezer [1 in 5,000,000,000]" ||
     rarity.type === "Polarr [1 in 50,000,000,000]" ||
     rarity.type === "H1di [1 in 9,890,089]" ||
+    rarity.type === "Rad [1 in 6,969]" ||
     rarity.type === "Firecracker [1 in 2,025]" ||
     rarity.type === "HARV [1 in 33,333]" ||
     rarity.type === "Experiment [1 in 100,000/10th]" ||
@@ -678,6 +679,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
       polarrSuspenceAudio.play();
     } else if (rarity.type === "Greg [1 in 50,000,000]") {
       gregAudio.play();
+    } else if (rarity.type === "Rad [1 in 6,969]") {
+      hugeSuspenceAudio.play();
     } else if (rarity.type == "Silly Car :3 [1 in 1,000,000]") {
       silcarAudio.play();
       setTimeout(function () {
@@ -1501,6 +1504,135 @@ document.getElementById("rollButton").addEventListener("click", function () {
           rollCount++;
           titleCont.style.visibility = "visible";
           lubjubAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
+    } else if (rarity.type === "Rad [1 in 6,969]") {
+      document.body.className = "blackBg";
+      disableChange();
+      startAnimationA5();
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+    
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-cyan";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+    
+      const squareInterval = setInterval(() => {
+        createGravitySquare();
+      }, 100);
+    
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 9350); // Stop after 9.35 seconds
+    
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+    
+        const starClasses = [
+          "green-star",
+          "cyan-star",
+          "blue-star"
+        ];
+        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+    
+        star.innerHTML = "◌";
+        star.style.left = Math.random() * 100 + "vw";
+    
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+    
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+    
+        star.style.animationDelay = i * 0.08 + "s";
+    
+        container.appendChild(star);
+    
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          titleCont.style.visibility = "visible";
+          radAudio.play();
         }, 100);
         enableChange();
       }, 10750); // Wait for 10.75 seconds
@@ -4351,6 +4483,12 @@ function rollRarity() {
       class: "h1diBgImg",
       chance: 0.000001011113156,
       titles: ["H1di"],
+    },
+    {
+      type: "Rad [1 in 6,969]",
+      class: "radBgImg",
+      chance: 0.01434926101,
+      titles: ["Rad", "Furry", ":3"],
     }
   ];
 
@@ -4601,6 +4739,7 @@ const backgroundDetails = {
   fircraBgImg: { image: "files/backgrounds/fircra.gif", audio: "fircraAudio" },
   shaBgImg: { image: "files/backgrounds/sha.png", audio: "shaAudio" },
   iriBgImg: { image: "files/backgrounds/iri.gif", audio: "iriAudio" },
+  radBgImg: { image: "files/backgrounds/rad.png", audio: "radAudio" },
   samuraiBgImg: {
     image: "files/backgrounds/samurai.png",
     audio: "samuraiAudio",
@@ -5642,6 +5781,7 @@ function getClassForRarity(rarity) {
       'Found Soul [1 in 5,000]': 'under10k',
       'Haunted Reality [1 in 5,500]': 'under10k',
       'LubbyJubby\'s Cherry Grove [1 in 5,666]': 'under10k',
+      'Rad [1 in 6,969]': 'under10k',
       'Ether Shift [1 in 5,540]': 'under10k',
       'Ethereal Pulse [1 in 6,000]': 'under10k',
       'Hellish Fire [1 in 6,666]': 'under10k',
@@ -5914,6 +6054,9 @@ document
 document
     .getElementById("deleteAllIridocyclitisVeilButton")
     .addEventListener("click", () => deleteAllByRarity("iriBgImg"));
+document
+    .getElementById("deleteAllRadButton")
+    .addEventListener("click", () => deleteAllByRarity("radBgImg"));
 
 const canvas = document.getElementById('fireworksCanvas');
 const ctx = canvas.getContext('2d');

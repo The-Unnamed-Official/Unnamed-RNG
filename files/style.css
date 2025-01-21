@@ -1211,6 +1211,12 @@ body {
     object-fit: contain;
 }
 
+.radBgImg {
+    background: url(backgrounds/rad.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
