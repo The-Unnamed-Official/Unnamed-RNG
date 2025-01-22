@@ -11,10 +11,8 @@
 <body>
 
     <div class="version">
-        <a class="vNumber">Version: 0.9.3</a>
+        <a class="vNumber">Version: 0.9.4</a>
     </div>
-
-    <canvas id="fireworksCanvas"></canvas>
     
     <div id="menuScreen">
         <button id="startButton"><i class="fa-solid fa-play"></i></button>
@@ -27,8 +25,11 @@
         <h3>Settings</h3>
     
         <div class="setting-item">
-            <label for="audioSlider">Audio Volume:</label>
-            <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
+            <label class="aSlid" for="audioSlider">Audio Volume:</label>
+            <div class="slider-container">
+                <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
+                <button id="muteButton" class="settingsBtns">Mute</button>
+            </div>
         </div>
     
         <div class="setting-item">
@@ -169,6 +170,7 @@
                 <button id="deleteAllEtherShiftButton" class="under10k">Delete All Ether Shift</button>
                 <button id="deleteAllEtherealPulseButton" class="under10k">Delete All Ethereal Pulse</button>
                 <button id="deleteAllHellishFireButton" class="under10k">Delete All Hellish Fire</button>
+                <button id="deleteAllRadButton" class="under10k">Delete All Rad</button>
                 <button id="deleteAllEnigmaticDreamButton" class="under10k">Delete All Enigmatic Dream</button>
                 <button id="deleteAllGrimDestinyButton" class="under10k">Delete All Grim Destiny</button>
                 <button id="deleteAllDemonSoulButton" class="under10k">Delete All Demon Soul</button>
@@ -323,6 +325,7 @@
     <audio id="fearAudio" src="files/sounds_and_music/fear.mp3" loop></audio>
     <audio id="darAudio" src="files/sounds_and_music/dar.mp3" loop></audio>
     <audio id="hauAudio" src="files/sounds_and_music/hau.mp3" loop></audio>
+    <audio id="radAudio" src="files/sounds_and_music/rad.mp3" loop></audio>
     <audio id="lostsAudio" src="files/sounds_and_music/losts.mp3" loop></audio>
     <audio id="foundsAudio" src="files/sounds_and_music/founds.mp3" loop></audio>
     <audio id="hauntAudio" src="files/sounds_and_music/haunt.mp3" loop></audio>
@@ -356,8 +359,8 @@
     <audio id="expAudio" src="files/sounds_and_music/exp.mp3" loop></audio>
     <audio id="veilAudio" src="files/sounds_and_music/veil.mp3" loop></audio>
     <audio id="h1diAudio" src="files/sounds_and_music/h1di.mp3" loop></audio>
-    <!-- <audio id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio> -->
-    <audio id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio>
+    <audio id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio>
+    <!-- <audio id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio> -->
 
     
     <script src="files/script.js"></script>

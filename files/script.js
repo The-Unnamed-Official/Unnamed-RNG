@@ -540,7 +540,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Geezer [1 in 5,000,000,000]" ||
     rarity.type === "Polarr [1 in 50,000,000,000]" ||
     rarity.type === "H1di [1 in 9,890,089]" ||
-    rarity.type === "Firecracker [1 in 2,025]" ||
+    rarity.type === "Rad [1 in 6,969]" ||
     rarity.type === "HARV [1 in 33,333]" ||
     rarity.type === "Experiment [1 in 100,000/10th]" ||
     rarity.type === "Veil [1 in 50,000/5th]" ||
@@ -574,8 +574,6 @@ document.getElementById("rollButton").addEventListener("click", function () {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Phantom Stride [1 in 990]") {
       polarrSuspenceAudio.play();
-    } else if (rarity.type === "Firecracker [1 in 2,025]") {
-      fircraAudio.play();
     } else if (rarity.type === "Unnamed [1 in 13,889]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Fate's Requiem [1 in 15,000]") {
@@ -678,6 +676,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
       polarrSuspenceAudio.play();
     } else if (rarity.type === "Greg [1 in 50,000,000]") {
       gregAudio.play();
+    } else if (rarity.type === "Rad [1 in 6,969]") {
+      hugeSuspenceAudio.play();
     } else if (rarity.type == "Silly Car :3 [1 in 1,000,000]") {
       silcarAudio.play();
       setTimeout(function () {
@@ -1501,6 +1501,135 @@ document.getElementById("rollButton").addEventListener("click", function () {
           rollCount++;
           titleCont.style.visibility = "visible";
           lubjubAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
+    } else if (rarity.type === "Rad [1 in 6,969]") {
+      document.body.className = "blackBg";
+      disableChange();
+      startAnimationA5();
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+    
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-cyan";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+    
+      const squareInterval = setInterval(() => {
+        createGravitySquare();
+      }, 100);
+    
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 9350); // Stop after 9.35 seconds
+    
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+    
+        const starClasses = [
+          "green-star",
+          "cyan-star",
+          "blue-star"
+        ];
+        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+    
+        star.innerHTML = "◌";
+        star.style.left = Math.random() * 100 + "vw";
+    
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+    
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+    
+        star.style.animationDelay = i * 0.08 + "s";
+    
+        container.appendChild(star);
+    
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          titleCont.style.visibility = "visible";
+          radAudio.play();
         }, 100);
         enableChange();
       }, 10750); // Wait for 10.75 seconds
@@ -3584,73 +3713,6 @@ document.getElementById("rollButton").addEventListener("click", function () {
         }, 100);
         enableChange();
       }, 9000); // Wait for 9 seconds
-    } else if (rarity.type === "Firecracker [1 in 2,025]") {
-      document.body.className = "blackBg";
-      disableChange();
-    
-      const fireworkInterval = setInterval(launchFirework, 100);
-  
-      setTimeout(() => {
-          const centerX = canvas.width / 2;
-          const centerY = canvas.height / 2;
-
-          class BigFirework extends Firework {
-              constructor(x, y, targetY, color) {
-                  super(x, y, targetY, color);
-                  this.size = 10;
-              }
-  
-              draw() {
-                  if (!this.exploded) {
-                      ctx.beginPath();
-                      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 6);
-                      ctx.fillStyle = this.color;
-                      ctx.fill();
-                  } else {
-                      this.particles.forEach(p => p.draw());
-                  }
-              }
-  
-              createExplosion() {
-                  for (let i = 0; i < 3000; i++) {
-                      const angle = Math.random() * Math.PI * 2;
-                      const speed = Math.random() * 6 + 4;
-                      const velocityX = Math.cos(angle) * speed;
-                      const velocityY = Math.sin(angle) * speed;
-                      const lifetime = Math.random() * 60 + 60;
-                      this.particles.push(
-                          new Particle(this.x, this.y, this.color, velocityX, velocityY, lifetime)
-                      );
-                  }
-              }
-  
-              update() {
-                  super.update();
-                  if (!this.exploded && this.size < 20) {
-                      this.size += 0.5;
-                  }
-              }
-          }
-  
-          const bigFirework = new BigFirework(centerX, canvas.height, centerY, "#FFECB9");
-          fireworks.push(bigFirework);
-          clearInterval(fireworkInterval);
-      }, 8500); // Trigger at 8 seconds
-  
-      setTimeout(() => {
-          document.body.className = "whiteFlash";
-          setTimeout(() => {
-              document.body.className = rarity.class;
-              addToInventory(title, rarity.class);
-              updateRollingHistory(title, rarity.type);
-              displayResult(title, rarity.type);
-              changeBackground(rarity.class);
-              rollButton.disabled = false;
-              rollCount++;
-              titleCont.style.visibility = "visible";
-          }, 100);
-          enableChange();
-      }, 9500); // Wait for 9.5 seconds
     } else if (rarity.type === "Polarr [1 in 50,000,000,000]") {
       document.body.className = "blackBg";
       disableChange();
@@ -4245,12 +4307,6 @@ function rollRarity() {
       titles: ["Angelic", "Divine", "Holy", "Winged", "Heavenly", "Celestial", "Radiant", "Ascended", "Graceful", "Blessed",],
     },
     {
-      type: "Firecracker [1 in 2,025]",
-      class: "fircraBgImg",
-      chance: 0.049382716,
-      titles: ["New Year", "2025"],
-    },
-    {
       type: "Ether Shift [1 in 5,540]",
       class: "ethershiftBgImg",
       chance: 0.0180505415,
@@ -4351,6 +4407,12 @@ function rollRarity() {
       class: "h1diBgImg",
       chance: 0.000001011113156,
       titles: ["H1di"],
+    },
+    {
+      type: "Rad [1 in 6,969]",
+      class: "radBgImg",
+      chance: 0.01434926101,
+      titles: ["Rad", "Furry", ":3"],
     }
   ];
 
@@ -4466,13 +4528,6 @@ function deleteAllFromInventory() {
   inventory = [];
   localStorage.setItem("inventory", JSON.stringify(inventory));
   renderInventory();
-  load();
-}
-
-function deleteFromInventory(index) {
-  inventory.splice(index, 1);
-  renderInventory();
-  localStorage.setItem("inventory", JSON.stringify(inventory));
   load();
 }
 
@@ -4601,6 +4656,7 @@ const backgroundDetails = {
   fircraBgImg: { image: "files/backgrounds/fircra.gif", audio: "fircraAudio" },
   shaBgImg: { image: "files/backgrounds/sha.png", audio: "shaAudio" },
   iriBgImg: { image: "files/backgrounds/iri.gif", audio: "iriAudio" },
+  radBgImg: { image: "files/backgrounds/rad.png", audio: "radAudio" },
   samuraiBgImg: {
     image: "files/backgrounds/samurai.png",
     audio: "samuraiAudio",
@@ -4737,26 +4793,59 @@ function renderInventory() {
   const paginatedItems = inventory.slice(start, end);
 
   paginatedItems.forEach((item, index) => {
+    const absoluteIndex = start + index; // Get the absolute index of the item
+
     const listItem = document.createElement("li");
     listItem.textContent = item.title;
     listItem.className = item.rarityClass;
 
-    listItem.addEventListener("click", () => {
-      equipItem(item);
-    });
+    // Dropdown menu
+    const burgerBar = document.createElement("div");
+    burgerBar.className = "burger-bar";
+    burgerBar.innerHTML = "☰";
+
+    const dropdownMenu = document.createElement("div");
+    dropdownMenu.className = "dropdown-menu";
+
+    const equipButton = document.createElement("button");
+    equipButton.textContent = "Equip";
+    equipButton.addEventListener("click", () => equipItem(item));
+
+    const cutsceneButton = document.createElement("button");
+    cutsceneButton.textContent = "Cutscene";
+    cutsceneButton.addEventListener("click", () => triggerCutscene(item.title, item.rarity));
 
     const deleteButton = document.createElement("button");
-    deleteButton.className = "fa-solid fa-trash";
+    deleteButton.className = "Delete";
     deleteButton.addEventListener("click", (event) => {
       event.stopPropagation();
-      deleteFromInventory(index);
+      deleteFromInventory(absoluteIndex);
     });
 
-    listItem.appendChild(deleteButton);
+    dropdownMenu.appendChild(equipButton);
+    dropdownMenu.appendChild(cutsceneButton);
+    dropdownMenu.appendChild(deleteButton);
+    burgerBar.appendChild(dropdownMenu);
+    listItem.appendChild(burgerBar);
+
+    burgerBar.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const isVisible = dropdownMenu.style.display === "block";
+      document.querySelectorAll(".dropdown-menu").forEach((menu) => (menu.style.display = "none"));
+      dropdownMenu.style.display = isVisible ? "none" : "block";
+    });
+
     inventoryList.appendChild(listItem);
   });
 
   updatePagination();
+}
+
+function deleteFromInventory(absoluteIndex) {
+  inventory.splice(absoluteIndex, 1);
+  renderInventory();
+  localStorage.setItem("inventory", JSON.stringify(inventory));
+  load();
 }
 
 function equipItem(item) {
@@ -5379,6 +5468,8 @@ scheduleButtonAppearance();
 
 let autoRollInterval = null;
 let audioVolume = 1;
+let isMuted = false;
+let previousVolume = audioVolume;
 
 const settingsButton = document.getElementById("settingsButton");
 const settingsMenu = document.getElementById("settingsMenu");
@@ -5396,23 +5487,62 @@ closeSettings.addEventListener("click", () => {
   settingsMenu.style.display = "none";
 });
 
+const muteButton = document.getElementById("muteButton");
+
 const savedVolume = localStorage.getItem("audioVolume");
 if (savedVolume !== null) {
-  audioSlider.value = savedVolume;
-  const audioElements = document.querySelectorAll("audio");
-  audioElements.forEach((audio) => (audio.volume = savedVolume));
+  audioVolume = parseFloat(savedVolume);
+  previousVolume = audioVolume;
+  audioSlider.value = audioVolume;
+  updateAudioElements(audioVolume);
 } else {
-  const audioElements = document.querySelectorAll("audio");
-  audioElements.forEach((audio) => (audio.volume = 1));
+  updateAudioElements(audioVolume);
 }
 
 audioSlider.addEventListener("input", () => {
-  const audioVolume = audioSlider.value;
+  audioVolume = parseFloat(audioSlider.value);
+  if (audioVolume === 0) {
+    isMuted = true;
+    setThumbColor(true);
+  } else {
+    isMuted = false;
+    setThumbColor(false);
+    previousVolume = audioVolume;
+  }
   console.log(`Audio volume set to: ${audioVolume}`);
   localStorage.setItem("audioVolume", audioVolume);
-  const audioElements = document.querySelectorAll("audio");
-  audioElements.forEach((audio) => (audio.volume = audioVolume));
+  updateAudioElements(audioVolume);
 });
+
+muteButton.addEventListener("click", () => {
+  isMuted = !isMuted;
+
+  if (isMuted) {
+    previousVolume = audioVolume; // Save current volume before muting
+    audioVolume = 0;
+  } else {
+    audioVolume = previousVolume; // Restore the saved volume
+  }
+
+  audioSlider.value = audioVolume;
+  localStorage.setItem("audioVolume", audioVolume);
+  console.log(`Mute toggled. Audio volume is now: ${audioVolume}`);
+  updateAudioElements(audioVolume);
+  setThumbColor(isMuted);
+});
+
+function updateAudioElements(volume) {
+  const audioElements = document.querySelectorAll("audio");
+  audioElements.forEach((audio) => (audio.volume = volume));
+}
+
+function setThumbColor(muted) {
+  if (muted) {
+    audioSlider.classList.add("muted");
+  } else {
+    audioSlider.classList.remove("muted");
+  }
+}
 
 resetDataButton.addEventListener("click", () => {
   if (confirm("Are you sure you want to reset all data?")) {
@@ -5642,6 +5772,7 @@ function getClassForRarity(rarity) {
       'Found Soul [1 in 5,000]': 'under10k',
       'Haunted Reality [1 in 5,500]': 'under10k',
       'LubbyJubby\'s Cherry Grove [1 in 5,666]': 'under10k',
+      'Rad [1 in 6,969]': 'under10k',
       'Ether Shift [1 in 5,540]': 'under10k',
       'Ethereal Pulse [1 in 6,000]': 'under10k',
       'Hellish Fire [1 in 6,666]': 'under10k',
@@ -5914,113 +6045,9 @@ document
 document
     .getElementById("deleteAllIridocyclitisVeilButton")
     .addEventListener("click", () => deleteAllByRarity("iriBgImg"));
-
-const canvas = document.getElementById('fireworksCanvas');
-const ctx = canvas.getContext('2d');
-
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
-class Particle {
-    constructor(x, y, color, velocityX, velocityY, lifetime) {
-        this.x = x;
-        this.y = y;
-        this.color = color;
-        this.velocityX = velocityX;
-        this.velocityY = velocityY;
-        this.lifetime = lifetime;
-    }
-
-    update() {
-        this.x += this.velocityX;
-        this.y += this.velocityY;
-        this.velocityY += 0.025;
-        this.lifetime -= 1;
-    }
-
-    draw() {
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
-        ctx.fillStyle = this.color;
-        ctx.fill();
-    }
-}
-
-class Firework {
-    constructor(x, y, targetY, color) {
-        this.x = x;
-        this.y = y;
-        this.targetY = targetY;
-        this.color = color;
-        this.exploded = false;
-        this.particles = [];
-    }
-
-    update() {
-        if (!this.exploded) {
-            this.y -= 6;
-            if (this.y <= this.targetY) {
-                this.exploded = true;
-                this.createExplosion();
-            }
-        } else {
-            this.particles.forEach(p => p.update());
-            this.particles = this.particles.filter(p => p.lifetime > 0);
-        }
-    }
-
-    draw() {
-        if (!this.exploded) {
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
-            ctx.fillStyle = this.color;
-            ctx.fill();
-        } else {
-            this.particles.forEach(p => p.draw());
-        }
-    }
-
-    createExplosion() {
-        for (let i = 0; i < 100; i++) {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 3 + 2;
-            const velocityX = Math.cos(angle) * speed;
-            const velocityY = Math.sin(angle) * speed;
-            const lifetime = Math.random() * 33 + 33;
-            this.particles.push(new Particle(this.x, this.y, this.color, velocityX, velocityY, lifetime));
-        }
-    }
-}
-
-const fireworks = [];
-const colors = ['#FF5733', '#33FF57', '#3357FF', '#FFFF33', '#FF33FF', '#33FFFF'];
-
-function launchFirework() {
-    const x = Math.random() * canvas.width;
-    const targetY = Math.random() * canvas.height / 2;
-    const color = colors[Math.floor(Math.random() * colors.length)];
-    fireworks.push(new Firework(x, canvas.height, targetY, color));
-}
-
-function animate() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    fireworks.forEach((firework, index) => {
-        firework.update();
-        firework.draw();
-        if (firework.exploded && firework.particles.length === 0) {
-            fireworks.splice(index, 1);
-        }
-    });
-    requestAnimationFrame(animate);
-}
-
-setInterval(launchFirework, 3333);
-
-animate();
+document
+    .getElementById("deleteAllRadButton")
+    .addEventListener("click", () => deleteAllByRarity("radBgImg"));
 
 
 function createParticle(minRadius, maxRadius, minSize, maxSize, speed, rotationRange) {
