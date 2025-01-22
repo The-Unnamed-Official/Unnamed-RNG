@@ -27,8 +27,11 @@
         <h3>Settings</h3>
     
         <div class="setting-item">
-            <label for="audioSlider">Audio Volume:</label>
-            <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
+            <label class="aSlid" for="audioSlider">Audio Volume:</label>
+            <div class="slider-container">
+                <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
+                <button id="muteButton" class="settingsBtns">Mute</button>
+            </div>
         </div>
     
         <div class="setting-item">
@@ -358,8 +361,8 @@
     <audio id="expAudio" src="files/sounds_and_music/exp.mp3" loop></audio>
     <audio id="veilAudio" src="files/sounds_and_music/veil.mp3" loop></audio>
     <audio id="h1diAudio" src="files/sounds_and_music/h1di.mp3" loop></audio>
-    <!-- <audio id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio> -->
-    <audio id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio>
+    <audio id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio>
+    <!-- <audio id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio> -->
 
     
     <script src="files/script.js"></script>

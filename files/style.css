@@ -283,17 +283,18 @@ body {
     -webkit-appearance: none;
     appearance: none;
     background: linear-gradient(to right, #60007e 0%, #ffa500 100%);
-    height: 5px;
+    height: 10px;
     border-radius: 10px;
     outline: none;
     cursor: pointer;
+    flex: 1;
 }
 
 #audioSlider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 15px;
-    height: 15px;
+    width: 20px;
+    height: 20px;
     background: var(--thumb-color, #ffa500); /* Default orange color */
     border-radius: 50%;
     cursor: pointer;
@@ -305,6 +306,14 @@ body {
     transform: scale(1.3);
 }
 
+#audioSlider.muted::-webkit-slider-thumb {
+    background: rgb(96, 0, 126);
+}
+
+#audioSlider.muted::-moz-range-thumb {
+    background: rgb(96, 0, 126); /* Purple when muted */
+}
+
 #audioSlider::-moz-range-thumb {
     width: 15px;
     height: 15px;
@@ -312,6 +321,13 @@ body {
     border-radius: 50%;
     cursor: pointer;
     transition: background-color 0.2s ease;
+}
+
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
 }
 
 #rollButton.disabled {
@@ -332,6 +348,10 @@ body {
     transition: all 0.3s ease-in-out;
 }
 
+.aSlid {
+    margin-top: 25px;
+}
+
 #resetDataButton {
     background-color: #ff4d4d;
     color: white;
@@ -339,6 +359,17 @@ body {
 
 #resetDataButton:hover {
     background-color: #ff1a1a;
+    transform: scale(1.1);
+}
+
+#muteButton {
+    background-color: #bd2ae9;
+    color: white;
+    flex-shrink: 0;
+}
+
+#muteButton:hover {
+    background-color: #9312c2;
     transform: scale(1.1);
 }
 
@@ -1404,17 +1435,61 @@ body.griCutsceneBgImg {
     padding: 20px;
 }
 
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: #333;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    z-index: 10;
+}
+
+.dropdown-menu button {
+    background: none;
+    border: none;
+    color: white;
+    padding: 5px;
+    text-align: left;
+    cursor: pointer;
+    width: 100%;
+    font-size: 14px;
+}
+
+.dropdown-menu button:hover {
+    background-color: #555;
+}
+
+.burger-bar {
+    display: inline-block;
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 16px;
+    z-index: 11;
+    position: relative;
+}
+
+.burger-bar:hover {
+    color: #aaa;
+}
+
 #inventoryList li {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 10px;
-    padding-bottom: 200px;
     padding: 10px;
     border-radius: 5px;
-    color: #ffffff00;
-    cursor: pointer;
-    transition: padding 0.25s;
+    background-color: #444;
+    color: white;
+    position: relative;
+    transition: background-color 0.3s ease;
+}
+
+#inventoryList li:hover {
+    background-color: #555;
 }
 
 #inventoryList li:defined {
