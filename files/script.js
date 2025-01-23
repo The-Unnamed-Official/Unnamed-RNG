@@ -4811,19 +4811,14 @@ function renderInventory() {
     equipButton.textContent = "Equip";
     equipButton.addEventListener("click", () => equipItem(item));
 
-    const cutsceneButton = document.createElement("button");
-    cutsceneButton.textContent = "Cutscene";
-    cutsceneButton.addEventListener("click", () => triggerCutscene(item.title, item.rarity));
-
     const deleteButton = document.createElement("button");
-    deleteButton.className = "Delete";
+    deleteButton.textContent = "Delete";
     deleteButton.addEventListener("click", (event) => {
       event.stopPropagation();
       deleteFromInventory(absoluteIndex);
     });
 
     dropdownMenu.appendChild(equipButton);
-    dropdownMenu.appendChild(cutsceneButton);
     dropdownMenu.appendChild(deleteButton);
     burgerBar.appendChild(dropdownMenu);
     listItem.appendChild(burgerBar);
