@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Unnamed's RNG</title>
     <script src="https://kit.fontawesome.com/fe85db6219.js" crossorigin="anonymous"></script>
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="files/style.css">
 </head>
@@ -21,8 +20,14 @@
     <div id="loadingScreen">
         <div>
             <div class="loading-animation"></div>
-            <p>Loading...</p>
+            <p class="loadTxt">Loading assets...</p>
         </div>
+  </div>
+
+  <div id="overlay">
+    <p>The game will reset in</p>
+    <div id="countdown">10</div>
+    <button id="imHereButton">I'm here</button>
   </div>
 
     <div id="settingsMenu" class="settings-menu" style="display: none;">
@@ -84,7 +89,7 @@
         
         <div class="container1">
             <div class="rollsCount">
-                <h3 class="count">Rolls: <a class="totalCount" id="rollCountDisplay">0</a></h3>
+                <h3 class="count">Rolls: <a class="totalCount" id="rollCountDisplay"></a></h3>
             </div>
     
             <button id="settingsButton" class="orange-button">Settings</button>
@@ -125,6 +130,8 @@
                 <h2><i class="fa-solid fa-box-archive"></i> Inventory</h2>
 
                 <button class="deleteAll" id="deleteAllButton">Delete All</button>
+
+                <button id="deleteAllUnder100Button">Delete All Under 100</button>
                 <button id="deleteAllCommonButton" class="under100">Delete All Common</button>
                 <button id="deleteAllRareButton" class="under100">Delete All Rare</button>
                 <button id="deleteAllEpicButton" class="under100">Delete All Epic</button>
@@ -136,6 +143,8 @@
                 <button id="deleteAllFlickerButton" class="under100">Delete All Flicker</button>
                 <button id="deleteAllBelieverButton" class="under100">Delete All Believer</button>
                 <button id="deleteAllPlanetBreakerButton" class="under100">Delete All Planet Breaker</button>
+
+                <button id="deleteAllUnder1kButton">Delete All Under 1k</button>
                 <button id="deleteAllUnstoppableButton" class="under1k">Delete All Unstoppable</button>
                 <button id="deleteAllGargantuaButton" class="under1k">Delete All Gargantua</button>
                 <button id="deleteAllWanderingSpiritButton" class="under1k">Delete All Wandering Spirit</button>
@@ -153,6 +162,8 @@
                 <button id="deleteAllSpectralGlareButton" class="under1k">Delete All Spectral Glare</button>
                 <button id="deleteAllPhantomStrideButton" class="under1k">Delete All Phantom Stride</button>
                 <button id="deleteAllContortionsButton" class="under1k">Delete All Contortions</button>
+
+                <button id="deleteAllUnder10kButton">Delete All Under 10k</button>
                 <button id="deleteAllShadowVeilButton" class="under10k">Delete All Shadow Veil</button>
                 <button id="deleteAllFrightButton" class="under10k">Delete All Fright</button>
                 <button id="deleteAllNightfallButton" class="under10k">Delete All Nightfall</button>
@@ -178,7 +189,10 @@
                 <button id="deleteAllEnigmaticDreamButton" class="under10k">Delete All Enigmatic Dream</button>
                 <button id="deleteAllGrimDestinyButton" class="under10k">Delete All Grim Destiny</button>
                 <button id="deleteAllDemonSoulButton" class="under10k">Delete All Demon Soul</button>
+
                 <button id="deleteAllPumpkinButton" class="eventTitleHalloween">Delete All Pumpkin</button>
+
+                <button id="deleteAllUnderChristmasEventTitlesButton">Delete All Under Christmas Event Titles</button>
                 <button id="deleteAllCrimsonStockingsButton" class="buttonDiv">
                     <p class="eventTitleXmas">Delete All Crimson Stockings</p>
                     </button>
@@ -209,9 +223,12 @@
                 <button id="deleteAllNorthStarButton" class="buttonDiv">
                     <p class="eventTitleXmas">Delete All North Star</p>
                     </button>
+
                 <button id="deleteAllFircraButton" class="buttonDiv">
                     <p class="eventTitle">Delete All Firecracker</p>
                     </button>
+
+                    <button id="deleteAllSpecialButton">Delete All Special</button>
                 <button id="deleteAllVeilButton" class="buttonDiv">
                     <p class="special">Delete All Veil</p>
                 </button>
@@ -224,6 +241,8 @@
                 <button id="deleteAllIridocyclitisVeilButton" class="buttonDiv">
                     <p class="special">Delete All Iridocyclitis Veil</p>
                 </button>
+
+                <button id="deleteAllUnder100kButton">Delete All Under 100k</button>
                 <button id="deleteAllCursedMirageButton" class="buttonDiv">
                     <p class="under100k">Delete All Cursed Mirage</p>
                 </button>
@@ -251,15 +270,19 @@
                 <button id="deleteAllArcanePulseButton" class="buttonDiv">
                     <p class="under100k">Delete All Arcane Pulse</p>
                 </button>
+
+                <button id="deleteAllUnder1mButton">Delete All Under 1m</button>
                 <button id="deleteAllImpeachedButton" class="buttonDiv">
                     <p class="under1m">Delete All Impeached</p>
                 </button>
                 <button id="deleteAllCelestialChorusButton" class="buttonDiv">
                     <p class="under1m">Delete All Celestial Chorus</p>
                 </button>
+
                 <button id="deleteAllSillyCarButton" class="buttonDiv">
                     <p class="under10ms">Delete All Silly Car :3</p>
                 </button>
+
                 <button id="deleteAllH1diButton" class="buttonDiv">
                     <p class="under10m">Delete All H1di</p>
                 </button>
@@ -279,7 +302,7 @@
         <button class="fullscreen-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
     </div>
 
-    <audio id="click" src="files/sounds_and_music/click.wav"></audio>
+    <audio id="click" src="files/sounds_and_music/click.mp3"></audio>
     <audio id="suspenseAudio" src="files/sounds_and_music/suspence.mp3"></audio>
     <audio id="geezerSuspenceAudio" src="files/sounds_and_music/geezer_suspence.mp3"></audio>
     <audio id="polarrSuspenceAudio" src="files/sounds_and_music/polarr_suspence.mp3"></audio>

@@ -5,27 +5,82 @@ let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 
 document.addEventListener("DOMContentLoaded", () => {
   const rollButton = document.getElementById("rollButton");
-
   const startButton = document.getElementById("startButton");
   const loadingScreen = document.getElementById("loadingScreen");
   const menuScreen = document.getElementById("menuScreen");
   const mainAudio = document.getElementById("mainAudio");
+  rollButton.disabled = true;
 
   startButton.addEventListener("click", () => {
     menuScreen.style.display = "none";
     loadingScreen.style.display = "flex";
     load();
     setTimeout(() => {
+      load();
+      loadContent();
+    }, 1000);
+    setTimeout(() => {
       rollButton.disabled = false;
       loadingScreen.style.display = "none";
       mainAudio.play().catch((error) => {
         console.log("Autoplay blocked. User interaction required:", error);
       });
-    }, 5000);
+    }, 2000);
   });
 });
 
-load();
+let timeoutId;
+let countdownInterval;
+let tabbedOutTime = null;
+
+function showCountdown() {
+  const overlay = document.getElementById("overlay");
+  const countdownElement = document.getElementById("countdown");
+  const imHereButton = document.getElementById("imHereButton");
+  let countdown = 10;
+
+  overlay.style.display = "flex";
+
+  countdownInterval = setInterval(() => {
+    countdownElement.textContent = countdown;
+    countdown--;
+
+    if (countdown < 0) {
+      clearInterval(countdownInterval);
+      location.reload();
+    }
+  }, 1000);
+
+  imHereButton.onclick = () => {
+    clearTimeout(timeoutId);
+    clearInterval(countdownInterval);
+    overlay.style.display = "none";
+    tabbedOutTime = null;
+  };
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    tabbedOutTime = Date.now();
+
+    timeoutId = setTimeout(() => {
+      if (document.hidden) {
+        showCountdown();
+      }
+    }, 60000);
+  } else {
+  }
+});
+
+function loadContent() {
+  const storedInventory = localStorage.getItem("inventory");
+    if (storedInventory) {
+      inventory = JSON.parse(storedInventory);
+    }
+    renderInventory();
+    musicLoad();
+    updateRollCount();
+}
 
 function load() {
   document.addEventListener("DOMContentLoaded", (event) => {
@@ -33,10 +88,10 @@ function load() {
     if (storedInventory) {
       inventory = JSON.parse(storedInventory);
     }
-    rollButton.disabled = true;
     renderInventory();
     musicLoad();
     updateRollCount();
+    formatRollCount();
   });
 }
 
@@ -3820,7 +3875,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         }, 100);
         enableChange();
       }, 4400); // Wait for 4.4 seconds
-    } else if (rarity.type === "Unstoppable [1 in 112]") {
+    } else if (rarity.type === "Wandering Spirit [1 in 150]") {
       document.body.className = "blackBg";
       disableChange();
       startAnimation8();
@@ -3828,8 +3883,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "fast-blue-star";
-        star.innerHTML = "▦";
+        star.className = "white-star";
+        star.innerHTML = "■";
 
         star.style.left = Math.random() * 100 + "vw";
 
@@ -3857,7 +3912,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           titleCont.style.visibility = "visible";
-          unstoppableAudio.play();
+          wanspiAudio.play();
         }, 100);
         enableChange();
       }, 4400); // Wait for 4.4 seconds
@@ -4107,59 +4162,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         }, 100);
         enableChange();
       }, 4400); // Wait for 4.4 seconds
-    } else if (
-      rarity.type === "Wandering Spirit [1 in 150]"
-    ) {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation8();
-      const container = document.getElementById("starContainer");
 
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "▫️";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-
-        if (rarity.type === "Spectral Whisper [1 in 288]") {
-          spectralAudio.play();
-        }
-        if (rarity.type === "Starfall [1 in 600]") {
-          starfallAudio.play();
-        }
-        if (rarity.type === "Pumpkin [1 in 999]") {
-          pumAudio.play();
-        }
-
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
     } else if (
       rarity.type === "Shadow Veil [1 in 1,000]" ||
       rarity.type === "Nightfall [1 in 1,200]" ||
@@ -6113,6 +6116,12 @@ function getClassForRarity(rarity) {
 
   return rarityClasses[rarity] || null;
 }
+
+
+document
+  .getElementById("deleteAllUnder100Button")
+  .addEventListener("click", renderInventory(), () => deleteAllByRarity("commonBgImg", "rareBgImg", "epicBgImg", "legendaryBgImg",
+    "impossibleBgImg", "poweredBgImg", "plabreBgImg", "solarpowerBgImg", "", "", "", "", ""))
 
 document
   .getElementById("deleteAllCommonButton")
