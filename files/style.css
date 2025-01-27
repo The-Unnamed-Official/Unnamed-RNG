@@ -1679,6 +1679,14 @@ body.griCutsceneBgImg {
     animation: levitate 5s ease-out forwards, fade 5s ease-out forwards;
 }
 
+.fast-purple-star {
+    position: absolute;
+    font-size: 33px;
+    color: blueviolet;
+    opacity: 1;
+    animation: levitate 2s ease-out forwards, fade 2s ease-out forwards;
+}
+
 .pink-star {
     position: absolute;
     font-size: 60px;
@@ -1711,12 +1719,36 @@ body.griCutsceneBgImg {
     animation: levitate 9s ease-out forwards, fade 9s ease-out forwards;
 }
 
+.fast-blue-star {
+    position: absolute;
+    font-size: 40px;
+    color: blue;
+    opacity: 1;
+    animation: levitate 2s ease-out forwards, fade 2s ease-out forwards;
+}
+
 .cyan-star {
     position: absolute;
     font-size: 40px;
     color: cyan;
     opacity: 1;
     animation: levitate 9s ease-out forwards, fade 9s ease-out forwards;
+}
+
+.brown-star {
+    position: absolute;
+    font-size: 50px;
+    color: #6e3c25;
+    opacity: 1;
+    animation: levitate 2s ease-out forwards, fade 3s ease-out forwards;
+}
+
+.fast-cyan-star {
+    position: absolute;
+    font-size: 40px;
+    color: cyan;
+    opacity: 1;
+    animation: levitate 2s ease-out forwards, fade 3s ease-out forwards;
 }
 
 .yellow-star {
