@@ -4,25 +4,24 @@ const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 
 document.addEventListener("DOMContentLoaded", () => {
+  const rollButton = document.getElementById("rollButton");
+
   const startButton = document.getElementById("startButton");
   const loadingScreen = document.getElementById("loadingScreen");
   const menuScreen = document.getElementById("menuScreen");
   const mainAudio = document.getElementById("mainAudio");
-  const rollButton = document.getElementById("rollButton");
 
-  rollButton.disabled = true;
-
-  startButton.addEventListener("click", function () {
+  startButton.addEventListener("click", () => {
+    menuScreen.style.display = "none";
     loadingScreen.style.display = "flex";
     load();
-    loadingScreen.style.display = "none";
-    menuScreen.style.display = "none";   
-
-    mainAudio.play().catch((error) => {
-      console.log("Autoplay blocked. User interaction required:", error);
-    });
-
-    rollButton.disabled = false;
+    setTimeout(() => {
+      rollButton.disabled = false;
+      loadingScreen.style.display = "none";
+      mainAudio.play().catch((error) => {
+        console.log("Autoplay blocked. User interaction required:", error);
+      });
+    }, 5000);
   });
 });
 
@@ -34,6 +33,7 @@ function load() {
     if (storedInventory) {
       inventory = JSON.parse(storedInventory);
     }
+    rollButton.disabled = true;
     renderInventory();
     musicLoad();
     updateRollCount();
