@@ -1,9 +1,8 @@
-const { render } = require("ejs");
-
 let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
 let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
+let cooldownTime = 690;
 
 document.addEventListener("DOMContentLoaded", () => {
   const rollButton = document.getElementById("rollButton");
@@ -363,8 +362,6 @@ function updateRollCount(increment = 1) {
   display.textContent = formatRollCount(rollCount);
 }
 
-let cooldownTime = 690;
-
 document.getElementById("rollButton").addEventListener("click", function () {
   let rollButton = document.getElementById("rollButton");
 
@@ -545,68 +542,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
   if (
     rarity.type === "Cursed Mirage [1 in 11,111]" ||
-    rarity.type === "Wandering Spirit [1 in 150]" ||
-    rarity.type === "Frozen Fate [1 in 200]" ||
-    rarity.type === "Mysterious Echo [1 in 300]" ||
-    rarity.type === "Forgotten Whisper [1 in 450]" ||
-    rarity.type === "Cursed Artifact [1 in 700]" ||
-    rarity.type === "Spectral Glare [1 in 850]" ||
-    rarity.type === "Shadow Veil [1 in 1,000]" ||
-    rarity.type === "Nightfall [1 in 1,200]" ||
-    rarity.type === "Void Walker [1 in 1,500]" ||
-    rarity.type === "Silent Listener [1 in 2,200]" ||
-    rarity.type === "Ghostly Embrace [1 in 2,800]" ||
-    rarity.type === "Endless Twilight [1 in 3,000]" ||
-    rarity.type === "Abyssal Shade [1 in 3,500]" ||
-    rarity.type === "Darkened Sky [1 in 4,200]" ||
-    rarity.type === "Twisted Light [1 in 5,000]" ||
-    rarity.type === "Ethereal Pulse [1 in 6,000]" ||
-    rarity.type === "Enigmatic Dream [1 in 7,500]" ||
-    rarity.type === "Celestial Dawn [1 in 12,000]" ||
-    rarity.type === "Fate's Requiem [1 in 15,000]" ||
-    rarity.type === "Pumpkin [1 in 999]" ||
-    rarity.type === "Demon Soul [1 in 9,999]" ||
-    rarity.type === "Fear [1 in 1,250]" ||
-    rarity.type === "Grim Destiny [1 in 8,500]" ||
-    rarity.type === "Haunted Soul [1 in 2,000]" ||
-    rarity.type === "Lost Soul [1 in 3,333]" ||
-    rarity.type === "Devil's Heart [1 in 66,666]" ||
-    rarity.type === "Shad0w [1 in 4,444]" ||
-    rarity.type === "Found Soul [1 in 5,000]" ||
-    rarity.type === "Haunted Reality [1 in 5,500]" ||
-    rarity.type === "LubbyJubby's Cherry Grove [1 in 5,666]" ||
-    rarity.type === "Arcane Pulse [1 in 77,777]" ||
-    rarity.type === "Celestial Chorus [1 in 202,020]" ||
-    rarity.type === "Eonbreak [1 in 20,000]" ||
-    rarity.type === "Seraph's Wing [1 in 1,333]" ||
-    rarity.type === "Ether Shift [1 in 5,540]" ||
-    rarity.type === "Phantom Stride [1 in 990]" ||
-    rarity.type === "Spectral Whisper [1 in 288]" ||
-    rarity.type === "Starfall [1 in 600]" ||
-    rarity.type === "Unstoppable [1 in 112]" ||
-    rarity.type === "Memory [1 in 175]" ||
-    rarity.type === "Isekai [1 in 300]" ||
-    rarity.type === "Emergencies [1 in 500]" ||
-    rarity.type === "Samurai [1 in 800]" ||
-    rarity.type === "Contortions [1 in 999]" ||
-    rarity.type === "Gargantua [1 in 143]" ||
-    rarity.type === "Oblivion [1 in 200]" ||
-    rarity.type === "Fright [1 in 1,075]" ||
-    rarity.type === "Unnamed [1 in 13,889]" ||
-    rarity.type === "Overture [1 in 25,641]" ||
-    rarity.type === "Impeached [1 in 101,010]" ||
-    rarity.type === "Silly Car :3 [1 in 1,000,000]" ||
-    rarity.type === "Greg [1 in 50,000,000]" ||
-    rarity.type === "Mintllie [1 in 500,000,000]" ||
-    rarity.type === "Geezer [1 in 5,000,000,000]" ||
-    rarity.type === "Polarr [1 in 50,000,000,000]" ||
-    rarity.type === "H1di [1 in 9,890,089]" ||
-    rarity.type === "Rad [1 in 6,969]" ||
-    rarity.type === "HARV [1 in 33,333]" ||
-    rarity.type === "Experiment [1 in 100,000/10th]" ||
-    rarity.type === "Veil [1 in 50,000/5th]" ||
-    rarity.type === "Abomination [1 in 1,000,000/20th]" ||
-    rarity.type === "Iridocyclitis Veil [1 in 5,000/50th]"
+    rarity.type === "Wandering Spirit [1 in 150]"
   ) {
     document.getElementById("result").innerText = "";
     const titleCont = document.querySelector(".container");
@@ -5118,24 +5054,29 @@ function renderInventory() {
   const end = start + itemsPerPage;
   const paginatedItems = inventory.slice(start, end);
 
-  paginatedItems.forEach((item, index) => {
-    const absoluteIndex = start + index; // Get the absolute index of the item
+  const reversedItems = paginatedItems.reverse();
+
+  reversedItems.forEach((item, index) => {
+    const absoluteIndex = start + index;
 
     const listItem = document.createElement("li");
     listItem.textContent = item.title;
     listItem.className = item.rarityClass;
 
-    // Dropdown menu
     const burgerBar = document.createElement("div");
     burgerBar.className = "burger-bar";
     burgerBar.innerHTML = "☰";
 
     const dropdownMenu = document.createElement("div");
     dropdownMenu.className = "dropdown-menu";
+    dropdownMenu.style.display = "none";
 
     const equipButton = document.createElement("button");
     equipButton.textContent = "Equip";
-    equipButton.addEventListener("click", () => equipItem(item));
+    equipButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      equipItem(item);
+    });
 
     const deleteButton = document.createElement("button");
     deleteButton.textContent = "Delete";
@@ -5149,11 +5090,13 @@ function renderInventory() {
     burgerBar.appendChild(dropdownMenu);
     listItem.appendChild(burgerBar);
 
+    let isDropdownOpen = false;
+
     burgerBar.addEventListener("click", (event) => {
       event.stopPropagation();
-      const isVisible = dropdownMenu.style.display === "block";
-      document.querySelectorAll(".dropdown-menu").forEach((menu) => (menu.style.display = "none"));
-      dropdownMenu.style.display = isVisible ? "none" : "block";
+
+      isDropdownOpen = !isDropdownOpen;
+      dropdownMenu.style.display = isDropdownOpen ? "block" : "none";
     });
 
     inventoryList.appendChild(listItem);
@@ -5187,13 +5130,19 @@ function updatePagination() {
   const nextPageButton = document.getElementById("nextPageButton");
   const lastPageButton = document.getElementById("lastPageButton");
 
-  const totalPages = Math.ceil(inventory.length / itemsPerPage);
+  const sortedInventory = [...inventory].reverse();
+
+  const totalPages = Math.ceil(sortedInventory.length / itemsPerPage);
   pageNumber.textContent = `Page ${currentPage} of ${totalPages}`;
 
   backPageButton.disabled = currentPage === 1;
   prevPageButton.disabled = currentPage === 1;
   nextPageButton.disabled = currentPage === totalPages;
   lastPageButton.disabled = currentPage === totalPages;
+
+  const end = (currentPage - 1) * itemsPerPage;
+  const start = end + itemsPerPage;
+  sortedInventory.slice(start, end);
 }
 
 function backPage() {
@@ -5896,7 +5845,7 @@ function startAutoRoll() {
   autoRollInterval = setInterval(() => {
     console.log("Rolling...");
     document.getElementById("rollButton").click();
-  }, 533);
+  }, 500);
   autoRollButton.textContent = "Auto Roll: On";
   autoRollButton.classList.remove("off");
   autoRollButton.classList.add("on");
@@ -6126,10 +6075,23 @@ function getClassForRarity(rarity) {
 
 document
   .getElementById("deleteAllUnder100Button")
-  .addEventListener("click", renderInventory(), () => deleteAllByRarity("commonBgImg", "rareBgImg", "epicBgImg",
-    "legendaryBgImg", "impossibleBgImg", "poweredBgImg", "plabreBgImg",
-    "solarpowerBgImg", "belivBgImg", "flickerBgImg", "toxBgImg"
-));
+  .addEventListener("click", () => {
+    renderInventory();
+    const rarities = [
+      "commonBgImg",
+      "rareBgImg",
+      "epicBgImg",
+      "legendaryBgImg",
+      "impossibleBgImg",
+      "poweredBgImg",
+      "plabreBgImg",
+      "solarpowerBgImg",
+      "belivBgImg",
+      "flickerBgImg",
+      "toxBgImg"
+    ];
+    rarities.forEach(rarity => deleteAllByRarity(rarity));
+  });
 
 document
   .getElementById("deleteAllCommonButton")
@@ -6165,13 +6127,33 @@ document
   .getElementById("deleteAllToxicButton")
   .addEventListener("click", () => deleteAllByRarity("toxBgImg"));
 
-document
+
+  document
   .getElementById("deleteAllUnder1kButton")
-  .addEventListener("click", renderInventory(), () => deleteAllByRarity("unstoppableBgImg", "spectralBgImg",
-    "starfallBgImg", "gargBgImg", "memBgImg", "oblBgImg", "phaBgImg",
-    "isekaiBgImg", "emerBgImg", "samuraiBgImg", "contBgImg", "wanspiBgImg",
-    "froBgImg", "mysBgImg", "forgBgImg", "curartBgImg", "specBgImg"
-));
+  .addEventListener("click", () => {
+    renderInventory();
+    const raritiesUnder1k = [
+      "unstoppableBgImg",
+      "spectralBgImg",
+      "starfallBgImg",
+      "gargBgImg",
+      "memBgImg",
+      "oblBgImg",
+      "phaBgImg",
+      "isekaiBgImg",
+      "emerBgImg",
+      "samuraiBgImg",
+      "contBgImg",
+      "wanspiBgImg",
+      "froBgImg",
+      "mysBgImg",
+      "forgBgImg",
+      "curartBgImg",
+      "specBgImg",
+    ];
+    raritiesUnder1k.forEach(rarity => deleteAllByRarity(rarity));
+  });
+
 document
   .getElementById("deleteAllUnstoppableButton")
   .addEventListener("click", () => deleteAllByRarity("unstoppableBgImg"));
@@ -6221,13 +6203,41 @@ document
   .getElementById("deleteAllFrightButton")
   .addEventListener("click", () => deleteAllByRarity("frightBgImg"));
 
-document
+
+  document
   .getElementById("deleteAllUnder10kButton")
-  .addEventListener("click", renderInventory(), () => deleteAllByRarity("ethershiftBgImg", "cursedmirageBgImg",
-    "hellBgImg", "frightBgImg", "seraphwingBgImg", "arcanepulseBgImg", "overtureBgImg",
-    "eonbreakBgImg", "shadBgImg", "shaBgImg", "unnamedBgImg", "nighBgImg",
-    "voiBgImg", "silBgImg", "ghoBgImg", "endBgImg", "abysBgImg", "darBgImg", "twiligBgImg", "ethpulBgImg", ""
-));
+  .addEventListener("click", () => {
+    renderInventory();
+    const raritiesUnder10k = [
+      "ethershiftBgImg",
+      "hellBgImg",
+      "frightBgImg",
+      "seraphwingBgImg",
+      "shadBgImg",
+      "shaBgImg",
+      "nighBgImg",
+      "voiBgImg",
+      "silBgImg",
+      "ghoBgImg",
+      "endBgImg",
+      "abysBgImg",
+      "darBgImg",
+      "twiligBgImg",
+      "ethpulBgImg",
+      "eniBgImg",
+      "griBgImg",
+      "fearBgImg",
+      "hauntBgImg",
+      "foundsBgImg",
+      "lostsBgImg",
+      "hauBgImg",
+      "lubjubBgImg",
+      "radBgImg",
+      "demsoBgImg",
+    ];
+    raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
+  });
+
 document
   .getElementById("deleteAllSeraphsWingButton")
   .addEventListener("click", () => deleteAllByRarity("seraphwingBgImg"));
@@ -6306,6 +6316,26 @@ document
 document
   .getElementById("deleteAllGrimDestinyButton")
   .addEventListener("click", () => deleteAllByRarity("griBgImg"));
+
+
+document
+  .getElementById("deleteAllUnder100kButton")
+  .addEventListener("click", () => {
+    renderInventory();
+    const raritiesUnder10k = [
+      "celdawBgImg",
+      "fatreBgImg",
+      "unnamedBgImg",
+      "eonbreakBgImg",
+      "overtureBgImg",
+      "arcanepulseBgImg",
+      "harvBgImg",
+      "devilBgImg",
+      "cursedmirageBgImg"
+    ];
+    raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
+  });
+
 document
   .getElementById("deleteAllCelestialDawnButton")
   .addEventListener("click", () => deleteAllByRarity("celdawBgImg"));
@@ -6394,6 +6424,30 @@ document
     .getElementById("deleteAllRadButton")
     .addEventListener("click", () => deleteAllByRarity("radBgImg"));
 
+
+document
+  .getElementById("deleteAllUnder1mButton")
+  .addEventListener("click", () => {
+    renderInventory();
+    const raritiesUnder10k = [
+      "impeachedBgImg",
+      "celestialchorusBgImg",
+    ];
+    raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
+  });
+
+document
+  .getElementById("deleteAllSpecialButton")
+  .addEventListener("click", () => {
+    renderInventory();
+    const raritiesUnder10k = [
+      "iriBgImg",
+      "veilBgImg",
+      "expBgImg",
+      "aboBgImg"
+    ];
+    raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
+  });
 
 function createParticle(minRadius, maxRadius, minSize, maxSize, speed, rotationRange) {
   const particle = document.createElement('div');
