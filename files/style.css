@@ -1974,6 +1974,10 @@ body.griCutsceneBgImg {
     background: #6495ed;
 }
 
+.under100T {
+    color: #e0ffff;
+}
+
 .eventTitleHalloween {
     color: #ffa500;
     background: #6495ed;
@@ -2002,9 +2006,17 @@ body.griCutsceneBgImg {
     background: #6495ed;
 }
 
+.under1kT {
+    color: #00ffff;
+}
+
 .under10k {
     color: #90ee90;
     background: #6495ed;
+}
+
+.under10kT {
+    color: #90ee90;
 }
 
 .special {
@@ -2023,6 +2035,19 @@ body.griCutsceneBgImg {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+}
+
+.under1mBtn {
+    background: radial-gradient(#019114, #aa9101);
+    background-size: 300%;
+    animation: gradient-shift 3s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.buttonDivClass {
+    background: #61B9E5;
 }
 
 .under1m {
