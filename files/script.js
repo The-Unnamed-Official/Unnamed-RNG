@@ -1,3 +1,5 @@
+const { render } = require("ejs");
+
 let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
 let currentPage = 1;
 const itemsPerPage = 10;
@@ -341,7 +343,11 @@ function musicLoad() {
 }
 
 function formatRollCount(count) {
-  if (count >= 1_000_000) {
+  if (count >= 1_000_000_000_000) {
+      return (count / 1_000_000_000_000).toFixed(count >= 1_000_000_000_000 ? 0 : 2) + 't';
+  } else if (count >= 1_000_000_000) {
+      return (count / 1_000_000_000).toFixed(count >= 1_000_000_000 ? 0 : 2) + 'b';
+  } else if (count >= 1_000_000) {
       return (count / 1_000_000).toFixed(count >= 10_000_000 ? 0 : 2) + 'm';
   } else if (count >= 100_000) {
       return (count / 1_000).toFixed(0) + 'k';
@@ -6120,8 +6126,10 @@ function getClassForRarity(rarity) {
 
 document
   .getElementById("deleteAllUnder100Button")
-  .addEventListener("click", renderInventory(), () => deleteAllByRarity("commonBgImg", "rareBgImg", "epicBgImg", "legendaryBgImg",
-    "impossibleBgImg", "poweredBgImg", "plabreBgImg", "solarpowerBgImg", "", "", "", "", ""))
+  .addEventListener("click", renderInventory(), () => deleteAllByRarity("commonBgImg", "rareBgImg", "epicBgImg",
+    "legendaryBgImg", "impossibleBgImg", "poweredBgImg", "plabreBgImg",
+    "solarpowerBgImg", "belivBgImg", "flickerBgImg", "toxBgImg"
+));
 
 document
   .getElementById("deleteAllCommonButton")
@@ -6156,6 +6164,14 @@ document
 document
   .getElementById("deleteAllToxicButton")
   .addEventListener("click", () => deleteAllByRarity("toxBgImg"));
+
+document
+  .getElementById("deleteAllUnder1kButton")
+  .addEventListener("click", renderInventory(), () => deleteAllByRarity("unstoppableBgImg", "spectralBgImg",
+    "starfallBgImg", "gargBgImg", "memBgImg", "oblBgImg", "phaBgImg",
+    "isekaiBgImg", "emerBgImg", "samuraiBgImg", "contBgImg", "wanspiBgImg",
+    "froBgImg", "mysBgImg", "forgBgImg", "curartBgImg", "specBgImg"
+));
 document
   .getElementById("deleteAllUnstoppableButton")
   .addEventListener("click", () => deleteAllByRarity("unstoppableBgImg"));
@@ -6204,6 +6220,14 @@ document
 document
   .getElementById("deleteAllFrightButton")
   .addEventListener("click", () => deleteAllByRarity("frightBgImg"));
+
+document
+  .getElementById("deleteAllUnder10kButton")
+  .addEventListener("click", renderInventory(), () => deleteAllByRarity("ethershiftBgImg", "cursedmirageBgImg",
+    "hellBgImg", "frightBgImg", "seraphwingBgImg", "arcanepulseBgImg", "overtureBgImg",
+    "eonbreakBgImg", "shadBgImg", "shaBgImg", "unnamedBgImg", "nighBgImg",
+    "voiBgImg", "silBgImg", "ghoBgImg", "endBgImg", "abysBgImg", "darBgImg", "twiligBgImg", "ethpulBgImg", ""
+));
 document
   .getElementById("deleteAllSeraphsWingButton")
   .addEventListener("click", () => deleteAllByRarity("seraphwingBgImg"));
