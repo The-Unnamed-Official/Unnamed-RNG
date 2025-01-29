@@ -1460,7 +1460,12 @@ body.griCutsceneBgImg {
 #inventoryList {
     list-style-type: none;
     padding: 20px;
+    list-style-type: none;
+    padding: 20px;
+    overflow-y: auto;
+    transition: max-height 0.4s ease-in-out, height 0.4s ease-in-out;
 }
+
 
 .dropdown-menu {
     display: none;
@@ -1483,6 +1488,7 @@ body.griCutsceneBgImg {
     cursor: pointer;
     width: 100%;
     font-size: 14px;
+    transition: background-color 0.2s ease;
 }
 
 .dropdown-menu button:hover {
@@ -1496,6 +1502,7 @@ body.griCutsceneBgImg {
     font-size: 16px;
     z-index: 11;
     position: relative;
+    transition: color 0.2s ease;
 }
 
 .burger-bar:hover {
@@ -1512,11 +1519,11 @@ body.griCutsceneBgImg {
     background-color: #444;
     color: white;
     position: relative;
-    transition: background-color 0.3s ease;
+    transition: transform 0.2s ease;
 }
 
 #inventoryList li:hover {
-    background-color: #555;
+    transform: scale(1.025);
 }
 
 #inventoryList li:defined {
@@ -1538,12 +1545,12 @@ body.griCutsceneBgImg {
     cursor: pointer;
     border-radius: 9px;
     border: none;
-    transition: background-color 0.25s, transform 0.25s;
+    transition: background-color 0.25s, transform 0.15s;
 }
 
 .inventory button:hover {
     background-color: #4169e1;
-    transform: scale(1.2);
+    transform: scale(1.1);
 }
 
 #toggleInventoryBtn {
@@ -2165,4 +2172,23 @@ body.griCutsceneBgImg {
         translateX(calc(var(--orbit-radius) * var(--scale-factor))) 
         rotate(calc((var(--start-angle) + var(--rotation-amount)) * -1));
     }
+}
+
+.item-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+}
+  
+.rarity-text {
+    position: absolute;
+    bottom: 5px;
+    left: 10px;
+    font-size: 0.9em;
+    font-style: italic;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
 }
