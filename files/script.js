@@ -4217,7 +4217,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "yellow-star";
+        star.className = "purple-star";
         star.innerHTML = "—";
 
         star.style.left = Math.random() * 100 + "vw";
@@ -4260,8 +4260,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "yellow-star";
-        star.innerHTML = "—";
+        star.className = "cyan-star";
+        star.innerHTML = "◁▷";
 
         star.style.left = Math.random() * 100 + "vw";
 
@@ -4303,7 +4303,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "yellow-star";
+        star.className = "green-star";
         star.innerHTML = "—";
 
         star.style.left = Math.random() * 100 + "vw";
@@ -4346,7 +4346,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "yellow-star";
+        star.className = "green-star";
         star.innerHTML = "—";
 
         star.style.left = Math.random() * 100 + "vw";
@@ -4389,7 +4389,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "yellow-star";
+        star.className = "white-star";
         star.innerHTML = "—";
 
         star.style.left = Math.random() * 100 + "vw";
@@ -4432,8 +4432,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "yellow-star";
-        star.innerHTML = "—";
+        star.className = "blue-star";
+        star.innerHTML = "𓆟";
 
         star.style.left = Math.random() * 100 + "vw";
 
@@ -4470,7 +4470,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Darkened Sky [1 in 4,200]") {
       document.body.className = "blackBg";
       disableChange();
-      startAnimation8();
+      startAnimation7();
       const container = document.getElementById("starContainer");
 
       for (let i = 0; i < 44; i++) {
@@ -4512,7 +4512,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Twisted Light [1 in 5,000]") {
       document.body.className = "blackBg";
       disableChange();
-      startAnimation8();
+      startAnimation7();
       const container = document.getElementById("starContainer");
 
       for (let i = 0; i < 44; i++) {
@@ -4554,12 +4554,12 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Ethereal Pulse [1 in 6,000]") {
       document.body.className = "blackBg";
       disableChange();
-      startAnimation8();
+      startAnimation7();
       const container = document.getElementById("starContainer");
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "fast-cyan-star";
+        star.className = "cyan-star";
         star.innerHTML = "▣";
 
         star.style.left = Math.random() * 100 + "vw";
@@ -4596,7 +4596,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Enigmatic Dream [1 in 7,500]") {
       document.body.className = "blackBg";
       disableChange();
-      startAnimation8();
+      startAnimation7();
       const container = document.getElementById("starContainer");
 
       for (let i = 0; i < 44; i++) {
@@ -4638,12 +4638,12 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Fear [1 in 1,250]") {
       document.body.className = "blackBg";
       disableChange();
-      startAnimation8();
+      startAnimation7();
       const container = document.getElementById("starContainer");
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "fast-cyan-star";
+        star.className = "gray-star";
         star.innerHTML = "▣";
 
         star.style.left = Math.random() * 100 + "vw";
@@ -4680,7 +4680,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Haunted Soul [1 in 2,000]") {
       document.body.className = "blackBg";
       disableChange();
-      startAnimation8();
+      startAnimation7();
       const container = document.getElementById("starContainer");
 
       for (let i = 0; i < 44; i++) {
@@ -4722,13 +4722,13 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Lost Soul [1 in 3,333]") {
       document.body.className = "blackBg";
       disableChange();
-      startAnimation8();
+      startAnimation7();
       const container = document.getElementById("starContainer");
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "fast-cyan-star";
-        star.innerHTML = "▣";
+        star.className = "white-star";
+        star.innerHTML = "←→";
 
         star.style.left = Math.random() * 100 + "vw";
 
@@ -4764,12 +4764,12 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Found Soul [1 in 5,000]") {
       document.body.className = "blackBg";
       disableChange();
-      startAnimation8();
+      startAnimation7();
       const container = document.getElementById("starContainer");
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "fast-cyan-star";
+        star.className = "fast-red-star";
         star.innerHTML = "▣";
 
         star.style.left = Math.random() * 100 + "vw";
@@ -4811,8 +4811,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "yellow-star";
-        star.innerHTML = "—";
+        star.className = "blue-star";
+        star.innerHTML = "-◪";
 
         star.style.left = Math.random() * 100 + "vw";
 
@@ -4854,8 +4854,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "yellow-star";
-        star.innerHTML = "—";
+        star.className = "purple-star";
+        star.innerHTML = "=";
 
         star.style.left = Math.random() * 100 + "vw";
 
@@ -4897,8 +4897,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       for (let i = 0; i < 44; i++) {
         const star = document.createElement("span");
-        star.className = "yellow-star";
-        star.innerHTML = "—";
+        star.className = "white-star";
+        star.innerHTML = "<>";
 
         star.style.left = Math.random() * 100 + "vw";
 

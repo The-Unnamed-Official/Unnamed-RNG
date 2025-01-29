@@ -1705,6 +1705,14 @@ body.griCutsceneBgImg {
     animation: levitate 4s ease-out forwards, fade 4s ease-out forwards;
 }
 
+.fast-red-star {
+    position: absolute;
+    font-size: 33px;
+    color: red;
+    opacity: 1;
+    animation: levitate 2s ease-out forwards, fade 2s ease-out forwards;
+}
+
 .purple-star {
     position: absolute;
     font-size: 45px;
