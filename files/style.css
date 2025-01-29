@@ -9,7 +9,7 @@
 .version {
     color: #fff;
     position: absolute;
-    bottom: 10px;
+    bottom: 25px;
     width: 100%;
     z-index: 0;
 }
@@ -23,17 +23,6 @@
     padding: 20px;
     background-color: #00000069;
     border-radius: 25px;
-}
-
-#fireworksCanvas {
-    position: fixed; 
-    top: 0;
-    left: 0;
-    width: 100vw; 
-    height: 100vh; 
-    pointer-events: none; 
-    z-index: 9999;
-    background: transparent;
 }
 
 .snowflake {
@@ -51,6 +40,44 @@
     100% {
         transform: translateY(100vh);
     }
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    font-size: 5vh;
+    flex-direction: column;
+    z-index: 90000000;
+}
+
+#countdown {
+    font-size: 7vh;
+    margin-top: 20px;
+}
+
+#imHereButton {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 69px;
+    font-size: 3vh;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, scale 0.3s ease;
+}
+
+#imHereButton:hover {
+    background-color: #3c8f40;
+    scale: 1.1;
 }
 
 #menuScreen {
@@ -1433,7 +1460,12 @@ body.griCutsceneBgImg {
 #inventoryList {
     list-style-type: none;
     padding: 20px;
+    list-style-type: none;
+    padding: 20px;
+    overflow-y: auto;
+    transition: max-height 0.4s ease-in-out, height 0.4s ease-in-out;
 }
+
 
 .dropdown-menu {
     display: none;
@@ -1456,6 +1488,7 @@ body.griCutsceneBgImg {
     cursor: pointer;
     width: 100%;
     font-size: 14px;
+    transition: background-color 0.2s ease;
 }
 
 .dropdown-menu button:hover {
@@ -1469,6 +1502,7 @@ body.griCutsceneBgImg {
     font-size: 16px;
     z-index: 11;
     position: relative;
+    transition: color 0.2s ease;
 }
 
 .burger-bar:hover {
@@ -1485,11 +1519,11 @@ body.griCutsceneBgImg {
     background-color: #444;
     color: white;
     position: relative;
-    transition: background-color 0.3s ease;
+    transition: transform 0.2s ease;
 }
 
 #inventoryList li:hover {
-    background-color: #555;
+    transform: scale(1.025);
 }
 
 #inventoryList li:defined {
@@ -1511,12 +1545,12 @@ body.griCutsceneBgImg {
     cursor: pointer;
     border-radius: 9px;
     border: none;
-    transition: background-color 0.25s, transform 0.25s;
+    transition: background-color 0.25s, transform 0.15s;
 }
 
 .inventory button:hover {
     background-color: #4169e1;
-    transform: scale(1.2);
+    transform: scale(1.1);
 }
 
 #toggleInventoryBtn {
@@ -1671,12 +1705,28 @@ body.griCutsceneBgImg {
     animation: levitate 4s ease-out forwards, fade 4s ease-out forwards;
 }
 
+.fast-red-star {
+    position: absolute;
+    font-size: 33px;
+    color: red;
+    opacity: 1;
+    animation: levitate 2s ease-out forwards, fade 2s ease-out forwards;
+}
+
 .purple-star {
     position: absolute;
     font-size: 45px;
     color: blueviolet;
     opacity: 1;
     animation: levitate 5s ease-out forwards, fade 5s ease-out forwards;
+}
+
+.fast-purple-star {
+    position: absolute;
+    font-size: 33px;
+    color: blueviolet;
+    opacity: 1;
+    animation: levitate 2s ease-out forwards, fade 2s ease-out forwards;
 }
 
 .pink-star {
@@ -1711,12 +1761,36 @@ body.griCutsceneBgImg {
     animation: levitate 9s ease-out forwards, fade 9s ease-out forwards;
 }
 
+.fast-blue-star {
+    position: absolute;
+    font-size: 40px;
+    color: blue;
+    opacity: 1;
+    animation: levitate 2s ease-out forwards, fade 2s ease-out forwards;
+}
+
 .cyan-star {
     position: absolute;
     font-size: 40px;
     color: cyan;
     opacity: 1;
     animation: levitate 9s ease-out forwards, fade 9s ease-out forwards;
+}
+
+.brown-star {
+    position: absolute;
+    font-size: 50px;
+    color: #6e3c25;
+    opacity: 1;
+    animation: levitate 2s ease-out forwards, fade 3s ease-out forwards;
+}
+
+.fast-cyan-star {
+    position: absolute;
+    font-size: 40px;
+    color: cyan;
+    opacity: 1;
+    animation: levitate 2s ease-out forwards, fade 3s ease-out forwards;
 }
 
 .yellow-star {
@@ -1769,14 +1843,36 @@ body.griCutsceneBgImg {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.7);
+    background-color: black;
     color: white;
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
-    font-size: 2rem;
-    z-index: 99999999;
-}  
+    z-index: 1000000000;
+}
+
+.loading-animation {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin-left: 30px;
+}
+
+.loadTxt {
+    margin-top: 20px;
+}
+
+@keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+}
 
 #cooldownButton {
     background-color: #4CAF50;
@@ -1893,6 +1989,10 @@ body.griCutsceneBgImg {
     background: #6495ed;
 }
 
+.under100T {
+    color: #e0ffff;
+}
+
 .eventTitleHalloween {
     color: #ffa500;
     background: #6495ed;
@@ -1921,9 +2021,17 @@ body.griCutsceneBgImg {
     background: #6495ed;
 }
 
+.under1kT {
+    color: #00ffff;
+}
+
 .under10k {
     color: #90ee90;
     background: #6495ed;
+}
+
+.under10kT {
+    color: #90ee90;
 }
 
 .special {
@@ -1942,6 +2050,19 @@ body.griCutsceneBgImg {
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+}
+
+.under1mBtn {
+    background: radial-gradient(#019114, #aa9101);
+    background-size: 300%;
+    animation: gradient-shift 3s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.buttonDivClass {
+    background: #61B9E5;
 }
 
 .under1m {
@@ -2059,4 +2180,23 @@ body.griCutsceneBgImg {
         translateX(calc(var(--orbit-radius) * var(--scale-factor))) 
         rotate(calc((var(--start-angle) + var(--rotation-amount)) * -1));
     }
+}
+
+.item-title {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.6);
+}
+  
+.rarity-text {
+    position: absolute;
+    bottom: 5px;
+    left: 10px;
+    font-size: 0.9em;
+    font-style: italic;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
 }
