@@ -3,6 +3,15 @@ let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 let cooldownTime = 690;
+let timeoutId;
+let countdownInterval;
+let tabbedOutTime = null;
+let currentAudio = null;
+let isChangeEnabled = true;
+let autoRollInterval = null;
+let audioVolume = 1;
+let isMuted = false;
+let previousVolume = audioVolume;
 
 document.addEventListener("DOMContentLoaded", () => {
   const rollButton = document.getElementById("rollButton");
@@ -29,10 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 2000);
   });
 });
-
-let timeoutId;
-let countdownInterval;
-let tabbedOutTime = null;
 
 function showCountdown() {
   const overlay = document.getElementById("overlay");
@@ -5764,10 +5769,6 @@ const backgroundDetails = {
   veilBgImg: { image: "files/backgrounds/veil.gif", audio: "veilAudio" },
 };
 
-let currentAudio = null;
-
-let isChangeEnabled = true;
-
 function changeBackground(rarityClass, itemTitle) {
   if (!isChangeEnabled) return;
   const details = backgroundDetails[rarityClass];
@@ -6496,11 +6497,6 @@ function scheduleButtonAppearance() {
 }
 
 scheduleButtonAppearance();
-
-let autoRollInterval = null;
-let audioVolume = 1;
-let isMuted = false;
-let previousVolume = audioVolume;
 
 const settingsButton = document.getElementById("settingsButton");
 const settingsMenu = document.getElementById("settingsMenu");
