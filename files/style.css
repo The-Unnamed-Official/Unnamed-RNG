@@ -1275,6 +1275,12 @@ body {
     object-fit: contain;
 }
 
+.blindBgImg {
+    background: url(backgrounds/blind.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
@@ -1961,6 +1967,16 @@ body.griCutsceneBgImg {
     animation: spin-scale-fast 1.5s ease-out forwards;
     border-radius: 2px;
     box-shadow: 0px 0px 15px #ff00bbe6;
+}
+
+.animated-square-purple {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: #9900ffb3;
+    animation: spin-scale-fast 1.5s ease-out forwards;
+    border-radius: 2px;
+    box-shadow: 0px 0px 15px #a200ffe6;
 }
 
 .animated-square-red {
