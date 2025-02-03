@@ -553,6 +553,15 @@ body {
     transition: scale 0.5s ease-in;
 }
 
+.msfuStar {
+    position: absolute;
+    top: 30%;
+    left: 40%;
+    scale: 0;
+    pointer-events: none;
+    transition: scale 0.5s ease-in;
+}
+
 .cutsceneStarEvent {
     position: absolute;
     top: 30%;
@@ -1205,6 +1214,12 @@ body {
 
 .reidasBgImg {
     background: url(backgrounds/reidas.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.msfuBgImg {
+    background: url(backgrounds/msfu.png);
     background-size: cover;
     object-fit: contain;
 }

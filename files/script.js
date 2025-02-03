@@ -183,6 +183,7 @@ function musicLoad() {
   let veilAudio = document.getElementById("veilAudio");
   let demsoAudio = document.getElementById("demsoAudio");
   let blindAudio = document.getElementById("blindAudio");
+  let msfuAudio = document.getElementById("msfuAudio");
 
   suspenseAudio.pause();
   expOpeningAudio.pause();
@@ -265,6 +266,7 @@ function musicLoad() {
   bigSuspenceAudio.pause();
   expAudio.pause();
   veilAudio.pause();
+  msfuAudio.pause();
 
   suspenseAudio.currentTime = 0;
   expOpeningAudio.currentTime = 0;
@@ -347,6 +349,7 @@ function musicLoad() {
   bigSuspenceAudio.currentTime = 0;
   expAudio.currentTime = 0;
   veilAudio.currentTime = 0;
+  msfuAudio.currentTime = 0;
 }
 
 function formatRollCount(count) {
@@ -460,6 +463,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   veilAudio.pause();
   fircraAudio.pause();
   blindAudio.pause();
+  msfuAudio.pause();
 
   suspenseAudio.currentTime = 0;
   geezerSuspenceAudio.currentTime = 0;
@@ -542,6 +546,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   veilAudio.currentTime = 0;
   fircraAudio.currentTime = 0;
   blindAudio.currentTime = 0;
+  msfuAudio.currentTime = 0;
 
   document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
 
@@ -614,7 +619,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Veil [1 in 50,000/5th]" ||
     rarity.type === "Abomination [1 in 1,000,000/20th]" ||
     rarity.type === "Iridocyclitis Veil [1 in 5,000/50th]" ||
-    rarity.type === "BlindGT [1 in 2,000,000/15th]"
+    rarity.type === "BlindGT [1 in 2,000,000/15th]" ||
+    rarity.type === "MSFU [1 in 333/333rd]"
   ) {
     document.getElementById("result").innerText = "";
     const titleCont = document.querySelector(".container");
@@ -749,6 +755,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "BlindGT [1 in 2,000,000/15th]") {
       hugeSuspenceAudio.play();
+    } else if (rarity.type === "MSFU [1 in 333/333rd]") {
+      msfuAudio.play();
     } else if (rarity.type == "Silly Car :3 [1 in 1,000,000]") {
       silcarAudio.play();
       setTimeout(function () {
@@ -2854,6 +2862,71 @@ document.getElementById("rollButton").addEventListener("click", function () {
         }, 100);
         enableChange();
       }, 7000); // Wait for 7 seconds
+    } else if (rarity.type === "MSFU [1 in 333/333rd]") {
+      document.body.className = "blackBg";
+      disableChange();
+      startAnimationMSFU();
+
+      const container1 = document.getElementById("squareContainer");
+
+      function createSquare(colorClass) {
+        const square = document.createElement("div");
+        square.className = `animated-square-${colorClass}`;
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+        container1.appendChild(square);
+        square.addEventListener("animationend", () => square.remove());
+      }
+
+      const container = document.getElementById("starContainer");
+
+      function createStars(count) {
+        for (let i = 0; i < count; i++) {
+          const star = document.createElement("span");
+          star.className = 'red-star';
+          star.innerHTML = "𖣘";
+          star.style.left = Math.random() * 100 + "vw";
+          star.style.setProperty(
+            "--randomX",
+            (Math.random() - 0.25) * 20 + "vw"
+          );
+          star.style.setProperty(
+            "--randomRotation",
+            (Math.random() - 0.5) * 720 + "deg"
+          );
+          star.style.animationDelay = i * 0.04 + "s";
+          container.appendChild(star);
+          star.addEventListener("animationend", () => star.remove());
+        }
+      }
+
+      createStars("orange", 276);
+      createStars("red", 276);
+
+      const squareInterval = setInterval(() => {
+        createSquare("red");
+        createSquare("orange");
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 7777);
+
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          updateRollingHistory(title, rarity.type);
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          msfuAudio.play();
+          titleCont.style.visibility = "visible";
+        }, 100);
+        enableChange();
+      }, 8888); // Wait for 8.88 seconds
     } else if (rarity.type === "Memory [1 in 175]") {
       document.body.className = "blackBg";
       disableChange();
@@ -5576,21 +5649,21 @@ function rollRarity() {
   const abominationRarity = {
     type: "Abomination [1 in 1,000,000/20th]",
     class: "aboBgImg",
-    chance: 0.002,
+    chance: 0,
     titles: ["Chaos", "Experiment: 902", "Damaged", "Assistance"],
   };
 
   const iridocyclitisVeilRarity = {
     type: "Iridocyclitis Veil [1 in 5,000/50th]",
     class: "iriBgImg",
-    chance: 0.02,
+    chance: 0,
     titles: ["Cyclithe", "Veilborne", "Hemovail", "Iris: 902", "Abomination: 902"],
   };
 
   const experimentRarity = {
     type: "Experiment [1 in 100,000/10th]",
     class: "expBgImg",
-    chance: 0.0075,
+    chance: 0,
     titles: ["1106", "1073", "1105", "905", "302", "1130", "1263", "1005", "1473", "1748",
             "899", "1157", "1288", "1203", "1024", "1702", "786", "1684", "1337", "912",
             "1987", "1405", "771", "1883", "1294", "1772", "902", "1526", "1759", "666"],
@@ -5599,21 +5672,33 @@ function rollRarity() {
   const veilRarity = {
     type: "Veil [1 in 50,000/5th]",
     class: "veilBgImg",
-    chance: 0.0025,
-    titles: ["Fight", "Peace"],
+    chance: 0,
+    titles: ["Fight", "Peace", "MSFU: 902"],
   };
 
   const blindRarity = {
     type: "BlindGT [1 in 2,000,000/15th]",
     class: "blindBgImg",
-    chance: 0.005,
-    titles: ["Moderator"],
+    chance: 0,
+    titles: ["Moderator", "Moderator: 902"],
+  };
+
+  const msfuRarity = {
+    type: "MSFU [1 in 333/333rd]",
+    class: "msfuBgImg",
+    chance: 0.3003003003,
+    titles: ["Metal", "Universe", "Veil: 902"],
   };
 
   let randomNum = Math.random() * 180;
   let cumulativeChance = 0.037;
 
-  if (rollCount % 50 === 0) {
+  if (rollCount % 333 === 0) {
+    cumulativeChance += msfuRarity.chance;
+    if (randomNum <= cumulativeChance) {
+      return msfuRarity;
+    }
+  } else if (rollCount % 50 === 0) {
     cumulativeChance += iridocyclitisVeilRarity.chance;
     if (randomNum <= cumulativeChance) {
       return iridocyclitisVeilRarity;
@@ -5900,7 +5985,7 @@ const backgroundDetails = {
   geezerBgGif: { image: "files/backgrounds/geezer.gif", audio: "geezerAudio" },
   polarrBgImg: { image: "files/backgrounds/polarr.png", audio: "polarrAudio" },
   ethershiftBgImg: { image: "files/backgrounds/ether.png", audio: "ethAudio" },
-  h1diBgImg: { image: "files/backgrounds/h1di.gif", audio: "h1diAudio" },
+  msfuBgImg: { image: "files/backgrounds/msfu.png", audio: "msfuAudio" },
   oppBgImg: { image: "files/backgrounds/oppression.jpg", audio: "oppAudio" },
   norstaBgImg: { image: "files/backgrounds/norsta.png", audio: "norstaAudio" },
   sanclaBgImg: { image: "files/backgrounds/sancla.png", audio: "sanclaAudio" },
@@ -6548,6 +6633,27 @@ function startAnimation11() {
   }, 7000);
 }
 
+function startAnimationMSFU() {
+  const star = document.getElementById("msfuStar");
+
+  star.classList.add("spin");
+
+  setTimeout(() => {
+    star.classList.add("spin-slow");
+  }, 4568);
+
+  setTimeout(() => {
+    star.classList.add("scale-up-and-vanish");
+  }, 6666);
+
+  setTimeout(() => {
+    star.classList.add("msfuStar");
+    star.classList.remove("scale-up-and-vanish");
+    star.classList.remove("spin-slow");
+    star.classList.remove("spin");
+  }, 8888);
+}
+
 function startAnimationBlackHole() {
   createParticleGroup();
   
@@ -6975,6 +7081,7 @@ function getClassForRarity(rarity) {
       'Silly Car :3 [1 in 1,000,000]': 'under10ms',
       'H1di [1 in 9,890,089]': 'under10m',
       'BlindGT [1 in 2,000,000/15th]': 'special',
+      'MSFU [1 in 333/333rd]': 'special',
   };
 
   return rarityClasses[rarity] || null;
@@ -7334,6 +7441,9 @@ document
 document
   .getElementById("deleteAllBlindGTButton")
   .addEventListener("click", () => deleteAllByRarity("blindBgImg"));
+document
+  .getElementById("deleteAllMSFUButton")
+  .addEventListener("click", () => deleteAllByRarity("msfuBgImg"));
 
 
 document
@@ -7356,7 +7466,8 @@ document
       "veilBgImg",
       "expBgImg",
       "aboBgImg",
-      "blindBgImg"
+      "blindBgImg",
+      "msfuBgImg",
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
   });
