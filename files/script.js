@@ -561,6 +561,9 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
   rollButton.disabled = true;
 
+  document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
+  document.getElementById("rollCountDisplay1").innerText = rollCount1;
+
   if (
     rarity.type === "Cursed Mirage [1 in 11,111]" ||
     rarity.type === "Wandering Spirit [1 in 150]" ||
