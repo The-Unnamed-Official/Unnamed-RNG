@@ -554,6 +554,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   veilAudio.currentTime = 0;
   fircraAudio.currentTime = 0;
   blindAudio.currentTime = 0;
+  msfuAudio.currentTime = 0;
 
   let rarity = rollRarity();
   let title = selectTitle(rarity);
