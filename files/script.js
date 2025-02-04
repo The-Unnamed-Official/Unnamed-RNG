@@ -2,6 +2,7 @@ let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
 let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
+let rollCount1 = parseInt(localStorage.getItem("rollCount")) || 0;
 let cooldownTime = 690;
 let timeoutId;
 let countdownInterval;
@@ -19,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadingScreen = document.getElementById("loadingScreen");
   const menuScreen = document.getElementById("menuScreen");
   const mainAudio = document.getElementById("mainAudio");
+
   rollButton.disabled = true;
 
   startButton.addEventListener("click", () => {
@@ -32,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
       rollButton.disabled = false;
       loadingScreen.style.display = "none";
+      formatRollCount();
       mainAudio.play().catch((error) => {
         console.log("Autoplay blocked. User interaction required:", error);
       });
@@ -43,7 +46,7 @@ function showCountdown() {
   const overlay = document.getElementById("overlay");
   const countdownElement = document.getElementById("countdown");
   const imHereButton = document.getElementById("imHereButton");
-  let countdown = 10;
+  let countdown = 30;
 
   overlay.style.display = "flex";
 
@@ -73,19 +76,21 @@ document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         showCountdown();
       }
-    }, 300000);
+    }, 420000);
   } else {
   }
 });
 
 function loadContent() {
   const storedInventory = localStorage.getItem("inventory");
-    if (storedInventory) {
-      inventory = JSON.parse(storedInventory);
-    }
-    renderInventory();
-    musicLoad();
-    updateRollCount();
+  if (storedInventory) {
+    inventory = JSON.parse(storedInventory);
+  }
+  renderInventory();
+  musicLoad();
+  updateRollCount();
+  document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
+  document.getElementById("rollCountDisplay1").innerText = rollCount1;
 }
 
 function load() {
@@ -351,23 +356,26 @@ function musicLoad() {
 
 function formatRollCount(count) {
   if (count >= 1_000_000_000_000) {
-      return (count / 1_000_000_000_000).toFixed(count >= 1_000_000_000_000 ? 0 : 2) + 't';
+      return Math.floor(count / 1_000_000_000_000) + 't';
   } else if (count >= 1_000_000_000) {
-      return (count / 1_000_000_000).toFixed(count >= 1_000_000_000 ? 0 : 2) + 'b';
+      return Math.floor(count / 1_000_000_000) + 'b';
   } else if (count >= 1_000_000) {
-      return (count / 1_000_000).toFixed(count >= 10_000_000 ? 0 : 2) + 'm';
+      return (Math.floor((count / 1_000_000) * 100) / 100) + 'm';
   } else if (count >= 100_000) {
-      return (count / 1_000).toFixed(0) + 'k';
+      return Math.floor(count / 1_000) + 'k';
   } else if (count >= 1_000) {
-      return (count / 1_000).toFixed(2) + 'k';
+      return (Math.floor((count / 1_000) * 100) / 100) + 'k';
   }
   return count.toString();
 }
 
 function updateRollCount(increment = 1) {
   rollCount += increment;
+  rollCount1 += increment;
   const display = document.getElementById('rollCountDisplay');
+  const display1 = document.getElementById('rollCountDisplay');
   display.textContent = formatRollCount(rollCount);
+  display1.textContent = rollCount1;
 }
 
 document.getElementById("rollButton").addEventListener("click", function () {
@@ -541,9 +549,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   expOpeningAudio.currentTime = 0;
   veilAudio.currentTime = 0;
   fircraAudio.currentTime = 0;
-  blindAudio.currentTime = 0;
-
-  document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
+  blindAudio.currentTime = 0;  
 
   let rarity = rollRarity();
   let title = selectTitle(rarity);
@@ -1010,6 +1016,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -1109,6 +1116,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           arcAudio.play();
         }, 100);
@@ -1183,6 +1191,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           expAudio.play();
         }, 100);
@@ -1312,6 +1321,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           harvAudio.play();
         }, 100);
@@ -1441,6 +1451,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           iriAudio.play();
         }, 100);
@@ -1570,6 +1581,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           lubjubAudio.play();
         }, 100);
@@ -1699,6 +1711,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           radAudio.play();
         }, 100);
@@ -1828,6 +1841,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           blindAudio.play();
         }, 100);
@@ -1957,6 +1971,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           shaAudio.play();
         }, 100);
@@ -2085,6 +2100,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           overtureAudio.play();
         }, 100);
@@ -2209,6 +2225,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           celAudio.play();
         }, 100);
@@ -2333,6 +2350,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           devilAudio.play();
         }, 100);
@@ -2405,6 +2423,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           demsoAudio.play();
         }, 100);
@@ -2477,6 +2496,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           hellAudio.play();
         }, 100);
@@ -2548,6 +2568,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           griAudio.play();
         }, 100);
@@ -2592,6 +2613,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -2668,6 +2690,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -2732,6 +2755,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -2803,6 +2827,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -2850,6 +2875,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -2906,6 +2932,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           memAudio.play();
         }, 100);
@@ -2963,6 +2990,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           oblAudio.play();
         }, 100);
@@ -3067,6 +3095,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           eonbreakAudio.play();
         }, 100);
@@ -3109,6 +3138,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           isekaiAudio.play();
         }, 100);
@@ -3151,6 +3181,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           pumpkinAudio.play();
         }, 100);
@@ -3193,6 +3224,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           emerAudio.play();
         }, 100);
@@ -3235,6 +3267,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           samuraiAudio.play();
         }, 100);
@@ -3277,6 +3310,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           contAudio.play();
         }, 100);
@@ -3319,6 +3353,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -3375,6 +3410,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           phaAudio.play();
         }, 100);
@@ -3520,6 +3556,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           unnamedAudio.play();
         }, 100);
@@ -3643,6 +3680,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           curAudio.play();
         }, 100);
@@ -3743,6 +3781,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           celdawAudio.play();
         }, 100);
@@ -3888,6 +3927,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           fatreAudio.play();
         }, 100);
@@ -3906,6 +3946,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           geezerAudio.play();
           setTimeout(() => {
             titleCont.style.visibility = "visible";
@@ -3974,6 +4015,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           polarrAudio.play();
         }, 100);
@@ -5141,11 +5183,13 @@ document.getElementById("rollButton").addEventListener("click", function () {
     updateRollingHistory(title, rarity.type);
     changeBackground(rarity.class);
     rollCount++;
+    rollCount1++;
     setTimeout(() => {
       rollButton.disabled = false;
     }, cooldownTime);
   }
   localStorage.setItem("rollCount", rollCount);
+  localStorage.setItem("rollCount1", rollCount1);
   load();
 });
 
@@ -6837,6 +6881,29 @@ function showStatusMessage(message, duration = 2000) {
       setTimeout(() => (status.style.display = 'none'), 500);
   }, duration);
 }
+
+    let playTime = parseInt(localStorage.getItem('playTime')) || 0;
+    
+    const timerDisplay = document.getElementById('timer');
+
+    function formatTime(seconds) {
+      const hrs = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      return [
+        hrs.toString().padStart(2, '0'),
+        mins.toString().padStart(2, '0'),
+        secs.toString().padStart(2, '0')
+      ].join(':');
+    }
+
+    timerDisplay.textContent = formatTime(playTime);
+
+    setInterval(() => {
+      playTime++;
+      timerDisplay.textContent = formatTime(playTime);
+      localStorage.setItem('playTime', playTime);
+    }, 1000);
 
 document.getElementById('importButton').addEventListener('click', () => {
   const input = document.createElement('input');

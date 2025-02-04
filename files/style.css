@@ -1612,6 +1612,40 @@ body.griCutsceneBgImg {
     z-index: 9999999;
 }
 
+.statistics {
+    color: #fff;
+    margin-bottom: 40px;
+}
+
+.rollsCount1 {
+    position: relative;
+    background: #ffffff05;
+    backdrop-filter: blur(5px);
+    color: #fff;
+    margin-bottom: 20px;
+    border-radius: 15px;
+    padding: 10px 6px;
+    z-index: 9999999;
+}
+
+.rollsCount2 {
+    background: #ffffff21;
+    color: #fff;
+    margin-bottom: 20px;
+    border-radius: 15px;
+    padding: 10px 6px;
+    z-index: 9999999;
+}
+
+.timerTotal {
+    margin-top: 20px;
+}
+
+.count1 {
+    top: 22px;
+    left: 30px;
+}
+
 .count {
     top: 22px;
     left: 30px;

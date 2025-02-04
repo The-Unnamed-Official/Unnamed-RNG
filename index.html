@@ -25,37 +25,52 @@
   </div>
 
   <div id="overlay">
-    <p>The game will reset in</p>
-    <div id="countdown">10</div>
-    <button id="imHereButton">I'm here</button>
-  </div>
-
+      <p>The game will reset in</p>
+      <div id="countdown">10</div>
+      <button id="imHereButton">I'm here</button>
+    </div>
+    
     <div id="settingsMenu" class="settings-menu" style="display: none;">
-        <h3>Settings</h3>
-    
-        <div class="setting-item">
-            <label class="aSlid" for="audioSlider">Audio Volume:</label>
-            <div class="slider-container">
-                <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
-                <button id="muteButton" class="settingsBtns">Mute</button>
+        <div class="rollsCount1">
+            <h3>Settings</h3>
+        
+            <div class="setting-item">
+                <label class="aSlid" for="audioSlider">Audio Volume:</label>
+                <div class="slider-container">
+                    <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
+                    <button id="muteButton" class="settingsBtns">Mute</button>
+                </div>
             </div>
-        </div>
-    
-        <div class="setting-item">
-            <button id="resetDataButton" class="settingsBtns">Reset Data</button>
-        </div>
-        <div class="setting-item">
-            <button id="toggleRollDisplayBtn" class="settingsBtns">Hide Roll & Display</button>
-            <button id="toggleRollHistoryBtn" class="settingsBtns">Hide Roll History</button>
-        </div>
+        
+            <div class="setting-item">
+                <button id="resetDataButton" class="settingsBtns">Reset Data</button>
+            </div>
+            <div class="setting-item">
+                <button id="toggleRollDisplayBtn" class="settingsBtns">Hide Roll & Display</button>
+                <button id="toggleRollHistoryBtn" class="settingsBtns">Hide Roll History</button>
+            </div>
 
-        <div class="settings-item">
-            <button id="saveButton" class="settingsBtns">Save Data</button>
-            <button id="importButton" class="settingsBtns">Import Data</button>
-            <p id="status" class="statusImport"></p>
+            <div class="settings-item">
+                <button id="saveButton" class="settingsBtns">Save Data</button>
+                <button id="importButton" class="settingsBtns">Import Data</button>
+                <p id="status" class="statusImport"></p>
+            </div>
+
+            <div class="settings-item">
+                <div class="rollsCount2">
+                    <h1 class="statistics">Statistics</h1>
+                    <h3 class="count1">Total Rolls:</h3>
+                        <a class="totalCount1" id="rollCountDisplay1">NaN</a>
+                    <br>
+                    <div class="timer-container">
+                        <h3 class="timerTotal">Playtime Timer:</h3>
+                        <div class="timer" id="timer">00:00:00</div>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="closeSettings" class="settingsBtns">Close</button>
         </div>
-    
-        <button id="closeSettings" class="settingsBtns">Close</button>
     </div>
 
     <button id="toggleUiBtn">Hide UI</button>
@@ -89,7 +104,7 @@
         
         <div class="container1">
             <div class="rollsCount">
-                <h3 class="count">Rolls: <a class="totalCount" id="rollCountDisplay"></a></h3>
+                <h3 class="count">Rolls: <a class="totalCount" id="rollCountDisplay">NaN</a></h3>
             </div>
     
             <button id="settingsButton" class="orange-button">Settings</button>
