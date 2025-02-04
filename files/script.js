@@ -6801,6 +6801,31 @@ function scheduleButtonAppearance() {
 
 scheduleButtonAppearance();
 
+document.addEventListener("DOMContentLoaded", () => {
+  const settingsMenu = document.getElementById("settingsMenu");
+  const header = settingsMenu.querySelector("h3");
+  let isDragging = false;
+  let offsetX, offsetY;
+
+  header.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      offsetX = e.clientX - settingsMenu.offsetLeft;
+      offsetY = e.clientY - settingsMenu.offsetTop;
+      header.style.cursor = "grabbing";
+  });
+
+  document.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      settingsMenu.style.left = e.clientX - offsetX + "px";
+      settingsMenu.style.top = e.clientY - offsetY + "px";
+  });
+
+  document.addEventListener("mouseup", () => {
+      isDragging = false;
+      header.style.cursor = "grab";
+  });
+});
+
 const settingsButton = document.getElementById("settingsButton");
 const settingsMenu = document.getElementById("settingsMenu");
 const closeSettings = document.getElementById("closeSettings");

@@ -282,6 +282,12 @@ body {
     color: red;
 }
 
+.dragTxt {
+    opacity: 0.5;
+    padding: 3px;
+    cursor: grab;
+}
+
 #settingsMenu {
     position: fixed;
     top: 50%;
@@ -297,6 +303,11 @@ body {
     color: white;
     font-family: 'Arial', sans-serif;
     text-align: center;
+}
+
+#settingsMenu .rollsCount1 {
+    padding: 15px;
+    border-radius: 10px;
 }
 
 #settingsMenu h2 {
