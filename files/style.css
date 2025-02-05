@@ -849,6 +849,12 @@ body {
     object-fit: contain;
 }
 
+.blodBgImg {
+    background: url(backgrounds/blod.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 .isekaiBgImg {
     background: url(backgrounds/isekai.png);
     background-size: cover;
