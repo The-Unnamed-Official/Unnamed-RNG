@@ -5934,7 +5934,7 @@ function clickSound() {
   document.getElementById("rollButton").addEventListener("click", clickSound);
 }
 
-function showPopup() {
+function showPopupCopyTxt() {
   var copyText = document.getElementById("unnamedUser");
   copyText.hidden = false;
   copyText.select();
