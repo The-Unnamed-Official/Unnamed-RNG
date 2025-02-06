@@ -46,10 +46,16 @@
     font-size: large;
     left: 50%;
     z-index: 99999999;
-    width: 100px;
+    width: 300px;
     padding: 20px;
     background-color: #00000069;
     border-radius: 25px;
+}
+
+.vNumberDetailed {
+    color: #999;
+    display: inline;
+    margin-left: 5px;
 }
 
 .snowflake {
@@ -766,30 +772,65 @@ body {
     opacity: 0;
 }
 
+.GATOPEEK {
+    position: absolute;
+    bottom: 50px;
+    left: 400px;
+}
+
+.maxwellCat {
+    position: absolute;
+    max-height: 150px;
+    bottom: 80px;
+    left: 75px;
+    pointer-events: none;
+}
+
+.oiiai {
+    position: absolute;
+    pointer-events: none;
+    top: 69px;
+    left: 33px;
+}
+
 #roll {
     scale: 300%;
 }
 
 .rButton:hover {
     background: #4169e1;
-    transform: rotate(360deg);
+    transform: scale(1.1);
 }
 
 .rButton:active {
     background: #2e4a9c;
-    transform: scale(0.8);
 }
 
 .rButton:disabled {
     background-color: #3a465c;
     cursor: not-allowed;
-    transform: scale(1);
+    animation: rollSpin 0.5s ease;
+}
+
+@keyframes rollSpin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 #result {
     margin-top: 20px;
     font-size: 24px;
     font-weight: bold;
+}
+
+.tuonBgImg {
+    background: url(backgrounds/tuon.gif);
+    background-size: cover;
+    object-fit: contain;
 }
 
 .shaBgImg {
