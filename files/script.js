@@ -6065,6 +6065,8 @@ window.addEventListener("resize", function () {
   } else {
     container.style.left = "383px";
     button.style.display = "inline-block";
+    inventory.style.width = "60vh";
+    inventory.style.height = "85vh";
 
     if (originalParent && !originalParent.contains(sliderContainer)) {
       originalParent.appendChild(sliderContainer);
