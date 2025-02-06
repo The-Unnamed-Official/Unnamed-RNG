@@ -5934,7 +5934,7 @@ function clickSound() {
   document.getElementById("rollButton").addEventListener("click", clickSound);
 }
 
-function unnamedUser() {
+function showPopup() {
   var copyText = document.getElementById("unnamedUser");
   copyText.hidden = false;
   copyText.select();
@@ -5942,8 +5942,28 @@ function unnamedUser() {
   copyText.hidden = true;
   alert("Copied selected discord user: " + copyText.value);
 
+  document.getElementById("profileModal").style.display = "block";
+}
+
+function closePopup() {
+  document.getElementById("profileModal").style.display = "none";
+}
+
+function openDiscord() {
   window.open("https://discord.gg/m6k7Jagm3v", "_blank");
-  window.open("https://the-unnamed-official.itch.io", "_blank");
+  closePopup();
+}
+
+function openGithub() {
+  window.open("https://github.com/The-Unnamed-Official/Unnamed-RNG/tree/published", "_blank");
+  closePopup();
+}
+
+window.onclick = function(event) {
+  var modal = document.getElementById("profileModal");
+  if (event.target === modal) {
+    modal.style.display = "none";
+  }
 }
 
 function selectTitle(rarity) {
@@ -5964,6 +5984,15 @@ function changeBackground(rarityClass) {
 }
 
 function addToInventory(title, rarityClass) {
+  const excludedRarities = new Set(
+    Array.from(document.querySelectorAll('.rarity-button.active')).map(btn => btn.dataset.rarity)
+  );
+
+  if (Object.keys(rarityCategories).some(category => 
+    excludedRarities.has(category) && rarityCategories[category].includes(rarityClass))) {
+    return;
+  }
+
   inventory.push({ title, rarityClass });
   localStorage.setItem("inventory", JSON.stringify(inventory));
   renderInventory();
@@ -7441,7 +7470,7 @@ document
   .addEventListener("click", () => deleteAllByRarity("toxBgImg"));
 
 
-  document
+document
   .getElementById("deleteAllUnder1kButton")
   .addEventListener("click", () => {
     renderInventory();
@@ -7465,7 +7494,7 @@ document
       "specBgImg",
     ];
     raritiesUnder1k.forEach(rarity => deleteAllByRarity(rarity));
-  });
+});
 
 document
   .getElementById("deleteAllUnstoppableButton")
@@ -7517,7 +7546,7 @@ document
   .addEventListener("click", () => deleteAllByRarity("frightBgImg"));
 
 
-  document
+document
   .getElementById("deleteAllUnder10kButton")
   .addEventListener("click", () => {
     renderInventory();
@@ -7549,7 +7578,7 @@ document
       "demsoBgImg",
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
-  });
+});
 
 document
   .getElementById("deleteAllSeraphsWingButton")
@@ -7647,7 +7676,7 @@ document
       "cursedmirageBgImg"
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
-  });
+});
 
 document
   .getElementById("deleteAllCelestialDawnButton")
@@ -7756,7 +7785,7 @@ document
       "celestialchorusBgImg",
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
-  });
+});
 
 document
   .getElementById("deleteAllSpecialButton")
@@ -7771,7 +7800,7 @@ document
       "msfuBgImg",
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
-  });
+});
 
 function createParticle(minRadius, maxRadius, minSize, maxSize, speed, rotationRange) {
   const particle = document.createElement('div');
@@ -7817,3 +7846,40 @@ function createParticleGroup() {
     system.appendChild(particle);
   }
 }
+
+const rarityCategories = {
+  under100: [
+    "commonBgImg", "rareBgImg", "epicBgImg", "legendaryBgImg", "impossibleBgImg",
+    "poweredBgImg", "plabreBgImg", "solarpowerBgImg", "belivBgImg", "flickerBgImg", "toxBgImg"
+  ],
+  under1k: [
+    "unstoppableBgImg", "spectralBgImg", "starfallBgImg", "gargBgImg", "memBgImg", "oblBgImg",
+    "phaBgImg", "isekaiBgImg", "emerBgImg", "samuraiBgImg", "contBgImg", "wanspiBgImg",
+    "froBgImg", "mysBgImg", "forgBgImg", "curartBgImg", "specBgImg"
+  ],
+  under10k: [
+    "ethershiftBgImg", "hellBgImg", "frightBgImg", "seraphwingBgImg", "shadBgImg", "shaBgImg",
+    "nighBgImg", "voiBgImg", "silBgImg", "ghoBgImg", "endBgImg", "abysBgImg", "darBgImg",
+    "twiligBgImg", "ethpulBgImg", "eniBgImg", "griBgImg", "fearBgImg", "hauntBgImg",
+    "foundsBgImg", "lostsBgImg", "hauBgImg", "lubjubBgImg", "radBgImg", "demsoBgImg"
+  ],
+  under100k: [
+    "celdawBgImg", "fatreBgImg", "unnamedBgImg", "eonbreakBgImg", "overtureBgImg",
+    "arcanepulseBgImg", "harvBgImg", "devilBgImg", "cursedmirageBgImg"
+  ],
+  under1m: ["impeachedBgImg", "celestialchorusBgImg"],
+  special: ["iriBgImg", "veilBgImg", "expBgImg", "aboBgImg", "blindBgImg", "msfuBgImg"]
+};
+
+document.querySelectorAll(".rarity-button").forEach(button => {
+  button.addEventListener("click", () => {
+    button.classList.toggle("active");
+  });
+});
+
+setInterval(() => {
+  renderInventory();
+  document.querySelectorAll('.rarity-button.active').forEach(button => {
+    rarityCategories[button.dataset.rarity].forEach(rarity => deleteAllByRarity(rarity));
+  });
+}, 1000);

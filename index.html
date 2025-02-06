@@ -52,13 +52,24 @@
                 <button id="toggleRollHistoryBtn" class="settingsBtns">Hide Roll History</button>
             </div>
 
-            <div class="settings-item">
+            <div class="setting-item">
                 <button id="saveButton" class="settingsBtns">Save Data</button>
                 <button id="importButton" class="settingsBtns">Import Data</button>
                 <p id="status" class="statusImport"></p>
             </div>
 
             <div class="settings-item">
+                <div id="rarityChecklist">
+                    <button class="rarity-button" data-rarity="under100">Basic</button>
+                    <button class="rarity-button" data-rarity="under1k">Decent</button>
+                    <button class="rarity-button" data-rarity="under10k">Grand</button>
+                    <button class="rarity-button" data-rarity="under100k">Mastery</button>
+                    <button class="rarity-button" data-rarity="under1m">Supreme</button>
+                    <button class="rarity-button" data-rarity="special">Special</button>
+                </div>                  
+            </div>
+
+            <div class="setting-item">
                 <div class="rollsCount2">
                     <h1 class="statistics">Statistics</h1>
                     <h3 class="count1">Total Rolls:</h3>
@@ -120,13 +131,23 @@
 
                 <br>
 
-                <h2 class="cu">𝐔𝐧𝐧𝐚𝐦𝐞𝐝</h2>
+                <h2 class="cu">𝐔𝐧𝐧𝐚𝐦𝐞𝐝 𝚁𝙽𝙶</h2>
 
                 <div class="creatorUnnamed">
                     <input type="text" value="not.unnamed" id="unnamedUser" hidden>
-                    <img class="unnamed" src="files/images/unnamed_pfp.png" width="80px">
-                    <div class="unnamedDeco" onclick="unnamedUser()"></div>
+                    <img class="unnamed" id="profile" src="files/images/unnamed_pfp.gif" width="80px">
+                    <div class="unnamedDeco" onclick="showPopup()"></div>
                 </div>
+            </div>
+        </div>
+
+        <div id="profileModal" class="modal">
+            <div class="modal-content">
+              <h2>Select an Option</h2>
+              <button class="modal-button discord-btn" onclick="openDiscord()">Open Discord <i class="fa-brands fa-discord"></i></button>
+              <button class="modal-button github-btn" onclick="openGithub()">Open GitHub <i class="fa-brands fa-github"></i></button>
+              <br><br>
+              <button class="modal-button cancel-btn" onclick="closePopup()">Cancel</button>
             </div>
         </div>
 

@@ -320,7 +320,7 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 500px;
+    width: 600px;
     padding: 20px;
     background: url(backgrounds/rng_master.png);
     border-radius: 10px;
@@ -1420,16 +1420,15 @@ body.griCutsceneBgImg {
 .cu {
     position: absolute;
     top: 50px;
-    left: 30px;
+    left: 10px;
     color: #ffffff;
     z-index: 99999;
 }
 
 .unnamedDeco {
-    position: relative;
-    margin-top: 70px;
-    top: -10px;
-    left: -30px;
+    position: absolute;
+    top: 70px;
+    left: -25px;
     width: 100px;
     height: 100px;
     cursor: pointer;
@@ -1474,6 +1473,76 @@ body.griCutsceneBgImg {
     }
 }
 
+#profile {
+    cursor: pointer;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    color: #fff;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: #00000000;
+    backdrop-filter: blur(3px);
+    z-index: 9789978448;
+}
+
+.modal-content {
+    background: #00000000;
+    margin: 15% auto;
+    padding: 20px;
+    width: 300px;
+    text-align: center;
+    border-radius: 8px;
+}
+
+.modal-button {
+    margin: 5px;
+    padding: 10px 15px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.discord-btn {
+    background-color: #7289DA;
+    color: white;
+    transition: background-color 0.2s ease, scale 0.2s ease;
+}
+
+.discord-btn:hover {
+    background-color: #657ac4;
+    scale: 1.1;
+}
+
+.github-btn {
+    background-color: #333;
+    color: white;
+    transition: background-color 0.2s ease, scale 0.2s ease;
+}
+
+.github-btn:hover {
+    background-color: #2c2c2c;
+    scale: 1.1;
+}
+
+.cancel-btn {
+    background-color: #442929;
+    color: #fff;
+    transition: background-color 0.2s ease, scale 0.2s ease;
+}
+
+.cancel-btn:hover {
+    background-color: #3d2121;
+    scale: 1.1;
+}
+
 #autoRollButton {
     background-color: #ff6347;
     color: #ffffff;
@@ -1488,6 +1557,40 @@ body.griCutsceneBgImg {
 
 #autoRollButton:hover {
     scale: 1.1;
+}
+
+#rarityChecklist {
+    display: flex;
+    gap: 10px;
+    background: #222;
+    padding: 10px;
+    border-radius: 8px;
+    align-items: center;
+    margin: 10px;
+    margin-bottom: 5px;
+}
+  
+.rarity-button {
+    background: #444;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.2s;
+}
+  
+.rarity-button.active {
+    background: #93c58c;
+    transform: scale(1.1);
+}
+
+.rarity-button.active:hover {
+    background: #3d753b;
+}
+  
+.rarity-button:hover {
+    background: #555;
 }
 
 .inventory {
