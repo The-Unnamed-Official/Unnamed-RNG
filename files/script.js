@@ -273,7 +273,7 @@ function musicLoad() {
   expAudio.pause();
   veilAudio.pause();
   msfuAudio.pause();
-  blodAudio.play();
+  blodAudio.pause();
 
   suspenseAudio.currentTime = 0;
   expOpeningAudio.currentTime = 0;
