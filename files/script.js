@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
       rollButton.disabled = false;
       loadingScreen.style.display = "none";
       formatRollCount();
+      loadToggledStates();
     }, 2000);
   });
 });
@@ -85,6 +86,7 @@ function loadContent() {
   }
   renderInventory();
   musicLoad();
+  loadToggledStates();
   updateRollCount();
   document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
   document.getElementById("rollCountDisplay1").innerText = rollCount1;
@@ -98,6 +100,7 @@ function load() {
     }
     renderInventory();
     musicLoad();
+    loadToggledStates();
     updateRollCount();
     formatRollCount();
   });
@@ -587,7 +590,6 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Enigmatic Dream [1 in 7,500]" ||
     rarity.type === "Celestial Dawn [1 in 12,000]" ||
     rarity.type === "Fate's Requiem [1 in 15,000]" ||
-    rarity.type === "Pumpkin [1 in 999]" ||
     rarity.type === "Demon Soul [1 in 9,999]" ||
     rarity.type === "Fear [1 in 1,250]" ||
     rarity.type === "Grim Destiny [1 in 8,500]" ||
@@ -3355,49 +3357,6 @@ document.getElementById("rollButton").addEventListener("click", function () {
         }, 100);
         enableChange();
       }, 3000); // Wait for 3 seconds
-    } else if (rarity.type === "Pumpkin [1 in 999]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation10();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 33; i++) {
-        const star = document.createElement("span");
-        star.className = "orange-star";
-        star.innerHTML = "⁂";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          pumpkinAudio.play();
-        }, 100);
-        enableChange();
-      }, 3000); // Wait for 3 seconds
     } else if (rarity.type === "Emergencies [1 in 500]") {
       document.body.className = "blackBg";
       disableChange();
@@ -5985,14 +5944,30 @@ function addToInventory(title, rarityClass) {
     Array.from(document.querySelectorAll('.rarity-button.active')).map(btn => btn.dataset.rarity)
   );
 
-  if (Object.keys(rarityCategories).some(category => 
-    excludedRarities.has(category) && rarityCategories[category].includes(rarityClass))) {
-    return;
+  for (const category in rarityCategories) {
+    if (excludedRarities.has(category) && rarityCategories[category].includes(rarityClass)) {
+      return;
+    }
   }
 
   inventory.push({ title, rarityClass });
   localStorage.setItem("inventory", JSON.stringify(inventory));
   renderInventory();
+}
+
+function saveToggledStates() {
+  const activeRarities = Array.from(document.querySelectorAll('.rarity-button.active'))
+    .map(btn => btn.dataset.rarity);
+  localStorage.setItem("toggledRarities", JSON.stringify(activeRarities));
+}
+
+function loadToggledStates() {
+  const savedRarities = JSON.parse(localStorage.getItem("toggledRarities")) || [];
+  document.querySelectorAll(".rarity-button").forEach(button => {
+    if (savedRarities.includes(button.dataset.rarity)) {
+      button.classList.add("active");
+    }
+  });
 }
 
 function deleteAllFromInventory() {
@@ -6297,11 +6272,8 @@ function renderInventory() {
   const end = start + itemsPerPage;
   const paginatedItems = inventory.slice(start, end);
 
-  const invItems = paginatedItems;
-
-  invItems.forEach((item, index) => {
+  paginatedItems.forEach((item, index) => {
     const absoluteIndex = start + index;
-
     const listItem = document.createElement("li");
     listItem.className = item.rarityClass;
 
@@ -6310,7 +6282,6 @@ function renderInventory() {
     itemTitle.textContent = item.title.toUpperCase();
 
     const rarityText = document.createElement("span");
-
     listItem.appendChild(itemTitle);
     listItem.appendChild(rarityText);
 
@@ -6342,10 +6313,8 @@ function renderInventory() {
     listItem.appendChild(burgerBar);
 
     let isDropdownOpen = false;
-
     burgerBar.addEventListener("click", (event) => {
       event.stopPropagation();
-
       isDropdownOpen = !isDropdownOpen;
       dropdownMenu.style.display = isDropdownOpen ? "block" : "none";
     });
@@ -7871,12 +7840,6 @@ const rarityCategories = {
 document.querySelectorAll(".rarity-button").forEach(button => {
   button.addEventListener("click", () => {
     button.classList.toggle("active");
+    saveToggledStates();
   });
 });
-
-setInterval(() => {
-  renderInventory();
-  document.querySelectorAll('.rarity-button.active').forEach(button => {
-    rarityCategories[button.dataset.rarity].forEach(rarity => deleteAllByRarity(rarity));
-  });
-}, 1000);
