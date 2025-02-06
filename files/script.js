@@ -6038,6 +6038,40 @@ document
     }
 });
 
+window.addEventListener("resize", function () {
+  const container = document.querySelector(".container1");
+  const inventory = document.querySelector(".inventory");
+  const button = document.getElementById("settingsButton");
+  const sliderContainer = document.querySelector(".slider-container");
+  const originalParent = document.querySelector(".original-parent");
+
+  if (window.innerWidth < 821) {
+    button.style.display = "none";
+    container.style.left = "10px";
+    inventory.style.height = "58vh";
+    inventory.style.width = "42vh";
+
+    if (!container.contains(sliderContainer)) {
+      container.appendChild(sliderContainer);
+    }
+  } else if (window.innerWidth > 821 && window.innerHeight > 1400) { 
+    // Fix: Use '&&' instead of '&'
+    inventory.style.width = "70vh";
+    container.style.left = "383px";
+
+    if (originalParent && !originalParent.contains(sliderContainer)) {
+      originalParent.appendChild(sliderContainer);
+    }
+  } else {
+    container.style.left = "383px";
+    button.style.display = "inline-block";
+
+    if (originalParent && !originalParent.contains(sliderContainer)) {
+      originalParent.appendChild(sliderContainer);
+    }
+  }
+});
+
 document
   .getElementById("toggleRollHistoryBtn")
   .addEventListener("click", function () {

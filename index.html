@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Unnamed's RNG</title>
     <script src="https://kit.fontawesome.com/fe85db6219.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -26,7 +26,7 @@
 
   <div id="overlay">
       <p>The game will reset in</p>
-      <div id="countdown">10</div>
+      <div id="countdown">30</div>
       <button id="imHereButton">I'm here</button>
     </div>
     
@@ -36,9 +36,11 @@
         
             <div class="setting-item">
                 <label class="aSlid" for="audioSlider">Audio Volume:</label>
-                <div class="slider-container">
-                    <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
-                    <button id="muteButton" class="settingsBtns">Mute</button>
+                <div class="original-parent">
+                    <div class="slider-container">
+                      <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
+                      <button id="muteButton" class="settingsBtns">Mute</button>
+                    </div>
                 </div>
             </div>
         

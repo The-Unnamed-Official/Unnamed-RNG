@@ -6,6 +6,33 @@
     z-index: 99999;
 }
 
+@media (max-width: 820px) {
+    body {
+        font-size: 16px;
+    }
+    .container {
+        width: 90%;
+    }
+    #rollingHistory {
+        visibility: hidden;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        font-size: 14px;
+    }
+    .container {
+        width: 100%;
+    }
+    #rollingHistory {
+        visibility: hidden;
+    }
+    .container1 {
+        left: 10px;
+    }
+}
+
 .version {
     color: #fff;
     position: absolute;
