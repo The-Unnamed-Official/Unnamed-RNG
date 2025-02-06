@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Unnamed's RNG</title>
     <script src="https://kit.fontawesome.com/fe85db6219.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
@@ -11,7 +11,7 @@
 <body>
 
     <div class="version">
-        <a class="vNumber">Version: 0.9.5</a>
+        <a class="vNumber">Version: 0.9.6</a>
     </div>
     
     <div id="menuScreen">
@@ -25,37 +25,65 @@
   </div>
 
   <div id="overlay">
-    <p>The game will reset in</p>
-    <div id="countdown">10</div>
-    <button id="imHereButton">I'm here</button>
-  </div>
-
-    <div id="settingsMenu" class="settings-menu" style="display: none;">
-        <h3>Settings</h3>
+      <p>The game will reset in</p>
+      <div id="countdown">30</div>
+      <button id="imHereButton">I'm here</button>
+    </div>
     
-        <div class="setting-item">
-            <label class="aSlid" for="audioSlider">Audio Volume:</label>
-            <div class="slider-container">
-                <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
-                <button id="muteButton" class="settingsBtns">Mute</button>
+    <div id="settingsMenu" class="settings-menu" style="display: none;"> <h3 class="dragTxt">Hold me to drag</h3>
+        <div class="rollsCount1">
+            <h3>Settings</h3>
+        
+            <div class="setting-item">
+                <label class="aSlid" for="audioSlider">Audio Volume:</label>
+                <div class="original-parent">
+                    <div class="slider-container">
+                      <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
+                      <button id="muteButton" class="settingsBtns">Mute</button>
+                    </div>
+                </div>
             </div>
-        </div>
-    
-        <div class="setting-item">
-            <button id="resetDataButton" class="settingsBtns">Reset Data</button>
-        </div>
-        <div class="setting-item">
-            <button id="toggleRollDisplayBtn" class="settingsBtns">Hide Roll & Display</button>
-            <button id="toggleRollHistoryBtn" class="settingsBtns">Hide Roll History</button>
-        </div>
+        
+            <div class="setting-item">
+                <button id="resetDataButton" class="settingsBtns">Reset Data</button>
+            </div>
+            <div class="setting-item">
+                <button id="toggleRollDisplayBtn" class="settingsBtns">Hide Roll & Display</button>
+                <button id="toggleRollHistoryBtn" class="settingsBtns">Hide Roll History</button>
+            </div>
 
-        <div class="settings-item">
-            <button id="saveButton" class="settingsBtns">Save Data</button>
-            <button id="importButton" class="settingsBtns">Import Data</button>
-            <p id="status" class="statusImport"></p>
+            <div class="setting-item">
+                <button id="saveButton" class="settingsBtns">Save Data</button>
+                <button id="importButton" class="settingsBtns">Import Data</button>
+                <p id="status" class="statusImport"></p>
+            </div>
+
+            <div class="settings-item">
+                <div id="rarityChecklist">
+                    <button class="rarity-button" data-rarity="under100">Basic</button>
+                    <button class="rarity-button" data-rarity="under1k">Decent</button>
+                    <button class="rarity-button" data-rarity="under10k">Grand</button>
+                    <button class="rarity-button" data-rarity="under100k">Mastery</button>
+                    <button class="rarity-button" data-rarity="under1m">Supreme</button>
+                    <button class="rarity-button" data-rarity="special">Special</button>
+                </div>                  
+            </div>
+
+            <div class="setting-item">
+                <div class="rollsCount2">
+                    <h1 class="statistics">Statistics</h1>
+                    <h3 class="count1">Total Rolls:</h3>
+                        <a class="totalCount1" id="rollCountDisplay1">NaN</a>
+                    <br>
+                    <div class="timer-container">
+                        <h3 class="timerTotal">Playtime Timer:</h3>
+                        <div class="timer" id="timer">00:00:00</div>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="closeSettings" class="settingsBtns">Close</button>
         </div>
-    
-        <button id="closeSettings" class="settingsBtns">Close</button>
     </div>
 
     <button id="toggleUiBtn">Hide UI</button>
@@ -77,6 +105,7 @@
     <img class="cutsceneStar" src="files/images/cutscene_star.png" id="star">
     <img class="cutsceneStarBig" src="files/images/cutscene_star_big.png" id="starBig">
     <img class="cutsceneStarSmall" src="files/images/cutscene_star_small.png" id="starSmall">
+    <img class="msfuStar" src="files/images/msfu_star.png" id="msfuStar">
     <img class="cutsceneStarEvent" src="files/images/cutscene_star_event.png" id="starEvent">
     <img class="cutsceneHeart" src="files/images/cutscene_heart.png" id="heart">
 
@@ -89,7 +118,7 @@
         
         <div class="container1">
             <div class="rollsCount">
-                <h3 class="count">Rolls: <a class="totalCount" id="rollCountDisplay"></a></h3>
+                <h3 class="count">Rolls: <a class="totalCount" id="rollCountDisplay">NaN</a></h3>
             </div>
     
             <button id="settingsButton" class="orange-button">Settings</button>
@@ -102,13 +131,23 @@
 
                 <br>
 
-                <h2 class="cu">𝐔𝐧𝐧𝐚𝐦𝐞𝐝</h2>
+                <h2 class="cu">𝐔𝐧𝐧𝐚𝐦𝐞𝐝 𝚁𝙽𝙶</h2>
 
                 <div class="creatorUnnamed">
                     <input type="text" value="not.unnamed" id="unnamedUser" hidden>
-                    <img class="unnamed" src="files/images/unnamed_pfp.png" width="80px">
-                    <div class="unnamedDeco" onclick="unnamedUser()"></div>
+                    <img class="unnamed" id="profile" src="files/images/unnamed_pfp.gif" width="80px">
+                    <div class="unnamedDeco" onclick="showPopup()"></div>
                 </div>
+            </div>
+        </div>
+
+        <div id="profileModal" class="modal">
+            <div class="modal-content">
+              <h2>Select an Option</h2>
+              <button class="modal-button discord-btn" onclick="openDiscord()">Open Discord <i class="fa-brands fa-discord"></i></button>
+              <button class="modal-button github-btn" onclick="openGithub()">Open GitHub <i class="fa-brands fa-github"></i></button>
+              <br><br>
+              <button class="modal-button cancel-btn" onclick="closePopup()">Cancel</button>
             </div>
         </div>
 
@@ -231,11 +270,11 @@
 
                 <button id="deleteAllFircraButton" class="buttonDiv">
                     <p class="eventTitle">Delete All Firecracker</p>
-                    </button>
+                </button>
 
-                    <button id="deleteAllSpecialButton" class="buttonDivClass">
-                        <p class="special">Delete All Special</p>
-                    </button>
+                <button id="deleteAllSpecialButton" class="buttonDivClass">
+                    <p class="special">Delete All Special</p>
+                </button>
                 <button id="deleteAllVeilButton" class="buttonDiv">
                     <p class="special">Delete All Veil</p>
                 </button>
@@ -247,6 +286,12 @@
                 </button>
                 <button id="deleteAllIridocyclitisVeilButton" class="buttonDiv">
                     <p class="special">Delete All Iridocyclitis Veil</p>
+                </button>
+                <button id="deleteAllBlindGTButton" class="buttonDiv">
+                    <p class="special">Delete All BlindGT</p>
+                </button>
+                <button id="deleteAllMSFUButton" class="buttonDiv">
+                    <p class="special">Delete All MSFU</p>
                 </button>
 
                 <button id="deleteAllUnder100kButton" class="buttonDivClass">
@@ -269,6 +314,10 @@
                 </button>
                 <button id="deleteAllOvertureButton" class="buttonDiv">
                     <p class="under100k">Delete All Overture</p>
+                </button>
+                
+                <button id="deleteAllBlodhestButton" class="buttonDiv">
+                    <p class="under100k">Delete All Blodhest</p>
                 </button>
                 <button id="deleteAllHarvButton" class="buttonDiv">
                     <p class="under100k">Delete All HARV</p>
@@ -323,6 +372,8 @@
     <audio id="expOpeningAudio" src="files/sounds_and_music/exp_opening.mp3"></audio>
     <audio id="plabreAudio" src="files/sounds_and_music/plabre.mp3" loop></audio>
     <audio id="aboAudio" src="files/sounds_and_music/abo.mp3" loop></audio>
+    <audio id="msfuAudio" src="files/sounds_and_music/msfu.mp3" loop></audio>
+    <audio id="blindAudio" src="files/sounds_and_music/blind.mp3" loop></audio>
     <audio id="isekaiAudio" src="files/sounds_and_music/isekai.mp3" loop></audio>
     <audio id="emerAudio" src="files/sounds_and_music/emergencies.mp3" loop></audio>
     <audio id="samuraiAudio" src="files/sounds_and_music/samurai.mp3" loop></audio>
@@ -397,6 +448,7 @@
     <audio id="expAudio" src="files/sounds_and_music/exp.mp3" loop></audio>
     <audio id="veilAudio" src="files/sounds_and_music/veil.mp3" loop></audio>
     <audio id="h1diAudio" src="files/sounds_and_music/h1di.mp3" loop></audio>
+    <audio id="blodAudio" src="files/sounds_and_music/blod.mp3" loop></audio>
     <audio id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio>
     <!-- <audio id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio> -->
 

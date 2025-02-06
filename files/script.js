@@ -2,7 +2,17 @@ let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
 let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
+let rollCount1 = parseInt(localStorage.getItem("rollCount")) || 0;
 let cooldownTime = 690;
+let timeoutId;
+let countdownInterval;
+let tabbedOutTime = null;
+let currentAudio = null;
+let isChangeEnabled = true;
+let autoRollInterval = null;
+let audioVolume = 1;
+let isMuted = false;
+let previousVolume = audioVolume;
 
 document.addEventListener("DOMContentLoaded", () => {
   const rollButton = document.getElementById("rollButton");
@@ -10,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadingScreen = document.getElementById("loadingScreen");
   const menuScreen = document.getElementById("menuScreen");
   const mainAudio = document.getElementById("mainAudio");
+
   rollButton.disabled = true;
 
   startButton.addEventListener("click", () => {
@@ -23,6 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
       rollButton.disabled = false;
       loadingScreen.style.display = "none";
+      formatRollCount();
       mainAudio.play().catch((error) => {
         console.log("Autoplay blocked. User interaction required:", error);
       });
@@ -30,15 +42,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-let timeoutId;
-let countdownInterval;
-let tabbedOutTime = null;
-
 function showCountdown() {
   const overlay = document.getElementById("overlay");
   const countdownElement = document.getElementById("countdown");
   const imHereButton = document.getElementById("imHereButton");
-  let countdown = 10;
+  let countdown = 30;
 
   overlay.style.display = "flex";
 
@@ -68,19 +76,21 @@ document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         showCountdown();
       }
-    }, 300000);
+    }, 420000);
   } else {
   }
 });
 
 function loadContent() {
   const storedInventory = localStorage.getItem("inventory");
-    if (storedInventory) {
-      inventory = JSON.parse(storedInventory);
-    }
-    renderInventory();
-    musicLoad();
-    updateRollCount();
+  if (storedInventory) {
+    inventory = JSON.parse(storedInventory);
+  }
+  renderInventory();
+  musicLoad();
+  updateRollCount();
+  document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
+  document.getElementById("rollCountDisplay1").innerText = rollCount1;
 }
 
 function load() {
@@ -177,12 +187,16 @@ function musicLoad() {
   let expAudio = document.getElementById("expAudio");
   let veilAudio = document.getElementById("veilAudio");
   let demsoAudio = document.getElementById("demsoAudio");
+  let blindAudio = document.getElementById("blindAudio");
+  let msfuAudio = document.getElementById("msfuAudio");
+  let blodAudio = document.getElementById("blodAudio");
 
   suspenseAudio.pause();
   expOpeningAudio.pause();
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  blindAudio.pause();
   iriAudio.pause();
   aboAudio.pause();
   shaAudio.pause();
@@ -258,6 +272,8 @@ function musicLoad() {
   bigSuspenceAudio.pause();
   expAudio.pause();
   veilAudio.pause();
+  msfuAudio.pause();
+  blodAudio.play();
 
   suspenseAudio.currentTime = 0;
   expOpeningAudio.currentTime = 0;
@@ -265,6 +281,7 @@ function musicLoad() {
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
   iriAudio.currentTime = 0;
+  blindAudio.currentTime = 0;
   aboAudio.currentTime = 0;
   shaAudio.currentTime = 0;
   demsoAudio.currentTime = 0;
@@ -339,27 +356,32 @@ function musicLoad() {
   bigSuspenceAudio.currentTime = 0;
   expAudio.currentTime = 0;
   veilAudio.currentTime = 0;
+  msfuAudio.currentTime = 0;
+  blodAudio.currentTime = 0;
 }
 
 function formatRollCount(count) {
   if (count >= 1_000_000_000_000) {
-      return (count / 1_000_000_000_000).toFixed(count >= 1_000_000_000_000 ? 0 : 2) + 't';
+      return Math.floor(count / 1_000_000_000_000) + 't';
   } else if (count >= 1_000_000_000) {
-      return (count / 1_000_000_000).toFixed(count >= 1_000_000_000 ? 0 : 2) + 'b';
+      return Math.floor(count / 1_000_000_000) + 'b';
   } else if (count >= 1_000_000) {
-      return (count / 1_000_000).toFixed(count >= 10_000_000 ? 0 : 2) + 'm';
+      return (Math.floor((count / 1_000_000) * 100) / 100) + 'm';
   } else if (count >= 100_000) {
-      return (count / 1_000).toFixed(0) + 'k';
+      return Math.floor(count / 1_000) + 'k';
   } else if (count >= 1_000) {
-      return (count / 1_000).toFixed(2) + 'k';
+      return (Math.floor((count / 1_000) * 100) / 100) + 'k';
   }
   return count.toString();
 }
 
 function updateRollCount(increment = 1) {
   rollCount += increment;
+  rollCount1 += increment;
   const display = document.getElementById('rollCountDisplay');
+  const display1 = document.getElementById('rollCountDisplay');
   display.textContent = formatRollCount(rollCount);
+  display1.textContent = rollCount1;
 }
 
 document.getElementById("rollButton").addEventListener("click", function () {
@@ -451,6 +473,9 @@ document.getElementById("rollButton").addEventListener("click", function () {
   expOpeningAudio.pause();
   veilAudio.pause();
   fircraAudio.pause();
+  blindAudio.pause();
+  msfuAudio.pause();
+  blodAudio.pause();
 
   suspenseAudio.currentTime = 0;
   geezerSuspenceAudio.currentTime = 0;
@@ -532,13 +557,17 @@ document.getElementById("rollButton").addEventListener("click", function () {
   expOpeningAudio.currentTime = 0;
   veilAudio.currentTime = 0;
   fircraAudio.currentTime = 0;
-
-  document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
+  blindAudio.currentTime = 0;
+  msfuAudio.currentTime = 0;
+  blodAudio.currentTime = 0;
 
   let rarity = rollRarity();
   let title = selectTitle(rarity);
 
   rollButton.disabled = true;
+
+  document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
+  document.getElementById("rollCountDisplay1").innerText = rollCount1;
 
   if (
     rarity.type === "Cursed Mirage [1 in 11,111]" ||
@@ -603,7 +632,10 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Experiment [1 in 100,000/10th]" ||
     rarity.type === "Veil [1 in 50,000/5th]" ||
     rarity.type === "Abomination [1 in 1,000,000/20th]" ||
-    rarity.type === "Iridocyclitis Veil [1 in 5,000/50th]"
+    rarity.type === "Iridocyclitis Veil [1 in 5,000/50th]" ||
+    rarity.type === "BlindGT [1 in 2,000,000/15th]" ||
+    rarity.type === "MSFU [1 in 333/333rd]" ||
+    rarity.type === "Blodhest [1 in 25,252]"
   ) {
     document.getElementById("result").innerText = "";
     const titleCont = document.querySelector(".container");
@@ -666,6 +698,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
       h1diAudio.play();
     } else if (rarity.type === "Veil [1 in 50,000/5th]") {
       veilAudio.play();
+    } else if (rarity.type === "Blodhest [1 in 25,252]") {
+      hugeSuspenceAudio.play();
     } else if (rarity.type === "Abomination [1 in 1,000,000/20th]") {
       aboAudio.play();
       let warningPopup = document.getElementById("warningPopup");
@@ -736,6 +770,10 @@ document.getElementById("rollButton").addEventListener("click", function () {
       gregAudio.play();
     } else if (rarity.type === "Rad [1 in 6,969]") {
       hugeSuspenceAudio.play();
+    } else if (rarity.type === "BlindGT [1 in 2,000,000/15th]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "MSFU [1 in 333/333rd]") {
+      msfuAudio.play();
     } else if (rarity.type == "Silly Car :3 [1 in 1,000,000]") {
       silcarAudio.play();
       setTimeout(function () {
@@ -997,6 +1035,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -1096,6 +1135,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           arcAudio.play();
         }, 100);
@@ -1170,6 +1210,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           expAudio.play();
         }, 100);
@@ -1299,6 +1340,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           harvAudio.play();
         }, 100);
@@ -1428,6 +1470,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           iriAudio.play();
         }, 100);
@@ -1557,6 +1600,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           lubjubAudio.play();
         }, 100);
@@ -1686,8 +1730,269 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           radAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
+    } else if (rarity.type === "Blodhest [1 in 25,252]") {
+      document.body.className = "blackBg";
+      disableChange();
+      startAnimationA5H();
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+    
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-purple";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+    
+      const squareInterval = setInterval(() => {
+        createGravitySquare();
+      }, 100);
+    
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 9350); // Stop after 9.35 seconds
+    
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+    
+        const starClasses = [
+          "blue-star",
+          "cyan-star",
+          "purple-star"
+        ];
+        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+    
+        star.innerHTML = "—";
+        star.style.left = Math.random() * 100 + "vw";
+    
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+    
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+    
+        star.style.animationDelay = i * 0.08 + "s";
+    
+        container.appendChild(star);
+    
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          rollCount1++;
+          titleCont.style.visibility = "visible";
+          blodAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
+    } else if (rarity.type === "BlindGT [1 in 2,000,000/15th]") {
+      document.body.className = "blackBg";
+      disableChange();
+      startAnimationA5();
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+    
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-purple";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+    
+      const squareInterval = setInterval(() => {
+        createGravitySquare();
+      }, 100);
+    
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 9350); // Stop after 9.35 seconds
+    
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+    
+        const starClasses = [
+          "purple-star",
+          "white-star",
+          "gray-star"
+        ];
+        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+    
+        star.innerHTML = "•";
+        star.style.left = Math.random() * 100 + "vw";
+    
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+    
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+    
+        star.style.animationDelay = i * 0.08 + "s";
+    
+        container.appendChild(star);
+    
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          rollCount1++;
+          titleCont.style.visibility = "visible";
+          blindAudio.play();
         }, 100);
         enableChange();
       }, 10750); // Wait for 10.75 seconds
@@ -1815,6 +2120,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           shaAudio.play();
         }, 100);
@@ -1943,6 +2249,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           overtureAudio.play();
         }, 100);
@@ -2067,6 +2374,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           celAudio.play();
         }, 100);
@@ -2191,6 +2499,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           devilAudio.play();
         }, 100);
@@ -2263,6 +2572,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           demsoAudio.play();
         }, 100);
@@ -2335,6 +2645,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           hellAudio.play();
         }, 100);
@@ -2406,6 +2717,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           griAudio.play();
         }, 100);
@@ -2450,6 +2762,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -2526,6 +2839,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -2590,6 +2904,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -2661,6 +2976,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -2708,10 +3024,76 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
       }, 7000); // Wait for 7 seconds
+    } else if (rarity.type === "MSFU [1 in 333/333rd]") {
+      document.body.className = "blackBg";
+      disableChange();
+      startAnimationMSFU();
+
+      const container1 = document.getElementById("squareContainer");
+
+      function createSquare(colorClass) {
+        const square = document.createElement("div");
+        square.className = `animated-square-${colorClass}`;
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+        container1.appendChild(square);
+        square.addEventListener("animationend", () => square.remove());
+      }
+
+      const container = document.getElementById("starContainer");
+
+      function createStars(count) {
+        for (let i = 0; i < count; i++) {
+          const star = document.createElement("span");
+          star.className = 'red-star';
+          star.innerHTML = "𖣘";
+          star.style.left = Math.random() * 100 + "vw";
+          star.style.setProperty(
+            "--randomX",
+            (Math.random() - 0.25) * 20 + "vw"
+          );
+          star.style.setProperty(
+            "--randomRotation",
+            (Math.random() - 0.5) * 720 + "deg"
+          );
+          star.style.animationDelay = i * 0.04 + "s";
+          container.appendChild(star);
+          star.addEventListener("animationend", () => star.remove());
+        }
+      }
+
+      createStars("orange", 276);
+      createStars("red", 276);
+
+      const squareInterval = setInterval(() => {
+        createSquare("red");
+        createSquare("orange");
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 7777);
+
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          updateRollingHistory(title, rarity.type);
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          msfuAudio.play();
+          titleCont.style.visibility = "visible";
+        }, 100);
+        enableChange();
+      }, 8888); // Wait for 8.88 seconds
     } else if (rarity.type === "Memory [1 in 175]") {
       document.body.className = "blackBg";
       disableChange();
@@ -2764,6 +3146,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           memAudio.play();
         }, 100);
@@ -2821,6 +3204,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           oblAudio.play();
         }, 100);
@@ -2925,6 +3309,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           eonbreakAudio.play();
         }, 100);
@@ -2967,6 +3352,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           isekaiAudio.play();
         }, 100);
@@ -3009,6 +3395,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           pumpkinAudio.play();
         }, 100);
@@ -3051,6 +3438,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           emerAudio.play();
         }, 100);
@@ -3093,6 +3481,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           samuraiAudio.play();
         }, 100);
@@ -3135,6 +3524,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           contAudio.play();
         }, 100);
@@ -3177,6 +3567,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -3233,6 +3624,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           phaAudio.play();
         }, 100);
@@ -3378,6 +3770,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           unnamedAudio.play();
         }, 100);
@@ -3501,6 +3894,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           curAudio.play();
         }, 100);
@@ -3601,6 +3995,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           celdawAudio.play();
         }, 100);
@@ -3746,6 +4141,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           fatreAudio.play();
         }, 100);
@@ -3764,6 +4160,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           geezerAudio.play();
           setTimeout(() => {
             titleCont.style.visibility = "visible";
@@ -3832,6 +4229,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           changeBackground(rarity.class);
           rollButton.disabled = false;
           rollCount++;
+          rollCount1++;
           titleCont.style.visibility = "visible";
           polarrAudio.play();
         }, 100);
@@ -4999,11 +5397,13 @@ document.getElementById("rollButton").addEventListener("click", function () {
     updateRollingHistory(title, rarity.type);
     changeBackground(rarity.class);
     rollCount++;
+    rollCount1++;
     setTimeout(() => {
       rollButton.disabled = false;
     }, cooldownTime);
   }
   localStorage.setItem("rollCount", rollCount);
+  localStorage.setItem("rollCount1", rollCount1);
   load();
 });
 
@@ -5428,27 +5828,33 @@ function rollRarity() {
       class: "radBgImg",
       chance: 0.01434926101,
       titles: ["Rad", "Furry", ":3"],
-    }
+    },
+    {
+      type: "Blodhest [1 in 25,252]",
+      class: "blodBgImg",
+      chance: 0.00396008236,
+      titles: ["Furry: Ultimate", "Blodhest"],
+    },
   ];
 
   const abominationRarity = {
     type: "Abomination [1 in 1,000,000/20th]",
     class: "aboBgImg",
-    chance: 0.002,
+    chance: 0,
     titles: ["Chaos", "Experiment: 902", "Damaged", "Assistance"],
   };
 
   const iridocyclitisVeilRarity = {
     type: "Iridocyclitis Veil [1 in 5,000/50th]",
     class: "iriBgImg",
-    chance: 0.02,
+    chance: 0,
     titles: ["Cyclithe", "Veilborne", "Hemovail", "Iris: 902", "Abomination: 902"],
   };
 
   const experimentRarity = {
     type: "Experiment [1 in 100,000/10th]",
     class: "expBgImg",
-    chance: 0.0075,
+    chance: 0,
     titles: ["1106", "1073", "1105", "905", "302", "1130", "1263", "1005", "1473", "1748",
             "899", "1157", "1288", "1203", "1024", "1702", "786", "1684", "1337", "912",
             "1987", "1405", "771", "1883", "1294", "1772", "902", "1526", "1759", "666"],
@@ -5457,14 +5863,33 @@ function rollRarity() {
   const veilRarity = {
     type: "Veil [1 in 50,000/5th]",
     class: "veilBgImg",
-    chance: 0.0025,
-    titles: ["Fight", "Peace"],
+    chance: 0,
+    titles: ["Fight", "Peace", "MSFU: 902"],
+  };
+
+  const blindRarity = {
+    type: "BlindGT [1 in 2,000,000/15th]",
+    class: "blindBgImg",
+    chance: 0,
+    titles: ["Moderator", "Moderator: 902"],
+  };
+
+  const msfuRarity = {
+    type: "MSFU [1 in 333/333rd]",
+    class: "msfuBgImg",
+    chance: 0.3003003003,
+    titles: ["Metal", "Universe", "Veil: 902"],
   };
 
   let randomNum = Math.random() * 180;
-  let cumulativeChance = 0.012;
+  let cumulativeChance = 0.037;
 
-  if (rollCount % 50 === 0) {
+  if (rollCount % 333 === 0) {
+    cumulativeChance += msfuRarity.chance;
+    if (randomNum <= cumulativeChance) {
+      return msfuRarity;
+    }
+  } else if (rollCount % 50 === 0) {
     cumulativeChance += iridocyclitisVeilRarity.chance;
     if (randomNum <= cumulativeChance) {
       return iridocyclitisVeilRarity;
@@ -5478,6 +5903,11 @@ function rollRarity() {
     cumulativeChance += experimentRarity.chance;
     if (randomNum <= cumulativeChance) {
       return experimentRarity;
+    }
+  } else if (rollCount % 15 === 0) {
+    cumulativeChance += blindRarity.chance;
+    if (randomNum <= cumulativeChance) {
+      return blindRarity;
     }
   } else if (rollCount % 5 === 0) {
     cumulativeChance += veilRarity.chance;
@@ -5504,7 +5934,7 @@ function clickSound() {
   document.getElementById("rollButton").addEventListener("click", clickSound);
 }
 
-function unnamedUser() {
+function showPopup() {
   var copyText = document.getElementById("unnamedUser");
   copyText.hidden = false;
   copyText.select();
@@ -5512,8 +5942,28 @@ function unnamedUser() {
   copyText.hidden = true;
   alert("Copied selected discord user: " + copyText.value);
 
+  document.getElementById("profileModal").style.display = "block";
+}
+
+function closePopup() {
+  document.getElementById("profileModal").style.display = "none";
+}
+
+function openDiscord() {
   window.open("https://discord.gg/m6k7Jagm3v", "_blank");
-  window.open("https://the-unnamed-official.itch.io", "_blank");
+  closePopup();
+}
+
+function openGithub() {
+  window.open("https://github.com/The-Unnamed-Official/Unnamed-RNG/tree/published", "_blank");
+  closePopup();
+}
+
+window.onclick = function(event) {
+  var modal = document.getElementById("profileModal");
+  if (event.target === modal) {
+    modal.style.display = "none";
+  }
 }
 
 function selectTitle(rarity) {
@@ -5534,6 +5984,15 @@ function changeBackground(rarityClass) {
 }
 
 function addToInventory(title, rarityClass) {
+  const excludedRarities = new Set(
+    Array.from(document.querySelectorAll('.rarity-button.active')).map(btn => btn.dataset.rarity)
+  );
+
+  if (Object.keys(rarityCategories).some(category => 
+    excludedRarities.has(category) && rarityCategories[category].includes(rarityClass))) {
+    return;
+  }
+
   inventory.push({ title, rarityClass });
   localStorage.setItem("inventory", JSON.stringify(inventory));
   renderInventory();
@@ -5608,6 +6067,42 @@ document
     }
 });
 
+window.addEventListener("resize", function () {
+  const container = document.querySelector(".container1");
+  const inventory = document.querySelector(".inventory");
+  const button = document.getElementById("settingsButton");
+  const sliderContainer = document.querySelector(".slider-container");
+  const originalParent = document.querySelector(".original-parent");
+
+  if (window.innerWidth < 821) {
+    button.style.display = "none";
+    container.style.left = "10px";
+    inventory.style.height = "58vh";
+    inventory.style.width = "42vh";
+
+    if (!container.contains(sliderContainer)) {
+      container.appendChild(sliderContainer);
+    }
+  } else if (window.innerWidth > 821 && window.innerHeight > 1400) { 
+    // Fix: Use '&&' instead of '&'
+    inventory.style.width = "70vh";
+    container.style.left = "383px";
+
+    if (originalParent && !originalParent.contains(sliderContainer)) {
+      originalParent.appendChild(sliderContainer);
+    }
+  } else {
+    container.style.left = "383px";
+    button.style.display = "inline-block";
+    inventory.style.width = "60vh";
+    inventory.style.height = "85vh";
+
+    if (originalParent && !originalParent.contains(sliderContainer)) {
+      originalParent.appendChild(sliderContainer);
+    }
+  }
+});
+
 document
   .getElementById("toggleRollHistoryBtn")
   .addEventListener("click", function () {
@@ -5672,6 +6167,7 @@ const backgroundDetails = {
   shaBgImg: { image: "files/backgrounds/sha.png", audio: "shaAudio" },
   iriBgImg: { image: "files/backgrounds/iri.gif", audio: "iriAudio" },
   radBgImg: { image: "files/backgrounds/rad.png", audio: "radAudio" },
+  blodBgImg: { image: "files/backgrounds/blod.png", audio: "blodAudio" },
   samuraiBgImg: {
     image: "files/backgrounds/samurai.png",
     audio: "samuraiAudio",
@@ -5746,7 +6242,7 @@ const backgroundDetails = {
   geezerBgGif: { image: "files/backgrounds/geezer.gif", audio: "geezerAudio" },
   polarrBgImg: { image: "files/backgrounds/polarr.png", audio: "polarrAudio" },
   ethershiftBgImg: { image: "files/backgrounds/ether.png", audio: "ethAudio" },
-  h1diBgImg: { image: "files/backgrounds/h1di.gif", audio: "h1diAudio" },
+  msfuBgImg: { image: "files/backgrounds/msfu.png", audio: "msfuAudio" },
   oppBgImg: { image: "files/backgrounds/oppression.jpg", audio: "oppAudio" },
   norstaBgImg: { image: "files/backgrounds/norsta.png", audio: "norstaAudio" },
   sanclaBgImg: { image: "files/backgrounds/sancla.png", audio: "sanclaAudio" },
@@ -5762,11 +6258,8 @@ const backgroundDetails = {
   aboBgImg: { image: "files/backgrounds/abo.gif", audio: "aboAudio" },
   expBgImg: { image: "files/backgrounds/exp.gif", audio: "expAudio" },
   veilBgImg: { image: "files/backgrounds/veil.gif", audio: "veilAudio" },
+  blindBgImg: { image: "files/backgrounds/blind.png", audio: "blindAudio" },
 };
-
-let currentAudio = null;
-
-let isChangeEnabled = true;
 
 function changeBackground(rarityClass, itemTitle) {
   if (!isChangeEnabled) return;
@@ -6185,6 +6678,27 @@ function startAnimationA5() {
   }, 10750);
 }
 
+function startAnimationA5H() {
+  const star = document.getElementById("starBig");
+
+  star.classList.add("spin");
+
+  setTimeout(() => {
+    star.classList.add("spin-slow");
+  }, 2000);
+
+  setTimeout(() => {
+    star.classList.add("scale-up-and-vanish");
+  }, 8750);
+
+  setTimeout(() => {
+    star.classList.add("cutsceneStarBig");
+    star.classList.remove("scale-up-and-vanish");
+    star.classList.remove("spin-slow");
+    star.classList.remove("spin");
+  }, 10750);
+}
+
 function startAnimation6() {
   const star = document.getElementById("star");
 
@@ -6397,6 +6911,27 @@ function startAnimation11() {
   }, 7000);
 }
 
+function startAnimationMSFU() {
+  const star = document.getElementById("msfuStar");
+
+  star.classList.add("spin");
+
+  setTimeout(() => {
+    star.classList.add("spin-slow");
+  }, 4568);
+
+  setTimeout(() => {
+    star.classList.add("scale-up-and-vanish");
+  }, 6666);
+
+  setTimeout(() => {
+    star.classList.add("msfuStar");
+    star.classList.remove("scale-up-and-vanish");
+    star.classList.remove("spin-slow");
+    star.classList.remove("spin");
+  }, 8888);
+}
+
 function startAnimationBlackHole() {
   createParticleGroup();
   
@@ -6497,10 +7032,30 @@ function scheduleButtonAppearance() {
 
 scheduleButtonAppearance();
 
-let autoRollInterval = null;
-let audioVolume = 1;
-let isMuted = false;
-let previousVolume = audioVolume;
+document.addEventListener("DOMContentLoaded", () => {
+  const settingsMenu = document.getElementById("settingsMenu");
+  const header = settingsMenu.querySelector("h3");
+  let isDragging = false;
+  let offsetX, offsetY;
+
+  header.addEventListener("mousedown", (e) => {
+      isDragging = true;
+      offsetX = e.clientX - settingsMenu.offsetLeft;
+      offsetY = e.clientY - settingsMenu.offsetTop;
+      header.style.cursor = "grabbing";
+  });
+
+  document.addEventListener("mousemove", (e) => {
+      if (!isDragging) return;
+      settingsMenu.style.left = e.clientX - offsetX + "px";
+      settingsMenu.style.top = e.clientY - offsetY + "px";
+  });
+
+  document.addEventListener("mouseup", () => {
+      isDragging = false;
+      header.style.cursor = "grab";
+  });
+});
 
 const settingsButton = document.getElementById("settingsButton");
 const settingsMenu = document.getElementById("settingsMenu");
@@ -6549,10 +7104,10 @@ muteButton.addEventListener("click", () => {
   isMuted = !isMuted;
 
   if (isMuted) {
-    previousVolume = audioVolume; // Save current volume before muting
+    previousVolume = audioVolume;
     audioVolume = 0;
   } else {
-    audioVolume = previousVolume; // Restore the saved volume
+    audioVolume = previousVolume;
   }
 
   audioSlider.value = audioVolume;
@@ -6692,6 +7247,29 @@ function showStatusMessage(message, duration = 2000) {
   }, duration);
 }
 
+    let playTime = parseInt(localStorage.getItem('playTime')) || 0;
+    
+    const timerDisplay = document.getElementById('timer');
+
+    function formatTime(seconds) {
+      const hrs = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      const secs = seconds % 60;
+      return [
+        hrs.toString().padStart(2, '0'),
+        mins.toString().padStart(2, '0'),
+        secs.toString().padStart(2, '0')
+      ].join(':');
+    }
+
+    timerDisplay.textContent = formatTime(playTime);
+
+    setInterval(() => {
+      playTime++;
+      timerDisplay.textContent = formatTime(playTime);
+      localStorage.setItem('playTime', playTime);
+    }, 1000);
+
 document.getElementById('importButton').addEventListener('click', () => {
   const input = document.createElement('input');
   input.type = 'file';
@@ -6817,6 +7395,7 @@ function getClassForRarity(rarity) {
       'Iridocyclitis Veil [1 in 5,000/50th]': 'special',
       'Cursed Mirage [1 in 11,000]': 'under100k',
       'Celestial Dawn [1 in 12,000]': 'under100k',
+      'Blodhest [1 in 25,252]': 'under100k',
       'Unnamed [1 in 13,889]': 'under100k',
       'Fate\'s Requiem [1 in 15,000]': 'under100k',
       'Eonbreak [1 in 20,000]': 'under100k',
@@ -6828,6 +7407,8 @@ function getClassForRarity(rarity) {
       'Celestial Chorus [1 in 202,020]': 'under1m',
       'Silly Car :3 [1 in 1,000,000]': 'under10ms',
       'H1di [1 in 9,890,089]': 'under10m',
+      'BlindGT [1 in 2,000,000/15th]': 'special',
+      'MSFU [1 in 333/333rd]': 'special',
   };
 
   return rarityClasses[rarity] || null;
@@ -6889,7 +7470,7 @@ document
   .addEventListener("click", () => deleteAllByRarity("toxBgImg"));
 
 
-  document
+document
   .getElementById("deleteAllUnder1kButton")
   .addEventListener("click", () => {
     renderInventory();
@@ -6913,7 +7494,7 @@ document
       "specBgImg",
     ];
     raritiesUnder1k.forEach(rarity => deleteAllByRarity(rarity));
-  });
+});
 
 document
   .getElementById("deleteAllUnstoppableButton")
@@ -6965,7 +7546,7 @@ document
   .addEventListener("click", () => deleteAllByRarity("frightBgImg"));
 
 
-  document
+document
   .getElementById("deleteAllUnder10kButton")
   .addEventListener("click", () => {
     renderInventory();
@@ -6997,7 +7578,7 @@ document
       "demsoBgImg",
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
-  });
+});
 
 document
   .getElementById("deleteAllSeraphsWingButton")
@@ -7095,7 +7676,7 @@ document
       "cursedmirageBgImg"
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
-  });
+});
 
 document
   .getElementById("deleteAllCelestialDawnButton")
@@ -7103,6 +7684,9 @@ document
 document
   .getElementById("deleteAllFatesRequiemButton")
   .addEventListener("click", () => deleteAllByRarity("fatreBgImg"));
+document
+  .getElementById("deleteAllBlodhestButton")
+  .addEventListener("click", () => deleteAllByRarity("blodBgImg"));
 document
   .getElementById("deleteAllFearButton")
   .addEventListener("click", () => deleteAllByRarity("fearBgImg"));
@@ -7184,6 +7768,12 @@ document
 document
     .getElementById("deleteAllRadButton")
     .addEventListener("click", () => deleteAllByRarity("radBgImg"));
+document
+  .getElementById("deleteAllBlindGTButton")
+  .addEventListener("click", () => deleteAllByRarity("blindBgImg"));
+document
+  .getElementById("deleteAllMSFUButton")
+  .addEventListener("click", () => deleteAllByRarity("msfuBgImg"));
 
 
 document
@@ -7195,7 +7785,7 @@ document
       "celestialchorusBgImg",
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
-  });
+});
 
 document
   .getElementById("deleteAllSpecialButton")
@@ -7205,10 +7795,12 @@ document
       "iriBgImg",
       "veilBgImg",
       "expBgImg",
-      "aboBgImg"
+      "aboBgImg",
+      "blindBgImg",
+      "msfuBgImg",
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
-  });
+});
 
 function createParticle(minRadius, maxRadius, minSize, maxSize, speed, rotationRange) {
   const particle = document.createElement('div');
@@ -7254,3 +7846,40 @@ function createParticleGroup() {
     system.appendChild(particle);
   }
 }
+
+const rarityCategories = {
+  under100: [
+    "commonBgImg", "rareBgImg", "epicBgImg", "legendaryBgImg", "impossibleBgImg",
+    "poweredBgImg", "plabreBgImg", "solarpowerBgImg", "belivBgImg", "flickerBgImg", "toxBgImg"
+  ],
+  under1k: [
+    "unstoppableBgImg", "spectralBgImg", "starfallBgImg", "gargBgImg", "memBgImg", "oblBgImg",
+    "phaBgImg", "isekaiBgImg", "emerBgImg", "samuraiBgImg", "contBgImg", "wanspiBgImg",
+    "froBgImg", "mysBgImg", "forgBgImg", "curartBgImg", "specBgImg"
+  ],
+  under10k: [
+    "ethershiftBgImg", "hellBgImg", "frightBgImg", "seraphwingBgImg", "shadBgImg", "shaBgImg",
+    "nighBgImg", "voiBgImg", "silBgImg", "ghoBgImg", "endBgImg", "abysBgImg", "darBgImg",
+    "twiligBgImg", "ethpulBgImg", "eniBgImg", "griBgImg", "fearBgImg", "hauntBgImg",
+    "foundsBgImg", "lostsBgImg", "hauBgImg", "lubjubBgImg", "radBgImg", "demsoBgImg"
+  ],
+  under100k: [
+    "celdawBgImg", "fatreBgImg", "unnamedBgImg", "eonbreakBgImg", "overtureBgImg",
+    "arcanepulseBgImg", "harvBgImg", "devilBgImg", "cursedmirageBgImg"
+  ],
+  under1m: ["impeachedBgImg", "celestialchorusBgImg"],
+  special: ["iriBgImg", "veilBgImg", "expBgImg", "aboBgImg", "blindBgImg", "msfuBgImg"]
+};
+
+document.querySelectorAll(".rarity-button").forEach(button => {
+  button.addEventListener("click", () => {
+    button.classList.toggle("active");
+  });
+});
+
+setInterval(() => {
+  renderInventory();
+  document.querySelectorAll('.rarity-button.active').forEach(button => {
+    rarityCategories[button.dataset.rarity].forEach(rarity => deleteAllByRarity(rarity));
+  });
+}, 1000);
