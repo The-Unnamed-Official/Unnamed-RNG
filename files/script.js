@@ -19,11 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const startButton = document.getElementById("startButton");
   const loadingScreen = document.getElementById("loadingScreen");
   const menuScreen = document.getElementById("menuScreen");
-  const mainAudio = document.getElementById("mainAudio");
 
   rollButton.disabled = true;
 
   startButton.addEventListener("click", () => {
+    mainAudio.play();
     menuScreen.style.display = "none";
     loadingScreen.style.display = "flex";
     load();
@@ -35,9 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
       rollButton.disabled = false;
       loadingScreen.style.display = "none";
       formatRollCount();
-      mainAudio.play().catch((error) => {
-        console.log("Autoplay blocked. User interaction required:", error);
-      });
     }, 2000);
   });
 });
