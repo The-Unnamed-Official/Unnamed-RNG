@@ -5523,7 +5523,7 @@ function rollRarity() {
     {
       type: "Common [1 in 2.5]",
       class: "commonBgImg",
-      chance: 30,
+      chance: 40,
       titles: ["Good", "Natural", "Simple", "Basic", "Plain", "Average", "Ordinary", "Usual", "Regular", "Standard"],
     },
     {
@@ -5949,7 +5949,7 @@ function rollRarity() {
     {
       type: "Tuon [1 in 50,000]",
       class: "tuonBgImg",
-      chance: 10.002,
+      chance: 0.002,
       titles: ["Gato", "Speen", "Car: Maxwell"],
     },
   ];
