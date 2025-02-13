@@ -58,20 +58,34 @@
     margin-left: 5px;
 }
 
-.snowflake {
+.heart {
     position: fixed;
-    top: -10px;
-    font-size: 24px;
-    color: #fff;
-    animation: fall linear infinite;
+    font-size: 69px;
+    color: red;
+    opacity: 0;
+    animation: pulseFadeIn 0.5s ease-out forwards, fadeOut 4s ease-in 1.5s forwards;
 }
 
-@keyframes fall {
+@keyframes pulseFadeIn {
     0% {
-        transform: translateY(0);
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 1;
     }
     100% {
-        transform: translateY(100vh);
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeOut {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
     }
 }
 
@@ -1233,6 +1247,12 @@ body {
 
 .fearBgImg {
     background: url(backgrounds/fear.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.orbBgImg {
+    background: url(backgrounds/orb.png);
     background-size: cover;
     object-fit: contain;
 }
