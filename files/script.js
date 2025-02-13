@@ -3,7 +3,7 @@ let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 let rollCount1 = parseInt(localStorage.getItem("rollCount")) || 0;
-let cooldownTime = 0;
+let cooldownTime = 690;
 let timeoutId;
 let countdownInterval;
 let tabbedOutTime = null;
@@ -6193,7 +6193,7 @@ function rollRarity() {
   };
 
   let randomNum = Math.random() * 200;
-  let cumulativeChance = 10.03;
+  let cumulativeChance = 0.03;
 
   if (rollCount % 333 === 0) {
     cumulativeChance += msfuRarity.chance;
