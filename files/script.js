@@ -6118,7 +6118,7 @@ function rollRarity() {
     {
       type: "H1di [1 in 9,890,089]",
       class: "h1diBgImg",
-      chance: 0.00101938877,
+      chance: 0.000001011113156,
       titles: ["H1di"],
     },
     {
@@ -6192,7 +6192,7 @@ function rollRarity() {
     titles: ["Metal", "Universe", "Veil: 902"],
   };
 
-  let randomNum = Math.random() * 200;
+  let randomNum = Math.random() * 114;
   let cumulativeChance = 0.03;
 
   if (rollCount % 333 === 0) {
@@ -6204,6 +6204,11 @@ function rollRarity() {
     cumulativeChance += iridocyclitisVeilRarity.chance;
     if (randomNum <= cumulativeChance) {
       return iridocyclitisVeilRarity;
+    }
+  } else if (rollCount % 30 === 0) {
+    cumulativeChance += orbRarity.chance;
+    if (randomNum <= cumulativeChance) {
+      return orbRarity;
     }
   } else if (rollCount % 20 === 0) {
     cumulativeChance += abominationRarity.chance;
@@ -6224,11 +6229,6 @@ function rollRarity() {
     cumulativeChance += veilRarity.chance;
     if (randomNum <= cumulativeChance) {
       return veilRarity;
-    }
-  } else if (rollCount % 1 === 0) {
-    cumulativeChance += orbRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return orbRarity;
     }
   } else {
     for (let rarity of rarities) {
