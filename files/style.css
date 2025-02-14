@@ -1401,6 +1401,12 @@ body {
     object-fit: contain;
 }
 
+.heartBgImg {
+    background: url(backgrounds/heart.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
@@ -2364,6 +2370,15 @@ body.griCutsceneBgImg {
     background: radial-gradient(#ff0000, #fff);
     background-size: 300%;
     animation: gradient-shift 1s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.eventV {
+    background: radial-gradient(#ff0000, #f5a7ff);
+    background-size: 300%;
+    animation: gradient-shift2 4s ease infinite;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
