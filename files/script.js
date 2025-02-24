@@ -6623,14 +6623,14 @@ function rollRarity() {
   };
 
   let randomNum = Math.random() * 200;
-  let cumulativeChance = 100.04;
+  let cumulativeChance = 0.04;
 
   if (rollCount % 333 === 0) {
     cumulativeChance += msfuRarity.chance;
     if (randomNum <= cumulativeChance) {
       return msfuRarity;
     }
-  } else if (rollCount % 2 === 0) {
+  } else if (rollCount % 69 === 0) {
     cumulativeChance += fireCrazeRarity.chance;
     if (randomNum <= cumulativeChance) {
       return fireCrazeRarity;
