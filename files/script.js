@@ -3,7 +3,7 @@ let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 let rollCount1 = parseInt(localStorage.getItem("rollCount")) || 0;
-let cooldownTime = 0;
+let cooldownTime = 690;
 let timeoutId;
 let countdownInterval;
 let tabbedOutTime = null;
@@ -6478,7 +6478,7 @@ function rollRarity() {
     titles: ["Metal", "Universe", "Veil: 902"],
   };
 
-  let randomNum = Math.random() * 113.5327315073;
+  let randomNum = Math.random() * 200;
   let cumulativeChance = 0.03;
 
   if (rollCount % 333 === 0) {
