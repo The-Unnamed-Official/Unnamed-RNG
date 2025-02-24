@@ -6414,12 +6414,6 @@ function rollRarity() {
       titles: ["Gato", "Speen", "Car: Maxwell"],
     },
     {
-      type: "Heart [1 in ♡♡♡]",
-      class: "heartBgImg",
-      chance: 0.05,
-      titles: ["Love", "Joy", "Valentines", "Be my: Valentine"],
-    },
-    {
       type: "Unfair [1 in ###]",
       class: "astblaBgImg",
       chance: 0.01,
@@ -7858,26 +7852,25 @@ slider.addEventListener("input", function () {
 
 slider.dispatchEvent(new Event("input"));
 
+// const heartContainer = document.createElement('div');
+// document.body.appendChild(heartContainer);
 
-const heartContainer = document.createElement('div');
-document.body.appendChild(heartContainer);
+// function createHeart() {
+//     const heart = document.createElement('div');
+//     heart.classList.add('heart');
+//     heart.textContent = '❤️';
+//     heart.style.left = Math.random() * 100 + 'vw';
+//     heart.style.top = Math.random() * 100 + 'vh';
+//     heart.style.fontSize = Math.random() * 20 + 10 + 'px';
 
-function createHeart() {
-    const heart = document.createElement('div');
-    heart.classList.add('heart');
-    heart.textContent = '❤️';
-    heart.style.left = Math.random() * 100 + 'vw';
-    heart.style.top = Math.random() * 100 + 'vh';
-    heart.style.fontSize = Math.random() * 20 + 10 + 'px';
+//     heartContainer.appendChild(heart);
 
-    heartContainer.appendChild(heart);
+//     setTimeout(() => {
+//         heart.remove();
+//     }, 5000);
+// }
 
-    setTimeout(() => {
-        heart.remove();
-    }, 5000);
-}
-
-setInterval(createHeart, 333);
+// setInterval(createHeart, 333);
 
 const secretKey = 'ImpeachedGlazer';
 

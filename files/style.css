@@ -58,13 +58,13 @@
     margin-left: 5px;
 }
 
-.heart {
+/* .heart {
     position: fixed;
     font-size: 69px;
     color: red;
     opacity: 0;
     animation: pulseFadeIn 0.5s ease-out forwards, fadeOut 4s ease-in 1.5s forwards;
-}
+} */
 
 @keyframes pulseFadeIn {
     0% {
