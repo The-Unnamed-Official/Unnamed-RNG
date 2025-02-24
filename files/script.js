@@ -5984,7 +5984,7 @@ function rollRarity() {
     {
       type: "Common [1 in 2.5]",
       class: "commonBgImg",
-      chance: 30,
+      chance: 40,
       titles: ["Good", "Natural", "Simple", "Basic", "Plain", "Average", "Ordinary", "Usual", "Regular", "Standard"],
     },
     {
@@ -6422,7 +6422,7 @@ function rollRarity() {
     {
       type: "GD Addict [1 in ###]",
       class: "astredBgImg",
-      chance: 10.05,
+      chance: 0.05,
       titles: ["Astrald RED"],
     }
   ];
