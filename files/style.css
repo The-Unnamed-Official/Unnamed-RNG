@@ -1419,6 +1419,12 @@ body {
     object-fit: contain;
 }
 
+.crazeBgImg {
+    background: url(backgrounds/firecraze.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
