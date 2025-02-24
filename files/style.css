@@ -1407,6 +1407,18 @@ body {
     object-fit: contain;
 }
 
+.astblaBgImg {
+    background: url(backgrounds/astbla.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.astredBgImg {
+    background: url(backgrounds/astred.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
@@ -2200,6 +2212,16 @@ body.griCutsceneBgImg {
     animation: spin-scale-fast 1.5s ease-out forwards;
     border-radius: 2px;
     box-shadow: 0px 0px 15px rgba(0, 195, 255, 0.9);
+}
+
+.animated-square-yellow {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(251, 255, 0, 0.7);
+    animation: spin-scale-fast 1.5s ease-out forwards;
+    border-radius: 2px;
+    box-shadow: 0px 0px 15px rgba(251, 255, 0, 0.9);
 }
 
 .animated-square-orange {
