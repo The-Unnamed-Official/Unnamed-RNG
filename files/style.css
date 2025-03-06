@@ -1451,6 +1451,11 @@ body.griCutsceneBgImg {
     background: #7a5309;
 }
 
+#fireworksCanvas {
+    position: absolute;
+    top: -9999px;
+}
+
 .fa-solid.fa-trash {
     padding: 10px 5px;
     font-size: 14px;
