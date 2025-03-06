@@ -8116,6 +8116,7 @@ resetDataButton.addEventListener("click", () => {
     setTimeout(() => {
     localStorage.clear();
     location.reload();
+    let playTime = 0;
     }, 100);
   }
 });
