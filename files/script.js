@@ -36,6 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
       loadingScreen.style.display = "none";
       formatRollCount();
       loadToggledStates();
+      checkAchievements();
+      updateAchievementsList();
     }, 2000);
   });
 });
@@ -49,6 +51,8 @@ function loadContent() {
   musicLoad();
   loadToggledStates();
   updateRollCount();
+  checkAchievements();
+  updateAchievementsList();
   document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
   document.getElementById("rollCountDisplay1").innerText = rollCount1;
 }
@@ -64,6 +68,8 @@ function load() {
     loadToggledStates();
     updateRollCount();
     formatRollCount();
+    checkAchievements();
+    updateAchievementsList();
   });
 }
 
@@ -366,10 +372,72 @@ function updateRollCount(increment = 1) {
   display1.textContent = rollCount1;
 }
 
+function checkAchievements() {
+  let achievements = [
+      { name: "I'm new to this", count: 1 },
+      { name: "I think I like this", count: 100 },
+      { name: "This is getting serious", count: 1000 },
+      { name: "I'm the Roll Master", count: 5000 },
+      { name: "Beyond Luck", count: 10000 },
+      { name: "I'm obsessed...", count: 50000 },
+      { name: "Rolling machine", count: 100000 },
+      { name: "One, Two, Three, Four.. ..One Million!", count: 1000000 }
+  ];
+
+  let unlockedAchievements = JSON.parse(localStorage.getItem("unlockedAchievements")) || [];
+
+  achievements.forEach(achievement => {
+      if (rollCount >= achievement.count && !unlockedAchievements.includes(achievement.name)) {
+          unlockedAchievements.push(achievement.name);
+          localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
+          showAchievementPopup(achievement.name);
+      }
+  });
+}
+
+function showAchievementPopup(name) {
+  let popup = document.createElement("div");
+  popup.className = "achievement-popup";
+  popup.textContent = `Achievement Unlocked: ${name}`;
+  document.body.appendChild(popup);
+  
+  setTimeout(() => {
+      popup.classList.add("show");
+      updateAchievementsList();
+  }, 100);
+  
+  setTimeout(() => {
+      popup.classList.remove("show");
+      setTimeout(() => popup.remove(), 500);
+      updateAchievementsList();
+  }, 3000);
+}
+
+function updateAchievementsList() {
+  let unlockedAchievements = JSON.parse(localStorage.getItem("unlockedAchievements")) || [];
+
+  let achievementItems = document.querySelectorAll(".achievement-item");
+
+  achievementItems.forEach(item => {
+    const achievementName = item.getAttribute("data-name");
+
+    if (unlockedAchievements.includes(achievementName)) {
+      item.style.backgroundColor = "blue";
+    } else {
+      item.style.backgroundColor = "gray";
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", updateAchievementsList);
+
 document.getElementById("rollButton").addEventListener("click", function () {
   let rollButton = document.getElementById("rollButton");
 
   mainAudio.pause();
+
+  checkAchievements();
+  updateAchievementsList();
 
   if (rollCount < 1) {
     rollCount++;
@@ -8994,3 +9062,4 @@ function animate() {
 setInterval(launchFirework, 9999);
 
 animate();
+
