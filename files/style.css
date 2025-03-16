@@ -38,14 +38,14 @@
     position: absolute;
     bottom: 25px;
     width: 100%;
-    z-index: 0;
+    z-index: 9;
 }
 
 .vNumber {
     font-weight: bold;
     font-size: large;
     left: 50%;
-    z-index: 99999999;
+    z-index: 9999999;
     width: 300px;
     padding: 20px;
     background-color: #00000069;
@@ -1480,6 +1480,12 @@ body {
     object-fit: contain;
 }
 
+.lightBgImg {
+    background: url(backgrounds/light.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
@@ -2246,12 +2252,57 @@ body.griCutsceneBgImg {
     margin: 4px 2px;    
     cursor: pointer;
     border-radius: 5px;
+    z-index: 900000000;
     transition: background-color 0.3s, transform 0.3s;
     position: absolute;
 }
 
 #cooldownButton:hover {
     background-color: #45a049;
+    transform: scale(1.05);
+}
+
+#cooldownButton1 {
+    background-color: #4caf91;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;    
+    cursor: pointer;
+    border-radius: 5px;
+    z-index: 900000000;
+    transition: background-color 0.3s, transform 0.3s;
+    position: absolute;
+}
+
+#cooldownButton1:hover {
+    background-color: #40927a;
+    transform: scale(1.05);
+}
+
+#cooldownButton2 {
+    background-color: #4c90af;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;    
+    cursor: pointer;
+    border-radius: 5px;
+    z-index: 900000000;
+    transition: background-color 0.3s, transform 0.3s;
+    position: absolute;
+}
+
+#cooldownButton2:hover {
+    background-color: #376a81;
     transform: scale(1.05);
 }
 
