@@ -408,6 +408,14 @@ function checkAchievements() {
       { name: "No one's getting this legit", timeCount: 31557600 }
   ];
 
+  let collectorAchievements = [
+      { name: "Achievement Collector", count: 5 },
+      { name: "Achievement Hoarder", count: 10 },
+      { name: "Achievement Addict", count: 20 },
+      { name: "Achievement God", count: 33 },
+      { name: "T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶", count: 50 }
+  ];
+
   let unlockedAchievements = JSON.parse(localStorage.getItem("unlockedAchievements")) || [];
 
   achievements.forEach(achievement => {
@@ -421,6 +429,15 @@ function checkAchievements() {
         localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
         showAchievementPopup(achievement.name);
       }
+
+      let unlockedCount = unlockedAchievements.length;
+      collectorAchievements.forEach(collector => {
+          if (unlockedCount >= collector.count && !unlockedAchievements.includes(collector.name)) {
+              unlockedAchievements.push(collector.name);
+              localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
+              showAchievementPopup(collector.name);
+          }
+      });
   });
 }
 
@@ -447,6 +464,7 @@ function updateAchievementsList() {
 
   let achievementItems = document.querySelectorAll(".achievement-item");
   let achievementItemsT = document.querySelectorAll(".achievement-itemT");
+  let achievementItemsC = document.querySelectorAll(".achievement-itemC");
 
   achievementItems.forEach(item => {
     const achievementName = item.getAttribute("data-name");
@@ -459,6 +477,16 @@ function updateAchievementsList() {
   });
 
   achievementItemsT.forEach(item => {
+    const achievementName = item.getAttribute("data-name");
+
+    if (unlockedAchievements.includes(achievementName)) {
+      item.style.backgroundColor = "blue";
+    } else {
+      item.style.backgroundColor = "gray";
+    }
+  });
+
+  achievementItemsC.forEach(item => {
     const achievementName = item.getAttribute("data-name");
 
     if (unlockedAchievements.includes(achievementName)) {
