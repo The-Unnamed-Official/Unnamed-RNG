@@ -4,15 +4,13 @@ const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 let rollCount1 = parseInt(localStorage.getItem("rollCount")) || 0;
 let cooldownTime = 690;
-let timeoutId;
-let countdownInterval;
-let tabbedOutTime = null;
 let currentAudio = null;
 let isChangeEnabled = true;
 let autoRollInterval = null;
 let audioVolume = 1;
 let isMuted = false;
 let previousVolume = audioVolume;
+let refreshTimeout;
 
 document.addEventListener("DOMContentLoaded", () => {
   const rollButton = document.getElementById("rollButton");
@@ -164,6 +162,7 @@ function musicLoad() {
   let astredAudio = document.getElementById("astredAudio");
   let crazeAudio = document.getElementById("crazeAudio");
   let shenviiAudio = document.getElementById("shenviiAudio");
+  let qbearAudio = document.getElementById("qbearAudio");
 
   suspenseAudio.pause();
   expOpeningAudio.pause();
@@ -255,6 +254,7 @@ function musicLoad() {
   astredAudio.pause();
   crazeAudio.pause();
   shenviiAudio.pause();
+  qbearAudio.pause();
 
   suspenseAudio.currentTime = 0;
   expOpeningAudio.currentTime = 0;
@@ -346,6 +346,7 @@ function musicLoad() {
   astredAudio.currentTime = 0;
   crazeAudio.currentTime = 0;
   shenviiAudio.currentTime = 0;
+  qbearAudio.currentTime = 0;
 }
 
 function formatRollCount(count) {
@@ -374,14 +375,37 @@ function updateRollCount(increment = 1) {
 
 function checkAchievements() {
   let achievements = [
-      { name: "I'm new to this", count: 1 },
+    // Rolls
       { name: "I think I like this", count: 100 },
       { name: "This is getting serious", count: 1000 },
       { name: "I'm the Roll Master", count: 5000 },
-      { name: "Beyond Luck", count: 10000 },
-      { name: "I'm obsessed...", count: 50000 },
+      { name: "It's over 9000!!", count: 10000 },
+      { name: "When will you stop?", count: 25000 },
+      { name: "No Unnamed?", count: 30303 },
+      { name: "Beyond Luck", count: 50000 },
       { name: "Rolling machine", count: 100000 },
-      { name: "One, Two, Three, Four.. ..One Million!", count: 1000000 }
+      { name: "Your PC must be burning", count: 250000 },
+      { name: "Half a million!1!!1", count: 500000 },
+      { name: "One, Two.. ..One Million!", count: 1000000 },
+      { name: "No H1di?", count: 10000000 },
+      { name: "Are you really doing this?", count: 25000000 },
+      { name: "You have no limits...", count: 50000000 },
+      { name: "WHAT HAVE YOU DONE", count: 100000000 },
+      { name: "AHHHHHHHHHHH", count: 1000000000 },
+
+      // Time
+      { name: "Just the beginning", timeCount: 0 },
+      { name: "This doesn't add up", timeCount: 3600 },
+      { name: "When does it end...", timeCount: 7200 },
+      { name: "I swear I'm not addicted...", timeCount: 36000 },
+      { name: "Grass? What's that?", timeCount: 86400 },
+      { name: "Unnamed's RNG biggest fan", timeCount: 172800 },
+      { name: "RNG is life!", timeCount: 604800 },
+      { name: "I. CAN'T. STOP", timeCount: 1209600 },
+      { name: "No Lifer", timeCount: 2629800 },
+      { name: "Are you okay?", timeCount: 5259600 },
+      { name: "You are a True No Lifer", timeCount: 15778800 },
+      { name: "No one's getting this legit", timeCount: 31557600 }
   ];
 
   let unlockedAchievements = JSON.parse(localStorage.getItem("unlockedAchievements")) || [];
@@ -391,6 +415,11 @@ function checkAchievements() {
           unlockedAchievements.push(achievement.name);
           localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
           showAchievementPopup(achievement.name);
+      }
+      if (playTime >= achievement.timeCount && !unlockedAchievements.includes(achievement.name)) {
+        unlockedAchievements.push(achievement.name);
+        localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
+        showAchievementPopup(achievement.name);
       }
   });
 }
@@ -417,8 +446,19 @@ function updateAchievementsList() {
   let unlockedAchievements = JSON.parse(localStorage.getItem("unlockedAchievements")) || [];
 
   let achievementItems = document.querySelectorAll(".achievement-item");
+  let achievementItemsT = document.querySelectorAll(".achievement-itemT");
 
   achievementItems.forEach(item => {
+    const achievementName = item.getAttribute("data-name");
+
+    if (unlockedAchievements.includes(achievementName)) {
+      item.style.backgroundColor = "blue";
+    } else {
+      item.style.backgroundColor = "gray";
+    }
+  });
+
+  achievementItemsT.forEach(item => {
     const achievementName = item.getAttribute("data-name");
 
     if (unlockedAchievements.includes(achievementName)) {
@@ -447,6 +487,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  qbearAudio.pause();
   shenviiAudio.pause();
   astblaAudio.pause();
   tuonAudio.pause();
@@ -538,6 +579,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   geezerSuspenceAudio.currentTime = 0;
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
+  qbearAudio.currentTime = 0;
   shenviiAudio.currentTime = 0;
   heartAudio.currentTime = 0;
   iriAudio.currentTime = 0;
@@ -635,6 +677,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
   if (
     rarity.type === "Cursed Mirage [1 in 11,111]" ||
+    rarity.type === "Qbear [1 in 35,555]" ||
     rarity.type === "Wandering Spirit [1 in 150]" ||
     rarity.type === "Frozen Fate [1 in 200]" ||
     rarity.type === "Mysterious Echo [1 in 300]" ||
@@ -718,6 +761,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
       gargantuaAudio.play();
     } else if (rarity.type === "Heart [1 in ♡♡♡]") {
       bigSuspenceAudio.play();
+    } else if (rarity.type === "Qbear [1 in 35,555]") {
+      hugeSuspenceAudio.play();
     } else if (rarity.type === "Memory [1 in 175]") {
       polarrSuspenceAudio.play();
     } else if (rarity.type === "Oblivion [1 in 200]") {
@@ -1319,11 +1364,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -1449,11 +1494,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -1558,6 +1603,151 @@ document.getElementById("rollButton").addEventListener("click", function () {
         }, 100);
         enableChange();
       }, 10750); // Wait for 10.75 seconds
+    } else if (rarity.type === "Qbear [1 in 35,555]") {
+      document.body.className = "blackBg";
+      disableChange();
+      startAnimationA5();
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+    
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-purple";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+    
+      function createSquare2() {
+        const square = document.createElement("div");
+        square.className = "animated-square-blue";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      const squareInterval = setInterval(() => {
+        createSquare();
+        createSquare2();
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 9350); // Stop after 9.35 seconds
+    
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+    
+        const starClasses = [
+          "purple-star",
+          "blue-star",
+          "red-star"
+        ];
+        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+    
+        star.innerHTML = "△";
+        star.style.left = Math.random() * 100 + "vw";
+    
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+    
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+    
+        star.style.animationDelay = i * 0.08 + "s";
+    
+        container.appendChild(star);
+    
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          rollCount1++;
+          titleCont.style.visibility = "visible";
+          qbearAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
     } else if (rarity.type === "Iridocyclitis Veil [1 in 5,000/50th]") {
       document.body.className = "blackBg";
       disableChange();
@@ -1579,11 +1769,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -1709,11 +1899,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -1839,11 +2029,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -1969,11 +2159,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -2099,11 +2289,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -2229,11 +2419,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -2359,11 +2549,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -2488,12 +2678,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-        createBurstStar();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -4499,6 +4688,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
       function createSquare() {
         const square = document.createElement("div");
         square.className = "animated-square-red";
+
         square.style.left = Math.random() * 100 + "vw";
         square.style.top = Math.random() * 100 + "vh";
 
@@ -4508,12 +4698,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-        createBurstStar();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -4646,6 +4835,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
       function createSquare() {
         const square = document.createElement("div");
         square.className = "animated-square-blue";
+
         square.style.left = Math.random() * 100 + "vw";
         square.style.top = Math.random() * 100 + "vh";
 
@@ -4655,12 +4845,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-        createBurstStar();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -4873,6 +5062,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
       function createSquare() {
         const square = document.createElement("div");
         square.className = "animated-square-blue";
+
         square.style.left = Math.random() * 100 + "vw";
         square.style.top = Math.random() * 100 + "vh";
 
@@ -4882,12 +5072,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
           square.remove();
         });
       }
-    
+
       const squareInterval = setInterval(() => {
-        createGravitySquare();
-        createBurstStar();
-      }, 100);
-    
+        createSquare();
+      }, 50);
+
       setTimeout(() => {
         clearInterval(squareInterval);
       }, 9350); // Stop after 9.35 seconds
@@ -6767,6 +6956,12 @@ function rollRarity() {
       class: "astredBgImg",
       chance: 0.05,
       titles: ["Astrald RED"],
+    },
+    {
+      type: "Qbear [1 in 35,555]",
+      class: "qbearBgImg",
+      chance: 0.00281254394,
+      titles: ["Qbear", "Risky Gato", "Samurai Gato", "Gato: Wew"],
     }
   ];
 
@@ -7166,6 +7361,7 @@ const backgroundDetails = {
   astredBgImg: { image: "files/backgrounds/astred.png", audio: "astredAudio" },
   crazeBgImg: { image: "files/backgrounds/firecraze.png", audio: "crazeAudio" },
   shenviiBgImg: { image: "files/backgrounds/shenvii.gif", audio: "shenviiAudio" },
+  qbearBgImg: { image: "files/backgrounds/qbear.png", audio: "qbearAudio" },
   samuraiBgImg: {
     image: "files/backgrounds/samurai.png",
     audio: "samuraiAudio",
@@ -8104,6 +8300,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 const settingsButton = document.getElementById("settingsButton");
+const achievementsButton = document.getElementById("achievementsButton");
+const achievementsMenu = document.getElementById("achievementsMenu");
+const closeAchievements = document.getElementById("closeAchievements");
 const settingsMenu = document.getElementById("settingsMenu");
 const closeSettings = document.getElementById("closeSettings");
 const audioSlider = document.getElementById("audioSlider");
@@ -8113,6 +8312,14 @@ const rollButton = document.getElementById("rollButton");
 
 settingsButton.addEventListener("click", () => {
   settingsMenu.style.display = "block";
+});
+
+achievementsButton.addEventListener("click", () => {
+  achievementsMenu.style.display = "block";
+});
+
+closeAchievements.addEventListener("click", () => {
+  achievementsMenu.style.display = "none";
 });
 
 closeSettings.addEventListener("click", () => {
@@ -8180,11 +8387,11 @@ resetDataButton.addEventListener("click", () => {
   if (confirm("Are you sure you want to reset all data?")) {
     console.log("Data reset!");
     localStorage.clear();
-    location.reload();
+    
     setTimeout(() => {
-    localStorage.clear();
-    location.reload();
-    let playTime = 0;
+      localStorage.clear();
+      location.reload();
+      let playTime = 0;
     }, 100);
   }
 });
@@ -8313,6 +8520,8 @@ function showStatusMessage(message, duration = 2000) {
       playTime++;
       timerDisplay.textContent = formatTime(playTime);
       localStorage.setItem('playTime', playTime);
+      checkAchievements();
+      updateAchievementsList();
     }, 1000);
 
 document.getElementById('importButton').addEventListener('click', () => {
@@ -8412,7 +8621,7 @@ function getClassForRarity(rarity) {
       'Fright [1 in 1,075]': 'under10k',
       'Nightfall [1 in 1,200]': 'under10k',
       'Fear [1 in 1,250]': 'under10k',
-      'Seraph\'s Wing [1 in 1,333]': 'under10k',
+      "Seraph's Wing [1 in 1,333]": 'under10k',
       'Void Walker [1 in 1,500]': 'under10k',
       'Haunted Soul [1 in 2,000]': 'under10k',
       'Silent Listener [1 in 2,200]': 'under10k',
@@ -8425,7 +8634,7 @@ function getClassForRarity(rarity) {
       'Twisted Light [1 in 5,000]': 'under10k',
       'Found Soul [1 in 5,000]': 'under10k',
       'Haunted Reality [1 in 5,500]': 'under10k',
-      'LubbyJubby\'s Cherry Grove [1 in 5,666]': 'under10k',
+      "LubbyJubby's Cherry Grove [1 in 5,666]": 'under10k',
       'Rad [1 in 6,969]': 'under10k',
       'Ether Shift [1 in 5,540]': 'under10k',
       'Ethereal Pulse [1 in 6,000]': 'under10k',
@@ -8442,11 +8651,11 @@ function getClassForRarity(rarity) {
       'Celestial Dawn [1 in 12,000]': 'under100k',
       'Blodhest [1 in 25,252]': 'under100k',
       'Unnamed [1 in 30,303]': 'under100k',
-      'Fate\'s Requiem [1 in 15,000]': 'under100k',
+      "Fate's Requiem [1 in 15,000]": 'under100k',
       'Eonbreak [1 in 20,000]': 'under100k',
       'Overture  [1 in 25,641]': 'under100k',
       'HARV [1 in 33,333]': 'under100k',
-      'Devil\'s Heart [1 in 66,666]': 'under100k',
+      "Devil's Heart [1 in 66,666]": 'under100k',
       'Arcane Pulse [1 in 77,777]': 'under100k',
       'Impeached [1 in 101,010]': 'under1m',
       'Celestial Chorus [1 in 202,020]': 'under1m',
@@ -8459,6 +8668,7 @@ function getClassForRarity(rarity) {
       'Heart [1 in ♡♡♡]': 'eventV',
       'Unfair [1 in ###]': 'under100k',
       'GD Addict [1 in ###]': 'under10k',
+      'Qbear [1 in 35,555]': 'under100k',
   };
 
   return rarityClasses[rarity] || null;
@@ -8715,9 +8925,12 @@ document
 document
   .getElementById("deleteAllGrimDestinyButton")
   .addEventListener("click", () => deleteAllByRarity("griBgImg"));
-  document
-    .getElementById("deleteAllUnfairButton")
-    .addEventListener("click", () => deleteAllByRarity("astblaBgImg"));
+document
+  .getElementById("deleteAllUnfairButton")
+  .addEventListener("click", () => deleteAllByRarity("astblaBgImg"));
+document
+  .getElementById("deleteAllQbearButton")
+  .addEventListener("click", () => deleteAllByRarity("qbearImgBg"));
 
 
 document
@@ -8736,6 +8949,7 @@ document
       "cursedmirageBgImg",
       "tuonBgImg",
       "astblaBgImg",
+      "qbearImgBg",
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
@@ -9063,3 +9277,20 @@ setInterval(launchFirework, 9999);
 
 animate();
 
+function startRefreshTimer() {
+  refreshTimeout = setTimeout(() => {
+      location.reload();
+  }, 1200000);
+}
+
+function cancelRefreshTimer() {
+  clearTimeout(refreshTimeout);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+      startRefreshTimer();
+  } else {
+      cancelRefreshTimer();
+  }
+});

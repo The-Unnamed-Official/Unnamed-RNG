@@ -89,44 +89,6 @@
     }
 }
 
-#overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    color: white;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    font-size: 5vh;
-    flex-direction: column;
-    z-index: 90000000;
-}
-
-#countdown {
-    font-size: 7vh;
-    margin-top: 20px;
-}
-
-#imHereButton {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    margin-top: 69px;
-    font-size: 3vh;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, scale 0.3s ease;
-}
-
-#imHereButton:hover {
-    background-color: #3c8f40;
-    scale: 1.1;
-}
-
 #menuScreen {
     position: fixed;
     top: 0;
@@ -210,7 +172,7 @@ body {
     position: absolute;
     bottom: 10px;
     left: 383px;
-    width: 200px;
+    width: 250px;
     height: 185px;
     display: inline-block;
     padding: 20px;
@@ -272,6 +234,24 @@ body {
     scale: 1.1;
 }
 
+#achievementsButton {
+    background-color: #ff6347;
+    color: #ffffff;
+    border-radius: 5px;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 9999999;
+    margin-bottom: 10px;
+    margin-right: 10px;
+    transition: background-color 0.2s ease, scale 0.2s ease;
+}
+
+#achievementsButton:hover {
+    background-color: #bb4935;
+    scale: 1.1;
+}
+
 #saveButton {
     background-color: #7a99f4;
     transition: background-color 0.2s ease, scale 0.2s ease;
@@ -315,6 +295,7 @@ body {
 .statusImport.showStatus {
     display: block;
     opacity: 1;
+    z-index: 999000000;
 }
 
 @keyframes shakeRoll {
@@ -361,6 +342,23 @@ body {
     font-size: 1.5rem;
     margin-bottom: 20px;
     color: #ffa500;
+}
+
+#achievementsMenu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    padding: 20px;
+    background: url(backgrounds/rng_master.png);
+    border-radius: 10px;
+    border-style: groove;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    z-index: 90000000;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    text-align: center;
 }
 
 #audioSlider {
@@ -433,6 +431,18 @@ body {
     transition: all 0.3s ease-in-out;
 }
 
+.achievementsBtns {
+    display: inline-block;
+    padding: 10px 15px;
+    margin: 10px 0;
+    font-size: 1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
 .aSlid {
     margin-top: 25px;
 }
@@ -479,6 +489,16 @@ body {
 }
 
 #closeSettings:hover {
+    background-color: #555;
+    transform: scale(1.1);
+}
+
+#closeAchievements {
+    background-color: #777;
+    color: white;
+}
+
+#closeAchievements:hover {
     background-color: #555;
     transform: scale(1.1);
 }
@@ -1436,6 +1456,12 @@ body {
 
 .shenviiBgImg {
     background: url(backgrounds/shenvii.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.qbearBgImg {
+    background: url(backgrounds/qbear.png);
     background-size: cover;
     object-fit: contain;
 }
@@ -2580,11 +2606,11 @@ body.griCutsceneBgImg {
 
 .achievement-item {
     position: relative;
-    padding: 10px;
+    padding: 20px;
     text-align: center;
     border-radius: 5px;
     font-weight: bold;
-    font-size: 15px;
+    font-size: 13px;
     color: white;
     background: #444;
     flex: 0 0 calc(25% - 10px);
@@ -2619,4 +2645,59 @@ body.griCutsceneBgImg {
     border-style: solid;
     border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
     z-index: 999999999999;
+}
+
+.achievement-itemT {
+    position: relative;
+    padding: 20px;
+    padding-left: 5px;
+    padding-right: 5px;
+    text-align: center;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 15px;
+    color: white;
+    background: #444;
+    flex: 0 0 calc(25% - 10px);
+    cursor: pointer;
+    z-index: 1;
+}
+
+.achievement-itemT:hover::after {
+    content: "Play " attr(data-time) " to unlock this achievement";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    pointer-events: none;
+    margin-bottom: 5px;
+    font-size: 12px;
+    z-index: 999999999;
+}
+
+.achievement-itemT:hover::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
+    z-index: 999999999999;
+}
+
+.AutoDeletionTxt {
+    background: #222;
+    padding: 10px;
+    border-radius: 8px;
+    align-items: center;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: -20px;
 }
