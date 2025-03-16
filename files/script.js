@@ -8022,12 +8022,16 @@ document
 window.addEventListener("resize", function () {
   const container = document.querySelector(".container1");
   const inventory = document.querySelector(".inventory");
-  const button = document.getElementById("settingsButton");
+  const SeButton = document.getElementById("settingsButton");
+  const AButton = document.getElementById("achievementsButton");
+  const StButton = document.getElementById("statsButton");
   const sliderContainer = document.querySelector(".slider-container");
   const originalParent = document.querySelector(".original-parent");
 
   if (window.innerWidth < 821) {
-    button.style.display = "none";
+    SeButton.style.display = "none";
+    AButton.style.display = "none";
+    StButton.style.display = "none";
     container.style.left = "10px";
     inventory.style.height = "58vh";
     inventory.style.width = "42vh";
@@ -8045,7 +8049,9 @@ window.addEventListener("resize", function () {
     }
   } else {
     container.style.left = "383px";
-    button.style.display = "inline-block";
+    SeButton.style.display = "inline-block";
+    AButton.style.display = "inline-block";
+    StButton.style.display = "inline-block";
     inventory.style.width = "60vh";
     inventory.style.height = "85vh";
 
