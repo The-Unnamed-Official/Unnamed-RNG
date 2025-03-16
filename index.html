@@ -11,7 +11,7 @@
 <body>
 
     <div class="version">
-        <a class="vNumber">Version: 0.9.7 <p class="vNumberDetailed">(0.9.7-5-updACHIEVEMENTS)</p></a>
+        <a class="vNumber">Version: 0.9.7 <p class="vNumberDetailed">(0.9.7-6-upd)</p></a>
     </div>
 
     <canvas id="fireworksCanvas"></canvas>
@@ -58,6 +58,15 @@
             </div>
 
             <div class="settings-item">
+                <h3 class="SkipCutsceneTxt">Skip Cutscene Rarity</h3>
+                <div id="rarityChecklistC">
+                    <button id="toggleCutscene1K" class="cutsceneSkipBtb"><a id="1KTxt" class="under1kT">Skip Decent Cutscenes</a></button>
+                    <button id="toggleCutscene10K" class="cutsceneSkipBtb"><a id="10KTxt" class="under10kT">Skip Grand Cutscenes</a></button>
+                    <button id="toggleCutscene100K" class="cutsceneSkipBtb"><a id="100KTxt" class="under100k">Skip Mastery Cutscenes</a></button>
+                    <button id="toggleCutscene1M" class="cutsceneSkipBtb"><a id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</a></button>
+                </div>
+            </div>
+            <div class="settings-item">
                 <h3 class="AutoDeletionTxt">Auto delete Rarity</h2>
                 <div id="rarityChecklist">
                     <button class="rarity-button" data-rarity="under100"><a class="under100T">Basic</a></button>
@@ -68,22 +77,24 @@
                     <button class="rarity-button" data-rarity="special"><a class="special">Special</a></button>
                 </div>                  
             </div>
-
-            <div class="setting-item">
-                <div class="rollsCount2">
-                    <h1 class="statistics">Statistics</h1>
-                    <h3 class="count1">Total Rolls:</h3>
-                        <a class="totalCount1" id="rollCountDisplay1">NaN</a>
-                    <br>
-                    <div class="timer-container">
-                        <h3 class="timerTotal">Playtime Timer:</h3>
-                        <div class="timer" id="timer">00:00:00</div>
-                    </div>
-                </div>
-            </div>
-            
+                    
             <button id="closeSettings" class="settingsBtns">Close</button>
         </div>
+    </div>
+
+    <div id="statsMenu" class="stats-menu" style="display: none;">
+            <div class="rollsCount1">
+                <h1 class="statistics">Statistics</h1>
+                <h3 class="count1">Total Rolls:</h3>
+                <a class="totalCount1" id="rollCountDisplay1">NaN</a>
+                <br>
+                <div class="timer-container">
+                    <h3 class="timerTotal">Playtime Timer:</h3>
+                    <div class="timer" id="timer">00:00:00</div>
+                </div>
+            </div>
+
+        <button id="closeStats" class="statsBtns">Close</button>
     </div>
 
     <div id="achievementsMenu" class="achievements-menu" style="display: none;">
@@ -169,6 +180,7 @@
                 <h3 class="count">Rolls: <a class="totalCount" id="rollCountDisplay">NaN</a></h3>
             </div>
             <button id="achievementsButton" class="orange-button">Achievements</button>
+            <button id="statsButton" class="orange-button">Stats</button>
             <button id="settingsButton" class="orange-button">Settings</button>
             <button id="autoRollButton" class="toggle-button off">Auto Roll: Off</button>
         </div>

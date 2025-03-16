@@ -35,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
       formatRollCount();
       loadToggledStates();
       checkAchievements();
+      loadCutsceneSkip();
       updateAchievementsList();
     }, 2000);
   });
@@ -51,6 +52,7 @@ function loadContent() {
   updateRollCount();
   checkAchievements();
   updateAchievementsList();
+  loadCutsceneSkip();
   document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
   document.getElementById("rollCountDisplay1").innerText = rollCount1;
 }
@@ -68,7 +70,39 @@ function load() {
     formatRollCount();
     checkAchievements();
     updateAchievementsList();
+    loadCutsceneSkip();
   });
+}
+
+function loadCutsceneSkip() {
+  skipCutscene1K = JSON.parse(localStorage.getItem('skipCutscene1K'));
+  if (skipCutscene1K === null) {
+    skipCutscene1K = true;
+    localStorage.setItem('skipCutscene1K', JSON.stringify(skipCutscene1K));
+  }
+
+  skipCutscene10K = JSON.parse(localStorage.getItem('skipCutscene10K'));
+  if (skipCutscene10K === null) {
+    skipCutscene10K = true;
+    localStorage.setItem('skipCutscene10K', JSON.stringify(skipCutscene10K));
+  }
+
+  skipCutscene100K = JSON.parse(localStorage.getItem('skipCutscene100K'));
+  if (skipCutscene100K === null) {
+    skipCutscene100K = true;
+    localStorage.setItem('skipCutscene100K', JSON.stringify(skipCutscene100K));
+  }
+
+  skipCutscene1M = JSON.parse(localStorage.getItem('skipCutscene1M'));
+  if (skipCutscene1M === null) {
+    skipCutscene1M = true;
+    localStorage.setItem('skipCutscene1M', JSON.stringify(skipCutscene1M));
+  }
+  
+  document.getElementById("1KTxt").textContent = `Skip Decent Cutscenes ${skipCutscene1K ? "" : "On"}`;
+  document.getElementById("10KTxt").textContent = `Skip Grand Cutscenes ${skipCutscene10K ? "" : "On"}`;
+  document.getElementById("100KTxt").textContent = `Skip Mastery Cutscenes ${skipCutscene100K ? "" : "On"}`;
+  document.getElementById("1MTxt").textContent = `Skip Supreme Cutscenes ${skipCutscene1M ? "" : "On"}`;
 }
 
 function musicLoad() {
@@ -1196,106 +1230,119 @@ document.getElementById("rollButton").addEventListener("click", function () {
         enableChange();
       }, 3000); // Wait for 3 seconds
     } else if (rarity.type === "Arcane Pulse [1 in 77,777]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimationA5();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-blue";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10370); // Stop after 10.75 seconds
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene100K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          arcAudio.play();
+        disableChange();
+        startAnimationA5();
+  
+        const container1 = document.getElementById("squareContainer");
+  
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10370); // Stop after 10.75 seconds
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            arcAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        arcAudio.play();
+      }
     } else if (rarity.type === "Experiment [1 in 100,000/10th]") {
       disableChange();
 
@@ -1372,410 +1419,449 @@ document.getElementById("rollButton").addEventListener("click", function () {
         enableChange();
       }, 20550); // Wait for 20.55 seconds
     } else if (rarity.type === "HARV [1 in 33,333]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimationA5();
-    
-      const container1 = document.getElementById("squareContainer");
-      const container = document.getElementById("starContainer");
-    
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-red";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-    
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-    
-        const starClasses = [
-          "orange-star",
-          "dark-red-star",
-          "purple-star"
-        ];
-        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
-    
-        star.innerHTML = "◈";
-        star.style.left = Math.random() * 100 + "vw";
-    
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-    
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-    
-        star.style.animationDelay = i * 0.08 + "s";
-    
-        container.appendChild(star);
-    
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene100K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-red";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          displayResult(title, rarity.type);
-          updateRollingHistory(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          harvAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "orange-star",
+            "dark-red-star",
+            "purple-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "◈";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            harvAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        harvAudio.play();
+      }
     } else if (rarity.type === "Tuon [1 in 50,000]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimationA5();
-    
-      const container1 = document.getElementById("squareContainer");
-      const container = document.getElementById("starContainer");
-    
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-green";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-    
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-    
-        const starClasses = [
-          "orange-star",
-          "green-star",
-          "red-star"
-        ];
-        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
-    
-        star.innerHTML = "𓃠";
-        star.style.left = Math.random() * 100 + "vw";
-    
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-    
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-    
-        star.style.animationDelay = i * 0.08 + "s";
-    
-        container.appendChild(star);
-    
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene100K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-green";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          displayResult(title, rarity.type);
-          updateRollingHistory(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          tuonAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "orange-star",
+            "green-star",
+            "red-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "𓃠";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            tuonAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        tuonAudio.play();
+      }
     } else if (rarity.type === "Qbear [1 in 35,555]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimationA5();
-    
-      const container1 = document.getElementById("squareContainer");
-      const container = document.getElementById("starContainer");
-    
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-purple";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-    
-      function createSquare2() {
-        const square = document.createElement("div");
-        square.className = "animated-square-blue";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-        createSquare2();
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-    
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-    
-        const starClasses = [
-          "purple-star",
-          "blue-star",
-          "red-star"
-        ];
-        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
-    
-        star.innerHTML = "△";
-        star.style.left = Math.random() * 100 + "vw";
-    
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-    
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-    
-        star.style.animationDelay = i * 0.08 + "s";
-    
-        container.appendChild(star);
-    
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene100K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-purple";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+      
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
+        }, 50);
+  
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          displayResult(title, rarity.type);
-          updateRollingHistory(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          qbearAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "purple-star",
+            "blue-star",
+            "red-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "△";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            qbearAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        qbearAudio.play();
+      }
     } else if (rarity.type === "Iridocyclitis Veil [1 in 5,000/50th]") {
       document.body.className = "blackBg";
       disableChange();
@@ -2037,395 +2123,434 @@ document.getElementById("rollButton").addEventListener("click", function () {
         enableChange();
       }, 10750); // Wait for 10.75 seconds
     } else if (rarity.type === "LubbyJubby's Cherry Grove [1 in 5,666]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimationA5();
-    
-      const container1 = document.getElementById("squareContainer");
-      const container = document.getElementById("starContainer");
-    
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-cyan";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-    
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-    
-        const starClasses = [
-          "pink-star",
-          "cyan-star",
-          "blue-star"
-        ];
-        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
-    
-        star.innerHTML = "◌";
-        star.style.left = Math.random() * 100 + "vw";
-    
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-    
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-    
-        star.style.animationDelay = i * 0.08 + "s";
-    
-        container.appendChild(star);
-    
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene10K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-cyan";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          displayResult(title, rarity.type);
-          updateRollingHistory(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          lubjubAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "pink-star",
+            "cyan-star",
+            "blue-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "◌";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            lubjubAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        lubjubAudio.play();
+      }
     } else if (rarity.type === "Rad [1 in 6,969]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimationA5();
-    
-      const container1 = document.getElementById("squareContainer");
-      const container = document.getElementById("starContainer");
-    
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-cyan";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-    
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-    
-        const starClasses = [
-          "green-star",
-          "cyan-star",
-          "blue-star"
-        ];
-        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
-    
-        star.innerHTML = "◌";
-        star.style.left = Math.random() * 100 + "vw";
-    
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-    
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-    
-        star.style.animationDelay = i * 0.08 + "s";
-    
-        container.appendChild(star);
-    
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene10K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-cyan";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          displayResult(title, rarity.type);
-          updateRollingHistory(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          radAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "green-star",
+            "cyan-star",
+            "blue-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "◌";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            radAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        radAudio.play();
+      }
     } else if (rarity.type === "Blodhest [1 in 25,252]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimationA5H();
-    
-      const container1 = document.getElementById("squareContainer");
-      const container = document.getElementById("starContainer");
-    
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-purple";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-    
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-    
-        const starClasses = [
-          "blue-star",
-          "cyan-star",
-          "purple-star"
-        ];
-        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
-    
-        star.innerHTML = "—";
-        star.style.left = Math.random() * 100 + "vw";
-    
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-    
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-    
-        star.style.animationDelay = i * 0.08 + "s";
-    
-        container.appendChild(star);
-    
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene100K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        disableChange();
+        startAnimationA5H();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-purple";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          displayResult(title, rarity.type);
-          updateRollingHistory(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          blodAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "blue-star",
+            "cyan-star",
+            "purple-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "—";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            blodAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        blodAudio.play();
+      }
     } else if (rarity.type === "BlindGT [1 in 2,000,000/15th]") {
       document.body.className = "blackBg";
       disableChange();
@@ -2557,659 +2682,737 @@ document.getElementById("rollButton").addEventListener("click", function () {
         enableChange();
       }, 10750); // Wait for 10.75 seconds
     } else if (rarity.type === "Shad0w [1 in 4,444]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimationBlackHole();
-    
-      const container1 = document.getElementById("squareContainer");
-      const container = document.getElementById("starContainer");
-    
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-blue";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-    
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-    
-        const starClasses = [
-          "pink-star",
-          "cyan-star",
-          "blue-star"
-        ];
-        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
-    
-        star.innerHTML = "◊";
-        star.style.left = Math.random() * 100 + "vw";
-    
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-    
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-    
-        star.style.animationDelay = i * 0.08 + "s";
-    
-        container.appendChild(star);
-    
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene10K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        disableChange();
+        startAnimationBlackHole();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          displayResult(title, rarity.type);
-          updateRollingHistory(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          shaAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "pink-star",
+            "cyan-star",
+            "blue-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "◊";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            shaAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        shaAudio.play();
+      }
     } else if (rarity.type === "Overture [1 in 25,641]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimationA5();
-    
-      const container = document.getElementById("starContainer");
-    
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-red";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-    
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-    
-        const starClasses = [
-          "orange-star",
-          "dark-red-star"
-        ];
-        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
-    
-        star.innerHTML = "◇";
-        star.style.left = Math.random() * 100 + "vw";
-    
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-    
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-    
-        star.style.animationDelay = i * 0.08 + "s";
-    
-        container.appendChild(star);
-    
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene100K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        disableChange();
+        startAnimationA5();
+      
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-red";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          displayResult(title, rarity.type);
-          updateRollingHistory(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          overtureAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "orange-star",
+            "dark-red-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "◇";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            overtureAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        overtureAudio.play();
+      }
     } else if (rarity.type === "Celestial Chorus [1 in 202,020]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimationA5();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-pink";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "purple-star";
-        star.innerHTML = "O";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene1M) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          celAudio.play();
+        disableChange();
+        startAnimationA5();
+  
+        const container1 = document.getElementById("squareContainer");
+  
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-pink";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+  
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "purple-star";
+          star.innerHTML = "O";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+  
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            celAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        celAudio.play();
+      }
     } else if (rarity.type === "Devil's Heart [1 in 66,666]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimationA5();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-orange";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "red-star";
-        star.innerHTML = "✕";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene100K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          devilAudio.play();
+        disableChange();
+        startAnimationA5();
+  
+        const container1 = document.getElementById("squareContainer");
+  
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-orange";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+  
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "red-star";
+          star.innerHTML = "✕";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+  
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            devilAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        devilAudio.play();
+      }
     } else if (rarity.type === "Demon Soul [1 in 9,999]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-red";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "orange-star";
-        star.innerHTML = "O";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8000);
-      setTimeout(function () {
+      if (skipCutscene10K) {
         document.body.className = "blackBg";
-      }, 9000);
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          demsoAudio.play();
+        disableChange();
+  
+        const container1 = document.getElementById("squareContainer");
+  
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-red";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
         }, 100);
-        enableChange();
-      }, 9850); // Wait for 9.85 seconds
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+  
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "orange-star";
+          star.innerHTML = "O";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8000);
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 9000);
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            demsoAudio.play();
+          }, 100);
+          enableChange();
+        }, 9850); // Wait for 9.85 seconds
+      } else {
+        bigSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        demsoAudio.play();
+      }
     } else if (rarity.type === "GD Addict [1 in ###]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-blue";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "yellow-star";
-        star.innerHTML = "∆∆∆";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8000);
-      setTimeout(function () {
+      if (skipCutscene10K) {
         document.body.className = "blackBg";
-      }, 9000);
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          astredAudio.play();
+        disableChange();
+  
+        const container1 = document.getElementById("squareContainer");
+  
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
         }, 100);
-        enableChange();
-      }, 9850); // Wait for 9.85 seconds
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+  
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "yellow-star";
+          star.innerHTML = "∆∆∆";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8000);
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 9000);
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            astredAudio.play();
+          }, 100);
+          enableChange();
+        }, 9850); // Wait for 9.85 seconds
+      } else {
+        bigSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        astredAudio.play();
+      }
     } else if (rarity.type === "Heart [1 in ♡♡♡]") {
       document.body.className = "blackBg";
       disableChange();
@@ -3305,78 +3508,91 @@ document.getElementById("rollButton").addEventListener("click", function () {
         enableChange();
       }, 9850); // Wait for 9.85 seconds
     } else if (rarity.type === "Hellish Fire [1 in 6,666]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-orange";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "pink-star";
-        star.innerHTML = "O";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8000);
-      setTimeout(function () {
+      if (skipCutscene10K) {
         document.body.className = "blackBg";
-      }, 9000);
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          hellAudio.play();
+        disableChange();
+  
+        const container1 = document.getElementById("squareContainer");
+  
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-orange";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
         }, 100);
-        enableChange();
-      }, 9850); // Wait for 9.85 seconds
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+  
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "pink-star";
+          star.innerHTML = "O";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8000);
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 9000);
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            hellAudio.play();
+          }, 100);
+          enableChange();
+        }, 9850); // Wait for 9.85 seconds
+      } else {
+        bigSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        hellAudio.play();
+      }
     } else if (rarity.type === "Grim Destiny [1 in 8,500]") {
       disableChange();
 
@@ -3450,49 +3666,60 @@ document.getElementById("rollButton").addEventListener("click", function () {
         enableChange();
       }, 23800); // Wait for 23.8 seconds
     } else if (rarity.type === "Impeached [1 in 101,010]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation01();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 3000); // Stop after 3 seconds
-
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
+      if (skipCutscene1M) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation01();
+  
+        const container1 = document.getElementById("squareContainer");
+  
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
         }, 100);
-        enableChange();
-      }, 3000); // Wait for 3 seconds
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 3000); // Stop after 3 seconds
+  
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 3000); // Wait for 3 seconds
+      } else {
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+      }
     } else if (rarity.type === "H1di [1 in 9,890,089]") {
       document.body.className = "blackBg";
       disableChange();
@@ -3895,127 +4122,140 @@ document.getElementById("rollButton").addEventListener("click", function () {
         enableChange();
       }, 13700); // Wait for 13.7 seconds
     } else if (rarity.type === "Unfair [1 in ###]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimationA5();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare(colorClass) {
-        const square = document.createElement("div");
-        square.className = `animated-square-${colorClass}`;
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-        container1.appendChild(square);
-        square.addEventListener("animationend", () => square.remove());
-      }
-
-      const container = document.getElementById("starContainer");
-
-      function createStars(colorClass, count) {
-        for (let i = 0; i < count; i++) {
-          const star = document.createElement("span");
-          star.className = `${colorClass}-star`;
-          star.innerHTML = "◊";
-          star.style.left = Math.random() * 100 + "vw";
-          star.style.setProperty(
-            "--randomX",
-            (Math.random() - 0.25) * 20 + "vw"
-          );
-          star.style.setProperty(
-            "--randomRotation",
-            (Math.random() - 0.5) * 720 + "deg"
-          );
-          star.style.animationDelay = i * 0.04 + "s";
-          container.appendChild(star);
-          star.addEventListener("animationend", () => star.remove());
+      if (skipCutscene100K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+  
+        const container1 = document.getElementById("squareContainer");
+  
+        function createSquare(colorClass) {
+          const square = document.createElement("div");
+          square.className = `animated-square-${colorClass}`;
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+          container1.appendChild(square);
+          square.addEventListener("animationend", () => square.remove());
         }
-      }
-
-      createStars("yellow", 276);
-      createStars("blue", 276);
-
-      const squareInterval = setInterval(() => {
-        createSquare("blue");
-        createSquare("yellow");
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10370); // Stop after 10.37 seconds
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+  
+        const container = document.getElementById("starContainer");
+  
+        function createStars(colorClass, count) {
+          for (let i = 0; i < count; i++) {
+            const star = document.createElement("span");
+            star.className = `${colorClass}-star`;
+            star.innerHTML = "◊";
+            star.style.left = Math.random() * 100 + "vw";
+            star.style.setProperty(
+              "--randomX",
+              (Math.random() - 0.25) * 20 + "vw"
+            );
+            star.style.setProperty(
+              "--randomRotation",
+              (Math.random() - 0.5) * 720 + "deg"
+            );
+            star.style.animationDelay = i * 0.04 + "s";
+            container.appendChild(star);
+            star.addEventListener("animationend", () => star.remove());
+          }
+        }
+  
+        createStars("yellow", 276);
+        createStars("blue", 276);
+  
+        const squareInterval = setInterval(() => {
+          createSquare("blue");
+          createSquare("yellow");
+        }, 50);
+  
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          astblaAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          clearInterval(squareInterval);
+        }, 10370); // Stop after 10.37 seconds
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            astblaAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        astblaAudio.play();
+      }
     } else if (rarity.type === "Abomination [1 in 1,000,000/20th]") {
       disableChange();
       document.body.style.backgroundImage = "url('files/backgrounds/gri_cutscene.gif')";
@@ -4089,54 +4329,65 @@ document.getElementById("rollButton").addEventListener("click", function () {
         enableChange();
       }, 18800); // Wait for 18.8 seconds
     } else if (rarity.type === "Gargantua [1 in 143]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Gargantua");
-      disableChange();
-      startAnimation11();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 69; i++) {
-        const star = document.createElement("span");
-        star.className = "blue-star";
-        star.innerHTML = "⁙";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 4000);
-      setTimeout(function () {
+      if (skipCutscene1K) {
         document.body.className = "blackBg";
-      }, 6000);
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        console.log("Rolled Gargantua");
+        disableChange();
+        startAnimation11();
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 69; i++) {
+          const star = document.createElement("span");
+          star.className = "blue-star";
+          star.innerHTML = "⁙";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 4000);
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 6000);
         setTimeout(() => {
-          document.body.className = rarity.class;
-          updateRollingHistory(title, rarity.type);
-          addToInventory(title, rarity.class);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 7000); // Wait for 7 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            updateRollingHistory(title, rarity.type);
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 7000); // Wait for 7 seconds
+      } else {
+        updateRollingHistory(title, rarity.type);
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+      }
     } else if (rarity.type === "MSFU [1 in 333/333rd]") {
       document.body.className = "blackBg";
       disableChange();
@@ -4203,1028 +4454,1195 @@ document.getElementById("rollButton").addEventListener("click", function () {
         enableChange();
       }, 8888); // Wait for 8.88 seconds
     } else if (rarity.type === "Memory [1 in 175]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Memory");
-      disableChange();
-      startAnimation9();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "purple-star";
-        star.innerHTML = "□";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8000);
-      setTimeout(function () {
+      if (skipCutscene1K) {
         document.body.className = "blackBg";
-      }, 10000);
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10500);
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 11000);
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 11500);
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        console.log("Rolled Memory");
+        disableChange();
+        startAnimation9();
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "purple-star";
+          star.innerHTML = "□";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8000);
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10500);
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 11000);
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 11500);
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          memAudio.play();
-        }, 100);
-        enableChange();
-      }, 12000); // Wait for 12 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            memAudio.play();
+          }, 100);
+          enableChange();
+        }, 12000); // Wait for 12 seconds
+      } else {
+        polarrSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        memAudio.play();
+      }
     } else if (rarity.type === "Oblivion [1 in 200]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Oblivion");
-      disableChange();
-      startAnimation9();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "purple-star";
-        star.innerHTML = "O";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8000);
-      setTimeout(function () {
+      if (skipCutscene1K) {
         document.body.className = "blackBg";
-      }, 10000);
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10500);
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 11000);
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 11500);
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        console.log("Rolled Oblivion");
+        disableChange();
+        startAnimation9();
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "purple-star";
+          star.innerHTML = "O";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8000);
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10500);
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 11000);
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 11500);
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          oblAudio.play();
-        }, 100);
-        enableChange();
-      }, 12000); // Wait for 12 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            oblAudio.play();
+          }, 100);
+          enableChange();
+        }, 12000); // Wait for 12 seconds
+      } else {
+        polarrSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        oblAudio.play();
+      }
     } else if (rarity.type === "Eonbreak [1 in 20,000]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Eonbreak");
-      disableChange();
-      startAnimation3();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-    
-        const starClasses = [
-          "cyan-star",
-          "blue-star"
-        ];
-        star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
-    
-        star.innerHTML = "▢";
-        star.style.left = Math.random() * 100 + "vw";
-    
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-    
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-    
-        star.style.animationDelay = i * 0.08 + "s";
-    
-        container.appendChild(star);
-    
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene100K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        console.log("Rolled Eonbreak");
+        disableChange();
+        startAnimation3();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "cyan-star",
+            "blue-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "▢";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          eonbreakAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            eonbreakAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        eonbreakAudio.play();
+      }
     } else if (rarity.type === "Isekai [1 in 300]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Isekai");
-      disableChange();
-      startAnimation10();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 33; i++) {
-        const star = document.createElement("span");
-        star.className = "green-star";
-        star.innerHTML = "⁂";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Isekai");
+        disableChange();
+        startAnimation10();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 33; i++) {
+          const star = document.createElement("span");
+          star.className = "green-star";
+          star.innerHTML = "⁂";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          isekaiAudio.play();
-        }, 100);
-        enableChange();
-      }, 3000); // Wait for 3 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            isekaiAudio.play();
+          }, 100);
+          enableChange();
+        }, 3000); // Wait for 3 seconds
+      } else {
+        scareSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        isekaiAudio.play();
+      }
     } else if (rarity.type === "Emergencies [1 in 500]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Emergencies");
-      disableChange();
-      startAnimation10();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 33; i++) {
-        const star = document.createElement("span");
-        star.className = "green-star";
-        star.innerHTML = "⌖";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Emergencies");
+        disableChange();
+        startAnimation10();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 33; i++) {
+          const star = document.createElement("span");
+          star.className = "green-star";
+          star.innerHTML = "⌖";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          emerAudio.play();
-        }, 100);
-        enableChange();
-      }, 3000); // Wait for 3 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            emerAudio.play();
+          }, 100);
+          enableChange();
+        }, 3000); // Wait for 3 seconds
+      } else {
+        scareSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        emerAudio.play();
+      }
     } else if (rarity.type === "Samurai [1 in 800]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Samurai");
-      disableChange();
-      startAnimation10();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 33; i++) {
-        const star = document.createElement("span");
-        star.className = "green-star";
-        star.innerHTML = "⨁";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Samurai");
+        disableChange();
+        startAnimation10();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 33; i++) {
+          const star = document.createElement("span");
+          star.className = "green-star";
+          star.innerHTML = "⨁";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          displayResult(title, rarity.type);
-          updateRollingHistory(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          samuraiAudio.play();
-        }, 100);
-        enableChange();
-      }, 3000); // Wait for 3 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            samuraiAudio.play();
+          }, 100);
+          enableChange();
+        }, 3000); // Wait for 3 seconds
+      } else {
+        scareSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        samuraiAudio.play();
+      }
     } else if (rarity.type === "Contortions [1 in 999]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Contortions");
-      disableChange();
-      startAnimation10();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 33; i++) {
-        const star = document.createElement("span");
-        star.className = "green-star";
-        star.innerHTML = "⨳";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Contortions");
+        disableChange();
+        startAnimation10();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 33; i++) {
+          const star = document.createElement("span");
+          star.className = "green-star";
+          star.innerHTML = "⨳";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          contAudio.play();
-        }, 100);
-        enableChange();
-      }, 3000); // Wait for 3 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            contAudio.play();
+          }, 100);
+          enableChange();
+        }, 3000); // Wait for 3 seconds
+      } else {
+        scareSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        contAudio.play();
+      }
     } else if (rarity.type === "Fright [1 in 1,075]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Fright");
-      disableChange();
-      startAnimation4();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 200; i++) {
-        const star = document.createElement("span");
-        star.className = "dark-red-star";
-        star.innerHTML = "⨹";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Fright");
+        disableChange();
+        startAnimation4();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 200; i++) {
+          const star = document.createElement("span");
+          star.className = "dark-red-star";
+          star.innerHTML = "⨹";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 27400); // Wait for 27.4 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 27400); // Wait for 27.4 seconds
+      } else {
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+      }
     } else if (rarity.type === "Phantom Stride [1 in 990]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Phantom Stride");
-      disableChange();
-      startAnimation9();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "purple-star";
-        star.innerHTML = "-";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8000);
-      setTimeout(function () {
+      if (skipCutscene1K) {
         document.body.className = "blackBg";
-      }, 10000);
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10500);
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 11000);
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 11500);
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        console.log("Rolled Phantom Stride");
+        disableChange();
+        startAnimation9();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "purple-star";
+          star.innerHTML = "-";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8000);
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10500);
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 11000);
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 11500);
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          phaAudio.play();
-        }, 100);
-        enableChange();
-      }, 12000); // Wait for 12 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            phaAudio.play();
+          }, 100);
+          enableChange();
+        }, 12000); // Wait for 12 seconds
+      } else {
+        polarrSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        phaAudio.play();
+      }
     } else if (rarity.type === "Unnamed [1 in 30,303]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Creator :3");
-      disableChange();
-      startAnimationA5();
-    
-      const container1 = document.getElementById("squareContainer");
-      const container = document.getElementById("starContainer");
-    
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-red";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-    
-      for (let i = 0; i < 177; i++) {
-        const star = document.createElement("span");
-        star.className = "purple-star";
-        star.innerHTML = "-";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-
-      for (let i = 0; i < 177; i++) {
-        const star = document.createElement("span");
-        star.className = "pink-star";
-        star.innerHTML = "+";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene100K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        console.log("Rolled Creator :3");
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-red";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          unnamedAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 177; i++) {
+          const star = document.createElement("span");
+          star.className = "purple-star";
+          star.innerHTML = "-";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+  
+        for (let i = 0; i < 177; i++) {
+          const star = document.createElement("span");
+          star.className = "pink-star";
+          star.innerHTML = "+";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            unnamedAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        unnamedAudio.play();
+      }
     } else if (rarity.type === "Cursed Mirage [1 in 11,111]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Cursed Mirage");
-      disableChange();
-      startAnimationA5();
-    
-      const container1 = document.getElementById("squareContainer");
-      const container = document.getElementById("starContainer");
-    
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-blue";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-    
-      for (let i = 0; i < 177; i++) {
-        const star = document.createElement("span");
-        star.className = "cyan-star";
-        star.innerHTML = "x";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene100K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        console.log("Rolled Cursed Mirage");
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          displayResult(title, rarity.type);
-          updateRollingHistory(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          curAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 177; i++) {
+          const star = document.createElement("span");
+          star.className = "cyan-star";
+          star.innerHTML = "x";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            curAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        curAudio.play();
+      }
     } else if (rarity.type === "Celestial Dawn [1 in 12,000]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Celestial Dawn");
-      disableChange();
-      startAnimationA5();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-pink";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10370); // Stop after 10.37 seconds
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene100K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          celdawAudio.play();
+        console.log("Rolled Celestial Dawn");
+        disableChange();
+        startAnimationA5();
+  
+        const container1 = document.getElementById("squareContainer");
+  
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-pink";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10370); // Stop after 10.37 seconds
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            celdawAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        celdawAudio.play();
+      }
     } else if (rarity.type === "Fate's Requiem [1 in 15,000]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Fate's Requiem");
-      disableChange();
-      startAnimationA5();
-    
-      const container1 = document.getElementById("squareContainer");
-      const container = document.getElementById("starContainer");
-    
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-blue";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 9350); // Stop after 9.35 seconds
-    
-      for (let i = 0; i < 177; i++) {
-        const star = document.createElement("span");
-        star.className = "blue-star";
-        star.innerHTML = "*";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-
-      for (let i = 0; i < 177; i++) {
-        const star = document.createElement("span");
-        star.className = "cyan-star";
-        star.innerHTML = "✕";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutscene100K) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+        console.log("Rolled Fate's Requiem");
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          fatreAudio.play();
-        }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 177; i++) {
+          const star = document.createElement("span");
+          star.className = "blue-star";
+          star.innerHTML = "*";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+  
+        for (let i = 0; i < 177; i++) {
+          const star = document.createElement("span");
+          star.className = "cyan-star";
+          star.innerHTML = "✕";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            fatreAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        fatreAudio.play();
+      }
     } else if (rarity.type === "Geezer [1 in 5,000,000,000]") {
       document.body.className = "blackBg";
       console.log("Rolled EpIk GeEzEr TiTlE");
@@ -5316,1151 +5734,1430 @@ document.getElementById("rollButton").addEventListener("click", function () {
         enableChange();
       }, 12000); // Wait for 12 seconds
     } else if (rarity.type === "Unstoppable [1 in 112]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Unstoppable");
-      disableChange();
-      startAnimation8();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "fast-blue-star";
-        star.innerHTML = "▦";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Unstoppable");
+        disableChange();
+        startAnimation8();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "fast-blue-star";
+          star.innerHTML = "▦";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          unstoppableAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            unstoppableAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        unstoppableAudio.play();
+      }
     } else if (rarity.type === "Wandering Spirit [1 in 150]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Wandering Spirit");
-      disableChange();
-      startAnimation8();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "■";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Wandering Spirit");
+        disableChange();
+        startAnimation8();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "■";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          wanspiAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            wanspiAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        wanspiAudio.play();
+      }
     } else if (rarity.type === "Spectral Whisper [1 in 288]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Spectral Whisper");
-      disableChange();
-      startAnimation8();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "pink-star";
-        star.innerHTML = "■";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Spectral Whisper");
+        disableChange();
+        startAnimation8();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "pink-star";
+          star.innerHTML = "■";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          spectralAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            spectralAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        spectralAudio.play();
+      }
     } else if (rarity.type === "Starfall [1 in 600]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Starfall");
-      disableChange();
-      startAnimation8();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "purple-star";
-        star.innerHTML = "⁘";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Starfall");
+        disableChange();
+        startAnimation8();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "purple-star";
+          star.innerHTML = "⁘";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          starfallAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            starfallAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        starfallAudio.play();
+      }
     } else if (rarity.type === "Cursed Artifact [1 in 700]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Cursed Artifact");
-      disableChange();
-      startAnimation8();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "◄►";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Cursed Artifact");
+        disableChange();
+        startAnimation8();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "◄►";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          curartAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            curartAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        curartAudio.play();
+      }
     } else if (rarity.type === "Forgotten Whisper [1 in 450]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Forgotten Whisper");
-      disableChange();
-      startAnimation8();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "brown-star";
-        star.innerHTML = "⟬⟭";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Forgotten Whisper");
+        disableChange();
+        startAnimation8();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "brown-star";
+          star.innerHTML = "⟬⟭";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          forgAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            forgAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        forgAudio.play();
+      }
     } else if (rarity.type === "Spectral Glare [1 in 850]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Spectral Glare");
-      disableChange();
-      startAnimation8();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "brown-star";
-        star.innerHTML = "⟬⟭";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Spectral Glare");
+        disableChange();
+        startAnimation8();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "brown-star";
+          star.innerHTML = "⟬⟭";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          forgAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            forgAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        forgAudio.play();
+      }
     } else if (rarity.type === "Mysterious Echo [1 in 300]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Mysterious Echo");
-      disableChange();
-      startAnimation8();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "△";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Mysterious Echo");
+        disableChange();
+        startAnimation8();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "△";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          mysAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            mysAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        mysAudio.play();
+      }
     } else if (rarity.type === "Frozen Fate [1 in 200]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Frozen Fate");
-      disableChange();
-      startAnimation8();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "fast-cyan-star";
-        star.innerHTML = "▣";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene1K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Frozen Fate");
+        disableChange();
+        startAnimation8();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "fast-cyan-star";
+          star.innerHTML = "▣";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          froAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            froAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        froAudio.play();
+      }
     } else if (rarity.type === "Shadow Veil [1 in 1,000]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Shadow Veil");
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "yellow-star";
-        star.innerHTML = "—";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Shadow Veil");
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "yellow-star";
+          star.innerHTML = "—";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          shadAudio.play();
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+  
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            shadAudio.play();
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        shadAudio.play();
+        titleCont.style.visibility = "visible";
+      }
     } else if (rarity.type === "Nightfall [1 in 1,200]") {
-      document.body.className = "blackBg";
-      console.log("Rolled Nightfall");
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "purple-star";
-        star.innerHTML = "—";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Nightfall");
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "purple-star";
+          star.innerHTML = "—";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          nighAudio.play();
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+  
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            nighAudio.play();
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        nighAudio.play();
+        titleCont.style.visibility = "visible";
+      }
     } else if (rarity.type === "Void Walker [1 in 1,500]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "cyan-star";
-        star.innerHTML = "◁▷";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "cyan-star";
+          star.innerHTML = "◁▷";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          voiAudio.play();
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+  
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            voiAudio.play();
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        voiAudio.play();
+        titleCont.style.visibility = "visible";
+      }
     } else if (rarity.type === "Silent Listener [1 in 2,200]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "green-star";
-        star.innerHTML = "—";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "green-star";
+          star.innerHTML = "—";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          silAudio.play();
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+  
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            silAudio.play();
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        silAudio.play();
+        titleCont.style.visibility = "visible";
+      }
     } else if (rarity.type === "Ghostly Embrace [1 in 2,800]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "green-star";
-        star.innerHTML = "—";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "green-star";
+          star.innerHTML = "—";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          ghoAudio.play();
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+  
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            ghoAudio.play();
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        ghoAudio.play();
+        titleCont.style.visibility = "visible";
+      }
     } else if (rarity.type === "Endless Twilight [1 in 3,000]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "—";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "—";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          endAudio.play();
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+  
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            endAudio.play();
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        endAudio.play();
+        titleCont.style.visibility = "visible";
+      }
     } else if (rarity.type === "Abyssal Shade [1 in 3,500]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "blue-star";
-        star.innerHTML = "𓆟";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "blue-star";
+          star.innerHTML = "𓆟";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          abysAudio.play();
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+  
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            abysAudio.play();
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        abysAudio.play();
+        titleCont.style.visibility = "visible";
+      }
     } else if (rarity.type === "Darkened Sky [1 in 4,200]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "fast-cyan-star";
-        star.innerHTML = "▣";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "fast-cyan-star";
+          star.innerHTML = "▣";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          froAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            darAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        froAudio.play();
+      }
     } else if (rarity.type === "Twisted Light [1 in 5,000]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "fast-cyan-star";
-        star.innerHTML = "▣";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "fast-cyan-star";
+          star.innerHTML = "▣";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          froAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            twiligAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        froAudio.play();
+      }
     } else if (rarity.type === "Ethereal Pulse [1 in 6,000]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "cyan-star";
-        star.innerHTML = "▣";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "cyan-star";
+          star.innerHTML = "▣";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          froAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            ethpulAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        froAudio.play();
+      }
     } else if (rarity.type === "Enigmatic Dream [1 in 7,500]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "fast-cyan-star";
-        star.innerHTML = "▣";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "fast-cyan-star";
+          star.innerHTML = "▣";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          froAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            eniAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        eniAudio.play();
+      }
     } else if (rarity.type === "Fear [1 in 1,250]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "gray-star";
-        star.innerHTML = "▣";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "gray-star";
+          star.innerHTML = "▣";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          froAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            fearAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        fearAudio.play();
+      }
     } else if (rarity.type === "Haunted Soul [1 in 2,000]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "fast-cyan-star";
-        star.innerHTML = "▣";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "fast-cyan-star";
+          star.innerHTML = "▣";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          froAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            hauAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        hauntAudio.play();
+      }
     } else if (rarity.type === "Lost Soul [1 in 3,333]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "←→";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "←→";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          froAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            lostsAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        lostsAudio.play();
+      }
     } else if (rarity.type === "Found Soul [1 in 5,000]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "fast-red-star";
-        star.innerHTML = "▣";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "fast-red-star";
+          star.innerHTML = "▣";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          titleCont.style.visibility = "visible";
-          froAudio.play();
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            titleCont.style.visibility = "visible";
+            foundsAudio.play();
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        titleCont.style.visibility = "visible";
+        foundsAudio.play();
+      }
     } else if (rarity.type === "Haunted Reality [1 in 5,000]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "blue-star";
-        star.innerHTML = "-◪";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "blue-star";
+          star.innerHTML = "-◪";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          hauntAudio.play();
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+  
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            hauntAudio.play();
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        hauntAudio.play();
+        titleCont.style.visibility = "visible";
+      }
     } else if (rarity.type === "Ether Shift [1 in 5,540]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "purple-star";
-        star.innerHTML = "=";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "purple-star";
+          star.innerHTML = "=";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          ethAudio.play();
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
-
+          document.body.className = "whiteFlash";
+  
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            ethAudio.play();
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        ethAudio.play();
+        titleCont.style.visibility = "visible";
+      }
     } else if (rarity.type === "Serap's Wing [1 in 1,333]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation7();
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 44; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "<>";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation7();
+        const container = document.getElementById("starContainer");
+  
+        for (let i = 0; i < 44; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "<>";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
         setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          rollButton.disabled = false;
-          serAudio.play();
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 4400); // Wait for 4.4 seconds
+          document.body.className = "whiteFlash";
+  
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            serAudio.play();
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 4400); // Wait for 4.4 seconds
+      } else {
+        suspenseAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        serAudio.play();
+        titleCont.style.visibility = "visible";
+      }
     } else if (
       rarity.type === "Silly Car :3 [1 in 1,000,000]" ||
       rarity.type === "Greg [1 in 50,000,000]" ||
@@ -6537,6 +7234,48 @@ document.getElementById("rollButton").addEventListener("click", function () {
   localStorage.setItem("rollCount", rollCount);
   localStorage.setItem("rollCount1", rollCount1);
   load();
+});
+
+let skipCutscene1K = true;
+let skipCutscene10K = true;
+let skipCutscene100K = true;
+let skipCutscene1M = true;
+
+
+const toggleCutscene1KBtn = document.getElementById("toggleCutscene1K");
+const toggleCutscene1KTxt = document.getElementById("1KTxt");
+toggleCutscene1KBtn.addEventListener("click", function () {
+  skipCutscene1K = !skipCutscene1K;
+  console.log(`Cutscene skip for 1K has been set to ${skipCutscene1K}`);
+  localStorage.setItem('skipCutscene1K', JSON.stringify(skipCutscene1K));
+  toggleCutscene1KTxt.textContent = `Skip Decent Cutscenes ${skipCutscene1K ? "" : "On"}`;
+});
+
+const toggleCutscene10KBtn = document.getElementById("toggleCutscene10K");
+const toggleCutscene10KTxt = document.getElementById("10KTxt");
+toggleCutscene10KBtn.addEventListener("click", function () {
+  skipCutscene10K = !skipCutscene10K;
+  console.log(`Cutscene skip for 10K has been set to ${skipCutscene10K}`);
+  localStorage.setItem('skipCutscene10K', JSON.stringify(skipCutscene10K));
+  toggleCutscene10KTxt.textContent = `Skip Grand Cutscenes ${skipCutscene10K ? "" : "On"}`;
+});
+
+const toggleCutscene100KBtn = document.getElementById("toggleCutscene100K");
+const toggleCutscene100KTxt = document.getElementById("100KTxt");
+toggleCutscene100KBtn.addEventListener("click", function () {
+  skipCutscene100K = !skipCutscene100K;
+  console.log(`Cutscene skip for 100K has been set to ${skipCutscene100K}`);
+  localStorage.setItem('skipCutscene100K', JSON.stringify(skipCutscene100K));
+  toggleCutscene100KTxt.textContent = `Skip Mastery Cutscenes ${skipCutscene100K ? "" : "On"}`;
+});
+
+const toggleCutscene1MBtn = document.getElementById("toggleCutscene1M");
+const toggleCutscene1MTxt = document.getElementById("1MTxt");
+toggleCutscene1MBtn.addEventListener("click", function () {
+  skipCutscene1M = !skipCutscene1M;
+  console.log(`Cutscene skip for 1M has been set to ${skipCutscene1M}`);
+  localStorage.setItem('skipCutscene1M', JSON.stringify(skipCutscene1M));
+  toggleCutscene1MTxt.textContent = `Skip Supreme Cutscenes ${skipCutscene1M ? "" : "On"}`;
 });
 
 function rollRarity() {
@@ -8331,6 +9070,9 @@ const settingsButton = document.getElementById("settingsButton");
 const achievementsButton = document.getElementById("achievementsButton");
 const achievementsMenu = document.getElementById("achievementsMenu");
 const closeAchievements = document.getElementById("closeAchievements");
+const statsMenu = document.getElementById("statsMenu");
+const statsButton = document.getElementById("statsButton");
+const closeStats = document.getElementById("closeStats");
 const settingsMenu = document.getElementById("settingsMenu");
 const closeSettings = document.getElementById("closeSettings");
 const audioSlider = document.getElementById("audioSlider");
@@ -8342,6 +9084,10 @@ settingsButton.addEventListener("click", () => {
   settingsMenu.style.display = "block";
 });
 
+closeSettings.addEventListener("click", () => {
+  settingsMenu.style.display = "none";
+});
+
 achievementsButton.addEventListener("click", () => {
   achievementsMenu.style.display = "block";
 });
@@ -8350,8 +9096,12 @@ closeAchievements.addEventListener("click", () => {
   achievementsMenu.style.display = "none";
 });
 
-closeSettings.addEventListener("click", () => {
-  settingsMenu.style.display = "none";
+statsButton.addEventListener("click", () => {
+  statsMenu.style.display = "block";
+});
+
+closeStats.addEventListener("click", () => {
+  statsMenu.style.display = "none";
 });
 
 const muteButton = document.getElementById("muteButton");
@@ -9184,13 +9934,20 @@ const rarityCategories = {
   ],
   under100k: [
     "celdawBgImg", "fatreBgImg", "unnamedBgImg", "eonbreakBgImg", "overtureBgImg",
-    "arcanepulseBgImg", "harvBgImg", "devilBgImg", "cursedmirageBgImg", "tuonBgImg", "astblaBgImg"
+    "arcanepulseBgImg", "harvBgImg", "devilBgImg", "cursedmirageBgImg", "tuonBgImg", "astblaBgImg", "qbearBgImg"
   ],
   under1m: ["impeachedBgImg", "celestialchorusBgImg"],
   special: ["iriBgImg", "veilBgImg", "expBgImg", "aboBgImg", "blindBgImg", "msfuBgImg", "orbBgImg", "crazeBgImg", "shenviiBgImg"]
 };
 
 document.querySelectorAll(".rarity-button").forEach(button => {
+  button.addEventListener("click", () => {
+    button.classList.toggle("active");
+    saveToggledStates();
+  });
+});
+
+document.querySelectorAll(".cutsceneSkipBtb").forEach(button => {
   button.addEventListener("click", () => {
     button.classList.toggle("active");
     saveToggledStates();
