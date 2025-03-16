@@ -9044,8 +9044,11 @@ scheduleButtonAppearance();
 document.addEventListener("DOMContentLoaded", () => {
   const settingsMenu = document.getElementById("settingsMenu");
   const header = settingsMenu.querySelector("h3");
+  const headerStats = statsMenu.querySelector("h3");
   let isDragging = false;
+  let isDraggingStats = false;
   let offsetX, offsetY;
+  let offsetXStyle, offsetYStyle;
 
   header.addEventListener("mousedown", (e) => {
       isDragging = true;
@@ -9054,15 +9057,33 @@ document.addEventListener("DOMContentLoaded", () => {
       header.style.cursor = "grabbing";
   });
 
+  headerStats.addEventListener("mousedown", (a) => {
+    isDraggingStats = true;
+    offsetXStyle = a.clientX - statsMenu.offsetLeft;
+    offsetYStyle = a.clientY - statsMenu.offsetTop;
+    headerStats.style.cursor = "grabbing";
+  })
+
   document.addEventListener("mousemove", (e) => {
       if (!isDragging) return;
       settingsMenu.style.left = e.clientX - offsetX + "px";
       settingsMenu.style.top = e.clientY - offsetY + "px";
   });
 
+  document.addEventListener("mousemove", (a) => {
+      if (!isDraggingStats) return;
+      statsMenu.style.left = a.clientX - offsetXStyle + "px";
+      statsMenu.style.top = a.clientY - offsetYStyle + "px";
+  });
+
   document.addEventListener("mouseup", () => {
       isDragging = false;
       header.style.cursor = "grab";
+  });
+
+  document.addEventListener("mouseup", () => {
+      isDraggingStats = false;
+      headerStats.style.cursor = "grab";
   });
 });
 
