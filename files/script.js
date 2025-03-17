@@ -197,12 +197,14 @@ function musicLoad() {
   let crazeAudio = document.getElementById("crazeAudio");
   let shenviiAudio = document.getElementById("shenviiAudio");
   let qbearAudio = document.getElementById("qbearAudio");
+  let lightAudio = document.getElementById("lightAudio");
 
   suspenseAudio.pause();
   expOpeningAudio.pause();
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  lightAudio.pause();
   astblaAudio.pause();
   heartAudio.pause();
   tuonAudio.pause();
@@ -295,6 +297,7 @@ function musicLoad() {
   geezerSuspenceAudio.currentTime = 0;
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
+  lightAudio.currentTime = 0;
   tuonAudio.currentTime = 0;
   astblaAudio.currentTime = 0;
   heartAudio.currentTime = 0;
@@ -549,6 +552,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  lightAudio.pause();
   qbearAudio.pause();
   shenviiAudio.pause();
   astblaAudio.pause();
@@ -641,6 +645,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   geezerSuspenceAudio.currentTime = 0;
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
+  lightAudio.currentTime = 0;
   qbearAudio.currentTime = 0;
   shenviiAudio.currentTime = 0;
   heartAudio.currentTime = 0;
@@ -810,7 +815,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Heart [1 in ♡♡♡]" ||
     rarity.type === "GD Addict [1 in ###]" ||
     rarity.type === "FireCraze [1 in 4,200/69th]" ||
-    rarity.type === "sʜeɴvɪ✞∞ [1 in 77,777/7th]"
+    rarity.type === "sʜeɴvɪ✞∞ [1 in 77,777/7th]" ||
+    rarity.type === "Light [1 in 29,979]"
   ) {
     document.getElementById("result").innerText = "";
     const titleCont = document.querySelector(".container");
@@ -854,6 +860,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Unfair [1 in ###]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Overture [1 in 25,641]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Light [1 in 29,979]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Cursed Mirage [1 in 11,111]") {
       hugeSuspenceAudio.play();
@@ -1861,6 +1869,164 @@ document.getElementById("rollButton").addEventListener("click", function () {
         rollCount1++;
         titleCont.style.visibility = "visible";
         qbearAudio.play();
+      }
+    } else if (rarity.type === "Light [1 in 29,979]") {
+      if (skipCutscene100K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+      
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-white";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "purple-star",
+            "blue-star",
+            "white-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "◀■▶";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            lightAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        lightAudio.play();
       }
     } else if (rarity.type === "Iridocyclitis Veil [1 in 5,000/50th]") {
       document.body.className = "blackBg";
@@ -7729,6 +7895,12 @@ function rollRarity() {
       class: "qbearBgImg",
       chance: 0.00281254394,
       titles: ["Qbear", "Risky Gato", "Samurai Gato", "Gato: Wew"],
+    },
+    {
+      type: "Light [1 in 29,979]",
+      class: "lightBgImg",
+      chance: 0.0033356683,
+      titles: ["Speed of Light", "Light: Feather", "Light", "Bright"],
     }
   ];
 
@@ -8226,6 +8398,7 @@ const backgroundDetails = {
   expBgImg: { image: "files/backgrounds/exp.gif", audio: "expAudio" },
   veilBgImg: { image: "files/backgrounds/veil.gif", audio: "veilAudio" },
   blindBgImg: { image: "files/backgrounds/blind.png", audio: "blindAudio" },
+  lightBgImg: { image: "files/backgrounds/light.png", audio: "lightAudio" },
 };
 
 function changeBackground(rarityClass, itemTitle) {
@@ -8984,7 +9157,7 @@ function createCooldownButton() {
   button.style.top = `${randomY}px`;
 
   button.addEventListener("click", () => {
-    cooldownTime = 100;
+    cooldownTime = 400;
 
     showCooldownEffect(90);
 
@@ -8997,6 +9170,78 @@ function createCooldownButton() {
       cooldownTime = 690;
       console.log("Cooldown reset to 690ms");
     }, 90000);
+
+    scheduleButtonAppearance();
+  });
+
+  document.body.appendChild(button);
+}
+
+function createCooldownButton1() {
+  if (document.getElementById("cooldownButton")) {
+    return;
+  }
+
+  const button = document.createElement("button");
+  button.innerText = "Reduce Cooldown";
+  button.id = "cooldownButton1";
+  button.style.position = "absolute";
+
+  const randomX = Math.floor(Math.random() * (window.innerWidth - 100));
+  const randomY = Math.floor(Math.random() * (window.innerHeight - 50));
+  button.style.left = `${randomX}px`;
+  button.style.top = `${randomY}px`;
+
+  button.addEventListener("click", () => {
+    cooldownTime = 250;
+
+    showCooldownEffect(60);
+
+    button.innerText = "Cooldown Reduced!";
+    setTimeout(() => {
+      document.body.removeChild(button);
+    }, 1000);
+
+    setTimeout(() => {
+      cooldownTime = 690;
+      console.log("Cooldown reset to 690ms");
+    }, 60000);
+
+    scheduleButtonAppearance();
+  });
+
+  document.body.appendChild(button);
+}
+
+function createCooldownButton2() {
+  if (document.getElementById("cooldownButton")) {
+    return;
+  }
+
+  const button = document.createElement("button");
+  button.innerText = "Reduce Cooldown";
+  button.id = "cooldownButton2";
+  button.style.position = "absolute";
+
+  const randomX = Math.floor(Math.random() * (window.innerWidth - 100));
+  const randomY = Math.floor(Math.random() * (window.innerHeight - 50));
+  button.style.left = `${randomX}px`;
+  button.style.top = `${randomY}px`;
+
+  button.addEventListener("click", () => {
+    cooldownTime = 100;
+
+    showCooldownEffect(30);
+
+    button.innerText = "Cooldown Reduced!";
+    setTimeout(() => {
+      document.body.removeChild(button);
+    }, 1000);
+
+    setTimeout(() => {
+      cooldownTime = 690;
+      console.log("Cooldown reset to 690ms");
+    }, 30000);
 
     scheduleButtonAppearance();
   });
@@ -9032,17 +9277,39 @@ function showCooldownEffect(duration) {
 }
 
 function getRandomTime() {
-  const min = 5 * 60 * 1000;
-  const max = 7 * 60 * 1000;
+  const min = 3 * 60 * 1000;
+  const max = 5 * 60 * 1000;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function getRandomTime1() {
+  const min = 7 * 60 * 1000;
+  const max = 9 * 60 * 1000;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function getRandomTime2() {
+  const min = 11 * 60 * 1000;
+  const max = 13 * 60 * 1000;
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function scheduleButtonAppearance() {
   const randomTime = getRandomTime();
+  const randomTime1 = getRandomTime1();
+  const randomTime2 = getRandomTime2();
 
   setTimeout(() => {
     createCooldownButton();
   }, randomTime);
+
+  setTimeout(() => {
+    createCooldownButton1();
+  }, randomTime1);
+
+  setTimeout(() => {
+    createCooldownButton2();
+  }, randomTime2);
 }
 
 scheduleButtonAppearance();
@@ -9474,6 +9741,7 @@ function getClassForRarity(rarity) {
       'Unfair [1 in ###]': 'under100k',
       'GD Addict [1 in ###]': 'under10k',
       'Qbear [1 in 35,555]': 'under100k',
+      'Light [1 in 29,979]': 'under100k',
   };
 
   return rarityClasses[rarity] || null;
@@ -9755,6 +10023,7 @@ document
       "tuonBgImg",
       "astblaBgImg",
       "qbearImgBg",
+      "lightImgBg",
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
@@ -9961,7 +10230,7 @@ const rarityCategories = {
   ],
   under100k: [
     "celdawBgImg", "fatreBgImg", "unnamedBgImg", "eonbreakBgImg", "overtureBgImg",
-    "arcanepulseBgImg", "harvBgImg", "devilBgImg", "cursedmirageBgImg", "tuonBgImg", "astblaBgImg", "qbearBgImg"
+    "arcanepulseBgImg", "harvBgImg", "devilBgImg", "cursedmirageBgImg", "tuonBgImg", "astblaBgImg", "qbearBgImg", "lightBgImg"
   ],
   under1m: ["impeachedBgImg", "celestialchorusBgImg"],
   special: ["iriBgImg", "veilBgImg", "expBgImg", "aboBgImg", "blindBgImg", "msfuBgImg", "orbBgImg", "crazeBgImg", "shenviiBgImg"]
