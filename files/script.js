@@ -198,12 +198,14 @@ function musicLoad() {
   let shenviiAudio = document.getElementById("shenviiAudio");
   let qbearAudio = document.getElementById("qbearAudio");
   let lightAudio = document.getElementById("lightAudio");
+  let x1staAudio = document.getElementById("x1staAudio");
 
   suspenseAudio.pause();
   expOpeningAudio.pause();
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  x1staAudio.pause();
   lightAudio.pause();
   astblaAudio.pause();
   heartAudio.pause();
@@ -297,6 +299,7 @@ function musicLoad() {
   geezerSuspenceAudio.currentTime = 0;
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
+  x1staAudio.currentTime = 0;
   lightAudio.currentTime = 0;
   tuonAudio.currentTime = 0;
   astblaAudio.currentTime = 0;
@@ -442,9 +445,10 @@ function checkAchievements() {
       { name: "No Lifer", timeCount: 2629800 },
       { name: "Are you okay?", timeCount: 5259600 },
       { name: "You are a True No Lifer", timeCount: 15778800 },
-      { name: "No one's getting this legit", timeCount: 31557600 }
+      { name: "No one's getting this legit", timeCount: 31557600 },
   ];
 
+  // Achievements collected
   let collectorAchievements = [
       { name: "Achievement Collector", count: 5 },
       { name: "Achievement Hoarder", count: 10 },
@@ -640,6 +644,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   heartAudio.pause();
   astredAudio.pause();
   crazeAudio.pause();
+  x1staAudio.pause();
 
   suspenseAudio.currentTime = 0;
   geezerSuspenceAudio.currentTime = 0;
@@ -733,6 +738,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   orbAudio.currentTime = 0;
   astredAudio.currentTime = 0;
   crazeAudio.currentTime = 0;
+  x1staAudio.currenttime = 0;
 
   let rarity = rollRarity();
   let title = selectTitle(rarity);
@@ -816,7 +822,9 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "GD Addict [1 in ###]" ||
     rarity.type === "FireCraze [1 in 4,200/69th]" ||
     rarity.type === "sʜeɴvɪ✞∞ [1 in 77,777/7th]" ||
-    rarity.type === "Light [1 in 29,979]"
+    rarity.type === "Light [1 in 29,979]" ||
+    rarity.type === "X1sta [1 in 230,444]" ||
+    rarity.type === "Hellish Fire [1 in 6,666]"
   ) {
     document.getElementById("result").innerText = "";
     const titleCont = document.querySelector(".container");
@@ -862,6 +870,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Overture [1 in 25,641]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Light [1 in 29,979]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "X1sta [1 in 230,444]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Cursed Mirage [1 in 11,111]") {
       hugeSuspenceAudio.play();
@@ -2027,6 +2037,164 @@ document.getElementById("rollButton").addEventListener("click", function () {
         rollCount1++;
         titleCont.style.visibility = "visible";
         lightAudio.play();
+      }
+    } else if (rarity.type === "X1sta [1 in 230,444]") {
+      if (skipCutscene1M) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-white";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+      
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-red";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "purple-star",
+            "red-star",
+            "white-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "◅▻";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            x1staAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        x1staAudio.play();
       }
     } else if (rarity.type === "Iridocyclitis Veil [1 in 5,000/50th]") {
       document.body.className = "blackBg";
@@ -7901,6 +8069,12 @@ function rollRarity() {
       class: "lightBgImg",
       chance: 0.0033356683,
       titles: ["Speed of Light", "Light: Feather", "Light", "Bright"],
+    },
+    {
+      type: "X1sta [1 in 230,444]",
+      class: "x1staBgImg",
+      chance: 0.0004339449,
+      titles: ["Corrupt", "X1sta", "Artist"],
     }
   ];
 
@@ -8399,6 +8573,7 @@ const backgroundDetails = {
   veilBgImg: { image: "files/backgrounds/veil.gif", audio: "veilAudio" },
   blindBgImg: { image: "files/backgrounds/blind.png", audio: "blindAudio" },
   lightBgImg: { image: "files/backgrounds/light.png", audio: "lightAudio" },
+  x1staBgImg: { image: "files/backgrounds/x1sta.png", audio: "x1staAudio" },
 };
 
 function changeBackground(rarityClass, itemTitle) {
@@ -9742,6 +9917,7 @@ function getClassForRarity(rarity) {
       'GD Addict [1 in ###]': 'under10k',
       'Qbear [1 in 35,555]': 'under100k',
       'Light [1 in 29,979]': 'under100k',
+      'X1sta [1 in 230,444]': 'under1m',
   };
 
   return rarityClasses[rarity] || null;
@@ -10145,6 +10321,7 @@ document
     const raritiesUnder10k = [
       "impeachedBgImg",
       "celestialchorusBgImg",
+      "x1staBgImg",
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
@@ -10232,7 +10409,7 @@ const rarityCategories = {
     "celdawBgImg", "fatreBgImg", "unnamedBgImg", "eonbreakBgImg", "overtureBgImg",
     "arcanepulseBgImg", "harvBgImg", "devilBgImg", "cursedmirageBgImg", "tuonBgImg", "astblaBgImg", "qbearBgImg", "lightBgImg"
   ],
-  under1m: ["impeachedBgImg", "celestialchorusBgImg"],
+  under1m: ["impeachedBgImg", "celestialchorusBgImg", "x1staBgImg"],
   special: ["iriBgImg", "veilBgImg", "expBgImg", "aboBgImg", "blindBgImg", "msfuBgImg", "orbBgImg", "crazeBgImg", "shenviiBgImg"]
 };
 

@@ -1486,6 +1486,12 @@ body {
     object-fit: contain;
 }
 
+.x1staBgImg {
+    background: url(backgrounds/x1sta.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
