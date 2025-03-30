@@ -58,7 +58,6 @@
     margin-left: 5px;
 }
 
-<<<<<<< HEAD
 .heart {
     position: fixed;
     font-size: 69px;
@@ -67,8 +66,6 @@
     animation: pulseFadeIn 0.5s ease-out forwards, fadeOut 4s ease-in 1.5s forwards;
 }
 
-=======
->>>>>>> 78a5773d08f03c21df377adce74077765726c57d
 @keyframes pulseFadeIn {
     0% {
         transform: scale(0.5);
@@ -1507,14 +1504,11 @@ body {
     object-fit: contain;
 }
 
-<<<<<<< HEAD
 .isekailofiBgImg {
     background: url(backgrounds/isekailofi.png);
     background-size: cover;
 }
 
-=======
->>>>>>> 78a5773d08f03c21df377adce74077765726c57d
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
