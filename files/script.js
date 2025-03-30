@@ -8143,7 +8143,7 @@ function rollRarity() {
     {
       type: "Common [1 in 2.5]",
       class: "commonBgImg",
-      chance: 30,
+      chance: 40,
       titles: ["Good", "Natural", "Simple", "Basic", "Plain", "Average", "Ordinary", "Usual", "Regular", "Standard"],
     },
     {
@@ -8617,7 +8617,7 @@ function rollRarity() {
     {
       type: "Isekai ♫ Lo-Fi [1 in 3,000]",
       class: "isekailofiBgImg",
-      chance: 10.033,
+      chance: 0.033,
       titles: ["Isekai", "Singing", "Chill", "Calm"]
     }
   ];

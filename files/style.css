@@ -654,6 +654,14 @@ body {
     transition: scale 0.5s ease-in;
 }
 
+.cutsceneStarEaster {
+    position: absolute;
+    top: 30%;
+    left: 40%;
+    scale: 0;
+    pointer-events: none;
+}
+
 .msfuStar {
     position: absolute;
     top: 30%;
