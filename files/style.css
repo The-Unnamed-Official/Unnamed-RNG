@@ -58,13 +58,13 @@
     margin-left: 5px;
 }
 
-/* .heart {
+.heart {
     position: fixed;
     font-size: 69px;
     color: red;
     opacity: 0;
     animation: pulseFadeIn 0.5s ease-out forwards, fadeOut 4s ease-in 1.5s forwards;
-} */
+}
 
 @keyframes pulseFadeIn {
     0% {
@@ -1492,6 +1492,23 @@ body {
     object-fit: contain;
 }
 
+.estbunBgImg {
+    background: url(backgrounds/estbun.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.esteggBgImg {
+    background: url(backgrounds/estegg.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.isekailofiBgImg {
+    background: url(backgrounds/isekailofi.png);
+    background-size: cover;
+}
+
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
@@ -2350,6 +2367,16 @@ body.griCutsceneBgImg {
     box-shadow: 0px 0px 15px rgba(0, 195, 255, 0.9);
 }
 
+.animated-square-green {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(4, 109, 0, 0.7);
+    animation: spin-scale-fast 1.5s ease-out forwards;
+    border-radius: 2px;
+    box-shadow: 0px 0px 15px rgba(0, 99, 16, 0.9);
+}
+
 .animated-square-black {
     position: absolute;
     width: 40px;
@@ -2547,6 +2574,15 @@ body.griCutsceneBgImg {
     background: radial-gradient(#ff0000, #f5a7ff);
     background-size: 300%;
     animation: gradient-shift2 4s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.eventE {
+    background: radial-gradient(#f0ff1e, #ff0000);
+    background-size: 300%;
+    animation: gradient-shift2 9s ease infinite;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -2812,6 +2848,51 @@ body.griCutsceneBgImg {
 }
 
 .achievement-itemC:hover::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
+    z-index: 999999999999;
+}
+
+.achievement-itemE {
+    position: relative;
+    padding: 20px;
+    padding-left: 5px;
+    padding-right: 5px;
+    text-align: center;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 15px;
+    color: white;
+    background: #444;
+    flex: 0 0 calc(25% - 10px);
+    cursor: pointer;
+    z-index: 1;
+}
+
+.achievement-itemE:hover::after {
+    content: "Play in " attr(data-time) " to unlock this achievement";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    pointer-events: none;
+    margin-bottom: 5px;
+    font-size: 12px;
+    z-index: 999999999;
+}
+
+.achievement-itemE:hover::before {
     content: "";
     position: absolute;
     bottom: 100%;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Unnamed's RNG</title>
+    <title>Unnamed's RNG - Easter</title>
     <script src="https://kit.fontawesome.com/fe85db6219.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="files/style.css">
@@ -18,7 +18,7 @@
 <body>
 
     <div class="version">
-        <a class="vNumber">Version: 0.9.7 <p class="vNumberDetailed">(0.9.7-8-upd)</p></a>
+        <a class="vNumber">Version: 0.9.8 <p class="vNumberDetailed">(0.9.8-updEASTER)</p></a>
     </div>
 
     <canvas id="fireworksCanvas"></canvas>
@@ -143,6 +143,10 @@
                 <div class="achievement-itemC" data-achievement="33" data-name="Achievement God">Achievement God</div>
                 <div class="achievement-itemC" data-achievement="50" data-name="T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶">T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶<br>(not obtainable)</div>
             </div>
+
+            <div class="achievement-grid">
+                <div class="achievement-itemE" data-time="the Easter Event" data-name="Happy Easter!">Happy Easter!</div>
+            </div>
         </div>
 
         <button id="closeAchievements" class="achievementsBtns">Close</button>
@@ -166,11 +170,11 @@
 
     <img class="cutsceneStar" src="files/images/cutscene_star.png" id="star">
     <img class="cutsceneStarBig" src="files/images/cutscene_star_big.png" id="starBig">
+    <img class="cutsceneStarEaster" src="files/images/cutscene_star_easter.png" id="starEaster">
     <img class="cutsceneStarSmall" src="files/images/cutscene_star_small.png" id="starSmall">
     <img class="msfuStar" src="files/images/msfu_star.png" id="msfuStar">
     <img class="cutsceneStarEvent" src="files/images/cutscene_star_event.png" id="starEvent">
     <img class="cutsceneHeart" src="files/images/cutscene_heart.png" id="heart">
-    <img class="starShenvii" src="files/images/cutscene_star_shenvii.png" alt="starShenvii">
 
     <div class="ui">
 
@@ -261,6 +265,7 @@
                 <button id="deleteAllSpectralButton" class="under1k">Delete All Spectral Whisper</button>
                 <button id="deleteAllMysteriousEchoButton" class="under1k">Delete All Mysterious Echo</button>
                 <button id="deleteAllIsekaiButton" class="under1k">Delete All Isekai</button>
+                <button id="deleteAllIsekaiLofiButton" class="under10k">Delete All Isekai: Lo-fi</button>
                 <button id="deleteAllForgottenWhisperButton" class="under1k">Delete All Forgotten Whisper</button>
                 <button id="deleteAllEmergenciesButton" class="under1k">Delete All Emergencies</button>
                 <button id="deleteAllStarfallButton" class="under1k">Delete All Starfall</button>
@@ -339,6 +344,13 @@
 
                 <button id="deleteAllHeartButton" class="buttonDiv">
                     <p class="eventV">Delete All Heart</p>
+                </button>
+
+                <button id="deleteAllEasterEggButton" class="buttonDiv">
+                    <p class="eventE">Delete All Easter Egg</p>
+                </button>
+                <button id="deleteAllEasterBunnyButton" class="buttonDiv">
+                    <p class="eventE">Delete All Easter Bunny</p>
                 </button>
 
                 <button id="deleteAllSpecialButton" class="buttonDivClass">
@@ -460,10 +472,12 @@
     <audio id="geezerSuspenceAudio" src="files/sounds_and_music/geezer_suspence.mp3"></audio>
     <audio id="polarrSuspenceAudio" src="files/sounds_and_music/polarr_suspence.mp3"></audio>
     <audio id="scareSuspenceAudio" src="files/sounds_and_music/scare_suspence.mp3"></audio>
+    <audio id="scareSuspenceLofiAudio" src="files/sounds_and_music/scare_suspence_lofi.mp3"></audio>
     <audio id="bigSuspenceAudio" src="files/sounds_and_music/big_suspence.mp3"></audio>
     <audio id="hugeSuspenceAudio" src="files/sounds_and_music/onemillionsuspence.mp3"></audio>
     <audio id="expOpeningAudio" src="files/sounds_and_music/exp_opening.mp3"></audio>
     <audio id="plabreAudio" src="files/sounds_and_music/plabre.mp3" loop></audio>
+    <audio id="isekailofiAudio" src="files/sounds_and_music/isekailofi.mp3" loop></audio>
     <audio id="x1staAudio" src="files/sounds_and_music/x1sta.mp3" loop></audio>
     <audio id="heartAudio" src="files/sounds_and_music/heart.mp3" loop></audio>
     <audio id="aboAudio" src="files/sounds_and_music/abo.mp3" loop></audio>
@@ -552,8 +566,11 @@
     <audio id="astredAudio" src="files/sounds_and_music/astred.mp3" loop></audio>
     <audio id="qbearAudio" src="files/sounds_and_music/qbear.mp3" loop></audio>
     <audio id="lightAudio" src="files/sounds_and_music/light.mp3" loop></audio>
-    <audio id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio>
+    <audio id="esteggAudio" src="files/sounds_and_music/estegg.mp3" loop></audio>
+    <audio id="estbunAudio" src="files/sounds_and_music/estbun.mp3" loop></audio>
+    <!-- <audio id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio> -->
     <!-- <audio id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio> -->
+    <audio id="mainAudio" src="files/sounds_and_music/mainEvent2.mp3" loop></audio>
 
     
     <script src="files/script.js"></script>

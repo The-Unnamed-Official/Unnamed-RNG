@@ -3,7 +3,7 @@ let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 let rollCount1 = parseInt(localStorage.getItem("rollCount")) || 0;
-let cooldownTime = 690;
+let cooldownTime = 200;
 let currentAudio = null;
 let isChangeEnabled = true;
 let autoRollInterval = null;
@@ -199,6 +199,9 @@ function musicLoad() {
   let qbearAudio = document.getElementById("qbearAudio");
   let lightAudio = document.getElementById("lightAudio");
   let x1staAudio = document.getElementById("x1staAudio");
+  let esteggAudio = document.getElementById("esteggAudio");
+  let estbunAudio = document.getElementById("estbunAudio");
+  let isekailofiAudio= document.getElementById("isekailofiAudio");
 
   suspenseAudio.pause();
   expOpeningAudio.pause();
@@ -293,6 +296,9 @@ function musicLoad() {
   crazeAudio.pause();
   shenviiAudio.pause();
   qbearAudio.pause();
+  estbunAudio.pause();
+  esteggAudio.pause();
+  isekailofiAudio.pause();
 
   suspenseAudio.currentTime = 0;
   expOpeningAudio.currentTime = 0;
@@ -387,6 +393,9 @@ function musicLoad() {
   crazeAudio.currentTime = 0;
   shenviiAudio.currentTime = 0;
   qbearAudio.currentTime = 0;
+  estbunAudio.currentTime = 0;
+  esteggAudio.currentTime = 0;
+  isekailofiAudio.currentTime = 0;
 }
 
 function formatRollCount(count) {
@@ -446,6 +455,9 @@ function checkAchievements() {
       { name: "Are you okay?", timeCount: 5259600 },
       { name: "You are a True No Lifer", timeCount: 15778800 },
       { name: "No one's getting this legit", timeCount: 31557600 },
+
+      // Event
+      { name: "Happy Easter!", timeCount: 0 },
   ];
 
   // Achievements collected
@@ -506,6 +518,7 @@ function updateAchievementsList() {
   let achievementItems = document.querySelectorAll(".achievement-item");
   let achievementItemsT = document.querySelectorAll(".achievement-itemT");
   let achievementItemsC = document.querySelectorAll(".achievement-itemC");
+  let achievementItemsE = document.querySelectorAll(".achievement-itemE");
 
   achievementItems.forEach(item => {
     const achievementName = item.getAttribute("data-name");
@@ -521,7 +534,7 @@ function updateAchievementsList() {
     const achievementName = item.getAttribute("data-name");
 
     if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "blue";
+      item.style.backgroundColor = "green";
     } else {
       item.style.backgroundColor = "gray";
     }
@@ -531,7 +544,18 @@ function updateAchievementsList() {
     const achievementName = item.getAttribute("data-name");
 
     if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "blue";
+      item.style.backgroundColor = "red";
+    } else {
+      item.style.backgroundColor = "gray";
+    }
+  });
+
+  achievementItemsE.forEach(item => {
+    const achievementName = item.getAttribute("data-name");
+
+    if (unlockedAchievements.includes(achievementName)) {
+      item.style.backgroundColor = "yellow";
+      item.style.color = "black";
     } else {
       item.style.backgroundColor = "gray";
     }
@@ -645,6 +669,9 @@ document.getElementById("rollButton").addEventListener("click", function () {
   astredAudio.pause();
   crazeAudio.pause();
   x1staAudio.pause();
+  esteggAudio.pause();
+  estbunAudio.pause();
+  isekailofiAudio.pause();
 
   suspenseAudio.currentTime = 0;
   geezerSuspenceAudio.currentTime = 0;
@@ -739,6 +766,9 @@ document.getElementById("rollButton").addEventListener("click", function () {
   astredAudio.currentTime = 0;
   crazeAudio.currentTime = 0;
   x1staAudio.currenttime = 0;
+  esteggAudio.currenttime = 0;
+  estbunAudio.currenttime = 0;
+  isekailofiAudio.currenttime = 0;
 
   let rarity = rollRarity();
   let title = selectTitle(rarity);
@@ -824,7 +854,10 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "sʜeɴvɪ✞∞ [1 in 77,777/7th]" ||
     rarity.type === "Light [1 in 29,979]" ||
     rarity.type === "X1sta [1 in 230,444]" ||
-    rarity.type === "Hellish Fire [1 in 6,666]"
+    rarity.type === "Easter Egg [1 in 13,333]" ||
+    rarity.type === "Easter Bunny [1 in 133,333]" ||
+    rarity.type === "Hellish Fire [1 in 6,666]" ||
+    rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]"
   ) {
     document.getElementById("result").innerText = "";
     const titleCont = document.querySelector(".container");
@@ -838,6 +871,10 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "Heart [1 in ♡♡♡]") {
       bigSuspenceAudio.play();
     } else if (rarity.type === "Qbear [1 in 35,555]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Easter Egg [1 in 13,333]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Easter Bunny [1 in 133,333]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Memory [1 in 175]") {
       polarrSuspenceAudio.play();
@@ -883,6 +920,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Isekai [1 in 300]") {
       scareSuspenceAudio.play();
+    } else if (rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]") {
+      scareSuspenceLofiAudio.play();
     } else if (rarity.type === "Emergencies [1 in 500]") {
       scareSuspenceAudio.play();
     } else if (rarity.type === "Samurai [1 in 800]") {
@@ -3841,6 +3880,413 @@ document.getElementById("rollButton").addEventListener("click", function () {
         }, 100);
         enableChange();
       }, 9850); // Wait for 9.85 seconds
+    } else if (rarity.type === "Easter Egg [1 in 13,333]") {
+      document.body.className = "blackBg";
+      disableChange();
+
+      const container1 = document.getElementById("squareContainer");
+
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-white";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      function createSquare2() {
+        const square = document.createElement("div");
+        square.className = "animated-square-orange";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      function createSquare3() {
+        const square = document.createElement("div");
+        square.className = "animated-square-yellow";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      const squareInterval = setInterval(() => {
+        createSquare();
+        createSquare2();
+        createSquare3();
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 10000); // Stop after 10 seconds
+
+      const container = document.getElementById("starContainer");
+
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+        star.className = "yellow-star";
+        star.innerHTML = "𓎥";
+
+        star.style.left = Math.random() * 100 + "vw";
+
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+
+        star.style.animationDelay = i * 0.08 + "s";
+
+        container.appendChild(star);
+
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+        star.className = "orange-star";
+        star.innerHTML = "𓎥";
+
+        star.style.left = Math.random() * 100 + "vw";
+
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+
+        star.style.animationDelay = i * 0.08 + "s";
+
+        container.appendChild(star);
+
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+      
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
+          displayResult(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          rollCount1++;
+          titleCont.style.visibility = "visible";
+          esteggAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
+    } else if (rarity.type === "Easter Bunny [1 in 133,333]") {
+      document.body.className = "blackBg";
+      disableChange();
+
+      const container1 = document.getElementById("squareContainer");
+
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-white";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      function createSquare2() {
+        const square = document.createElement("div");
+        square.className = "animated-square-orange";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      function createSquare3() {
+        const square = document.createElement("div");
+        square.className = "animated-square-yellow";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      function createSquare4() {
+        const square = document.createElement("div");
+        square.className = "animated-square-red";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      const squareInterval = setInterval(() => {
+        createSquare();
+        createSquare2();
+        createSquare3();
+        createSquare4();
+      }, 100);
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 10000); // Stop after 10 seconds
+
+      const container = document.getElementById("starContainer");
+
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+        star.className = "yellow-star";
+        star.innerHTML = "𓎥";
+
+        star.style.left = Math.random() * 100 + "vw";
+
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+
+        star.style.animationDelay = i * 0.08 + "s";
+
+        container.appendChild(star);
+
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+        star.className = "orange-star";
+        star.innerHTML = "𓎥";
+
+        star.style.left = Math.random() * 100 + "vw";
+
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+
+        star.style.animationDelay = i * 0.08 + "s";
+
+        container.appendChild(star);
+
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+        star.className = "white-star";
+        star.innerHTML = "*";
+
+        star.style.left = Math.random() * 100 + "vw";
+
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+
+        star.style.animationDelay = i * 0.08 + "s";
+
+        container.appendChild(star);
+
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+      for (let i = 0; i < 133; i++) {
+        const star = document.createElement("span");
+        star.className = "red-star";
+        star.innerHTML = "<>";
+
+        star.style.left = Math.random() * 100 + "vw";
+
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+
+        star.style.animationDelay = i * 0.08 + "s";
+
+        container.appendChild(star);
+
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+      
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
+          displayResult(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          rollCount1++;
+          titleCont.style.visibility = "visible";
+          estbunAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
     } else if (rarity.type === "Hellish Fire [1 in 6,666]") {
       if (skipCutscene10K) {
         document.body.className = "blackBg";
@@ -5106,6 +5552,86 @@ document.getElementById("rollButton").addEventListener("click", function () {
         rollCount1++;
         titleCont.style.visibility = "visible";
         isekaiAudio.play();
+      }
+    } else if (rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]") {
+      if (skipCutscene10K) {
+        document.body.className = "blackBg";
+        console.log("Rolled Isekai ♫ Lo-Fi");
+        disableChange();
+        startAnimation10();
+        const container = document.getElementById("starContainer");
+        const container1 = document.getElementById("squareContainer");
+  
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-green";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 3000); // Stop after 3 seconds
+  
+        for (let i = 0; i < 33; i++) {
+          const star = document.createElement("span");
+          star.className = "green-star";
+          star.innerHTML = "⁂";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            isekailofiAudio.play();
+          }, 100);
+          enableChange();
+        }, 3100); // Wait for 3.1 seconds
+      } else {
+        scareSuspenceLofiAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        isekailofiAudio.play();
       }
     } else if (rarity.type === "Emergencies [1 in 500]") {
       if (skipCutscene1K) {
@@ -7617,7 +8143,7 @@ function rollRarity() {
     {
       type: "Common [1 in 2.5]",
       class: "commonBgImg",
-      chance: 40,
+      chance: 30,
       titles: ["Good", "Natural", "Simple", "Basic", "Plain", "Average", "Ordinary", "Usual", "Regular", "Standard"],
     },
     {
@@ -8075,6 +8601,24 @@ function rollRarity() {
       class: "x1staBgImg",
       chance: 0.0004339449,
       titles: ["Corrupt", "X1sta", "Artist"],
+    },
+    {
+      type: "Easter Egg [1 in 13,333]",
+      class: "esteggBgImg",
+      chance: 0.0075001875,
+      titles: ["Secret Egg", "Easter", "Candy"],
+    },
+    {
+      type: "Easter Bunny [1 in 133,333]",
+      class: "estbunBgImg",
+      chance: 0.00075000187,
+      titles: ["Secret Bunny", "Easter", "Bunny"],
+    },
+    {
+      type: "Isekai ♫ Lo-Fi [1 in 3,000]",
+      class: "isekailofiBgImg",
+      chance: 10.033,
+      titles: ["Isekai", "Singing", "Chill", "Calm"]
     }
   ];
 
@@ -8143,7 +8687,7 @@ function rollRarity() {
     titles: ["Fire", "Craze", "Iridocyclitis: 902"],
   };
 
-  let randomNum = Math.random() * 200;
+  let randomNum = Math.random() * 110;
   let cumulativeChance = 0.04;
 
   if (rollCount % 333 === 0) {
@@ -8261,9 +8805,7 @@ function changeBackground(rarityClass) {
 }
 
 function addToInventory(title, rarityClass) {
-  const excludedRarities = new Set(
-    Array.from(document.querySelectorAll('.rarity-button.active')).map(btn => btn.dataset.rarity)
-  );
+  const excludedRarities = new Set(Array.from(document.querySelectorAll('.rarity-button.active')).map(btn => btn.dataset.rarity));
 
   for (const category in rarityCategories) {
     if (excludedRarities.has(category) && rarityCategories[category].includes(rarityClass)) {
@@ -8481,6 +9023,7 @@ const backgroundDetails = {
   crazeBgImg: { image: "files/backgrounds/firecraze.png", audio: "crazeAudio" },
   shenviiBgImg: { image: "files/backgrounds/shenvii.gif", audio: "shenviiAudio" },
   qbearBgImg: { image: "files/backgrounds/qbear.png", audio: "qbearAudio" },
+  isekailofiBgImg: { image: "files/backgrounds/isekailofi.png", audio: "isekailofiAudio" },
   samuraiBgImg: {
     image: "files/backgrounds/samurai.png",
     audio: "samuraiAudio",
@@ -8574,6 +9117,8 @@ const backgroundDetails = {
   blindBgImg: { image: "files/backgrounds/blind.png", audio: "blindAudio" },
   lightBgImg: { image: "files/backgrounds/light.png", audio: "lightAudio" },
   x1staBgImg: { image: "files/backgrounds/x1sta.png", audio: "x1staAudio" },
+  esteggBgImg: { image: "files/backgrounds/estegg.png", audio: "esteggAudio" },
+  estbunBgImg: { image: "files/backgrounds/estbun.png", audio: "estbunAudio" },
 };
 
 function changeBackground(rarityClass, itemTitle) {
@@ -9253,6 +9798,27 @@ function startAnimation10() {
   }, 3000);
 }
 
+function startAnimation10B() {
+  const star = document.getElementById("star");
+
+  star.classList.add("spin");
+
+  setTimeout(() => {
+    star.classList.add("spin-slow");
+  }, 1000);
+
+  setTimeout(() => {
+    star.classList.add("scale-up-and-vanish");
+  }, 2000);
+
+  setTimeout(() => {
+    star.classList.add("cutsceneStar");
+    star.classList.remove("scale-up-and-vanish");
+    star.classList.remove("spin-slow");
+    star.classList.remove("spin");
+  }, 3000);
+}
+
 function startAnimation11() {
   const star = document.getElementById("starSmall");
 
@@ -9332,7 +9898,7 @@ function createCooldownButton() {
   button.style.top = `${randomY}px`;
 
   button.addEventListener("click", () => {
-    cooldownTime = 400;
+    cooldownTime = 175;
 
     showCooldownEffect(90);
 
@@ -9342,8 +9908,8 @@ function createCooldownButton() {
     }, 1000);
 
     setTimeout(() => {
-      cooldownTime = 690;
-      console.log("Cooldown reset to 690ms");
+      cooldownTime = 200;
+      console.log("Cooldown reset to 200ms");
     }, 90000);
 
     scheduleButtonAppearance();
@@ -9368,7 +9934,7 @@ function createCooldownButton1() {
   button.style.top = `${randomY}px`;
 
   button.addEventListener("click", () => {
-    cooldownTime = 250;
+    cooldownTime = 100;
 
     showCooldownEffect(60);
 
@@ -9378,8 +9944,8 @@ function createCooldownButton1() {
     }, 1000);
 
     setTimeout(() => {
-      cooldownTime = 690;
-      console.log("Cooldown reset to 690ms");
+      cooldownTime = 200;
+      console.log("Cooldown reset to 200ms");
     }, 60000);
 
     scheduleButtonAppearance();
@@ -9404,7 +9970,7 @@ function createCooldownButton2() {
   button.style.top = `${randomY}px`;
 
   button.addEventListener("click", () => {
-    cooldownTime = 100;
+    cooldownTime = 25;
 
     showCooldownEffect(30);
 
@@ -9414,8 +9980,8 @@ function createCooldownButton2() {
     }, 1000);
 
     setTimeout(() => {
-      cooldownTime = 690;
-      console.log("Cooldown reset to 690ms");
+      cooldownTime = 200;
+      console.log("Cooldown reset to 200ms");
     }, 30000);
 
     scheduleButtonAppearance();
@@ -9451,40 +10017,19 @@ function showCooldownEffect(duration) {
   }, 1000);
 }
 
-function getRandomTime() {
-  const min = 3 * 60 * 1000;
-  const max = 5 * 60 * 1000;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function getRandomTime1() {
-  const min = 7 * 60 * 1000;
-  const max = 9 * 60 * 1000;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function getRandomTime2() {
-  const min = 11 * 60 * 1000;
-  const max = 13 * 60 * 1000;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
 function scheduleButtonAppearance() {
-  const randomTime = getRandomTime();
-  const randomTime1 = getRandomTime1();
-  const randomTime2 = getRandomTime2();
 
   setTimeout(() => {
     createCooldownButton();
-  }, randomTime);
+  }, 120000);
 
   setTimeout(() => {
     createCooldownButton1();
-  }, randomTime1);
+  }, 300000);
 
   setTimeout(() => {
     createCooldownButton2();
-  }, randomTime2);
+  }, 600000);
 }
 
 scheduleButtonAppearance();
@@ -9660,10 +10205,10 @@ autoRollButton.addEventListener("click", () => {
 
 function startAutoRoll() {
   autoRollInterval = setInterval(() => {
-    console.log("Rolling...");
     document.getElementById("rollButton").click();
-  }, 500);
+  },99);
   autoRollButton.textContent = "Auto Roll: On";
+  console.log("Rolling...");
   autoRollButton.classList.remove("off");
   autoRollButton.classList.add("on");
   localStorage.setItem("autoRollEnabled", "true");
@@ -9671,6 +10216,7 @@ function startAutoRoll() {
 
 function stopAutoRoll() {
   clearInterval(autoRollInterval);
+  console.log("Stopped rolling");
   autoRollInterval = null;
   autoRollButton.textContent = "Auto Roll: Off";
   autoRollButton.classList.remove("on");
@@ -9697,25 +10243,25 @@ slider.addEventListener("input", function () {
 
 slider.dispatchEvent(new Event("input"));
 
-// const heartContainer = document.createElement('div');
-// document.body.appendChild(heartContainer);
+const heartContainer = document.createElement('div');
+document.body.appendChild(heartContainer);
 
-// function createHeart() {
-//     const heart = document.createElement('div');
-//     heart.classList.add('heart');
-//     heart.textContent = '❤️';
-//     heart.style.left = Math.random() * 100 + 'vw';
-//     heart.style.top = Math.random() * 100 + 'vh';
-//     heart.style.fontSize = Math.random() * 20 + 10 + 'px';
+function createHeart() {
+    const heart = document.createElement('div');
+    heart.classList.add('heart');
+    heart.textContent = '🐣';
+    heart.style.left = Math.random() * 100 + 'vw';
+    heart.style.top = Math.random() * 100 + 'vh';
+    heart.style.fontSize = Math.random() * 25 + 15 + 'px';
 
-//     heartContainer.appendChild(heart);
+    heartContainer.appendChild(heart);
 
-//     setTimeout(() => {
-//         heart.remove();
-//     }, 5000);
-// }
+    setTimeout(() => {
+        heart.remove();
+    }, 1000);
+}
 
-// setInterval(createHeart, 333);
+setInterval(createHeart, 33);
 
 const secretKey = 'ImpeachedGlazer';
 
@@ -9918,6 +10464,10 @@ function getClassForRarity(rarity) {
       'Qbear [1 in 35,555]': 'under100k',
       'Light [1 in 29,979]': 'under100k',
       'X1sta [1 in 230,444]': 'under1m',
+      'sʜeɴvɪ✞∞ [1 in 77,777/7th]': 'special',
+      'Easter Bunny [1 in 133,333]': 'eventE',
+      'Easter Egg [1 in 13,333]': 'eventE',
+      'Isekai ♫ Lo-Fi [1 in 3,000]': 'under10k'
   };
 
   return rarityClasses[rarity] || null;
@@ -9977,6 +10527,9 @@ document
 document
   .getElementById("deleteAllToxicButton")
   .addEventListener("click", () => deleteAllByRarity("toxBgImg"));
+document
+  .getElementById("deleteAllIsekaiLofiButton")
+  .addEventListener("click", () => deleteAllByRarity("isekailofiBgImg"));
 
 
 document
@@ -10092,6 +10645,7 @@ document
       "radBgImg",
       "demsoBgImg",
       "astredBgImg",
+      "isekailofiBgImg",
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
@@ -10312,6 +10866,9 @@ document
 document
   .getElementById("deleteAllShenviiButton")
   .addEventListener("click", () => deleteAllByRarity("shenviiBgImg"));
+document
+  .getElementById("deleteAllX1staButton")
+  .addEventListener("click", () => deleteAllByRarity("x1staBgImg"));
 
 
 document
@@ -10403,7 +10960,7 @@ const rarityCategories = {
     "ethershiftBgImg", "hellBgImg", "frightBgImg", "seraphwingBgImg", "shadBgImg", "shaBgImg",
     "nighBgImg", "voiBgImg", "silBgImg", "ghoBgImg", "endBgImg", "abysBgImg", "darBgImg",
     "twiligBgImg", "ethpulBgImg", "eniBgImg", "griBgImg", "fearBgImg", "hauntBgImg",
-    "foundsBgImg", "lostsBgImg", "hauBgImg", "lubjubBgImg", "radBgImg", "demsoBgImg"
+    "foundsBgImg", "lostsBgImg", "hauBgImg", "lubjubBgImg", "radBgImg", "demsoBgImg", "isekailofiBgImg"
   ],
   under100k: [
     "celdawBgImg", "fatreBgImg", "unnamedBgImg", "eonbreakBgImg", "overtureBgImg",
