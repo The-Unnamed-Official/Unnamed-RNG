@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Copilot RNG: Aura Collector</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #181c24; color: #f0f0f0; margin: 0; padding: 0; }
+        .container { max-width: 900px; margin: 30px auto; background: #23283a; border-radius: 12px; padding: 32px; box-shadow: 0 4px 24px #0008; }
+        h1, h2 { color: #ffd700; }
+        button { background: #2e354a; color: #fff; border: none; padding: 12px 24px; border-radius: 6px; font-size: 1.1em; cursor: pointer; margin: 8px 0; user-select: none; }
+        button:active { background: #444c6a; }
+        .auras-list { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; user-select: none; }
+        .aura { background: #222; border-radius: 8px; padding: 10px 14px; min-width: 120px; text-align: center; transition: background 0.5s ease, scale 0.5s ease; user-select: none; }
+        .aura:hover { background: #2e354a; scale: 1.1; }
+        .locked { color: #888; background: #181c24; border: 1px dashed #444; user-select: none; }
+        .collected { color: #fff; border: 1px solid #ffd700; user-select: none; }
+        .crafting { margin-top: 24px; user-select: none; }
+        .craft-recipe { font-size: 0.95em; color: #aaa; user-select: none; }
+        .luck-status { margin: 10px 0 20px 0; color: #b8ffba; user-select: none; }
+        #luckMultiplier { color: #98ff90; font-weight: bold; user-select: none; }
+        .cutscene { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(30,0,40,0.97); color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; font-size: 2em; animation: fadeIn 0.5s; user-select: none; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .close-cutscene { margin-top: 30px; font-size: 1em; background: #ffd700; color: #23283a; user-select: none; }
+        .stats { margin-bottom: 20px; user-select: none; }
+        .craftName-Stardust { color: #eedaff; font-size: 1.2em; font-weight: bold; }
+        .craftName-CelestialSpell { color: #fcffc0; font-size: 1.2em; font-weight: bold; }
+        .craftName-JazzSheet { color: #ffcea4; font-size: 1.2em; font-weight: bold; }
+        .craftName-ExoticDust { color: #7bb9ff; font-size: 1.2em; font-weight: bold; }
+        .craftName-StellarGift { color: #e75fff; font-size: 1.2em; font-weight: bold; }
+        .craftName-OnyxCurse { color: #ff006a; font-size: 1.2em; font-weight: bold; }
+        .craftName-HastyGloves { color: #48dee6; font-size: 1.2em; font-weight: bold; }
+        .craftName-DeviceHaste { color: #7bffde; font-size: 1.2em; font-weight: bold; }
+        .btn-normal { background-color: #2e354a; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-disabled { background-color: #4a2e2e; color: #666666; padding: 10px 20px; border: none; border-radius: 4px; cursor: not-allowed; }
+        .btn-disabled:active { background-color: #462424; }
+        .fast-roll-status { margin-top: 5px; color: #c9e6e8; }
+        #fastRollTimerDisplay, #rollCooldownDisplay { color: #8bf9ff; font-weight: bold; }
+        .roll-status { color: #fff3b0; }
+        #totalRolls { color: #ffea72; font-weight: bold; }
+
+        @keyframes borderGlow {
+            0% { box-shadow: 0 0 1px 0 transparent; }
+            50% { box-shadow: 0 0 2px 1px currentColor; }
+            100% { box-shadow: 0 0 1px 0 transparent; }
+        }
+
+        @keyframes textPulse {
+            0%, 100% { text-shadow: 0 0 4px transparent; }
+            50% { text-shadow: 0 0 8px currentColor; }
+        }
+
+        @keyframes borderShiftChallenged {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes borderShiftForsaken {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* === Rank-Based Styles === */
+
+        .rank-basic {
+            color: #ffffff;
+            border-color: #888;
+        }
+
+        .rank-basic:hover {
+            border-color: #7e7e7e;
+            background-color: #373737;
+        }
+
+        .rank-natural {
+            color: #b9ffae;
+            border-color: #44bd32;
+        }
+
+        .rank-natural:hover {
+            border-color: #3dcf2b;
+            background-color: #192c16;
+        }
+
+        .rank-unique {
+            color: #c1eaff;
+            border-color: #0097e6;
+        }
+
+        .rank-exalted {
+            color: #ffe9ab;
+            border-color: #e1b12c;
+            animation: borderGlow 2s infinite ease-in-out, textPulse 3s infinite ease-in-out;
+        }
+
+        .rank-exalted:hover {
+            border-color: #e1b12c;
+            background-color: #3b2e2e;
+        }
+
+        .rank-glorious {
+            color: #ccc2ff;
+            border-color: #8c7ae6;
+            animation: borderGlow 2.5s infinite ease-in-out, textPulse 3.5s infinite ease-in-out;
+        }
+
+        .rank-challenged {
+            position: relative;
+            color: #ffc7b9;
+            border: 2px solid transparent;
+            background: linear-gradient(#1e1e1e, #1e1e1e) padding-box,
+                        linear-gradient(135deg, #ff6b6b31, #ffa07a6a, #ff6b6b6e) border-box;
+            background-clip: padding-box, border-box;
+            border-radius: 8px;
+            animation: borderShiftChallenged 5s linear infinite, textPulse 3s ease-in-out infinite;
+            transition: color 0.3s ease, background 0.3s ease, border 0.3s ease, scale 0.3s ease, box-shadow 0.3s ease, background-clip 0.3s ease, animation 0.3s ease;
+        }
+
+        .rank-challenged:hover {
+            position: relative;
+            color: #ffc7b9;
+            border: 2px solid transparent;
+            background: linear-gradient(#362f2f, #413131) padding-box,
+                        linear-gradient(135deg, #ff6b6b, #ffa07a, #ff6b6b) border-box;
+            background-clip: padding-box, border-box;
+            border-radius: 8px;
+            animation: borderShiftChallenged 5s linear infinite, textPulse 3s ease-in-out infinite;
+        }
+
+        .rank-forsaken {
+            position: relative;
+            color: #ffcfd6;
+            border: 2px solid transparent;
+            background: linear-gradient(#1e1e1e, #1e1e1e) padding-box,
+                        linear-gradient(135deg, #ff9a9d54, #fad0c430, #ff9a9d3c) border-box;
+            background-clip: padding-box, border-box;
+            border-radius: 8px;
+            animation: borderShiftForsaken 6s linear infinite, textPulse 4s ease-in-out infinite;
+            transition: color 0.3s ease, background 0.3s ease, border 0.3s ease, scale 0.3s ease, box-shadow 0.3s ease, background-clip 0.3s ease, animation 0.3s ease;
+        }
+
+        .rank-forsaken:hover {
+            position: relative;
+            color: #ffcfd6;
+            border: 2px solid transparent;
+            background: linear-gradient(#3b2e2e, #392e2e) padding-box,
+                        linear-gradient(135deg, #ff9a9e, #fad0c4, #ff9a9e) border-box;
+            background-clip: padding-box, border-box;
+            border-radius: 8px;
+            animation: borderShiftForsaken 6s linear infinite, textPulse 4s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Named's RNG</h1>
+        <div class="stats">
+            <div><b class="roll-status">Total Rolls:</b> <span id="totalRolls">0</span></div>
+            <div class="luck-status">
+                <b>Active Luck:</b>
+                <span id="luckMultiplier">1x</span>
+                <span id="luckTimer"></span>
+            </div>
+            <div class="fast-roll-status">
+                <b>Roll Cooldown:</b> 
+                <span id="rollCooldownDisplay">No current haste effect</span>
+                <span id="fastRollTimerDisplay"></span>
+            </div>
+        </div>
+        <div id="autoRollToggleWrapper" style="display:none; margin-top: 10px;">
+            <button id="autoRollToggleBtn" onclick="toggleAutoRoll()">Enable Auto Roll</button>
+        </div>
+        <button id="rollBTN" onclick="rollAura()">Roll for Aura!</button>
+        <div id="lastRoll" style="margin: 16px 0; font-size: 1.2em;"></div>
+        <h2>Your Auras</h2>
+        <div class="auras-list" id="aurasList"></div>
+        <div class="crafting">
+            <h2>Craft Features</h2>
+            <div>
+                <button id="craftAutoRollBtn" onclick="craftAutoRoll()">Craft Auto Roll</button>
+                <span class="craft-recipe">Cost: 1000 Common, 750 Uncommon, 500 Rare, 333 Epic, 250 Legendary, 75 Wind, 50 Heat, 25 Wave</span>
+            <h2>Craft Speed Effects</h2>
+            <div>
+                <button id="craftFastRollBtn" onclick="craftFastRoll()">Craft <p class="craftName-HastyGloves">Hasty Gloves</p> 50% less roll-cooldown (10 min)</button>
+                <span class="craft-recipe">Cost: 50 Wind, 30 Heat, 10 Wave</span>
+            </div>
+            <div>
+                <button id="craftFastRollBtn" onclick="craftFastRoll2()">Craft <p class="craftName-DeviceHaste">The Device of Haste</p> 90% less roll-cooldown (10 min)</button>
+                <span class="craft-recipe">Cost: 100 Wind, 75 Heat, 50 Wave</span>
+            </div>
+            <h2>Craft Luck Effects</h2>
+            <div>
+                <button onclick="craftLuck('2x')">Craft 2x Luck (1 min)</button>
+                <span class="craft-recipe">Cost: 10 Common, 5 Rare, 2 Epic</span>
+            </div>
+            <div>
+                <button onclick="craftLuck('10x')">Craft 10x Luck (1 min)</button>
+                <span class="craft-recipe">Cost: 30 Uncommon, 15 Rare, 5 Epic, 1 Legendary</span>
+            </div>
+            <div>
+                <button onclick="craftLuck('100x')">Craft 100x Luck (1 min)</button>
+                <span class="craft-recipe">Cost: 100 Epic, 10 Legendary, 1 Mythic</span>
+            </div>
+            <div>
+                <button onclick="craftOneRollLuck10k()">Craft <p class="craftName-Stardust">Stardust</p> 10,000x Luck (next roll only)</button>
+                <span class="craft-recipe">Cost: 50 Uncommon, 25 Rare, 10 Epic</span>
+            </div>
+            <div>
+                <button onclick="craftOneRollLuck100k()">Craft <p class="craftName-CelestialSpell">The Celestial Spell</p> 100,000x Luck (next roll only)</button>
+                <span class="craft-recipe">Cost: 30 Rare, 20 Epic, 15 Legendary, 1 Celestial</span>
+            </div>
+            <div>
+                <button onclick="craftOneRollLuck250k()">Craft <p class="craftName-JazzSheet">The Jazz Sheet</p> 250,000x Luck (next roll only)</button>
+                <span class="craft-recipe">Cost: 30 Epic, 30 Legendary, 15 Mythic, 1 Jazz</span>
+            </div>
+            <div>
+                <button onclick="craftOneRollLuck500k()">Craft <p class="craftName-ExoticDust">Exotic Dust</p> 500,000x Luck (next roll only)</button>
+                <span class="craft-recipe">Cost: 60 Epic, 55 Legendary, 30 Mythic, 1 Exotic</span>
+            </div>
+            <div>
+                <button onclick="craftOneRollLuck1m()">Craft <p class="craftName-StellarGift">Stellar's Gift</p> 1,000,000x Luck (next roll only)</button>
+                <span class="craft-recipe">Cost: 110 Legendary, 50 Mythic, 33 Stellar, 1 Void</span>
+            </div>
+            <div>
+                <button onclick="craftOneRollLuck10m()">Craft <p class="craftName-OnyxCurse">The Onyx Curse</p> 10,000,000x Luck (next roll only)</button>
+                <span class="craft-recipe">Cost: 600 Mythic, 333 Stellar, 240 Onyx, 1 Nihility</span>
+            </div>
+        </div>
+    </div>
+    <div id="cutscene" class="cutscene" style="display:none;">
+        <div id="cutsceneText"></div>
+        <button class="close-cutscene" onclick="closeCutscene()">Continue</button>
+    </div>
+    <script>
+        // Aura definitions
+        const auras = [
+            { name: "Common", odds: 2, rank: "Basic" },
+            { name: "Uncommon", odds: 5, rank: "Basic" },
+            { name: "Rare", odds: 8, rank: "Basic" },
+            { name: "Faint", odds: 10, rank: "Basic" },
+            { name: "Dusky", odds: 16, rank: "Basic" },
+            { name: "Epic", odds: 18, rank: "Basic" },
+            { name: "Bright", odds: 20, rank: "Basic" },
+            { name: "Legendary", odds: 22, rank: "Basic" },
+            { name: "Azure", odds: 25, rank: "Basic" },
+            { name: "Mythic", odds: 30, rank: "Basic" },
+            { name: "Emerald", odds: 33, rank: "Basic" },
+            { name: "Ancient", odds: 40, rank: "Basic" },
+            { name: "Amber", odds: 50, rank: "Basic" },
+            { name: "Mystic", odds: 50, rank: "Basic" },
+            { name: "Crimson", odds: 66, rank: "Basic" },
+            { name: "Divine", odds: 70, rank: "Basic" },
+            { name: "Violet", odds: 77, rank: "Basic" },
+            { name: "Prismatic", odds: 80, rank: "Basic" },
+            { name: "Cobalt", odds: 88, rank: "Basic" },
+            { name: "Spectral", odds: 90, rank: "Basic" },
+            { name: "Opal", odds: 99, rank: "Basic" },
+            { name: "Stellar", odds: 100, rank: "Natural" },
+            { name: "Sapphire", odds: 101, rank: "Natural" },
+            { name: "Ruby", odds: 111, rank: "Natural" },
+            { name: "Nebula", odds: 120, rank: "Natural" },
+            { name: "Topaz", odds: 123, rank: "Natural" },
+            { name: "Wind", odds: 150, rank: "Natural" },
+            { name: "Amethyst", odds: 150, rank: "Natural" },
+            { name: "Obsidian", odds: 177, rank: "Natural" },
+            { name: "Jade", odds: 200, rank: "Natural" },
+            { name: "Jazz", odds: 200, rank: "Natural" },
+            { name: "Heat", odds: 222, rank: "Natural" },
+            { name: "Onyx", odds: 250, rank: "Natural" },
+            { name: "Wave", odds: 250, rank: "Natural" },
+            { name: "Globe", odds: 300, rank: "Natural" },
+            { name: "Quartz", odds: 333, rank: "Natural" },
+            { name: "Nomu", odds: 400, rank: "Natural" },
+            { name: "Garnet", odds: 420, rank: "Natural" },
+            { name: "Bleeding", odds: 500, rank: "Natural" },
+            { name: "Chroma", odds: 600, rank: "Natural" },
+            { name: "Glock", odds: 700, rank: "Natural" },
+            { name: "Jackpot", odds: 777, rank: "Natural" },
+            { name: "Platinum", odds: 800, rank: "Natural" },
+            { name: "Bounded", odds: 900, rank: "Natural" },
+            { name: "Soul", odds: 1000, rank: "Unique" },
+            { name: "Celestial", odds: 10000, rank: "Unique" },
+            { name: "Void", odds: 50000, rank: "Unique" },
+            { name: "Eternal", odds: 100000, rank: "Exalted" },
+            { name: "Exotic", odds: 250000, rank: "Exalted" },
+            { name: "Poseidon", odds: 500000, rank: "Exalted" },
+            { name: "Astral", odds: 1000000, rank: "Glorious" },
+            { name: "Arcane", odds: 2000000, rank: "Glorious" },
+            { name: "Galaxy", odds: 5000000, rank: "Glorious" },
+            { name: "Nihility", odds: 10000000, rank: "Glorious" },
+            { name: "Singularity", odds: 20000000, rank: "Glorious" },
+            { name: "Abyssal", odds: 30000000, rank: "Glorious" },
+            { name: "Radiant", odds: 40000000, rank: "Glorious" },
+            { name: "Memory", odds: 50000000, rank: "Glorious" },
+            { name: "Paradox", odds: 60000000, rank: "Glorious" },
+            { name: "Dutchman", odds: 80000000, rank: "Glorious" },
+            { name: "Infinity", odds: 90000000, rank: "Glorious" },
+            { name: "Genesis", odds: 99999999, rank: "Challenged" },
+            { name: "Ascendant", odds: 100000000, rank: "Challenged" },
+            { name: "Overture", odds: 150000000, rank: "Challenged" },
+            { name: "Symphony", odds: 175000000, rank: "Challenged" },
+            { name: "Impeached", odds: 200000000, rank: "Challenged" },
+            { name: "Oppression", odds: 220000000, rank: "Challenged" },
+            { name: "Archangel", odds: 250000000, rank: "Challenged" },
+            { name: "Bloodlust", odds: 300000000, rank: "Challenged" },
+            { name: "AbyssalHunter", odds: 400000000, rank: "Challenged" },
+            { name: "Gargantua", odds: 430000000, rank: "Challenged" },
+            { name: "Ruins", odds: 500000000, rank: "Challenged" },
+            { name: "Broken Reality", odds: 601020102, rank: "Challenged" },
+            { name: "Leviathan", odds: 700000000, rank: "Challenged" },
+            { name: "Aegis", odds: 825000000, rank: "Challenged" },
+            { name: "Oblivion", odds: 999999999, rank: "Forsaken" },
+            { name: "Pixelation", odds: 1073741824, rank: "Forsaken" },
+            { name: "Luminocity", odds: 1200000000, rank: "Forsaken" },
+            { name: "Monarch", odds: 1500000000, rank: "Forsaken" },
+            { name: "Sovereign", odds: 2000000000, rank: "Forsaken" }
+        ];
+
+        // Threshold for special cutscenes
+        const cutsceneThreshold = 10000;
+
+        // Player state
+        let collected = {};
+        let totalRolls = 0;
+        let luckMultiplier = 1;
+        let luckTimer = 0; // seconds remaining for time-based luck
+        let luckInterval = null;
+        // three separate one‑roll counters:
+        let oneRollLuckCount10k = 0;
+        let oneRollLuckCount100k = 0;
+        let oneRollLuckCount250k = 0;
+        let oneRollLuckCount500k = 0;
+        let oneRollLuckCount1m = 0;
+        let oneRollLuckCount10m = 0;
+        let fastRollActive = false;
+        let fastRollTimer = 0; // seconds remaining for fast roll
+        let fastRollInterval = null;
+        let hasAutoRoll = false;
+        let autoRollEnabled = false;
+        let autoRollInterval;
+
+        // Initialize collection counts
+        auras.forEach((_, i) => collected[i] = 0);
+
+        function saveState() {
+            const state = {
+                collected,
+                totalRolls,
+                luckMultiplier,
+                luckEndTimestamp: luckTimer>0 ? Date.now() + luckTimer*1000 : null,
+                fastRollEndTimestamp: fastRollTimer>0 ? Date.now() + fastRollTimer*1000 : null,
+                oneRollLuckCount10k,
+                oneRollLuckCount100k,
+                oneRollLuckCount250k,
+                oneRollLuckCount500k,
+                oneRollLuckCount1m,
+                oneRollLuckCount10m
+            };
+            localStorage.setItem('auraCollectorState', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const stateStr = localStorage.getItem('auraCollectorState');
+            if (!stateStr) return;
+            const st = JSON.parse(stateStr);
+            collected = st.collected || collected;
+            totalRolls = st.totalRolls || 0;
+            luckMultiplier = st.luckMultiplier || 1;
+            oneRollLuckCount10k = st.oneRollLuckCount10k || 0;
+            oneRollLuckCount100k = st.oneRollLuckCount100k || 0;
+            oneRollLuckCount250k = st.oneRollLuckCount250k || 0;
+            oneRollLuckCount500k = st.oneRollLuckCount500k || 0;
+            oneRollLuckCount1m = st.oneRollLuckCount1m || 0;
+            oneRollLuckCount10m = st.oneRollLuckCount10m || 0;
+    
+            if (st.luckEndTimestamp) {
+                const rem = Math.ceil((st.luckEndTimestamp - Date.now())/1000);
+                if (rem>0) {
+                    luckTimer = rem;
+                    startLuckCountdown();
+                }
+            }
+            
+            // Load fast roll state
+            if (st.fastRollEndTimestamp) {
+                const rem = Math.ceil((st.fastRollEndTimestamp - Date.now())/1000);
+                if (rem>0) {
+                    fastRollTimer = rem;
+                    fastRollActive = true;
+                    startFastRollCountdown();
+                }
+            }
+        }
+
+        function startLuckCountdown() {
+            if (luckInterval) clearInterval(luckInterval);
+            luckInterval = setInterval(() => {
+                if (luckTimer>0) {
+                luckTimer--;
+                updateLuckStatus();
+                saveState();
+                } else {
+                clearInterval(luckInterval);
+                luckMultiplier = 1;
+                updateLuckStatus();
+                saveState();
+                }
+            }, 1000);
+        }
+
+        function startFastRollCountdown() {
+            if (fastRollInterval) clearInterval(fastRollInterval);
+            fastRollInterval = setInterval(() => {
+                if (fastRollTimer>0) {
+                    fastRollTimer--;
+                    updateFastRollStatus();
+                    saveState();
+                } else {
+                    clearInterval(fastRollInterval);
+                    fastRollActive = false;
+                    updateFastRollStatus();
+                    saveState();
+                }
+            }, 1000);
+        }
+
+        let rollBTN = document.getElementById('rollBTN');
+        rollBTN.classList.add('btn-normal');
+
+        // Function to toggle disabled state with visual feedback
+        function disableButton() {
+            rollBTN.disabled = true;
+            rollBTN.classList.remove('btn-normal');
+            rollBTN.classList.add('btn-disabled');
+            
+            setTimeout(() => { 
+                rollBTN.disabled = false; 
+                rollBTN.classList.remove('btn-disabled');
+                rollBTN.classList.add('btn-normal');
+            }, fastRollActive ? 100 : 1000);
+        }
+
+        function updateFastRollStatus() {
+            // Update the rollCooldownDisplay
+            const cooldownDisplay = document.getElementById('rollCooldownDisplay');
+            if (cooldownDisplay) {
+                cooldownDisplay.textContent = fastRollActive ? '100 ms' : '1 second';
+            }
+            
+            // Update the timer display with minutes and seconds
+            const timerDisplay = document.getElementById('fastRollTimerDisplay');
+            if (timerDisplay) {
+                if (fastRollActive && fastRollTimer > 0) {
+                    const minutes = Math.floor(fastRollTimer / 60);
+                    const seconds = fastRollTimer % 60;
+                    timerDisplay.textContent = ` (${minutes}:${seconds < 10 ? '0' + seconds : seconds} remaining)`;
+                } else {
+                    timerDisplay.textContent = '';
+                }
+            }
+        }
+
+        function startFastRollCountdown() {
+            if (fastRollInterval) clearInterval(fastRollInterval);
+            updateFastRollStatus(); // Update immediately when starting
+            
+            fastRollInterval = setInterval(() => {
+                if (fastRollTimer > 0) {
+                    fastRollTimer--;
+                    updateFastRollStatus();
+                    saveState();
+                } else {
+                    clearInterval(fastRollInterval);
+                    fastRollActive = false;
+                    updateFastRollStatus();
+                    saveState();
+                }
+            }, 1000); // Update every second
+        }
+
+        function rollAura() {
+            disableButton();
+
+            // decide which one‑roll is active, highest first
+            let activeOneRoll = null;
+            let multiplier = luckMultiplier;
+            if (oneRollLuckCount10m>0){ activeOneRoll='10m';  multiplier=10000000; }
+            else if (oneRollLuckCount1m>0){ activeOneRoll='1m';  multiplier=1000000; }
+            else if (oneRollLuckCount500k>0){ activeOneRoll='500k';multiplier=500000;  }
+            else if (oneRollLuckCount250k>0){ activeOneRoll='250k';multiplier=250000;  }
+            else if (oneRollLuckCount100k>0){ activeOneRoll='100k';multiplier=100000;  }
+            else if (oneRollLuckCount10k>0){ activeOneRoll='10k';multiplier=10000;  }
+
+            // filter by odds threshold
+            const eligible = auras.map((a,i)=>({...a, index:i}))
+                .filter(a=>{
+                if (activeOneRoll==='10m') return a.odds>=10000000;
+                if (activeOneRoll==='1m') return a.odds>=1000000;
+                if (activeOneRoll==='500k') return a.odds>=500000;
+                if (activeOneRoll==='250k') return a.odds>=250000;
+                if (activeOneRoll==='100k') return a.odds>=100000;
+                if (activeOneRoll==='10k') return a.odds>=10000;
+                return true;
+                });
+
+            // weighted roll
+            const weights = eligible.map(a=>1/(a.odds/multiplier));
+            const totalW = weights.reduce((s,w)=>s+w,0);
+            let r = Math.random()*totalW, chosen=eligible[0].index;
+            for (let i=0; i<eligible.length; i++) {
+                if (r<weights[i]) { chosen=eligible[i].index; break; }
+                r -= weights[i];
+            }
+
+            // apply result
+            collected[chosen]++; totalRolls++;
+
+            // consume one‑roll
+            if (activeOneRoll==='10m')   oneRollLuckCount10m--;
+            else if (activeOneRoll==='1m')   oneRollLuckCount1m--;
+            else if (activeOneRoll==='500k') oneRollLuckCount500k--;
+            else if (activeOneRoll==='250k') oneRollLuckCount250k--;
+            else if (activeOneRoll==='100k') oneRollLuckCount100k--;
+            else if (activeOneRoll==='10k') oneRollLuckCount10k--;
+
+            updateAurasList();
+            updateStats();
+            showLastRoll(chosen);
+            if (auras[chosen].odds>cutsceneThreshold && collected[chosen]===1) showCutscene(chosen);
+            saveState();
+        }
+
+        function showLastRoll(idx) {
+            const a = auras[idx];
+            document.getElementById('lastRoll').innerHTML = 
+                `<b>You rolled:</b> <span style="color:#ffd700">${a.name}</span> <span style="font-size:0.9em;">[1 in ${a.odds.toLocaleString()}]</span>`;
+        }
+
+        function updateAurasList() {
+            let out = '';
+            for (let i = 0; i < auras.length; i++) {
+                const rankClass = `rank-${auras[i].rank.toLowerCase()}`;
+                out += collected[i] > 0
+                    ? `<div class="aura collected ${rankClass}"><b>${auras[i].name}</b><br>[1 in ${auras[i].odds.toLocaleString()}]<br>x${collected[i]}</div>`
+                    : `<div class="aura locked ${rankClass}">Locked<br>[1 in ${auras[i].odds.toLocaleString()}]</div>`;
+            }
+            document.getElementById('aurasList').innerHTML = out;
+        }
+
+        function updateStats() {
+            document.getElementById('totalRolls').textContent = totalRolls;
+            updateLuckStatus();
+        }
+
+        // Show current luck multiplier and timers
+        function updateLuckStatus() {
+            let mult = luckMultiplier;
+            let rollsLeftText = '';
+
+            if (oneRollLuckCount10m > 0) {
+                mult = 10000000;
+                rollsLeftText = `(next ${oneRollLuckCount10m} roll${oneRollLuckCount10m === 1 ? '' : 's'})`;
+            } else if (oneRollLuckCount1m > 0) {
+                mult = 1000000;
+                rollsLeftText = `(next ${oneRollLuckCount1m} roll${oneRollLuckCount1m === 1 ? '' : 's'})`;
+            } else if (oneRollLuckCount500k > 0) {
+                mult = 500000;
+                rollsLeftText = `(next ${oneRollLuckCount500k} roll${oneRollLuckCount500k === 1 ? '' : 's'})`;
+            } else if (oneRollLuckCount250k > 0) {
+                mult = 250000;
+                rollsLeftText = `(next ${oneRollLuckCount250k} roll${oneRollLuckCount250k === 1 ? '' : 's'})`;
+            } else if (oneRollLuckCount100k > 0) {
+                mult = 100000;
+                rollsLeftText = `(next ${oneRollLuckCount100k} roll${oneRollLuckCount100k === 1 ? '' : 's'})`;
+            } else if (oneRollLuckCount10k > 0) {
+                mult = 10000;
+                rollsLeftText = `(next ${oneRollLuckCount10k} roll${oneRollLuckCount10k === 1 ? '' : 's'})`;
+            } else if (luckTimer > 0) {
+                rollsLeftText = `(${Math.ceil(luckTimer / 60)} min left)`;
+            } else if (luckTimer <= 0) {
+                rollsLeftText = '';
+            } else {
+                rollsLeftText = '';
+            }
+
+            document.getElementById('luckMultiplier').textContent = mult + 'x';
+            document.getElementById('luckTimer').textContent = rollsLeftText;
+        }
+
+        function craftAutoRoll() {
+            // Adjust these requirements to your preference
+            if (collected[getAuraIndex("Common")] >= 1000 &&
+                collected[getAuraIndex("Uncommon")] >= 750 &&
+                collected[getAuraIndex("Rare")] >= 500 &&
+                collected[getAuraIndex("Epic")] >= 333 &&
+                collected[getAuraIndex("Legendary")] >= 250 &&
+                collected[getAuraIndex("Wind")] >= 75 &&
+                collected[getAuraIndex("Heat")] >= 50 &&
+                collected[getAuraIndex("Wave")] >= 25) {
+                
+                collected[getAuraIndex("Common")] -= 1000;
+                collected[getAuraIndex("Uncommon")] -= 750;
+                collected[getAuraIndex("Rare")] -= 500;
+                collected[getAuraIndex("Epic")] -= 333;
+                collected[getAuraIndex("Legendary")] -= 250;
+                collected[getAuraIndex("Wind")] -= 75;
+                collected[getAuraIndex("Heat")] -= 50;
+                collected[getAuraIndex("Wave")] -= 25;
+
+                const craftAutoRollBtn = document.getElementById('craftAutoRollBtn');
+                craftAutoRollBtn.disabled = true;
+                craftAutoRollBtn.classList.add('btn-disabled');
+                craftAutoRollBtn.classList.remove('btn-normal');
+
+                hasAutoRoll = true;
+                localStorage.setItem("hasAutoRoll", "true");
+
+                showAutoRollToggle();
+                
+            } else {
+                notEnoughAuras();
+            }
+            updateAurasList(); 
+            updateStats(); 
+            saveState();
+        }
+
+        function showAutoRollToggle() {
+            document.getElementById('autoRollToggleWrapper').style.display = 'block';
+        }
+
+        function toggleAutoRoll() {
+            autoRollEnabled = !autoRollEnabled;
+            const btn = document.getElementById("autoRollToggleBtn");
+            const rollBTN = document.getElementById("rollBTN"); // make sure this ID matches your actual roll button
+
+            if (autoRollEnabled) {
+                btn.textContent = "Disable Auto Roll";
+                localStorage.setItem("autoRollEnabled", "true");
+
+                autoRollInterval = setInterval(() => {
+                    if (autoRollEnabled && rollBTN && !rollBTN.disabled) {
+                        rollAura();
+                    }
+                }, 100); // adjust timing as needed
+            } else {
+                btn.textContent = "Enable Auto Roll";
+                clearInterval(autoRollInterval);
+                localStorage.setItem("autoRollEnabled", "false");
+            }
+        }
+
+        function loadAutoRollState() {
+            if (localStorage.getItem("hasAutoRoll") === "true") {
+                hasAutoRoll = true;
+                showAutoRollToggle();
+                const craftAutoRollBtn = document.getElementById('craftAutoRollBtn');
+                craftAutoRollBtn.disabled = true;
+                craftAutoRollBtn.classList.add('btn-disabled');
+                craftAutoRollBtn.classList.remove('btn-normal');
+            }
+
+            const savedEnabled = localStorage.getItem("autoRollEnabled") === "true";
+            if (savedEnabled) {
+                toggleAutoRoll();
+            }
+        }
+
+        function craftFastRoll() {
+            // Adjust these requirements to your preference
+            if (collected[getAuraIndex("Wind")] >= 50 &&
+                collected[getAuraIndex("Heat")] >= 30 &&
+                collected[getAuraIndex("Wave")] >= 10) {
+                
+                collected[getAuraIndex("Wind")] -= 50;
+                collected[getAuraIndex("Heat")] -= 30;
+                collected[getAuraIndex("Wave")] -= 10;
+                
+                // Activate fast roll for 10 minutes (600 seconds)
+                fastRollActive = true;
+                fastRollTimer = 300;
+                startFastRollCountdown();
+                updateFastRollStatus();
+                
+                // Show activation message
+                initFastRollDisplay();
+            } else {
+                notEnoughAuras();
+            }
+            updateAurasList(); 
+            updateStats(); 
+            saveState();
+        }
+
+        function craftFastRoll2() {
+            // Adjust these requirements to your preference
+            if (collected[getAuraIndex("Wind")] >= 100 &&
+                collected[getAuraIndex("Heat")] >= 75 &&
+                collected[getAuraIndex("Wave")] >= 50) {
+                
+                collected[getAuraIndex("Wind")] -= 100;
+                collected[getAuraIndex("Heat")] -= 75;
+                collected[getAuraIndex("Wave")] -= 50;
+                
+                // Activate fast roll for 10 minutes (600 seconds)
+                fastRollActive = true;
+                fastRollTimer = 600;
+                startFastRollCountdown();
+                updateFastRollStatus();
+                
+                // Show activation message
+                initFastRollDisplay();
+            } else {
+                notEnoughAuras();
+            }
+            updateAurasList(); 
+            updateStats(); 
+            saveState();
+        }
+
+        function initFastRollDisplay() {
+            // Find the luck-status div
+            const luckStatusDiv = document.querySelector('.luck-status');
+            if (!luckStatusDiv) return;
+            
+            // Check if fast-roll-status already exists
+            if (!document.querySelector('.fast-roll-status')) {
+                // Create the fast roll status div
+                const fastRollStatusDiv = document.createElement('div');
+                fastRollStatusDiv.className = 'fast-roll-status';
+                fastRollStatusDiv.innerHTML = `
+                    <b>Roll Cooldown:</b> 
+                    <span id="rollCooldownDisplay">${fastRollActive ? '100 ms' : '1 second'}</span>
+                    <span id="fastRollTimerDisplay">${
+                        fastRollActive && fastRollTimer > 0 ? 
+                        ` (${Math.floor(fastRollTimer / 60)}:${
+                            fastRollTimer % 60 < 10 ? '0' + (fastRollTimer % 60) : fastRollTimer % 60
+                        } remaining)` : ''
+                    }</span>
+                `;
+                
+                // Insert it after the luck-status div
+                luckStatusDiv.insertAdjacentElement('afterend', fastRollStatusDiv);
+            }
+            
+            // Update the display
+            updateFastRollStatus();
+        }
+
+        // Craft time-based luck effects
+        function craftLuck(type) {
+            if (type === '2x') {
+                if (collected[getAuraIndex("Common")] >= 10 &&
+                    collected[getAuraIndex("Rare")] >= 5 &&
+                    collected[getAuraIndex("Epic")] >= 2) {
+                    collected[getAuraIndex("Common")] -= 10;
+                    collected[getAuraIndex("Rare")] -= 5;
+                    collected[getAuraIndex("Epic")] -= 2;
+                    addLuck(2, 60);
+                } else notEnoughAuras();
+            } else if (type === '10x') {
+                if (collected[getAuraIndex("Uncommon")] >= 30 &&
+                    collected[getAuraIndex("Rare")] >= 15 &&
+                    collected[getAuraIndex("Epic")] >= 5 &&
+                    collected[getAuraIndex("Legendary")] >= 1) {
+                    collected[getAuraIndex("Uncommon")] -= 30;
+                    collected[getAuraIndex("Rare")] -= 15;
+                    collected[getAuraIndex("Epic")] -= 5;
+                    collected[getAuraIndex("Legendary")] -= 1;
+                    addLuck(10, 60);
+                } else notEnoughAuras();
+            } else if (type === '100x') {
+                if (collected[getAuraIndex("Epic")] >= 100 &&
+                    collected[getAuraIndex("Legendary")] >= 10 &&
+                    collected[getAuraIndex("Mythic")] >= 1) {
+                    collected[getAuraIndex("Epic")] -= 100;
+                    collected[getAuraIndex("Legendary")] -= 10;
+                    collected[getAuraIndex("Mythic")] -= 1;
+                    addLuck(100, 60);
+                } else notEnoughAuras();
+            }
+            updateAurasList(); updateStats(); saveState();
+        }
+
+        // one‑roll crafts
+
+        function craftOneRollLuck10k() {
+            if (collected[getAuraIndex("Uncommon")]>=50 && collected[getAuraIndex("Rare")]>=25 && collected[getAuraIndex("Epic")]>=10) {
+                collected[getAuraIndex("Uncommon")]-=50;
+                collected[getAuraIndex("Rare")]-=25;
+                collected[getAuraIndex("Epic")]-=10;
+                oneRollLuckCount10k++;
+            } else notEnoughAuras();
+            updateAurasList(); updateStats(); saveState();
+        }
+
+        function craftOneRollLuck100k() {
+            if (collected[getAuraIndex("Rare")]>=30 && collected[getAuraIndex("Epic")]>=20 && collected[getAuraIndex("Legendary")]>=15 && collected[getAuraIndex("Celestial")]>=2) {
+                collected[getAuraIndex("Rare")]-=30;
+                collected[getAuraIndex("Epic")]-=20;
+                collected[getAuraIndex("Legendary")]-=15;
+                collected[getAuraIndex("Celestial")]-=2;
+                oneRollLuckCount100k++;
+            } else notEnoughAuras();
+            updateAurasList(); updateStats(); saveState();
+        }
+
+        function craftOneRollLuck250k() {
+            if (collected[getAuraIndex("Epic")]>=30 && collected[getAuraIndex("Legendary")]>=30 && collected[getAuraIndex("Mythic")]>=15 && collected[getAuraIndex("Jazz")]>=1) {
+                collected[getAuraIndex("Epic")]-=30;
+                collected[getAuraIndex("Legendary")]-=30;
+                collected[getAuraIndex("Mythic")]-=15;
+                collected[getAuraIndex("Jazz")]-=1;
+                oneRollLuckCount250k++;
+            } else notEnoughAuras();
+            updateAurasList(); updateStats(); saveState();
+        }
+
+        function craftOneRollLuck500k() {
+            if (collected[getAuraIndex("Epic")]>=60 && collected[getAuraIndex("Legendary")]>=55 && collected[getAuraIndex("Mythic")]>=30 && collected[getAuraIndex("Void")]>=2) {
+                collected[getAuraIndex("Epic")]-=60;
+                collected[getAuraIndex("Legendary")]-=55;
+                collected[getAuraIndex("Mythic")]-=30;
+                collected[getAuraIndex("Void")]-=2;
+                oneRollLuckCount500k++;
+            } else notEnoughAuras();
+            updateAurasList(); updateStats(); saveState();
+        }
+
+        function craftOneRollLuck1m() {
+            if (collected[getAuraIndex("Legendary")]>=110 && collected[getAuraIndex("Mythic")]>=50 && collected[getAuraIndex("Stellar")]>=33 && collected[getAuraIndex("Exotic")]>=2) {
+                collected[getAuraIndex("Legendary")]-=110;
+                collected[getAuraIndex("Mythic")]-=50;
+                collected[getAuraIndex("Stellar")]-=33;
+                collected[getAuraIndex("Exotic")]-=2;
+                oneRollLuckCount1m++;
+            } else notEnoughAuras();
+            updateAurasList(); updateStats(); saveState();
+        }
+
+        function craftOneRollLuck10m() {
+            if (collected[getAuraIndex("Mythic")]>=600 && collected[getAuraIndex("Stellar")]>=333 && collected[getAuraIndex("Onyx")]>=240 && collected[getAuraIndex("Nihility")]>=1) {
+                collected[getAuraIndex("Mythic")]-=600;
+                collected[getAuraIndex("Stellar")]-=333;
+                collected[getAuraIndex("Onyx")]-=240;
+                collected[getAuraIndex("Nihility")]-=1;
+                oneRollLuckCount10m++;
+            } else notEnoughAuras();
+            updateAurasList(); updateStats(); saveState();
+        }
+
+        // Subtract auras popup
+        function notEnoughAuras() {
+            const popup = document.createElement('div');
+            popup.style.position = 'fixed';
+            popup.style.top = '50%';
+            popup.style.left = '50%';
+            popup.style.transform = 'translate(-50%, -50%)';
+            popup.style.background = '#23283a';
+            popup.style.color = '#ffd700';
+            popup.style.padding = '32px 40px';
+            popup.style.borderRadius = '12px';
+            popup.style.boxShadow = '0 4px 24px #000a';
+            popup.style.fontSize = '1.3em';
+            popup.style.zIndex = '2000';
+            popup.style.opacity = '0';
+            popup.style.transition = 'opacity 0.3s ease, filter 0.3s ease';
+            popup.style.filter = 'brightness(0.9)';
+
+            popup.innerHTML = `
+                <div style="margin-bottom:18px; text-align: center;">Not enough auras!</div>
+                <div style="display: flex; justify-content: center;">
+                    <button style="background:#ffd700;color:#23283a;padding:10px 24px;border:none;border-radius:6px;font-size:1em;cursor:pointer;">OK</button>
+                </div>
+            `;
+
+            // Append popup to body
+            document.body.appendChild(popup);
+
+            // Trigger fade-in animation
+            requestAnimationFrame(() => {
+                popup.style.opacity = '1';
+                popup.style.filter = 'brightness(1)';
+            });
+
+            // Attach the click handler directly to the OK button
+            const okButton = popup.querySelector('button');
+            okButton.onclick = () => popup.remove();
+        }
+
+        // Apply time-based luck and start countdown
+        function addLuck(mult, seconds) {
+            if (oneRollLuckCount10k > 0) oneRollLuckCount10k = 0;
+            if (oneRollLuckCount100k > 0) oneRollLuckCount100k = 0;
+            if (oneRollLuckCount250k > 0) oneRollLuckCount250k = 0;
+            if (oneRollLuckCount500k > 0) oneRollLuckCount500k = 0;
+            if (oneRollLuckCount1m > 0) oneRollLuckCount1m = 0;
+            if (oneRollLuckCount10m > 0) oneRollLuckCount10m = 0;
+            if (luckMultiplier < mult) {
+                luckMultiplier = mult;
+                luckTimer = seconds;
+            } else {
+                luckTimer += seconds;
+            }
+            startLuckCountdown();
+            updateLuckStatus();
+            saveState();
+        }
+
+        // Find aura index by name
+        function getAuraIndex(name) {
+            return auras.findIndex(a => a.name === name);
+        }
+
+        // Cutscene display
+        function showCutscene(idx) {
+            const aura = auras[idx];
+            document.getElementById('cutsceneText').innerHTML = `
+                <div>
+                    <span style="color:#ff4bff;font-size:1.3em;">RARE FIND!</span><br>
+                    <b>${aura.name}</b><br>
+                    <span style="font-size:0.7em;">[1 in ${aura.odds.toLocaleString()}]</span><br><br>
+                    <span style="font-size:0.8em;">You have obtained a legendary aura!<br>Congratulations!</span>
+                </div>
+            `;
+            document.getElementById('cutscene').style.display = 'flex';
+        }
+        function closeCutscene() {
+            document.getElementById('cutscene').style.display = 'none';
+        }
+
+        // Initial setup
+        loadState();
+        updateAurasList();
+        updateStats();
+        loadAutoRollState();
+    </script>
+</body>
+</html>
