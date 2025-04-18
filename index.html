@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Unnamed's RNG - Easter</title>
+    <script src="https://kit.fontawesome.com/fe85db6219.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <link rel="stylesheet" href="files/style.css">
+    <link rel="icon" type="image/png" sizes="16x16" href="/Unnamed-RNG/files/images/favicon-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/Unnamed-RNG/files/images/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="/Unnamed-RNG/files/images/favicon-48.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="/Unnamed-RNG/files/images/favicon-64.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="/Unnamed-RNG/files/images/favicon-128.png">
+    <link rel="icon" type="image/png" sizes="256x256" href="/Unnamed-RNG/files/images/favicon-256.png">
+    <link rel="icon" type="image/png" sizes="500x500" href="/Unnamed-RNG/files/images/favicon-500.png">
+</head>
+<body>
+
+    <div class="version">
+        <a class="vNumber">Version: 0.9.8 <p class="vNumberDetailed">(0.9.8-updEASTER)</p></a>
+    </div>
+
+    <canvas id="fireworksCanvas"></canvas>
+    
+    <div id="menuScreen">
+        <button id="startButton"><i class="fa-solid fa-play"></i></button>
+    </div>
+    <div id="loadingScreen">
+        <div>
+            <div class="loading-animation"></div>
+            <p class="loadTxt">Loading assets...</p>
+        </div>
+  </div>
+    
+    <div id="settingsMenu" class="settings-menu" style="display: none;"> <h3 class="dragTxt">Hold me to drag</h3>
+        <div class="rollsCount1">
+            <h3>Settings</h3>
+        
+            <div class="setting-item">
+                <label class="aSlid" for="audioSlider">Audio Volume:</label>
+                <div class="original-parent">
+                    <div class="slider-container">
+                      <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
+                      <button id="muteButton" class="settingsBtns">Mute</button>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="setting-item">
+                <button id="resetDataButton" class="settingsBtns">Reset Data</button>
+            </div>
+            <div class="setting-item">
+                <button id="toggleRollDisplayBtn" class="settingsBtns">Hide Roll & Display</button>
+                <button id="toggleRollHistoryBtn" class="settingsBtns">Hide Roll History</button>
+            </div>
+
+            <div class="setting-item">
+                <button id="saveButton" class="settingsBtns">Save Data</button>
+                <button id="importButton" class="settingsBtns">Import Data</button>
+                <p id="status" class="statusImport"></p>
+            </div>
+
+            <div class="settings-item">
+                <h3 class="SkipCutsceneTxt">Skip Cutscene Rarity</h3>
+                <div id="rarityChecklistC">
+                    <button id="toggleCutscene1K" class="cutsceneSkipBtb"><a id="1KTxt" class="under1kT">Skip Decent Cutscenes</a></button>
+                    <button id="toggleCutscene10K" class="cutsceneSkipBtb"><a id="10KTxt" class="under10kT">Skip Grand Cutscenes</a></button>
+                    <button id="toggleCutscene100K" class="cutsceneSkipBtb"><a id="100KTxt" class="under100k">Skip Mastery Cutscenes</a></button>
+                    <button id="toggleCutscene1M" class="cutsceneSkipBtb"><a id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</a></button>
+                </div>
+            </div>
+            <div class="settings-item">
+                <h3 class="AutoDeletionTxt">Auto delete Rarity</h2>
+                <div id="rarityChecklist">
+                    <button class="rarity-button" data-rarity="under100"><a class="under100T">Basic</a></button>
+                    <button class="rarity-button" data-rarity="under1k"><a class="under1kT">Decent</a></button>
+                    <button class="rarity-button" data-rarity="under10k"><a class="under10kT">Grand</a></button>
+                    <button class="rarity-button" data-rarity="under100k"><a class="under100k">Mastery</a></button>
+                    <button class="rarity-button" data-rarity="under1m"><a class="under1mBtn">Supreme</a></button>
+                    <button class="rarity-button" data-rarity="special"><a class="special">Special</a></button>
+                </div>                  
+            </div>
+                    
+            <button id="closeSettings" class="settingsBtns">Close</button>
+        </div>
+    </div>
+
+    <div id="statsMenu" class="stats-menu" style="display: none;"> <h3 class="dragTxt">Hold me to drag</h3>
+            <div class="rollsCount1">
+                <h1 class="statistics">Statistics</h1>
+                <h3 class="count1">Total Rolls:</h3>
+                <a class="totalCount1" id="rollCountDisplay1">NaN</a>
+                <br>
+                <div class="timer-container">
+                    <h3 class="timerTotal">Playtime Timer:</h3>
+                    <div class="timer" id="timer">00:00:00</div>
+                </div>
+            </div>
+
+        <button id="closeStats" class="statsBtns">Close</button>
+    </div>
+
+    <div id="achievementsMenu" class="achievements-menu" style="display: none;">
+        <div class="achievement-list">
+            <div class="achievement-grid">
+                <div class="achievement-item" data-roll="100" data-name="I think I like this">I think I like this</div>
+                <div class="achievement-item" data-roll="1,000" data-name="This is getting serious">This is getting serious</div>
+                <div class="achievement-item" data-roll="5,000" data-name="I'm the Roll Master">I'm the Roll Master</div>
+                <div class="achievement-item" data-roll="10,000" data-name="It's over 9000!!">It's over 9000!!</div>
+                <div class="achievement-item" data-roll="25,000" data-name="When will you stop?">When will you stop?</div>
+                <div class="achievement-item" data-roll="30,303" data-name="No Unnamed?">No Unnamed?</div>
+                <div class="achievement-item" data-roll="50,000" data-name="Beyond Luck">Beyond Luck</div>
+                <div class="achievement-item" data-roll="100,000" data-name="Rolling machine">Rolling machine</div>
+                <div class="achievement-item" data-roll="250,000" data-name="Your PC must be burning">Your PC must be burning</div>
+                <div class="achievement-item" data-roll="500,000" data-name="Half a million!1!!1">Half a million!1!!1</div>
+                <div class="achievement-item" data-roll="1,000,000" data-name="One, Two.. ..One Million!">One, Two.. ..One Million!</div>
+                <div class="achievement-item" data-roll="10,000,000" data-name="No H1di?">No H1di?</div>
+                <div class="achievement-item" data-roll="25,000,000" data-name="Are you really doing this?">Are you really doing this?</div>
+                <div class="achievement-item" data-roll="50,000,000" data-name="You have no limits...">You have no limits...</div>
+                <div class="achievement-item" data-roll="100,000,000" data-name="WHAT HAVE YOU DONE">WHAT HAVE YOU DONE</div>
+                <div class="achievement-item" data-roll="1,000,000,000" data-name="AHHHHHHHHHHH">AHHHHHHHHHHH</div>
+            </div>
+            <div class="achievement-grid">
+                <div class="achievement-itemT" data-time="the game" data-name="Just the beginning">Just the beginning</div>
+                <div class="achievement-itemT" data-time="one hour" data-name="This doesn't add up">This doesn't add up</div>
+                <div class="achievement-itemT" data-time="two hours" data-name="When does it end...">When does it end...</div>
+                <div class="achievement-itemT" data-time="10 hours" data-name="I swear I'm not addicted...">I swear I'm not addicted...</div>
+                <div class="achievement-itemT" data-time="one day" data-name="Grass? What's that?">Grass? What's that?</div>
+                <div class="achievement-itemT" data-time="two days" data-name="Unnamed's RNG biggest fan">Unnamed's RNG biggest fan</div>
+                <div class="achievement-itemT" data-time="one week" data-name="RNG is life!">RNG is life!</div>
+                <div class="achievement-itemT" data-time="two weeks" data-name="I. CAN'T. STOP">I. CAN'T. STOP</div>
+                <div class="achievement-itemT" data-time="a month" data-name="No Lifer">No Lifer</div>
+                <div class="achievement-itemT" data-time="two months" data-name="Are you okay?">Are you okay?</div>
+                <div class="achievement-itemT" data-time="six months" data-name="You are a True No Lifer">You are a True No Lifer</div>
+                <div class="achievement-itemT" data-time="a year" data-name="No one's getting this legit">No one's getting this legit</div>
+            </div>
+
+            <div class="achievement-grid">
+                <div class="achievement-itemC" data-achievement="5" data-name="Achievement Collector">Achievement Collector</div>
+                <div class="achievement-itemC" data-achievement="10" data-name="Achievement Hoarder">Achievement Hoarder</div>
+                <div class="achievement-itemC" data-achievement="20" data-name="Achievement Addict">Achievement Addict</div>
+                <div class="achievement-itemC" data-achievement="33" data-name="Achievement God">Achievement God</div>
+                <div class="achievement-itemC" data-achievement="50" data-name="T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶">T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶<br>(not obtainable)</div>
+            </div>
+
+            <div class="achievement-grid">
+                <div class="achievement-itemE" data-time="the Easter Event" data-name="Happy Easter!">Happy Easter!</div>
+            </div>
+        </div>
+
+        <button id="closeAchievements" class="achievementsBtns">Close</button>
+    </div>
+
+    <button id="toggleUiBtn">Hide UI</button>
+
+    <div id="warningPopup" class="warning-popup">
+        <h1>WARNING</h1>
+    </div>
+
+    <div id="starContainer"></div>
+    <div id="squareContainer"></div>
+    <div class="oppHeartContainer"></div>
+    <div class="black-hole">
+        <div class="particle-system"></div>
+    </div>
+    
+    <div id="geezerPopup" class="geezer-popup">
+    </div>
+
+    <img class="cutsceneStar" src="files/images/cutscene_star.png" id="star">
+    <img class="cutsceneStarBig" src="files/images/cutscene_star_big.png" id="starBig">
+    <img class="cutsceneStarEaster" src="files/images/cutscene_star_easter.png" id="starEaster">
+    <img class="cutsceneStarSmall" src="files/images/cutscene_star_small.png" id="starSmall">
+    <img class="msfuStar" src="files/images/msfu_star.png" id="msfuStar">
+    <img class="cutsceneStarEvent" src="files/images/cutscene_star_event.png" id="starEvent">
+    <img class="cutsceneHeart" src="files/images/cutscene_heart.png" id="heart">
+
+    <div class="ui">
+
+        <div class="historySection" id="rollingHistory">
+            <h3>Rolling History</h3>
+            <ul id="historyList"></ul>
+        </div>
+        
+        <div class="container1">
+            <div class="rollsCount">
+                <h3 class="count">Rolls: <a class="totalCount" id="rollCountDisplay">NaN</a></h3>
+            </div>
+            <button id="achievementsButton" class="orange-button">Achievements</button>
+            <button id="statsButton" class="orange-button">Stats</button>
+            <button id="settingsButton" class="orange-button">Settings</button>
+            <button id="autoRollButton" class="toggle-button off">Auto Roll: Off</button>
+        </div>
+
+        <div class="info2">
+            <div class="creator">
+                <h3 class="cu1">Game created by:</h3>
+
+                <br>
+
+                <h2 class="cu">𝐔𝐧𝐧𝐚𝐦𝐞𝐝 𝚁𝙽𝙶</h2>
+
+                <div class="creatorUnnamed">
+                    <input type="text" value="not.unnamed" id="unnamedUser" hidden>
+                    <img class="unnamed" id="profile" src="files/images/unnamed_pfp.gif" width="80px">
+                    <div class="unnamedDeco" onclick="showPopupCopyTxt()"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="profileModal" class="modal">
+            <div class="modal-content">
+              <h2>Select an Option</h2>
+              <button class="modal-button discord-btn" onclick="openDiscord()">Open Discord <i class="fa-brands fa-discord"></i></button>
+              <button class="modal-button github-btn" onclick="openGithub()">Open GitHub <i class="fa-brands fa-github"></i></button>
+              <br><br>
+              <button class="modal-button cancel-btn" onclick="closePopup()">Cancel</button>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="containerInside">
+                <h1 class="gameTitle">Unnamed's RNG</h1>
+
+                <button class="rButton" id="rollButton" onclick="clickSound()"><i id="roll" class="fa-solid fa-arrows-rotate"></i></button>
+
+                
+                <div class="res" id="result"></div>
+            </div>
+        </div>
+
+        <button id="toggleInventoryBtn">Show Inventory</button>
+
+        <div class="inventory">
+            <div class="invent">
+                <h2><i class="fa-solid fa-box-archive"></i> Inventory</h2>
+
+                <button class="deleteAll" id="deleteAllButton">Delete All</button>
+
+                <button id="deleteAllUnder100Button" class="buttonDivClass">
+                    <p class="under100T">Delete All Basic</p>
+                </button>
+                <button id="deleteAllCommonButton" class="under100">Delete All Common</button>
+                <button id="deleteAllRareButton" class="under100">Delete All Rare</button>
+                <button id="deleteAllEpicButton" class="under100">Delete All Epic</button>
+                <button id="deleteAllLegendaryButton" class="under100">Delete All Legendary</button>
+                <button id="deleteAllImpossibleButton" class="under100">Delete All Impossible</button>
+                <button id="deleteAllPoweredButton" class="under100">Delete All Powered</button>
+                <button id="deleteAllToxicButton" class="under100">Delete All Toxic</button>
+                <button id="deleteAllSolarpowerButton" class="under100">Delete All Solarpower</button>
+                <button id="deleteAllFlickerButton" class="under100">Delete All Flicker</button>
+                <button id="deleteAllBelieverButton" class="under100">Delete All Believer</button>
+                <button id="deleteAllPlanetBreakerButton" class="under100">Delete All Planet Breaker</button>
+
+                <button id="deleteAllUnder1kButton" class="buttonDivClass">
+                    <p class="under1kT">Delete All Decent</p>
+                </button>
+                <button id="deleteAllUnstoppableButton" class="under1k">Delete All Unstoppable</button>
+                <button id="deleteAllGargantuaButton" class="under1k">Delete All Gargantua</button>
+                <button id="deleteAllWanderingSpiritButton" class="under1k">Delete All Wandering Spirit</button>
+                <button id="deleteAllMemoryButton" class="under1k">Delete All Memory</button>
+                <button id="deleteAllOblivionButton" class="under1k">Delete All Oblivion</button>
+                <button id="deleteAllFrozenFateButton" class="under1k">Delete All Frozen Fate</button>
+                <button id="deleteAllSpectralButton" class="under1k">Delete All Spectral Whisper</button>
+                <button id="deleteAllMysteriousEchoButton" class="under1k">Delete All Mysterious Echo</button>
+                <button id="deleteAllIsekaiButton" class="under1k">Delete All Isekai</button>
+                <button id="deleteAllIsekaiLofiButton" class="under10k">Delete All Isekai: Lo-fi</button>
+                <button id="deleteAllForgottenWhisperButton" class="under1k">Delete All Forgotten Whisper</button>
+                <button id="deleteAllEmergenciesButton" class="under1k">Delete All Emergencies</button>
+                <button id="deleteAllStarfallButton" class="under1k">Delete All Starfall</button>
+                <button id="deleteAllCursedArtifactButton" class="under1k">Delete All Cursed Artifact</button>
+                <button id="deleteAllSamuraiButton" class="under1k">Delete All Samurai</button>
+                <button id="deleteAllSpectralGlareButton" class="under1k">Delete All Spectral Glare</button>
+                <button id="deleteAllPhantomStrideButton" class="under1k">Delete All Phantom Stride</button>
+                <button id="deleteAllContortionsButton" class="under1k">Delete All Contortions</button>
+
+                <button id="deleteAllUnder10kButton" class="buttonDivClass">
+                    <p class="under10kT">Delete All Grand</p>
+                </button>
+                <button id="deleteAllShadowVeilButton" class="under10k">Delete All Shadow Veil</button>
+                <button id="deleteAllFrightButton" class="under10k">Delete All Fright</button>
+                <button id="deleteAllNightfallButton" class="under10k">Delete All Nightfall</button>
+                <button id="deleteAllFearButton"  class="under10k">Delete All Fear</button>
+                <button id="deleteAllSeraphsWingButton" class="under10k">Delete All Seraph's Wing</button>
+                <button id="deleteAllVoidWalkerButton" class="under10k">Delete All Void Walker</button>
+                <button id="deleteAllHauntedSoulButton" class="under10k">Delete All Haunted Soul</button>
+                <button id="deleteAllGDAddictButton" class="under10k">Delete All GD Addict</button>
+                <button id="deleteAllSilentListenerButton" class="under10k">Delete All Silent Listener</button>
+                <button id="deleteAllGhostlyEmbraceButton" class="under10k">Delete All Ghostly Embrace</button>
+                <button id="deleteAllEndlessTwilightButton" class="under10k">Delete All Endless Twilight</button>
+                <button id="deleteAllLostSoulButton" class="under10k">Delete All Lost Soul</button>
+                <button id="deleteAllAbyssalShadeButton" class="under10k">Delete All Abyssal Shade</button>
+                <button id="deleteAllDarkenedSkyButton" class="under10k">Delete All Darkened Sky</button>
+                <button id="deleteAllShad0wButton" class="under10k">Delete All Shad0w</button>
+                <button id="deleteAllTwistedLightButton" class="under10k">Delete All Twisted Light</button>
+                <button id="deleteAllFoundSoulButton" class="under10k">Delete All Found Soul</button>
+                <button id="deleteAllHauntedRealityButton" class="under10k">Delete All Haunted Reality</button>
+                <button id="deleteAllLubJubButton" class="under10k">Delete All LubbyJubby's Cherry Grove</button>
+                <button id="deleteAllEtherShiftButton" class="under10k">Delete All Ether Shift</button>
+                <button id="deleteAllEtherealPulseButton" class="under10k">Delete All Ethereal Pulse</button>
+                <button id="deleteAllHellishFireButton" class="under10k">Delete All Hellish Fire</button>
+                <button id="deleteAllRadButton" class="under10k">Delete All Rad</button>
+                <button id="deleteAllEnigmaticDreamButton" class="under10k">Delete All Enigmatic Dream</button>
+                <button id="deleteAllGrimDestinyButton" class="under10k">Delete All Grim Destiny</button>
+                <button id="deleteAllDemonSoulButton" class="under10k">Delete All Demon Soul</button>
+
+                <button id="deleteAllPumpkinButton" class="eventTitleHalloween">Delete All Pumpkin</button>
+
+                <button id="deleteAllCrimsonStockingsButton" class="buttonDiv">
+                    <p class="eventTitleXmas">Delete All Crimson Stockings</p>
+                    </button>
+                <button id="deleteAllHolidayCheerButton" class="buttonDiv">
+                    <p class="eventTitleXmas">Delete All Holiday Cheer</p>
+                    </button>
+                <button id="deleteAllReindeerDashButton" class="buttonDiv">
+                    <p class="eventTitleXmas">Delete All Reindeer Dash</p>
+                    </button>
+                <button id="deleteAllGingerbreadHarmonyButton" class="buttonDiv">
+                    <p class="eventTitleXmas">Delete All Gingerbread Harmony</p>
+                    </button>
+                <button id="deleteAllSilentNightButton" class="buttonDiv">
+                    <p class="eventTitleXmas">Delete All Silent Night</p>
+                    </button>
+                <button id="deleteAllFrostedGarlandButton" class="buttonDiv">
+                    <p class="eventTitleXmas">Delete All Frosted Garland</p>
+                    </button>
+                <button id="deleteAllCandyCaneSymphonyButton" class="buttonDiv">
+                    <p class="eventTitleXmas">Delete All Candy Cane Symphony</p>
+                    </button>
+                <button id="deleteAllSantaClausButton" class="buttonDiv">
+                    <p class="eventTitleXmas">Delete All Santa Claus</p>
+                    </button>
+                <button id="deleteAllJollyBellsButton" class="buttonDiv">
+                    <p class="eventTitleXmas">Delete All Jolly Bells</p>
+                    </button>
+                <button id="deleteAllNorthStarButton" class="buttonDiv">
+                    <p class="eventTitleXmas">Delete All North Star</p>
+                    </button>
+
+                <button id="deleteAllFircraButton" class="buttonDiv">
+                    <p class="eventTitle">Delete All Firecracker</p>
+                </button>
+
+                <button id="deleteAllHeartButton" class="buttonDiv">
+                    <p class="eventV">Delete All Heart</p>
+                </button>
+
+                <button id="deleteAllEasterEggButton" class="buttonDiv">
+                    <p class="eventE">Delete All Easter Egg</p>
+                </button>
+                <button id="deleteAllEasterBunnyButton" class="buttonDiv">
+                    <p class="eventE">Delete All Easter Bunny</p>
+                </button>
+
+                <button id="deleteAllSpecialButton" class="buttonDivClass">
+                    <p class="special">Delete All Special</p>
+                </button>
+                <button id="deleteAllVeilButton" class="buttonDiv">
+                    <p class="special">Delete All Veil</p>
+                </button>
+                <button id="deleteAllExperimentButton" class="buttonDiv">
+                    <p class="special">Delete All Experiment</p>
+                </button>
+                <button id="deleteAllAbominationButton" class="buttonDiv">
+                    <p class="special">Delete All Abomination</p>
+                </button>
+                <button id="deleteAllIridocyclitisVeilButton" class="buttonDiv">
+                    <p class="special">Delete All Iridocyclitis Veil</p>
+                </button>
+                <button id="deleteAllBlindGTButton" class="buttonDiv">
+                    <p class="special">Delete All BlindGT</p>
+                </button>
+                <button id="deleteAllMSFUButton" class="buttonDiv">
+                    <p class="special">Delete All MSFU</p>
+                </button>
+                <button id="deleteAllOrbButton" class="buttonDiv">
+                    <p class="special">Delete All Orb</p>
+                </button>
+                <button id="deleteAllFireCrazeButton" class="buttonDiv">
+                    <p class="special">Delete All FireCraze</p>
+                </button>
+                <button id="deleteAllShenviiButton" class="buttonDiv">
+                    <p class="special">Delete All sʜeɴvɪ✞∞</p>
+                </button>
+
+                <button id="deleteAllUnder100kButton" class="buttonDivClass">
+                    <p class="under100k">Delete All Mastery</p>
+                </button>
+                <button id="deleteAllUnfairButton" class="buttonDiv">
+                    <p class="under100k">Delete All Unfair</p>
+                </button>
+                <button id="deleteAllCursedMirageButton" class="buttonDiv">
+                    <p class="under100k">Delete All Cursed Mirage</p>
+                </button>
+                <button id="deleteAllCelestialDawnButton" class="buttonDiv">
+                    <p class="under100k">Delete All Celestial Dawn</p>
+                </button>
+                <button id="deleteAllFatesRequiemButton" class="buttonDiv">
+                    <p class="under100k">Delete All Fates Requiem</p>
+                </button>
+                <button id="deleteAllEonbreakButton" class="buttonDiv">
+                    <p class="under100k">Delete All Eonbreak</p>
+                </button>
+                <button id="deleteAllOvertureButton" class="buttonDiv">
+                    <p class="under100k">Delete All Overture</p>
+                </button>
+                <button id="deleteAllLightButton" class="buttonDiv">
+                    <p class="under100k">Delete All Light</p>
+                </button>
+                <button id="deleteAllUnnamedButton" class="buttonDiv">
+                    <p class="under100k">Delete All Unnamed</p>
+                </button>
+                <button id="deleteAllQbearButton" class="buttonDiv">
+                    <p class="under100k">Delete All Qbear</p>
+                </button>
+                
+                <button id="deleteAllBlodhestButton" class="buttonDiv">
+                    <p class="under100k">Delete All Blodhest</p>
+                </button>
+                <button id="deleteAllHarvButton" class="buttonDiv">
+                    <p class="under100k">Delete All HARV</p>
+                </button>
+                <button id="deleteAllTuonButton" class="buttonDiv">
+                    <p class="under100k">Delete All Tuon</p>
+                </button>
+                <button id="deleteAllDevilsHeartButton" class="buttonDiv">
+                    <p class="under100k">Delete All Devil's Heart</p>
+                </button>
+                <button id="deleteAllArcanePulseButton" class="buttonDiv">
+                    <p class="under100k">Delete All Arcane Pulse</p>
+                </button>
+
+                <button id="deleteAllUnder1mButton" class="buttonDivClass">
+                    <p class="under1mBtn">Delete All Supreme</p>
+                </button>
+                <button id="deleteAllImpeachedButton" class="buttonDiv">
+                    <p class="under1m">Delete All Impeached</p>
+                </button>
+                <button id="deleteAllCelestialChorusButton" class="buttonDiv">
+                    <p class="under1m">Delete All Celestial Chorus</p>
+                </button>
+                <button id="deleteAllX1staButton" class="buttonDiv">
+                    <p class="under1m">Delete All X1sta</p>
+                </button>
+
+                <button id="deleteAllSillyCarButton" class="buttonDiv">
+                    <p class="under10ms">Delete All Silly Car :3</p>
+                </button>
+
+                <button id="deleteAllH1diButton" class="buttonDiv">
+                    <p class="under10m">Delete All H1di</p>
+                </button>
+
+                <ul class="inv" id="inventoryList"></ul>
+
+                <div class="pagination">
+                    <button id="backPageButton" class="pageButton" onclick="backPage()">First</button>
+                    <button id="prevPageButton" class="pageButton" onclick="prevPage()">Previous</button>
+                    <span class="pgNr" id="pageNumber"></span>
+                    <button id="nextPageButton" class="pageButton" onclick="nextPage()">Next</button>
+                    <button id="lastPageButton" class="pageButton" onclick="lastPage()">Last</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="fullscreen-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
+    </div>
+
+    <audio id="click" src="files/sounds_and_music/click.mp3"></audio>
+    <audio id="suspenseAudio" src="files/sounds_and_music/suspence.mp3"></audio>
+    <audio id="geezerSuspenceAudio" src="files/sounds_and_music/geezer_suspence.mp3"></audio>
+    <audio id="polarrSuspenceAudio" src="files/sounds_and_music/polarr_suspence.mp3"></audio>
+    <audio id="scareSuspenceAudio" src="files/sounds_and_music/scare_suspence.mp3"></audio>
+    <audio id="scareSuspenceLofiAudio" src="files/sounds_and_music/scare_suspence_lofi.mp3"></audio>
+    <audio id="bigSuspenceAudio" src="files/sounds_and_music/big_suspence.mp3"></audio>
+    <audio id="hugeSuspenceAudio" src="files/sounds_and_music/onemillionsuspence.mp3"></audio>
+    <audio id="expOpeningAudio" src="files/sounds_and_music/exp_opening.mp3"></audio>
+    <audio id="plabreAudio" src="files/sounds_and_music/plabre.mp3" loop></audio>
+    <audio id="isekailofiAudio" src="files/sounds_and_music/isekailofi.mp3" loop></audio>
+    <audio id="x1staAudio" src="files/sounds_and_music/x1sta.mp3" loop></audio>
+    <audio id="heartAudio" src="files/sounds_and_music/heart.mp3" loop></audio>
+    <audio id="aboAudio" src="files/sounds_and_music/abo.mp3" loop></audio>
+    <audio id="tuonAudio" src="files/sounds_and_music/tuon.mp3" loop></audio>
+    <audio id="msfuAudio" src="files/sounds_and_music/msfu.mp3" loop></audio>
+    <audio id="blindAudio" src="files/sounds_and_music/blind.mp3" loop></audio>
+    <audio id="isekaiAudio" src="files/sounds_and_music/isekai.mp3" loop></audio>
+    <audio id="emerAudio" src="files/sounds_and_music/emergencies.mp3" loop></audio>
+    <audio id="samuraiAudio" src="files/sounds_and_music/samurai.mp3" loop></audio>
+    <audio id="contAudio" src="files/sounds_and_music/contortions.mp3" loop></audio>
+    <audio id="unstoppableAudio" src="files/sounds_and_music/unstoppable.mp3" loop></audio>
+    <audio id="gargantuaAudio" src="files/sounds_and_music/gargantua.mp3" loop></audio>
+    <audio id="spectralAudio" src="files/sounds_and_music/spectral.mp3" loop></audio>
+    <audio id="starfallAudio" src="files/sounds_and_music/starfall.mp3" loop></audio>
+    <audio id="memAudio" src="files/sounds_and_music/memory.mp3" loop></audio>
+    <audio id="oblAudio" src="files/sounds_and_music/oblivion.mp3" loop></audio>
+    <audio id="lubjubAudio" src="files/sounds_and_music/lubjub.mp3" loop></audio>
+    <audio id="shaAudio" src="files/sounds_and_music/sha.mp3" loop></audio>
+    <audio id="phaAudio" src="files/sounds_and_music/phantomstride.mp3" loop></audio>
+    <audio id="frightAudio" src="files/sounds_and_music/fright.mp3" loop></audio>
+    <audio id="unnamedAudio" src="files/sounds_and_music/unnamed.mp3" loop></audio>
+    <audio id="serAudio" src="files/sounds_and_music/seraphwing.mp3" loop></audio>
+    <audio id="arcAudio" src="files/sounds_and_music/arcanepulse.mp3" loop></audio>
+    <audio id="hellAudio" src="files/sounds_and_music/hell.mp3" loop></audio>
+    <audio id="wanspiAudio" src="files/sounds_and_music/wanspi.mp3" loop></audio>
+    <audio id="mysAudio" src="files/sounds_and_music/mys.mp3" loop></audio>
+    <audio id="nighAudio" src="files/sounds_and_music/nigh.mp3" loop></audio>
+    <audio id="voiAudio" src="files/sounds_and_music/voi.mp3" loop></audio>
+    <audio id="endAudio" src="files/sounds_and_music/end.mp3" loop></audio>
+    <audio id="shadAudio" src="files/sounds_and_music/shad.mp3" loop></audio>
+    <audio id="froAudio" src="files/sounds_and_music/fro.mp3" loop></audio>
+    <audio id="forgAudio" src="files/sounds_and_music/forg.mp3" loop></audio>
+    <audio id="curartAudio" src="files/sounds_and_music/curart.mp3" loop></audio>
+    <audio id="ghoAudio" src="files/sounds_and_music/gho.mp3" loop></audio>
+    <audio id="abysAudio" src="files/sounds_and_music/abys.mp3" loop></audio>
+    <audio id="twiligAudio" src="files/sounds_and_music/twilig.ogg" loop></audio>
+    <audio id="silAudio" src="files/sounds_and_music/sil.mp3" loop></audio>
+    <audio id="orbAudio" src="files/sounds_and_music/orb.mp3" loop></audio>
+    <audio id="specAudio" src="files/sounds_and_music/spec.mp3" loop></audio>
+    <audio id="ethpulAudio" src="files/sounds_and_music/ethpul.mp3" loop></audio>
+    <audio id="eniAudio" src="files/sounds_and_music/eni.mp3" loop></audio>
+    <audio id="griAudio" src="files/sounds_and_music/gri.mp3" loop></audio>
+    <audio id="celdawAudio" src="files/sounds_and_music/celdaw.mp3" loop></audio>
+    <audio id="fatreAudio" src="files/sounds_and_music/fatre.mp3" loop></audio>
+    <audio id="fearAudio" src="files/sounds_and_music/fear.mp3" loop></audio>
+    <audio id="darAudio" src="files/sounds_and_music/dar.mp3" loop></audio>
+    <audio id="hauAudio" src="files/sounds_and_music/hau.mp3" loop></audio>
+    <audio id="radAudio" src="files/sounds_and_music/rad.mp3" loop></audio>
+    <audio id="lostsAudio" src="files/sounds_and_music/losts.mp3" loop></audio>
+    <audio id="foundsAudio" src="files/sounds_and_music/founds.mp3" loop></audio>
+    <audio id="hauntAudio" src="files/sounds_and_music/haunt.mp3" loop></audio>
+    <audio id="devilAudio" src="files/sounds_and_music/devil.mp3" loop></audio>
+    <audio id="pumpkinAudio" src="files/sounds_and_music/pumpkin.mp3" loop></audio>
+    <audio id="overtureAudio" src="files/sounds_and_music/overture.ogg" loop></audio>
+    <audio id="impeachedAudio" src="files/sounds_and_music/impeached.ogg" loop></audio>
+    <audio id="rngmasterAudio" src="files/sounds_and_music/rngmaster.mp3" loop></audio>
+    <audio id="crazeAudio" src="files/sounds_and_music/firecraze.mp3" loop></audio>
+    <audio id="iriAudio" src="files/sounds_and_music/iri.mp3" loop></audio>
+    <audio id="demsoAudio" src="files/sounds_and_music/demso.mp3" loop></audio>
+    <audio id="fircraAudio" src="files/sounds_and_music/fircra.mp3" loop></audio>
+    <audio id="curAudio" src="files/sounds_and_music/cursed.ogg" loop></audio>
+    <audio id="eonbreakAudio" src="files/sounds_and_music/eonbreak.mp3" loop></audio>
+    <audio id="celAudio" src="files/sounds_and_music/celestialchorus.mpeg" loop></audio>
+    <audio id="silcarAudio" src="files/sounds_and_music/sillycar.mp3" loop></audio>
+    <audio id="ethAudio" src="files/sounds_and_music/ether.mp3" loop></audio>
+    <audio id="gregAudio" src="files/sounds_and_music/greg.mp3" loop></audio>
+    <audio id="mintllieAudio" src="files/sounds_and_music/mintllie.mp3" loop></audio>
+    <audio id="geezerAudio" src="files/sounds_and_music/geezer.m4a" loop></audio>
+    <audio id="polarrAudio" src="files/sounds_and_music/polarr.mp3" loop></audio>
+    <audio id="oppAudio" src="files/sounds_and_music/oppression.mpeg" loop></audio>
+    <audio id="sanclaAudio" src="files/sounds_and_music/sancla.mp3" loop></audio>
+    <audio id="frogarAudio" src="files/sounds_and_music/frogar.mp3" loop></audio>
+    <audio id="reidasAudio" src="files/sounds_and_music/reidas.mp3" loop></audio>
+    <audio id="cancansymAudio" src="files/sounds_and_music/cancansym.mp3" loop></audio>
+    <audio id="ginharAudio" src="files/sounds_and_music/ginhar.mp3" loop></audio>
+    <audio id="jolbelAudio" src="files/sounds_and_music/jolbel.mp3" loop></audio>
+    <audio id="norstaAudio" src="files/sounds_and_music/norsta.mp3" loop></audio>
+    <audio id="silnigAudio" src="files/sounds_and_music/silnig.mp3" loop></audio>
+    <audio id="harvAudio" src="files/sounds_and_music/harv.mp3" loop></audio>
+    <audio id="expAudio" src="files/sounds_and_music/exp.mp3" loop></audio>
+    <audio id="veilAudio" src="files/sounds_and_music/veil.mp3" loop></audio>
+    <audio id="h1diAudio" src="files/sounds_and_music/h1di.mp3" loop></audio>
+    <audio id="blodAudio" src="files/sounds_and_music/blod.mp3" loop></audio>
+    <audio id="shenviiAudio" src="files/sounds_and_music/shenvii.mp3" loop></audio>
+    <audio id="astblaAudio" src="files/sounds_and_music/astbla.mp3" loop></audio>
+    <audio id="astredAudio" src="files/sounds_and_music/astred.mp3" loop></audio>
+    <audio id="qbearAudio" src="files/sounds_and_music/qbear.mp3" loop></audio>
+    <audio id="lightAudio" src="files/sounds_and_music/light.mp3" loop></audio>
+    <audio id="esteggAudio" src="files/sounds_and_music/estegg.mp3" loop></audio>
+    <audio id="estbunAudio" src="files/sounds_and_music/estbun.mp3" loop></audio>
+    <!-- <audio id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio> -->
+    <!-- <audio id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio> -->
+    <audio id="mainAudio" src="files/sounds_and_music/mainEvent2.mp3" loop></audio>
+
+    
+    <script src="files/script.js"></script>
+</body>
+</html>
