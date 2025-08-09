@@ -8380,11 +8380,7 @@ function rollRarity() {
     {
       type: "Common [1 in 2.5]",
       class: "commonBgImg",
-<<<<<<< HEAD
-      chance: 30,
-=======
       chance: 40,
->>>>>>> parent of 6ada09b (1st Attempt on fixing pages error)
       titles: ["Good", "Natural", "Simple", "Basic", "Plain", "Average", "Ordinary", "Usual", "Regular", "Standard"],
     },
     {
@@ -8864,11 +8860,7 @@ function rollRarity() {
     {
       type: "Isekai ♫ Lo-Fi [1 in 3,000]",
       class: "isekailofiBgImg",
-<<<<<<< HEAD
-      chance: 10.033,
-=======
       chance: 0.033,
->>>>>>> parent of 6ada09b (1st Attempt on fixing pages error)
       titles: ["Isekai", "Singing", "Chill", "Calm"]
     },
     {

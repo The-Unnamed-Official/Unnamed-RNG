@@ -654,8 +654,6 @@ body {
     transition: scale 0.5s ease-in;
 }
 
-<<<<<<< HEAD
-=======
 .cutsceneStarEaster {
     position: absolute;
     top: 30%;
@@ -664,7 +662,6 @@ body {
     pointer-events: none;
 }
 
->>>>>>> parent of 6ada09b (1st Attempt on fixing pages error)
 .msfuStar {
     position: absolute;
     top: 30%;
