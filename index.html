@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Unnamed's RNG - Easter</title>
+    <title>Unnamed's RNG - Pre-Summer</title>
     <script src="https://kit.fontawesome.com/fe85db6219.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="files/style.css">
@@ -18,7 +18,7 @@
 <body>
 
     <div class="version">
-        <a class="vNumber">Version: 0.9.8 <p class="vNumberDetailed">(0.9.8-updEASTER)</p></a>
+        <a class="vNumber">Version: 0.9.8.5 <p class="vNumberDetailed">(0.9.8.5-updPRE-SUMMER)</p></a>
     </div>
 
     <canvas id="fireworksCanvas"></canvas>
@@ -146,6 +146,7 @@
 
             <div class="achievement-grid">
                 <div class="achievement-itemE" data-time="the Easter Event" data-name="Happy Easter!">Happy Easter!</div>
+                <div class="achievement-itemSum" data-time="the Summer Event" data-name="Happy Summer!">Happy Summer!</div>
             </div>
         </div>
 
@@ -447,9 +448,16 @@
                 <button id="deleteAllSillyCarButton" class="buttonDiv">
                     <p class="under10ms">Delete All Silly Car :3</p>
                 </button>
+                <button id="deleteAllGingerButton" class="buttonDiv">
+                    <p class="under10ms">Delete All Ginger</p>
+                </button>
 
                 <button id="deleteAllH1diButton" class="buttonDiv">
                     <p class="under10m">Delete All H1di</p>
+                </button>
+
+                <button id="deleteAllEquinoxButton" class="buttonDiv">
+                    <p class="under10me">Delete All 『Equinox』</p>
                 </button>
 
                 <ul class="inv" id="inventoryList"></ul>
@@ -481,6 +489,7 @@
     <audio id="x1staAudio" src="files/sounds_and_music/x1sta.mp3" loop></audio>
     <audio id="heartAudio" src="files/sounds_and_music/heart.mp3" loop></audio>
     <audio id="aboAudio" src="files/sounds_and_music/abo.mp3" loop></audio>
+    <audio id="equinoxAudio" src="files/sounds_and_music/equinox.mp3" loop></audio>
     <audio id="tuonAudio" src="files/sounds_and_music/tuon.mp3" loop></audio>
     <audio id="msfuAudio" src="files/sounds_and_music/msfu.mp3" loop></audio>
     <audio id="blindAudio" src="files/sounds_and_music/blind.mp3" loop></audio>
@@ -566,11 +575,12 @@
     <audio id="astredAudio" src="files/sounds_and_music/astred.mp3" loop></audio>
     <audio id="qbearAudio" src="files/sounds_and_music/qbear.mp3" loop></audio>
     <audio id="lightAudio" src="files/sounds_and_music/light.mp3" loop></audio>
+    <audio id="gingerAudio" src="files/sounds_and_music/ginger.mp3" loop></audio>
     <audio id="esteggAudio" src="files/sounds_and_music/estegg.mp3" loop></audio>
     <audio id="estbunAudio" src="files/sounds_and_music/estbun.mp3" loop></audio>
-    <!-- <audio id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio> -->
+    <audio id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio>
     <!-- <audio id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio> -->
-    <audio id="mainAudio" src="files/sounds_and_music/mainEvent2.mp3" loop></audio>
+    <!-- <audio id="mainAudio" src="files/sounds_and_music/mainEvent2.mp3" loop></audio> -->
 
     
     <script src="files/script.js"></script>

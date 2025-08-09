@@ -994,6 +994,18 @@ body {
     object-fit: contain;
 }
 
+.equinoxBgImg {
+    background: url(backgrounds/equinox.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.gingerBgImg {
+    background: url(backgrounds/ginger.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
 .emerBgImg {
     background: url(backgrounds/emergencies.png);
     background-size: cover;
@@ -2094,6 +2106,14 @@ body.griCutsceneBgImg {
     animation: levitate 3s ease-out forwards, fade 3s ease-out forwards;
 }
 
+.black-star {
+    position: absolute;
+    font-size: 33px;
+    color: black;
+    opacity: 1;
+    animation: levitate 3s ease-out forwards, fade 3s ease-out forwards;
+}
+
 .red-star {
     position: absolute;
     font-size: 33px;
@@ -2355,6 +2375,26 @@ body.griCutsceneBgImg {
     z-index: 0;
 }
 
+.animated-circle-black {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(128, 0, 255, 0.7);
+    animation: spin-scale-fast 1.5s ease-out forwards;
+    border-radius: 50%;
+    box-shadow: 0px 0px 15px rgba(128, 0, 255, 0.9);
+}
+
+.animated-circle-white {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(128, 0, 255, 0.7);
+    animation: spin-scale-fast 1.5s ease-out forwards;
+    border-radius: 50%;
+    box-shadow: 0px 0px 15px rgba(128, 0, 255, 0.9);
+}
+
 .animated-square {
     position: absolute;
     width: 40px;
@@ -2571,6 +2611,15 @@ body.griCutsceneBgImg {
 
 .under10ms {
     background: radial-gradient(#ff0000, #fff);
+    background-size: 300%;
+    animation: gradient-shift 1s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.under10me {
+    background: radial-gradient(#000000, #fff);
     background-size: 300%;
     animation: gradient-shift 1s ease infinite;
     -webkit-background-clip: text;
@@ -2901,6 +2950,49 @@ body.griCutsceneBgImg {
 }
 
 .achievement-itemE:hover::before {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
+    z-index: 999999999999;
+}
+
+.achievement-itemSum {
+    position: relative;
+    padding: 20px;
+    text-align: center;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 13px;
+    color: white;
+    background: #444;
+    flex: 0 0 calc(25% - 10px);
+    cursor: pointer;
+    z-index: 9999999999;
+}
+
+.achievement-itemSum:hover::after {
+    content: "Play in " attr(data-time) " to unlock this achievement";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    white-space: nowrap;
+    pointer-events: none;
+    margin-bottom: 5px;
+    font-size: 12px;
+    z-index: 999999999999;
+}
+
+.achievement-itemSum:hover::before {
     content: "";
     position: absolute;
     bottom: 100%;
