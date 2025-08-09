@@ -3,7 +3,7 @@ let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 let rollCount1 = parseInt(localStorage.getItem("rollCount")) || 0;
-let cooldownTime = 200;
+let cooldownTime = 500;
 let currentAudio = null;
 let isChangeEnabled = true;
 let autoRollInterval = null;
@@ -112,6 +112,7 @@ function musicLoad() {
   let polarrSuspenceAudio = document.getElementById("polarrSuspenceAudio");
   let scareSuspenceAudio = document.getElementById("scareSuspenceAudio");
   let bigSuspenceAudio = document.getElementById("bigSuspenceAudio");
+  let gingerAudio = document.getElementById("gingerAudio");
   let astblaAudio = document.getElementById("astblaAudio");
   let iriAudio = document.getElementById("iriAudio");
   let heartAudio = document.getElementById("heartAudio");
@@ -120,6 +121,7 @@ function musicLoad() {
   let lubjubAudio = document.getElementById("lubjubAudio");
   let plabreAudio = document.getElementById("plabreAudio");
   let isekaiAudio = document.getElementById("isekaiAudio");
+  let equinoxAudio = document.getElementById("equinoxAudio");
   let fircraAudio = document.getElementById("fircraAudio");
   let emerAudio = document.getElementById("emerAudio");
   let shadAudio = document.getElementById("shadAudio");
@@ -208,6 +210,7 @@ function musicLoad() {
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  gingerAudio.pause();
   x1staAudio.pause();
   lightAudio.pause();
   astblaAudio.pause();
@@ -237,6 +240,7 @@ function musicLoad() {
   twiligAudio.pause();
   silAudio.pause();
   isekaiAudio.pause();
+  equinoxAudio.pause();
   emerAudio.pause();
   samuraiAudio.pause();
   contAudio.pause();
@@ -305,6 +309,7 @@ function musicLoad() {
   geezerSuspenceAudio.currentTime = 0;
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
+  gingerAudio.currentTime = 0;
   x1staAudio.currentTime = 0;
   lightAudio.currentTime = 0;
   tuonAudio.currentTime = 0;
@@ -349,6 +354,7 @@ function musicLoad() {
   specAudio.currentTime = 0;
   twiligAudio.currentTime = 0;
   isekaiAudio.currentTime = 0;
+  equinoxAudio.currentTime = 0;
   emerAudio.currentTime = 0;
   samuraiAudio.currentTime = 0;
   contAudio.currentTime = 0;
@@ -457,7 +463,7 @@ function checkAchievements() {
       { name: "No one's getting this legit", timeCount: 31557600 },
 
       // Event
-      { name: "Happy Easter!", timeCount: 0 },
+      { name: "Happy Summer!", timeCount: 0 },
   ];
 
   // Achievements collected
@@ -519,6 +525,7 @@ function updateAchievementsList() {
   let achievementItemsT = document.querySelectorAll(".achievement-itemT");
   let achievementItemsC = document.querySelectorAll(".achievement-itemC");
   let achievementItemsE = document.querySelectorAll(".achievement-itemE");
+  let achievementItemsSum = document.querySelectorAll(".achievement-itemSum");
 
   achievementItems.forEach(item => {
     const achievementName = item.getAttribute("data-name");
@@ -555,6 +562,17 @@ function updateAchievementsList() {
 
     if (unlockedAchievements.includes(achievementName)) {
       item.style.backgroundColor = "yellow";
+      item.style.color = "black";
+    } else {
+      item.style.backgroundColor = "gray";
+    }
+  });
+
+  achievementItemsSum.forEach(item => {
+    const achievementName = item.getAttribute("data-name");
+
+    if (unlockedAchievements.includes(achievementName)) {
+      item.style.backgroundColor = "orange";
       item.style.color = "black";
     } else {
       item.style.backgroundColor = "gray";
@@ -607,6 +625,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
   twiligAudio.pause();
   silAudio.pause();
   isekaiAudio.pause();
+  equinoxAudio.pause();
+  gingerAudio.pause();
   emerAudio.pause();
   samuraiAudio.pause();
   contAudio.pause();
@@ -720,6 +740,8 @@ document.getElementById("rollButton").addEventListener("click", function () {
   specAudio.currentTime = 0;
   twiligAudio.currentTime = 0;
   isekaiAudio.currentTime = 0;
+  equinoxAudio.currentTime = 0;
+  gingerAudio.currentTime = 0;
   emerAudio.currentTime = 0;
   samuraiAudio.currentTime = 0;
   contAudio.currentTime = 0;
@@ -857,7 +879,9 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Easter Egg [1 in 13,333]" ||
     rarity.type === "Easter Bunny [1 in 133,333]" ||
     rarity.type === "Hellish Fire [1 in 6,666]" ||
-    rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]"
+    rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]" ||
+    rarity.type === "『Equinox』 [1 in 2,500,000]" ||
+    rarity.type === "Ginger [1 in 1,144,141]"
   ) {
     document.getElementById("result").innerText = "";
     const titleCont = document.querySelector(".container");
@@ -922,6 +946,10 @@ document.getElementById("rollButton").addEventListener("click", function () {
       scareSuspenceAudio.play();
     } else if (rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]") {
       scareSuspenceLofiAudio.play();
+    } else if (rarity.type === "『Equinox』 [1 in 2,500,000]") {
+      equinoxAudio.play();
+    } else if (rarity.type === "Ginger [1 in 1,144,141]") {
+      hugeSuspenceAudio.play();
     } else if (rarity.type === "Emergencies [1 in 500]") {
       scareSuspenceAudio.play();
     } else if (rarity.type === "Samurai [1 in 800]") {
@@ -5553,6 +5581,77 @@ document.getElementById("rollButton").addEventListener("click", function () {
         titleCont.style.visibility = "visible";
         isekaiAudio.play();
       }
+    } else if (rarity.type === "『Equinox』 [1 in 2,500,000]") {
+      disableChange();
+
+      setTimeout(() => {
+        document.body.style.backgroundImage = "url('files/backgrounds/equinox_cutscene.gif')";
+        document.body.style.backgroundSize = "cover";
+        document.body.style.backgroundRepeat = "no-repeat";
+        document.body.style.backgroundPosition = "center";
+      }, 1000)
+
+      const container1 = document.getElementById("squareContainer");
+
+      function createCircle(colorClass) {
+        const circle = document.createElement("div");
+        circle.className = `animated-circle-${colorClass}`;
+        circle.style.left = Math.random() * 100 + "vw";
+        circle.style.top = Math.random() * 100 + "vh";
+        container1.appendChild(circle);
+        circle.addEventListener("animationend", () => circle.remove());
+      }
+
+      const container = document.getElementById("starContainer");
+
+      function createStars(colorClass, count) {
+        for (let i = 0; i < count; i++) {
+          const star = document.createElement("span");
+          star.className = `${colorClass}-star`;
+          star.innerHTML = "●";
+          star.style.left = Math.random() * 100 + "vw";
+          star.style.setProperty(
+            "--randomX",
+            (Math.random() - 0.25) * 20 + "vw"
+          );
+          star.style.setProperty(
+            "--randomRotation",
+            (Math.random() - 0.5) * 720 + "deg"
+          );
+          star.style.animationDelay = i * 0.04 + "s";
+          container.appendChild(star);
+          star.addEventListener("animationend", () => star.remove());
+        }
+      }
+
+      createStars("white", 500);
+      createStars("black", 500);
+
+      const squareInterval = setInterval(() => {
+        createCircles("white");
+        createCircles("black");
+      }, 50); 
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 10500);
+
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        document.body.style.backgroundImage = "";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
+          displayResult(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          rollCount1++;
+          titleCont.style.visibility = "visible";
+        }, 100);
+        enableChange();
+      }, 10500); // Wait for 10.5 seconds
     } else if (rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]") {
       if (skipCutscene10K) {
         document.body.className = "blackBg";
@@ -6089,6 +6188,144 @@ document.getElementById("rollButton").addEventListener("click", function () {
         rollCount1++;
         titleCont.style.visibility = "visible";
         unnamedAudio.play();
+      }
+    } else if (rarity.type === "Ginger [1 in 1,144,141]") {
+      if (skipCutscene1M) {
+        document.body.className = "blackBg";
+        console.log("Rolled Ginger");
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-orange";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 177; i++) {
+          const star = document.createElement("span");
+          star.className = "orange-star";
+          star.innerHTML = "ↀ";
+  
+          star.style.left = Math.random() * 100 + "vw";
+  
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+  
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+  
+          star.style.animationDelay = i * 0.08 + "s";
+  
+          container.appendChild(star);
+  
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            gingerAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        gingerAudio.play();
       }
     } else if (rarity.type === "Cursed Mirage [1 in 11,111]") {
       if (skipCutscene100K) {
@@ -8339,6 +8576,12 @@ function rollRarity() {
       titles: ["Grim Destiny"],
     },
     {
+      type: "Ginger [1 in 1,144,141]",
+      class: "gingerBgImg",
+      chance: 0.00008740181,
+      titles: ["Orange puffy creature"],
+    },
+    {
       type: "Celestial Dawn [1 in 12,000]",
       class: "celdawBgImg",
       chance: 0.0083,
@@ -8603,22 +8846,16 @@ function rollRarity() {
       titles: ["Corrupt", "X1sta", "Artist"],
     },
     {
-      type: "Easter Egg [1 in 13,333]",
-      class: "esteggBgImg",
-      chance: 0.0075001875,
-      titles: ["Secret Egg", "Easter", "Candy"],
-    },
-    {
-      type: "Easter Bunny [1 in 133,333]",
-      class: "estbunBgImg",
-      chance: 0.00075000187,
-      titles: ["Secret Bunny", "Easter", "Bunny"],
-    },
-    {
       type: "Isekai ♫ Lo-Fi [1 in 3,000]",
       class: "isekailofiBgImg",
       chance: 0.033,
       titles: ["Isekai", "Singing", "Chill", "Calm"]
+    },
+    {
+      type: "『Equinox』 [1 in 2,500,000]",
+      class: "equinoxBgImg",
+      chance: 0.00014,
+      titles: ["LAYERS", "CHROMA", "衡"]
     }
   ];
 
@@ -8981,6 +9218,7 @@ const backgroundDetails = {
   plabreBgImg: { image: "files/backgrounds/plabre.png", audio: "plabreAudio" },
   wanspiBgImg: { image: "files/backgrounds/wanspi.png", audio: "wanspiAudio" },
   lubjubBgImg: { image: "files/backgrounds/lubjub.gif", audio: "lubjubAudio" },
+  gingerBgImg: { image: "files/backgrounds/ginger.gif", audio: "gingerAudio" },
   froBgImg: { image: "files/backgrounds/fro.png", audio: "froAudio" },
   mysBgImg: { image: "files/backgrounds/mys.png", audio: "mysAudio" },
   forgBgImg: { image: "files/backgrounds/forg.png", audio: "forgAudio" },
@@ -9024,6 +9262,7 @@ const backgroundDetails = {
   shenviiBgImg: { image: "files/backgrounds/shenvii.gif", audio: "shenviiAudio" },
   qbearBgImg: { image: "files/backgrounds/qbear.png", audio: "qbearAudio" },
   isekailofiBgImg: { image: "files/backgrounds/isekailofi.png", audio: "isekailofiAudio" },
+  equinoxBgImg: { image: "files/backgrounds/equinox.gif", audio: "equinoxAudio" },
   samuraiBgImg: {
     image: "files/backgrounds/samurai.png",
     audio: "samuraiAudio",
@@ -9898,7 +10137,7 @@ function createCooldownButton() {
   button.style.top = `${randomY}px`;
 
   button.addEventListener("click", () => {
-    cooldownTime = 175;
+    cooldownTime = 350;
 
     showCooldownEffect(90);
 
@@ -9908,8 +10147,8 @@ function createCooldownButton() {
     }, 1000);
 
     setTimeout(() => {
-      cooldownTime = 200;
-      console.log("Cooldown reset to 200ms");
+      cooldownTime = 500;
+      console.log("Cooldown reset to 500ms");
     }, 90000);
 
     scheduleButtonAppearance();
@@ -9934,7 +10173,7 @@ function createCooldownButton1() {
   button.style.top = `${randomY}px`;
 
   button.addEventListener("click", () => {
-    cooldownTime = 100;
+    cooldownTime = 200;
 
     showCooldownEffect(60);
 
@@ -9944,8 +10183,8 @@ function createCooldownButton1() {
     }, 1000);
 
     setTimeout(() => {
-      cooldownTime = 200;
-      console.log("Cooldown reset to 200ms");
+      cooldownTime = 500;
+      console.log("Cooldown reset to 500ms");
     }, 60000);
 
     scheduleButtonAppearance();
@@ -9970,7 +10209,7 @@ function createCooldownButton2() {
   button.style.top = `${randomY}px`;
 
   button.addEventListener("click", () => {
-    cooldownTime = 25;
+    cooldownTime = 75;
 
     showCooldownEffect(30);
 
@@ -9980,8 +10219,8 @@ function createCooldownButton2() {
     }, 1000);
 
     setTimeout(() => {
-      cooldownTime = 200;
-      console.log("Cooldown reset to 200ms");
+      cooldownTime = 500;
+      console.log("Cooldown reset to 500ms");
     }, 30000);
 
     scheduleButtonAppearance();
@@ -10206,7 +10445,7 @@ autoRollButton.addEventListener("click", () => {
 function startAutoRoll() {
   autoRollInterval = setInterval(() => {
     document.getElementById("rollButton").click();
-  },99);
+  },400);
   autoRollButton.textContent = "Auto Roll: On";
   console.log("Rolling...");
   autoRollButton.classList.remove("off");
@@ -10247,18 +10486,18 @@ const heartContainer = document.createElement('div');
 document.body.appendChild(heartContainer);
 
 function createHeart() {
-    const heart = document.createElement('div');
-    heart.classList.add('heart');
-    heart.textContent = '🐣';
-    heart.style.left = Math.random() * 100 + 'vw';
-    heart.style.top = Math.random() * 100 + 'vh';
-    heart.style.fontSize = Math.random() * 25 + 15 + 'px';
+    // const heart = document.createElement('div');
+    // heart.classList.add('heart');
+    // heart.textContent = '🐣';
+    // heart.style.left = Math.random() * 100 + 'vw';
+    // heart.style.top = Math.random() * 100 + 'vh';
+    // heart.style.fontSize = Math.random() * 25 + 15 + 'px';
 
-    heartContainer.appendChild(heart);
+    // heartContainer.appendChild(heart);
 
-    setTimeout(() => {
-        heart.remove();
-    }, 1000);
+    // setTimeout(() => {
+    //     heart.remove();
+    // }, 1000);
 }
 
 setInterval(createHeart, 33);
@@ -10467,7 +10706,9 @@ function getClassForRarity(rarity) {
       'sʜeɴvɪ✞∞ [1 in 77,777/7th]': 'special',
       'Easter Bunny [1 in 133,333]': 'eventE',
       'Easter Egg [1 in 13,333]': 'eventE',
-      'Isekai ♫ Lo-Fi [1 in 3,000]': 'under10k'
+      'Isekai ♫ Lo-Fi [1 in 3,000]': 'under10k',
+      '『Equinox』 [1 in 2,500,000]': 'under10me',
+      'Ginger [1 in 1,144,141]': 'under10m'
   };
 
   return rarityClasses[rarity] || null;
@@ -10582,6 +10823,12 @@ document
 document
   .getElementById("deleteAllIsekaiButton")
   .addEventListener("click", () => deleteAllByRarity("isekaiBgImg"));
+document
+  .getElementById("deleteAllEquinoxButton")
+  .addEventListener("click", () => deleteAllByRarity("equinoxBgImg"));
+document
+  .getElementById("deleteAllGingerButton")
+  .addEventListener("click", () => deleteAllByRarity("gingerBgImg"));
 document
   .getElementById("deleteAllEmergenciesButton")
   .addEventListener("click", () => deleteAllByRarity("emerBgImg"));
