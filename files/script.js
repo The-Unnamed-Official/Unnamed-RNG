@@ -8846,18 +8846,6 @@ function rollRarity() {
       titles: ["Corrupt", "X1sta", "Artist"],
     },
     {
-      type: "Easter Egg [1 in 13,333]",
-      class: "esteggBgImg",
-      chance: 0.0075001875,
-      titles: ["Secret Egg", "Easter", "Candy"],
-    },
-    {
-      type: "Easter Bunny [1 in 133,333]",
-      class: "estbunBgImg",
-      chance: 0.00075000187,
-      titles: ["Secret Bunny", "Easter", "Bunny"],
-    },
-    {
       type: "Isekai ♫ Lo-Fi [1 in 3,000]",
       class: "isekailofiBgImg",
       chance: 0.033,
