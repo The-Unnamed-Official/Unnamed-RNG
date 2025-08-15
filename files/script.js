@@ -9981,36 +9981,13 @@ const backgroundDetails = {
   estbunBgImg: { image: "files/backgrounds/estbun.png", audio: "estbunAudio" },
 };
 
-function changeBackground(rarityClass, itemTitle) {
-  if (!isChangeEnabled) return;
-  const details = backgroundDetails[rarityClass];
-  if (details) {
-    document.body.style.backgroundImage = `url(${details.image})`;
-
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-    }
-
-    if (details.audio) {
-      const newAudio = document.getElementById(details.audio);
-      if (newAudio) {
-        newAudio.play();
-        currentAudio = newAudio;
-      }
-    } else {
-      currentAudio = null;
-    }
-  }
-}
-
 function triggerScreenShakeByBucket(bucket) {
   // Map rarity buckets to shake classes
   const map = {
     under100: 'shake-xs',     // optional tiniest shake
-    under1k:  'shake-xs',
-    under10k: 'shake-s',
-    under100k:'shake-m',
+    under1k:  'shake-s',
+    under10k: 'shake-m',
+    under100k:'shake-xl',
     under1m:  'shake-xl',     // "actually too much"
     special:  'shake-xl'      // same "too much" for specials
   };

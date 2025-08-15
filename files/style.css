@@ -3926,69 +3926,65 @@ body.griCutsceneBgImg {
     text-align: center;
 }
 
-@keyframes screenShakeXS {
-  0%,100% { transform: translate(0,0); }
-  10% { transform: translate(1px,-1px); }
-  20% { transform: translate(-1px,1px); }
-  30% { transform: translate(1px,1px); }
-  40% { transform: translate(-1px,-1px); }
-  50% { transform: translate(0,0); }
-  60% { transform: translate(1px,0); }
-  70% { transform: translate(0,-1px); }
-  80% { transform: translate(-1px,0); }
-  90% { transform: translate(0,1px); }
+@keyframes rngShakeXS {
+  0%,100% { transform: translate(0,0) }
+  10% { transform: translate(1px,-1px) }
+  20% { transform: translate(-1px,1px) }
+  30% { transform: translate(1px,1px) }
+  40% { transform: translate(-1px,-1px) }
+  50% { transform: translate(0,0) }
+  60% { transform: translate(1px,0) }
+  70% { transform: translate(0,-1px) }
+  80% { transform: translate(-1px,0) }
+  90% { transform: translate(0,1px) }
 }
-
-@keyframes screenShakeS {
-  0%,100% { transform: translate(0,0); }
-  10% { transform: translate(2px,-2px); }
-  20% { transform: translate(-2px,2px); }
-  30% { transform: translate(2px,2px); }
-  40% { transform: translate(-2px,-2px); }
-  50% { transform: translate(0,0); }
-  60% { transform: translate(2px,0); }
-  70% { transform: translate(0,-2px); }
-  80% { transform: translate(-2px,0); }
-  90% { transform: translate(0,2px); }
+@keyframes rngShakeS {
+  0%,100% { transform: translate(0,0) }
+  10% { transform: translate(2px,-2px) }
+  20% { transform: translate(-2px,2px) }
+  30% { transform: translate(2px,2px) }
+  40% { transform: translate(-2px,-2px) }
+  50% { transform: translate(0,0) }
+  60% { transform: translate(2px,0) }
+  70% { transform: translate(0,-2px) }
+  80% { transform: translate(-2px,0) }
+  90% { transform: translate(0,2px) }
 }
-
-@keyframes screenShakeM {
-  0%,100% { transform: translate(0,0); }
-  10% { transform: translate(4px,-4px); }
-  20% { transform: translate(-4px,4px); }
-  30% { transform: translate(4px,4px); }
-  40% { transform: translate(-4px,-4px); }
-  50% { transform: translate(0,0); }
-  60% { transform: translate(4px,0); }
-  70% { transform: translate(0,-4px); }
-  80% { transform: translate(-4px,0); }
-  90% { transform: translate(0,4px); }
+@keyframes rngShakeM {
+  0%,100% { transform: translate(0,0) }
+  10% { transform: translate(4px,-4px) }
+  20% { transform: translate(-4px,4px) }
+  30% { transform: translate(4px,4px) }
+  40% { transform: translate(-4px,-4px) }
+  50% { transform: translate(0,0) }
+  60% { transform: translate(4px,0) }
+  70% { transform: translate(0,-4px) }
+  80% { transform: translate(-4px,0) }
+  90% { transform: translate(0,4px) }
 }
-
-@keyframes screenShakeL {
-  0%,100% { transform: translate(0,0); }
-  10% { transform: translate(7px,-7px); }
-  20% { transform: translate(-7px,7px); }
-  30% { transform: translate(7px,7px); }
-  40% { transform: translate(-7px,-7px); }
-  50% { transform: translate(0,0); }
-  60% { transform: translate(7px,0); }
-  70% { transform: translate(0,-7px); }
-  80% { transform: translate(-7px,0); }
-  90% { transform: translate(0,7px); }
+@keyframes rngShakeL {
+  0%,100% { transform: translate(0,0) }
+  10% { transform: translate(7px,-7px) }
+  20% { transform: translate(-7px,7px) }
+  30% { transform: translate(7px,7px) }
+  40% { transform: translate(-7px,-7px) }
+  50% { transform: translate(0,0) }
+  60% { transform: translate(7px,0) }
+  70% { transform: translate(0,-7px) }
+  80% { transform: translate(-7px,0) }
+  90% { transform: translate(0,7px) }
 }
-
-@keyframes screenShakeXL {
-  0%,100% { transform: translate(0,0) rotate(0deg); }
-  10% { transform: translate(12px,-12px) rotate(0.5deg); }
-  20% { transform: translate(-12px,12px) rotate(-0.5deg); }
-  30% { transform: translate(12px,12px) rotate(0.4deg); }
-  40% { transform: translate(-12px,-12px) rotate(-0.4deg); }
-  50% { transform: translate(0,0) rotate(0deg); }
-  60% { transform: translate(12px,0) rotate(0.3deg); }
-  70% { transform: translate(0,-12px) rotate(-0.3deg); }
-  80% { transform: translate(-12px,0) rotate(0.2deg); }
-  90% { transform: translate(0,12px) rotate(-0.2deg); }
+@keyframes rngShakeXL {
+  0%,100% { transform: translate(0,0) rotate(0) }
+  10% { transform: translate(12px,-12px) rotate(0.5deg) }
+  20% { transform: translate(-12px,12px) rotate(-0.5deg) }
+  30% { transform: translate(12px,12px) rotate(0.4deg) }
+  40% { transform: translate(-12px,-12px) rotate(-0.4deg) }
+  50% { transform: translate(0,0) rotate(0) }
+  60% { transform: translate(12px,0) rotate(0.3deg) }
+  70% { transform: translate(0,-12px) rotate(-0.3deg) }
+  80% { transform: translate(-12px,0) rotate(0.2deg) }
+  90% { transform: translate(0,12px) rotate(-0.2deg) }
 }
 
 /* Apply to body so the whole screen shakes */
@@ -3999,8 +3995,7 @@ body.shake-l  { animation: screenShakeL  750ms ease-in-out; }
 body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
 
 /* Reduced-motion users: keep it tiny/short */
+/* Reduced-motion fallback: tiny/quick */
 @media (prefers-reduced-motion: reduce) {
-  body.shake-s, body.shake-m, body.shake-l, body.shake-xl {
-    animation: screenShakeXS 180ms ease-in-out;
-  }
+  @keyframes rngShakeXL { from { transform: translate(0,0) } to { transform: translate(1px,-1px) } }
 }
