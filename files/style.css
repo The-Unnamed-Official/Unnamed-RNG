@@ -1555,6 +1555,30 @@ body.griCutsceneBgImg {
     background: #7a5309;
 }
 
+.waveBgImg {
+    background: url(backgrounds/wave.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.scorchingBgImg {
+    background: url(backgrounds/scho.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.beachBgImg {
+    background: url(backgrounds/beach.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.tidalwaveBgImg {
+    background: url(backgrounds/tidwav.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
 #fireworksCanvas {
     position: absolute;
     top: -9999px;
@@ -2640,6 +2664,15 @@ body.griCutsceneBgImg {
     background: radial-gradient(#f0ff1e, #ff0000);
     background-size: 300%;
     animation: gradient-shift2 9s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.eventS {
+    background: radial-gradient(#0066ff, #fffaad);
+    background-size: 300%;
+    animation: gradient-shift2 6s ease infinite;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

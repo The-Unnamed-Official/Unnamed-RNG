@@ -112,6 +112,10 @@ function musicLoad() {
   let polarrSuspenceAudio = document.getElementById("polarrSuspenceAudio");
   let scareSuspenceAudio = document.getElementById("scareSuspenceAudio");
   let bigSuspenceAudio = document.getElementById("bigSuspenceAudio");
+  let waveAudio = document.getElementById("waveAudio");
+  let scorchingAudio = document.getElementById("scorchingAudio");
+  let beachAudio = document.getElementById("beachAudio");
+  let tidalwaveAudio = document.getElementById("tidalwaveAudio");
   let gingerAudio = document.getElementById("gingerAudio");
   let astblaAudio = document.getElementById("astblaAudio");
   let iriAudio = document.getElementById("iriAudio");
@@ -210,6 +214,10 @@ function musicLoad() {
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  waveAudio.pause();
+  scorchingAudio.pause();
+  beachAudio.pause();
+  tidalwaveAudio.pause();
   gingerAudio.pause();
   x1staAudio.pause();
   lightAudio.pause();
@@ -309,6 +317,10 @@ function musicLoad() {
   geezerSuspenceAudio.currentTime = 0;
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
+  waveAudio.currentTime = 0;
+  scorchingAudio.currentTime = 0;
+  beachAudio.currentTime = 0;
+  tidalwaveAudio.currentTime = 0;
   gingerAudio.currentTime = 0;
   x1staAudio.currentTime = 0;
   lightAudio.currentTime = 0;
@@ -598,6 +610,10 @@ document.getElementById("rollButton").addEventListener("click", function () {
   geezerSuspenceAudio.pause();
   polarrSuspenceAudio.pause();
   scareSuspenceAudio.pause();
+  waveAudio.pause();
+  scorchingAudio.pause();
+  beachAudio.pause();
+  tidalwaveAudio.pause();
   lightAudio.pause();
   qbearAudio.pause();
   shenviiAudio.pause();
@@ -697,6 +713,10 @@ document.getElementById("rollButton").addEventListener("click", function () {
   geezerSuspenceAudio.currentTime = 0;
   polarrSuspenceAudio.currentTime = 0;
   scareSuspenceAudio.currentTime = 0;
+  waveAudio.currentTime = 0;
+  scorchingAudio.currentTime = 0;
+  beachAudio.currentTime = 0;
+  tidalwaveAudio.currentTime = 0;
   lightAudio.currentTime = 0;
   qbearAudio.currentTime = 0;
   shenviiAudio.currentTime = 0;
@@ -881,7 +901,14 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Hellish Fire [1 in 6,666]" ||
     rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]" ||
     rarity.type === "『Equinox』 [1 in 2,500,000]" ||
-    rarity.type === "Ginger [1 in 1,144,141]"
+    rarity.type === "Ginger [1 in 1,144,141]" ||
+    rarity.type === "Wave [1 in 2,555]" ||
+    rarity.type === "Scorching [1 in 7,923]" ||
+    rarity.type === "Beach [1 in 12,555]" ||
+    rarity.type === "Tidal Wave [1 in 25,500]" ||
+    rarity.type === "Scorching [1 in 7,923]" ||
+    rarity.type === "Beach [1 in 12,555]" ||
+    rarity.type === "Tidal Wave [1 in 25,500]"
   ) {
     document.getElementById("result").innerText = "";
     const titleCont = document.querySelector(".container");
@@ -935,6 +962,14 @@ document.getElementById("rollButton").addEventListener("click", function () {
     } else if (rarity.type === "X1sta [1 in 230,444]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Cursed Mirage [1 in 11,111]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Wave [1 in 2,555]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Scorching [1 in 7,923]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Beach [1 in 12,555]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Tidal Wave [1 in 25,500]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "ORB [1 in 55,555/30th]") {
       hugeSuspenceAudio.play();
@@ -6465,6 +6500,506 @@ document.getElementById("rollButton").addEventListener("click", function () {
         titleCont.style.visibility = "visible";
         curAudio.play();
       }
+    } else if (rarity.type === "Wave [1 in 2,555]") {
+      document.body.className = "blackBg";
+      console.log("Rolled Wave");
+      disableChange();
+      startAnimationA5();
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+    
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-blue";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      const squareInterval = setInterval(() => {
+        createSquare();
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 9350); // Stop after 9.35 seconds
+    
+      for (let i = 0; i < 177; i++) {
+        const star = document.createElement("span");
+        star.className = "cyan-star";
+        star.innerHTML = "~";
+
+        star.style.left = Math.random() * 100 + "vw";
+
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+
+        star.style.animationDelay = i * 0.08 + "s";
+
+        container.appendChild(star);
+
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          rollCount1++;
+          titleCont.style.visibility = "visible";
+          waveAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
+    } else if (rarity.type === "Scorching [1 in 7,923]") {
+      document.body.className = "blackBg";
+      console.log("Rolled Scorching");
+      disableChange();
+      startAnimationA5();
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+    
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-red";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      const squareInterval = setInterval(() => {
+        createSquare();
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 9350); // Stop after 9.35 seconds
+    
+      for (let i = 0; i < 177; i++) {
+        const star = document.createElement("span");
+        star.className = "yellow-star";
+        star.innerHTML = "◈";
+
+        star.style.left = Math.random() * 100 + "vw";
+
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+
+        star.style.animationDelay = i * 0.08 + "s";
+
+        container.appendChild(star);
+
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          rollCount1++;
+          titleCont.style.visibility = "visible";
+          scorchingAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
+    } else if (rarity.type === "Beach [1 in 12,555]") {
+      document.body.className = "blackBg";
+      console.log("Rolled Beach");
+      disableChange();
+      startAnimationA5();
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+    
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-yellow";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      const squareInterval = setInterval(() => {
+        createSquare();
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 9350); // Stop after 9.35 seconds
+    
+      for (let i = 0; i < 177; i++) {
+        const star = document.createElement("span");
+        star.className = "blue-star";
+        star.innerHTML = "<";
+
+        star.style.left = Math.random() * 100 + "vw";
+
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+
+        star.style.animationDelay = i * 0.08 + "s";
+
+        container.appendChild(star);
+
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          rollCount1++;
+          titleCont.style.visibility = "visible";
+          beachAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
+    } else if (rarity.type === "Tidal Wave [1 in 25,500]") {
+      document.body.className = "blackBg";
+      console.log("Rolled Tidal Wave");
+      disableChange();
+      startAnimationA5();
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+    
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-blue";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      const squareInterval = setInterval(() => {
+        createSquare();
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 9350); // Stop after 9.35 seconds
+    
+      for (let i = 0; i < 177; i++) {
+        const star = document.createElement("span");
+        star.className = "cyan-star";
+        star.innerHTML = "~";
+
+        star.style.left = Math.random() * 100 + "vw";
+
+        const randomX = (Math.random() - 0.25) * 20 + "vw";
+        star.style.setProperty("--randomX", randomX);
+
+        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+
+        star.style.animationDelay = i * 0.08 + "s";
+
+        container.appendChild(star);
+
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+      }
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 7500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 7750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 8500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 8750);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 9500);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10000);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10100);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10175);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10250);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10325);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10400);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10475);
+    
+      setTimeout(function () {
+        document.body.className = "whiteFlash";
+      }, 10550);
+    
+      setTimeout(function () {
+        document.body.className = "blackBg";
+      }, 10625);
+    
+      setTimeout(() => {
+        document.body.className = "whiteFlash";
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          rollCount1++;
+          titleCont.style.visibility = "visible";
+          tidalwaveAudio.play();
+        }, 100);
+        enableChange();
+      }, 10750); // Wait for 10.75 seconds
     } else if (rarity.type === "Celestial Dawn [1 in 12,000]") {
       if (skipCutscene100K) {
         document.body.className = "blackBg";
@@ -8856,6 +9391,30 @@ function rollRarity() {
       class: "equinoxBgImg",
       chance: 0.00014,
       titles: ["LAYERS", "CHROMA", "衡"]
+    },
+    {
+      type: "Wave [1 in 2,555]",
+      class: "waveBgImg",
+      chance: 0.03913894324,
+      titles: ["Water", "H2O", "Ocean"]
+    },
+    {
+      type: "Scorching [1 in 7,923]",
+      class: "scorchingBgImg",
+      chance: 0.01262148176,
+      titles: ["Isekai", "Singing", "Chill", "Calm"]
+    },
+    {
+      type: "Beach [1 in 12,555]",
+      class: "beachBgImg",
+      chance: 0.0079649542,
+      titles: ["Dusty", "Sandy", "Tropical"]
+    },
+    {
+      type: "Tidal Wave [1 in 25,500]",
+      class: "tidalwaveBgImg",
+      chance: 0.00392156862,
+      titles: ["Du da du dum dum da du dum dum", "Tsunami", "Surf"]
     }
   ];
 
@@ -9263,6 +9822,10 @@ const backgroundDetails = {
   qbearBgImg: { image: "files/backgrounds/qbear.png", audio: "qbearAudio" },
   isekailofiBgImg: { image: "files/backgrounds/isekailofi.png", audio: "isekailofiAudio" },
   equinoxBgImg: { image: "files/backgrounds/equinox.gif", audio: "equinoxAudio" },
+  waveBgImg: { image: "files/backgrounds/wave.png", audio: "waveAudio" },
+  scorchingBgImg: { image: "files/backgrounds/scho.png", audio: "scorchingAudio" },
+  beachBgImg: { image: "files/backgrounds/beach.png", audio: "beachAudio" },
+  tidalwaveBgImg: { image: "files/backgrounds/tidwav.gif", audio: "tidalwaveAudio" },
   samuraiBgImg: {
     image: "files/backgrounds/samurai.png",
     audio: "samuraiAudio",
@@ -10486,18 +11049,18 @@ const heartContainer = document.createElement('div');
 document.body.appendChild(heartContainer);
 
 function createHeart() {
-    // const heart = document.createElement('div');
-    // heart.classList.add('heart');
-    // heart.textContent = '🐣';
-    // heart.style.left = Math.random() * 100 + 'vw';
-    // heart.style.top = Math.random() * 100 + 'vh';
-    // heart.style.fontSize = Math.random() * 25 + 15 + 'px';
+    const heart = document.createElement('div');
+    heart.classList.add('heart');
+    heart.textContent = '🌊';
+    heart.style.left = Math.random() * 100 + 'vw';
+    heart.style.top = Math.random() * 100 + 'vh';
+    heart.style.fontSize = Math.random() * 25 + 15 + 'px';
 
-    // heartContainer.appendChild(heart);
+    heartContainer.appendChild(heart);
 
-    // setTimeout(() => {
-    //     heart.remove();
-    // }, 1000);
+    setTimeout(() => {
+        heart.remove();
+    }, 1000);
 }
 
 setInterval(createHeart, 33);
@@ -10708,7 +11271,11 @@ function getClassForRarity(rarity) {
       'Easter Egg [1 in 13,333]': 'eventE',
       'Isekai ♫ Lo-Fi [1 in 3,000]': 'under10k',
       '『Equinox』 [1 in 2,500,000]': 'under10me',
-      'Ginger [1 in 1,144,141]': 'under10m'
+      'Ginger [1 in 1,144,141]': 'under10m',
+      'Wave [1 in 2,555]': 'eventS',
+      'Scorching [1 in 7,923]': 'eventS',
+      'Beach [1 in 12,555]': 'eventS',
+      'Tidal Wave [1 in 25,500]': 'eventS'
   };
 
   return rarityClasses[rarity] || null;
@@ -10856,9 +11423,21 @@ document
 document
   .getElementById("deleteAllHeartButton")
   .addEventListener("click", () => deleteAllByRarity("heartBgImg"));
-  document
-    .getElementById("deleteAllGDAddictButton")
-    .addEventListener("click", () => deleteAllByRarity("astredBgImg"));
+document
+  .getElementById("deleteAllGDAddictButton")
+  .addEventListener("click", () => deleteAllByRarity("astredBgImg"));
+document
+  .getElementById("deleteAllWaveButton")
+  .addEventListener("click", () => deleteAllByRarity("wave"));
+document
+  .getElementById("deleteAllScorchingButton")
+  .addEventListener("click", () => deleteAllByRarity("scorchingBgImg"));
+document
+  .getElementById("deleteAllBeachButton")
+  .addEventListener("click", () => deleteAllByRarity("beachBgImg"));
+document
+  .getElementById("deleteAllTidalWaveButton")
+  .addEventListener("click", () => deleteAllByRarity("tidalwaveBgImg"));
 
 
 document
