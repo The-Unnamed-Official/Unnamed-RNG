@@ -8915,7 +8915,7 @@ function rollRarity() {
     {
       type: "Common [1 in 2.5]",
       class: "commonBgImg",
-      chance: 40,
+      chance: 35,
       titles: ["Good", "Natural", "Simple", "Basic", "Plain", "Average", "Ordinary", "Usual", "Regular", "Standard"],
     },
     {
@@ -9402,7 +9402,7 @@ function rollRarity() {
       type: "Scorching [1 in 7,923]",
       class: "scorchingBgImg",
       chance: 0.01262148176,
-      titles: ["Isekai", "Singing", "Chill", "Calm"]
+      titles: ["Burning", "Warm", "Sweatty", "Fire", "Heat"]
     },
     {
       type: "Beach [1 in 12,555]",
@@ -9414,28 +9414,28 @@ function rollRarity() {
       type: "Tidal Wave [1 in 25,500]",
       class: "tidalwaveBgImg",
       chance: 0.00392156862,
-      titles: ["Du da du dum dum da du dum dum", "Tsunami", "Surf"]
+      titles: ["Du da du dum du, da du dum du", "Tsunami", "Surf"]
     }
   ];
 
   const abominationRarity = {
     type: "Abomination [1 in 1,000,000/20th]",
     class: "aboBgImg",
-    chance: 0,
+    chance: 0.000001,
     titles: ["Chaos", "Experiment: 902", "Damaged", "Assistance"],
   };
 
   const iridocyclitisVeilRarity = {
     type: "Iridocyclitis Veil [1 in 5,000/50th]",
     class: "iriBgImg",
-    chance: 0,
+    chance: 0.02,
     titles: ["Cyclithe", "Veilborne", "Hemovail", "Abomination: 902"],
   };
 
   const ShenviiRarity = {
     type: "sʜeɴvɪ✞∞ [1 in 77,777/7th]",
     class: "shenviiBgImg",
-    chance: 0,
+    chance: 0.000055,
     titles: ["Cat", "Unforgettable", "Pookie", "Orb: 902", "Infinity"],
   };
 
@@ -9449,7 +9449,7 @@ function rollRarity() {
   const experimentRarity = {
     type: "Experiment [1 in 100,000/10th]",
     class: "expBgImg",
-    chance: 0,
+    chance: 0.0001,
     titles: ["1106", "1073", "1105", "905", "302", "1130", "1263", "1005", "1473", "1748",
             "899", "1157", "1288", "1203", "1024", "1702", "786", "1684", "1337", "912",
             "1987", "1405", "771", "1883", "1294", "1772", "902", "1526", "1759", "666"],
@@ -9458,14 +9458,14 @@ function rollRarity() {
   const veilRarity = {
     type: "Veil [1 in 50,000/5th]",
     class: "veilBgImg",
-    chance: 0,
+    chance: 0.0002,
     titles: ["Fight", "Peace", "MSFU: 902"],
   };
 
   const blindRarity = {
     type: "BlindGT [1 in 2,000,000/15th]",
     class: "blindBgImg",
-    chance: 0,
+    chance: 0.000005,
     titles: ["Moderator", "Moderator: 902"],
   };
 
@@ -9479,12 +9479,12 @@ function rollRarity() {
   const fireCrazeRarity = {
     type: "FireCraze [1 in 4,200/69th]",
     class: "crazeBgImg",
-    chance: 0.01,
+    chance: 0.001,
     titles: ["Fire", "Craze", "Iridocyclitis: 902"],
   };
 
   let randomNum = Math.random() * 110;
-  let cumulativeChance = 0.04;
+  let cumulativeChance = 0.004;
 
   if (rollCount % 333 === 0) {
     cumulativeChance += msfuRarity.chance;
@@ -9601,6 +9601,16 @@ function changeBackground(rarityClass) {
 }
 
 function addToInventory(title, rarityClass) {
+  const rolledAt = typeof rollCount === "number"
+    ? rollCount
+    : parseInt(localStorage.getItem("rollCount")) || 0;
+  const autoDeleteSet = getAutoDeleteSet();
+  const bucket = normalizeRarityBucket(rarityClass);
+  if (autoDeleteSet.has(bucket)) {
+    showStatusMessage(`${title} auto-deleted`, 800);
+    return false; // not persisted
+  }
+
   const excludedRarities = new Set(Array.from(document.querySelectorAll('.rarity-button.active')).map(btn => btn.dataset.rarity));
 
   for (const category in rarityCategories) {
@@ -9609,9 +9619,57 @@ function addToInventory(title, rarityClass) {
     }
   }
 
-  inventory.push({ title, rarityClass });
+  inventory.push({ title, rarityClass, rolledAt });
   localStorage.setItem("inventory", JSON.stringify(inventory));
   renderInventory();
+  return true; // persisted
+}
+
+function getAutoDeleteSet() {
+  return new Set(
+    Array.from(document.querySelectorAll('.rarity-button.active'))
+      .map(btn => btn.dataset.rarity)
+  );
+}
+
+function normalizeRarityBucket(rarityClass) {
+  if (!rarityClass || typeof rarityClass !== 'string') return '';
+  const cls = rarityClass.trim();
+
+  // Order matters when prefixes overlap
+  if (cls.startsWith('under100k')) return 'under100k';
+  if (cls.startsWith('under10k'))  return 'under10k';
+  if (cls.startsWith('under1m'))   return 'under1m';
+  if (cls.startsWith('under1k'))   return 'under1k';
+  if (cls.startsWith('under100'))  return 'under100';
+  if (cls === 'special')           return 'special';
+
+  // Fallback: direct bucket names
+  if (['under100','under1k','under10k','under100k','under1m','special'].includes(cls)) {
+    return cls;
+  }
+  return '';
+}
+
+function deleteByRarityBucket(bucket) {
+  const before = inventory.length;
+
+  const isLocked = (it) => {
+    try {
+      return typeof lockedItems === 'object' && lockedItems && lockedItems[it.title];
+    } catch { return false; }
+  };
+
+  inventory = inventory.filter(it => {
+    const b = normalizeRarityBucket(it.rarityClass);
+    // Keep if different bucket OR locked
+    return b !== bucket || isLocked(it);
+  });
+
+  if (inventory.length !== before) {
+    localStorage.setItem('inventory', JSON.stringify(inventory));
+    renderInventory();
+  }
 }
 
 function saveToggledStates() {
@@ -9923,35 +9981,50 @@ const backgroundDetails = {
   estbunBgImg: { image: "files/backgrounds/estbun.png", audio: "estbunAudio" },
 };
 
-function changeBackground(rarityClass, itemTitle) {
-  if (!isChangeEnabled) return;
-  const details = backgroundDetails[rarityClass];
-  if (details) {
-    document.body.style.backgroundImage = `url(${details.image})`;
+function triggerScreenShakeByBucket(bucket) {
+  // Map rarity buckets to shake classes
+  const map = {
+    under100: 'shake-xs',     // optional tiniest shake
+    under1k:  'shake-s',
+    under10k: 'shake-m',
+    under100k:'shake-xl',
+    under1m:  'shake-xl',     // "actually too much"
+    special:  'shake-xl'      // same "too much" for specials
+  };
+  const cls = map[bucket];
+  if (!cls) return;
 
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-    }
+  const el = document.body;
 
-    if (details.audio) {
-      const newAudio = document.getElementById(details.audio);
-      if (newAudio) {
-        newAudio.play();
-        currentAudio = newAudio;
-      }
-    } else {
-      currentAudio = null;
+  // Clean previous shakes
+  el.classList.remove('shake-xs','shake-s','shake-m','shake-l','shake-xl');
+
+  // Respect reduced motion: heavy -> medium
+  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const finalClass = prefersReduced && (cls === 'shake-xl') ? 'shake-m' : cls;
+
+  el.classList.add(finalClass);
+
+  // Remove shake class after animation ends
+  const onEnd = (e) => {
+    if (!e || (typeof e.animationName === 'string' && e.animationName.startsWith('screenShake'))) {
+      el.classList.remove('shake-xs','shake-s','shake-m','shake-l','shake-xl');
+      el.removeEventListener('animationend', onEnd);
     }
-  }
+  };
+  el.addEventListener('animationend', onEnd);
 }
 
 function enableChange() {
   isChangeEnabled = true;
+  ensureBgStack();
+  __bgStack.classList.remove("is-hidden");
 }
 
 function disableChange() {
   isChangeEnabled = false;
+  // Hide stack during cutscenes (body backgrounds/gifs will show)
+  if (__bgStack) __bgStack.classList.add("is-hidden");
 }
 
 function renderInventory() {
@@ -9986,8 +10059,29 @@ function renderInventory() {
     dropdownMenu.className = "dropdown-menu";
     dropdownMenu.style.display = "none";
 
+    // HEADER: aura title + rolled-at line
+    const header = document.createElement("div");
+    header.className = "dropdown-header";
+
+    // prefer your formatter if present, else fallback
+    const rolledText = typeof item.rolledAt === "number"
+      ? (typeof formatRollCount === "function" ? formatRollCount(item.rolledAt) : item.rolledAt.toLocaleString())
+      : "Unknown";
+
+    header.innerHTML = `
+      <div class="info-title">${item.title}</div>
+      <div class="info-sub">Rolled at: ${rolledText}</div>
+    `;
+    dropdownMenu.appendChild(header);
+
+    // Divider
+    const divider = document.createElement("div");
+    divider.className = "dropdown-divider";
+    dropdownMenu.appendChild(divider);
+    
     const equipButton = document.createElement("button");
-    equipButton.textContent = "Equip";
+    equipButton.className = "dropdown-item";
+    equipButton.innerHTML = "Equip";
     equipButton.addEventListener("click", (event) => {
       event.stopPropagation();
       equipItem(item);
@@ -10016,11 +10110,21 @@ function renderInventory() {
     burgerBar.appendChild(dropdownMenu);
     listItem.appendChild(burgerBar);
 
-    let isDropdownOpen = false;
     burgerBar.addEventListener("click", (event) => {
       event.stopPropagation();
-      isDropdownOpen = !isDropdownOpen;
-      dropdownMenu.style.display = isDropdownOpen ? "block" : "none";
+
+      // Close other menus
+      document.querySelectorAll(".dropdown-menu").forEach(m => {
+        if (m !== dropdownMenu) {
+          m.style.display = "none";
+          m.classList.remove("open");
+        }
+      });
+
+      // Toggle this one
+      const willOpen = dropdownMenu.style.display !== "block";
+      dropdownMenu.style.display = willOpen ? "block" : "none";
+      dropdownMenu.classList.toggle("open", willOpen);
     });
 
     inventoryList.appendChild(listItem);
@@ -11182,6 +11286,13 @@ function updateRollingHistory(title, rarity) {
     });
 }
 
+document.getElementById("deleteAllUnder100Button")?.addEventListener("click", () => deleteByRarityBucket('under100'));
+document.getElementById("deleteAllUnder1kButton")?.addEventListener("click", () => deleteByRarityBucket('under1k'));
+document.getElementById("deleteAllUnder10kButton")?.addEventListener("click", () => deleteByRarityBucket('under10k'));
+document.getElementById("deleteAllUnder100kButton")?.addEventListener("click", () => deleteByRarityBucket('under100k'));
+document.getElementById("deleteAllUnder1mButton")?.addEventListener("click", () => deleteByRarityBucket('under1m'));
+document.getElementById("deleteAllSpecialButton")?.addEventListener("click", () => deleteByRarityBucket('special'));
+
 function getClassForRarity(rarity) {
   const rarityClasses = {
       'Common [1 in 2.5]': 'under100',
@@ -11935,3 +12046,82 @@ document.addEventListener("visibilitychange", () => {
       cancelRefreshTimer();
   }
 });
+
+let __bgStack, __bgLayerA, __bgLayerB, __bgActive = 0;
+
+function ensureBgStack() {
+  if (__bgStack) return;
+
+  // Create stack container + two layers
+  __bgStack = document.createElement("div");
+  __bgStack.id = "bg-stack";
+  const a = document.createElement("div");
+  const b = document.createElement("div");
+  a.className = "bg-layer";
+  b.className = "bg-layer";
+  __bgStack.appendChild(a);
+  __bgStack.appendChild(b);
+
+  // Insert as the first child so it sits under typical content
+  document.body.insertBefore(__bgStack, document.body.firstChild);
+
+  __bgLayerA = a;
+  __bgLayerB = b;
+
+  // Initialize with whatever body currently has (so first fade looks natural)
+  const initialBg = getComputedStyle(document.body).backgroundImage;
+  if (initialBg && initialBg !== "none") {
+    __bgLayerA.style.backgroundImage = initialBg;
+    __bgLayerA.classList.add("is-active");
+    __bgActive = 0;
+  } else {
+    __bgActive = 0; // A will be first to show when we set it
+  }
+}
+
+function changeBackground(rarityClass, itemTitle) {
+  if (!isChangeEnabled) return;
+
+  const details = backgroundDetails[rarityClass];
+  if (!details) return;
+
+  // Prepare the stack
+  ensureBgStack();
+
+  // Determine next layer and set its image
+  const nextLayer = __bgActive === 0 ? __bgLayerB : __bgLayerA;
+  const currLayer = __bgActive === 0 ? __bgLayerA : __bgLayerB;
+
+  // Point to the file URL (string or template is ok)
+  nextLayer.style.backgroundImage = `url(${details.image})`;
+
+  const bucket = normalizeRarityBucket(rarityClass);
+  triggerScreenShakeByBucket(bucket);
+
+  // Trigger the crossfade on the next animation frame to ensure style is applied
+  requestAnimationFrame(() => {
+    // Bring the next one in, send the current one out
+    nextLayer.classList.add("is-active");
+    currLayer.classList.remove("is-active");
+    __bgActive = __bgActive === 0 ? 1 : 0;
+  });
+
+  // Maintain your audio behavior
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+  }
+  if (details.audio) {
+    const newAudio = document.getElementById(details.audio);
+    if (newAudio) {
+      newAudio.play();
+      currentAudio = newAudio;
+    }
+  } else {
+    currentAudio = null;
+  }
+
+  // Clear direct body background inline style so the stack is the only visual source.
+  // This prevents flicker if some other code set document.body.style.backgroundImage.
+  document.body.style.backgroundImage = "";
+}
