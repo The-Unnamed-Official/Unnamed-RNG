@@ -1,3 +1,373 @@
+:root {
+  --btn-radius: 12px;
+  --btn-radius-pill: 999px;
+  --btn-shadow: 0 6px 18px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.06);
+  --btn-shadow-hover: 0 10px 26px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08);
+  --btn-transition: 220ms cubic-bezier(.2, .7, .2, 1);
+  --btn-focus: 0 0 0 3px color-mix(in oklab, var(--btn-accent, #7aa2ff) 55%, transparent);
+
+  /* Base palette */
+  --btn-bg: linear-gradient(180deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.06) 100%);
+  --btn-bg-hover: linear-gradient(180deg, rgba(255,255,255,.22) 0%, rgba(255,255,255,.10) 100%);
+  --btn-text: #f2f5ff;
+
+  /* Variants */
+  --btn-accent: #7aa2ff;      /* Primary accent */
+  --btn-accent-2: #76e4c3;    /* Secondary accent */
+  --btn-danger: #ff6b6b;      /* Danger accent */
+  --btn-ghost: rgba(255,255,255,.08);
+}
+
+/* Motion safety */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --btn-transition: 0ms linear;
+  }
+}
+
+/* Base button apply: native buttons and common classes */
+button,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+.btn {
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
+  border: 0;
+  border-radius: var(--btn-radius);
+  padding: 10px 14px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--btn-text);
+  background: var(--btn-bg);
+  backdrop-filter: blur(8px) saturate(120%);
+  box-shadow: var(--btn-shadow);
+  transition: transform var(--btn-transition),
+              box-shadow var(--btn-transition),
+              background var(--btn-transition),
+              outline-offset var(--btn-transition);
+  outline: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hover/Active interactions */
+button:hover,
+input[type="button"]:hover,
+input[type="submit"]:hover,
+input[type="reset"]:hover,
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--btn-shadow-hover);
+  background: var(--btn-bg-hover);
+}
+
+button:active,
+input[type="button"]:active,
+input[type="submit"]:active,
+input[type="reset"]:active,
+.btn:active {
+  transform: translateY(0) scale(.995);
+}
+
+/* Focus ring */
+button:focus-visible,
+input[type="button"]:focus-visible,
+input[type="submit"]:focus-visible,
+input[type="reset"]:focus-visible,
+.btn:focus-visible {
+  box-shadow: var(--btn-shadow), var(--btn-focus);
+}
+
+/* Disabled */
+button:disabled,
+input[type="button"]:disabled,
+input[type="submit"]:disabled,
+input[type="reset"]:disabled,
+.btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Icon alignment helpers (optional) */
+.btn .icon,
+button .icon {
+  display: inline-flex;
+  width: 1.1em;
+  height: 1.1em;
+  margin-right: .5ch;
+  vertical-align: -2px;
+}
+
+/* Size variants */
+.btn-sm { padding: 8px 12px; border-radius: 10px; font-size: .9rem; }
+.btn-lg { padding: 12px 16px; border-radius: 14px; font-size: 1.05rem; }
+
+/* Pill option */
+.btn-pill { border-radius: var(--btn-radius-pill); }
+
+/* ============ Color Variants ============ */
+.btn-primary {
+  --btn-accent: #7aa2ff;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--btn-accent) 22%, #ffffff 0%) 0%, color-mix(in oklab, var(--btn-accent) 14%, #000 100%) 100%),
+    var(--btn-bg);
+  color: #0b1225;
+  text-shadow: 0 1px 0 rgba(255,255,255,.25);
+}
+.btn-primary:hover {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--btn-accent) 28%, #ffffff 0%) 0%, color-mix(in oklab, var(--btn-accent) 20%, #000 100%) 100%),
+    var(--btn-bg-hover);
+}
+
+.btn-secondary {
+  --btn-accent: #76e4c3;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--btn-accent) 22%, #ffffff 0%) 0%, color-mix(in oklab, var(--btn-accent) 14%, #000 100%) 100%),
+    var(--btn-bg);
+  color: #041510;
+}
+.btn-secondary:hover {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--btn-accent) 28%, #ffffff 0%) 0%, color-mix(in oklab, var(--btn-accent) 20%, #000 100%) 100%),
+    var(--btn-bg-hover);
+}
+
+.btn-danger {
+  --btn-accent: var(--btn-danger);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--btn-accent) 22%, #ffffff 0%) 0%, color-mix(in oklab, var(--btn-accent) 10%, #000 100%) 100%),
+    var(--btn-bg);
+}
+.btn-danger:hover {
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--btn-accent) 28%, #ffffff 0%) 0%, color-mix(in oklab, var(--btn-accent) 16%, #000 100%) 100%),
+    var(--btn-bg-hover);
+}
+
+/* Ghost (low-emphasis) */
+.btn-ghost {
+  background: var(--btn-ghost);
+  color: #e9ecf8;
+  border: 1px solid rgba(255,255,255,.14);
+}
+.btn-ghost:hover {
+  background: color-mix(in oklab, var(--btn-ghost) 60%, #ffffff 8%);
+}
+
+/* ============ Ripple micro-interaction (CSS-only) ============ */
+button::after,
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120px 120px at var(--r-x, 50%) var(--r-y, 50%), rgba(255,255,255,.22), transparent 60%);
+  opacity: 0;
+  transition: opacity var(--btn-transition), transform var(--btn-transition);
+  transform: scale(0.92);
+  pointer-events: none;
+}
+button:active::after,
+.btn:active::after {
+  opacity: 1;
+  transform: scale(1);
+}
+button:hover::after,
+.btn:hover::after {
+  opacity: .35;
+}
+
+/* Utility: set ripple origin via JS if desired
+   element.style.setProperty('--r-x', `${e.offsetX}px`);
+   element.style.setProperty('--r-y', `${e.offsetY}px`);
+*/
+
+/* ============ Freshen existing project-specific buttons ============ */
+
+/* Roll button (if you use .rButton as wrapper) */
+.rButton,
+#rollBtn,
+#roll-button {
+  /* keep existing sizing; modernize visuals */
+  border-radius: var(--btn-radius-pill);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, #88ffef 22%, #ffffff 0%) 0%, color-mix(in oklab, #3cc9ff 30%, #000 100%) 100%);
+  color: #03181b;
+  text-shadow: 0 1px 0 rgba(255,255,255,.35);
+  box-shadow: 0 10px 24px rgba(60, 201, 255, .35), inset 0 1px 0 rgba(255,255,255,.25);
+}
+.rButton:hover,
+#rollBtn:hover,
+#roll-button:hover {
+  box-shadow: 0 14px 34px rgba(60, 201, 255, .46), inset 0 1px 0 rgba(255,255,255,.3);
+}
+
+/* Rarity filter buttons */
+.rarity-button {
+  border-radius: var(--btn-radius);
+  padding: 8px 12px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  background: linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 100%);
+  border: 1px solid rgba(255,255,255,.12);
+  color: #eef3ff;
+  transition: background var(--btn-transition), transform var(--btn-transition), box-shadow var(--btn-transition), border-color var(--btn-transition);
+}
+.rarity-button:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(180deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.08) 100%);
+  box-shadow: 0 8px 18px rgba(0,0,0,.22);
+  border-color: rgba(255,255,255,.2);
+}
+.rarity-button.active,
+.rarity-button.is-active {
+  /* Active state pops and gets an accent ring */
+  background: linear-gradient(180deg, rgba(122,162,255,.24) 0%, rgba(122,162,255,.10) 100%);
+  border-color: color-mix(in oklab, #7aa2ff 45%, #ffffff 15%);
+  box-shadow: 0 10px 24px rgba(122,162,255,.28), 0 0 0 2px color-mix(in oklab, #7aa2ff 40%, transparent);
+}
+
+/* Optional: different accent by data-rarity */
+.rarity-button[data-rarity="under100"].active { --btn-accent: #a7f3d0; }
+.rarity-button[data-rarity="under1k"].active  { --btn-accent: #93c5fd; }
+.rarity-button[data-rarity="under10k"].active { --btn-accent: #c4b5fd; }
+.rarity-button[data-rarity="under100k"].active{ --btn-accent: #fde68a; }
+.rarity-button[data-rarity="under1m"].active  { --btn-accent: #fda4af; }
+.rarity-button[data-rarity="special"].active  { --btn-accent: #f0abfc; }
+.rarity-button.active {
+  outline: none;
+  box-shadow:
+    0 10px 24px color-mix(in oklab, var(--btn-accent, #7aa2ff) 28%, transparent),
+    0 0 0 2px color-mix(in oklab, var(--btn-accent, #7aa2ff) 40%, transparent);
+}
+
+/* Dropdown actions look like compact buttons */
+.dropdown-menu .dropdown-item,
+.dropdown-menu button,
+.dropdown-menu .btn {
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+  border: 1px solid rgba(255,255,255,.10);
+  color: #e8edff;
+  box-shadow: none;
+}
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu button:hover,
+.dropdown-menu .btn:hover {
+  background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.08));
+  transform: translateY(-1px);
+}
+
+/* Danger-looking actions inside dropdown */
+.dropdown-menu .dropdown-item.danger,
+.dropdown-menu .btn-danger {
+  background: linear-gradient(180deg, rgba(255,107,107,.15), rgba(255,107,107,.08));
+  border-color: rgba(255,107,107,.35);
+}
+.dropdown-menu .dropdown-item.danger:hover {
+  background: linear-gradient(180deg, rgba(255,107,107,.22), rgba(255,107,107,.12));
+}
+
+/* Toolbar groups (if you have grouped buttons) */
+.btn-group {
+  display: inline-flex;
+  gap: 8px;
+}
+.btn-group .btn,
+.btn-group button {
+  border-radius: 10px;
+}
+
+/* If some legacy elements should keep plain look, add .btn-plain to them */
+.btn-plain {
+  background: none !important;
+  border: 1px solid rgba(255,255,255,.2) !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+/* Optional: subtle sheen on hover for primary buttons */
+.btn-primary::before,
+.rButton::before {
+  content: "";
+  position: absolute;
+  top: -120%;
+  left: -30%;
+  width: 160%;
+  height: 220%;
+  transform: rotate(18deg);
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.25) 45%, rgba(255,255,255,.08) 55%, transparent 100%);
+  opacity: 0;
+  transition: opacity var(--btn-transition), transform var(--btn-transition);
+  pointer-events: none;
+}
+.btn-primary:hover::before,
+.rButton:hover::before {
+  opacity: .8;
+  transform: rotate(18deg) translateY(20%);
+}
+
+#bg-stack {
+  position: fixed;
+  inset: 0;
+  z-index: 0;              /* will sit below all regular content */
+  pointer-events: none;    /* purely decorative */
+  overflow: hidden;
+  background: #000;
+}
+
+#bg-stack .bg-layer {
+  position: absolute;
+  inset: 0;
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transform: scale(1.03);                /* slight Ken Burns feel on new image */
+  transition:
+    opacity 700ms ease,
+    transform 6000ms ease;               /* slow zoom settles over time */
+  will-change: opacity, transform;
+  filter: saturate(1.03) contrast(1.02); /* tiny polish */
+}
+
+/* Active/visible layer */
+#bg-stack .bg-layer.is-active {
+  opacity: 1;
+  transform: scale(1.0);
+}
+
+/* Optional vignette for depth */
+#bg-stack::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 50% 10%, rgba(255,255,255,.05) 0%, transparent 45%) ,
+    radial-gradient(140% 120% at 50% 120%, rgba(0,0,0,.36) 20%, rgba(0,0,0,.55) 100%);
+  mix-blend-mode: overlay;
+  opacity: .55;
+}
+
+/* Hide the stack during cutscenes (we'll toggle this from JS) */
+#bg-stack.is-hidden {
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+/* Prefer-reduced-motion: fade only, no zoom */
+@media (prefers-reduced-motion: reduce) {
+  #bg-stack .bg-layer {
+    transform: none;
+    transition: opacity 250ms ease;
+  }
+}
+
 * {
     user-select: none;
     margin: 0;
@@ -103,41 +473,109 @@
 }
 
 #rollingHistory {
-    position: absolute;
-    bottom: 10px;
-    left: 10px;
-    width: 355px;
-    display: inline-block;
-    color: #fff;
-    padding: 15px;
-    background: url(backgrounds/rng_master.png);
-    border-style: groove;
-    background-size: cover;
-    background-position: center;
-    border-radius: 10px;
-    box-shadow: 0 0 10px #0000001a;
-    z-index: 20000002;
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  width: 355px;
+  display: inline-block;
+  color: #fff;
+  padding: 14px 14px 12px;
+  border-radius: 16px;
+
+  background:
+    linear-gradient(180deg, rgba(20,20,20,0.68), rgba(20,20,20,0.78)),
+    url(backgrounds/rng_master.png);
+  background-size: cover;
+  background-position: center;
+
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow:
+    0 10px 24px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+
+  overflow: hidden;
+  isolation: isolate;
+  z-index: 20000002; /* keep above surrounding UI */
 }
 
+/* Sheen for history panel too */
+#rollingHistory::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      110deg,
+      transparent 0%,
+      rgba(255,255,255,0.06) 45%,
+      rgba(255,255,255,0.10) 50%,
+      rgba(255,255,255,0.06) 55%,
+      transparent 100%
+    );
+  transform: translateX(-120%);
+  animation: containerSheen 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#rollingHistory > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* History header chip */
 #rollingHistory h3 {
-    margin: 0 0 10px;
-    font-size: 18px;
+  margin: 0 0 10px;
+  font-size: 18px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 10px;
+  color: #fff;
+  background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  display: inline-block;
 }
 
+/* History list panel and items */
 #historyList {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    background: #6495ed;
-    border-radius: 20px;
+  list-style: none;
+  padding: 8px;
+  margin: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  max-height: 240px;           /* prevent runaway height; scroll if long */
+  overflow-y: auto;
 }
 
 #historyList li {
-    font-size: 16px;
-    line-height: 1.6;
-    border-radius: 10px;
-    padding-bottom: 10px;
-    padding-top: 10px;
+  font-size: 15px;
+  line-height: 1.5;
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin: 6px 4px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  word-break: break-word;
+}
+
+/* Use the same sheen animation keyframes as the main container */
+@keyframes containerSheen {
+  0%   { transform: translateX(-120%); }
+  12%  { transform: translateX(120%); }
+  100% { transform: translateX(120%); }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .container1::before,
+  #rollingHistory::before {
+    animation: none !important;
+  }
 }
 
 body {
@@ -155,34 +593,268 @@ body {
     z-index: 99999;
 }
 
+/* Replace the old .container block with this */
 .container {
-    margin-top: 33vh;
-    display: inline-block;
-    padding: 20px;
-    background: url(backgrounds/rng_master.png);
-    border-style: groove;
-    background-size: cover;
-    background-position: center;
-    border-radius: 10px;
-    box-shadow: 0 0 10px #0000001a;
-    z-index: 9999;
+  position: relative;
+  margin: 33vh auto 0 auto;          /* keep your vertical offset, center horizontally */
+  display: inline-block;
+  padding: 18px 18px 22px;
+  width: min(92vw, 740px);
+  border-radius: 16px;
+
+  /* Layered glass look with your background image subtly present */
+  background:
+    linear-gradient(180deg, rgba(28,28,28,0.38), rgba(28,28,28,0.48)),
+    url(backgrounds/rng_master.png);
+  background-size: cover;
+  background-position: center;
+  /* Slightly brighter border and softer shadow for lift */
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow:
+    0 12px 28px rgba(0,0,0,0.40),
+    inset 0 1px 0 rgba(255,255,255,0.09);
+
+  /* Nice glass blur where supported */
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+
+  overflow: hidden;
+  isolation: isolate;                 /* ensures pseudo-elements stack within */
+  z-index: 9999;                      /* same z-index as your old */
+}
+
+/* Subtle animated sheen across the panel */
+.container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      110deg,
+      transparent 0%,
+      rgba(255,255,255,0.06) 45%,
+      rgba(255,255,255,0.10) 50%,
+      rgba(255,255,255,0.06) 55%,
+      transparent 100%
+    );
+  transform: translateX(-120%);
+  animation: containerSheen 5.5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Soft radial spotlight for depth */
+.container::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(60% 60% at 50% 0%,
+      rgba(255,255,255,0.05) 0%,
+      transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes containerSheen {
+  0%   { transform: translateX(-120%); }
+  12%  { transform: translateX(120%); }
+  100% { transform: translateX(120%); }
+}
+
+/* Inside layout: centered, clean spacing */
+.container .containerInside {
+  position: relative;
+  z-index: 1;                         /* above pseudo-elements */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 8px 2px;
+}
+
+/* Title: crisp and subtle */
+.container .gameTitle {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  font-size: clamp(20px, 3.2vw, 28px);
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.6px;
+
+  background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* Roll button: bold, tactile, and glowing on hover */
+.container .rButton {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: clamp(72px, 10vw, 92px);
+  height: clamp(72px, 10vw, 92px);
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+
+  color: #fff;
+  background: radial-gradient(circle at 50% 30%, #7aa4ff 0%, #4169e1 60%, #2b4bb3 100%);
+  box-shadow:
+    0 10px 24px rgba(65,105,225,0.45),
+    inset 0 2px 8px rgba(255,255,255,0.25);
+  transition:
+    transform 180ms ease,
+    box-shadow 220ms ease,
+    filter 220ms ease;
+  will-change: transform, box-shadow, filter;
+  z-index: 1;
+}
+
+.container .rButton:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 14px 28px rgba(65,105,225,0.55),
+    inset 0 2px 8px rgba(255,255,255,0.28);
+  filter: saturate(1.1);
+}
+
+.container .rButton:active {
+  transform: translateY(0);
+}
+
+/* Rolling icon slightly larger by default */
+.container .rButton i#roll {
+  font-size: clamp(14px, 2.1vw, 18px);
+  transform: translateY(1px); /* tiny nudge for visual centering */
+}
+
+/* Sheen across the roll button on hover */
+.container .rButton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(60% 60% at 50% 10%, rgba(255,255,255,0.22), transparent 60%),
+    linear-gradient(110deg, transparent 45%, rgba(255,255,255,0.35) 50%, transparent 55%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: translateX(-30%);
+  transition: opacity 180ms ease, transform 280ms ease;
+  pointer-events: none;
+}
+
+.container .rButton:hover::after {
+  opacity: 1;
+  transform: translateX(0%);
+}
+
+/* Result display chip */
+.container .res {
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+
+  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+/* Compact screens */
+@media (max-width: 480px) {
+  .container {
+    background:
+      linear-gradient(180deg, rgba(32,32,32,0.34), rgba(32,32,32,0.44)),
+      url(backgrounds/rng_master.png);
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .container::before,
+  .container .rButton::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .container .rButton {
+    transition: none !important;
+  }
 }
 
 .container1 {
-    position: absolute;
-    bottom: 10px;
-    left: 383px;
-    width: 250px;
-    height: 185px;
-    display: inline-block;
-    padding: 20px;
-    background: url(backgrounds/rng_master.png);
-    border-style: groove;
-    background-size: cover;
-    background-position: center;
-    border-radius: 10px;
-    box-shadow: 0 0 10px #0000001a;
-    z-index: 9999999;
+  position: absolute;
+  bottom: 10px;
+  left: 383px;
+  width: 250px;
+  min-height: 185px;            /* keep your height target but allow content growth */
+  display: inline-block;
+  padding: 14px 14px 16px;
+  border-radius: 16px;
+
+  /* Glass panel with your background image */
+  background:
+    linear-gradient(180deg, rgba(20,20,20,0.68), rgba(20,20,20,0.78)),
+    url(backgrounds/rng_master.png);
+  background-size: cover;
+  background-position: center;
+
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow:
+    0 10px 24px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.06);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+
+  overflow: hidden;
+  isolation: isolate;
+  z-index: 9999999;
+}
+
+/* Light sheen (subtle) */
+.container1::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      110deg,
+      transparent 0%,
+      rgba(255,255,255,0.06) 45%,
+      rgba(255,255,255,0.10) 50%,
+      rgba(255,255,255,0.06) 55%,
+      transparent 100%
+    );
+  transform: translateX(-120%);
+  animation: containerSheen 6s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Keep inner content above sheen */
+.container1 > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Optional: tidy title and small chips inside */
+.container1 .rollsCount {
+  background: transparent;
+  margin: 0 0 8px 0;
+  padding: 0;
+  color: #ffffff;
+}
+
+.container1 .count {
+  background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+  border: 1px solid rgba(255,255,255,0.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 4px 8px;
 }
 
 .rButton {
@@ -1825,87 +2497,170 @@ body.griCutsceneBgImg {
 }
 
 .inventory {
-    visibility: hidden;
-    position: fixed;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 60vh;
-    background: url(backgrounds/rng_master.png);
-    border-style: groove;
-    background-position: center;
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: 0 0 10px #0000001a;
-    text-align: left;
-    overflow-y: auto;
-    max-height: 85vh;
-    transition:
-        max-width 0.5s ease;
-    z-index: 999999;
+  visibility: hidden;
+  position: fixed;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60vh;
+  /* Keep background image but add a dark overlay for readability */
+  background:
+    linear-gradient(rgba(15,15,15,0.75), rgba(15,15,15,0.75)),
+    url(backgrounds/rng_master.png);
+  background-position: center;
+  background-size: cover;
+  /* Remove groove; use a clean subtle border */
+  border: 1px solid #3f3f3f;
+  border-radius: 14px;
+  padding: 16px;
+  /* Stronger, softer shadow */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  text-align: left;
+  overflow-y: auto;
+  max-height: 85vh;
+  /* No animated transitions */
+  z-index: 999999;
 }
 
+/* Inner content container */
 .invent {
-    background: #ffffff77;
-    border-radius: 10px;
-    padding: 6px 6px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 10px;
 }
 
+/* Title */
 .inventory h2 {
-    font-size: 20px;
-    margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin: 6px 6px 12px 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
 #inventoryList {
-    list-style-type: none;
-    padding: 20px;
-    list-style-type: none;
-    padding: 20px;
-    overflow-y: auto;
-    transition: max-height 0.4s ease-in-out, height 0.4s ease-in-out;
+  list-style: none;
+  padding: 12px;
+  margin: 0;
+  overflow-y: auto;
+  /* Remove height transition (no animations) */
 }
-
 
 .dropdown-menu {
-    display: none;
-    position: absolute;
-    top: 100%;
-    right: 0;
-    background-color: #333;
-    padding: 10px;
-    border-radius: 5px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    z-index: 10;
+  display: none;                 /* default closed */
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 200px;
+  padding: 8px;
+  background: rgba(28, 28, 28, 0.92);
+  border: 1px solid #4a4a4a;
+  border-radius: 8px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px);
+  z-index: 99999999999999999999;
 }
 
-.dropdown-menu button {
-    background: none;
-    border: none;
-    color: white;
-    padding: 5px;
-    text-align: left;
-    cursor: pointer;
-    width: 100%;
-    font-size: 14px;
-    transition: background-color 0.2s ease;
+.dropdown-menu.open {
+  display: block;                /* support class-based toggling */
+  animation: dropdownFade 120ms ease-out;
 }
 
-.dropdown-menu button:hover {
-    background-color: #555;
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
+.dropdown-header {
+  padding: 6px 8px 4px 8px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  margin-bottom: 6px;
+}
+
+.dropdown-header .info-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-header .info-sub {
+  margin-top: 3px;
+  font-size: 12px;
+  color: #bdbdbd;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #555, transparent);
+  margin: 6px 4px;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  color: #eaeaea;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.15s ease, transform 0.08s ease;
+}
+
+.dropdown-item i {
+  width: 16px;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.dropdown-item:hover {
+  background-color: #3b3b3b;
+}
+
+.dropdown-item:active {
+  transform: scale(0.98);
+}
+
+.dropdown-item.danger {
+  color: #ffd8d8;
+}
+
+.dropdown-item.danger:hover {
+  background-color: #5a2f2f;
+}
+
+/* Keep burger icon subtle but touch-friendly */
 .burger-bar {
-    display: inline-block;
-    margin-left: 10px;
-    cursor: pointer;
-    font-size: 16px;
-    z-index: 11;
-    position: relative;
-    transition: color 0.2s ease;
+  display: inline-block;
+  margin-left: 10px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  user-select: none;
+  color: #e0e0e0;
+  transition: color 0.2s ease, transform 0.06s ease;
 }
 
 .burger-bar:hover {
-    color: #aaa;
+  color: #cfcfcf;
+}
+
+.burger-bar:active {
+  transform: scale(0.96);
 }
 
 #inventoryList li {
@@ -1919,6 +2674,7 @@ body.griCutsceneBgImg {
     color: white;
     position: relative;
     transition: transform 0.2s ease;
+    overflow: visible;
 }
 
 #inventoryList li:hover {
@@ -1929,8 +2685,32 @@ body.griCutsceneBgImg {
     padding-bottom: 200px;
 }
 
+#inventoryList li .burger-bar {
+  position: absolute;         /* new: overlay positioning */
+  top: 6px;                   /* tweak as needed to align over image */
+  right: 6px;
+  font-size: 18px;
+  line-height: 1;
+  z-index: 100000010;         /* above other card content */
+  background: rgba(0,0,0,0.35);
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 6px;
+}
+
+#inventoryList li .burger-bar .dropdown-menu {
+  position: absolute;         /* ensure anchored to burger-bar */
+  top: calc(100% + 6px);      /* right under the burger */
+  right: 0;
+  z-index: 100000011;         /* above titles and other content */
+}
+
 .inventory .deleteAll {
-    background: #ed6464;
+  background: #db5656;     /* slightly softer red */
+  color: #fff;
+  border: 1px solid #b74444;
+  border-radius: 8px;
+  padding: 8px 10px;
 }
 
 .inventory .deleteAll:hover {
@@ -1938,13 +2718,13 @@ body.griCutsceneBgImg {
 }
 
 .inventory button {
-    margin-bottom: 5px;
-    padding: 4px;
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 9px;
-    border: none;
-    transition: background-color 0.25s, transform 0.15s;
+  margin-bottom: 6px;
+  padding: 8px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: background-color 0.25s, transform 0.15s;
 }
 
 .inventory button:hover {
@@ -3144,4 +3924,83 @@ body.griCutsceneBgImg {
     color: white;
     font-family: 'Arial', sans-serif;
     text-align: center;
+}
+
+@keyframes screenShakeXS {
+  0%,100% { transform: translate(0,0); }
+  10% { transform: translate(1px,-1px); }
+  20% { transform: translate(-1px,1px); }
+  30% { transform: translate(1px,1px); }
+  40% { transform: translate(-1px,-1px); }
+  50% { transform: translate(0,0); }
+  60% { transform: translate(1px,0); }
+  70% { transform: translate(0,-1px); }
+  80% { transform: translate(-1px,0); }
+  90% { transform: translate(0,1px); }
+}
+
+@keyframes screenShakeS {
+  0%,100% { transform: translate(0,0); }
+  10% { transform: translate(2px,-2px); }
+  20% { transform: translate(-2px,2px); }
+  30% { transform: translate(2px,2px); }
+  40% { transform: translate(-2px,-2px); }
+  50% { transform: translate(0,0); }
+  60% { transform: translate(2px,0); }
+  70% { transform: translate(0,-2px); }
+  80% { transform: translate(-2px,0); }
+  90% { transform: translate(0,2px); }
+}
+
+@keyframes screenShakeM {
+  0%,100% { transform: translate(0,0); }
+  10% { transform: translate(4px,-4px); }
+  20% { transform: translate(-4px,4px); }
+  30% { transform: translate(4px,4px); }
+  40% { transform: translate(-4px,-4px); }
+  50% { transform: translate(0,0); }
+  60% { transform: translate(4px,0); }
+  70% { transform: translate(0,-4px); }
+  80% { transform: translate(-4px,0); }
+  90% { transform: translate(0,4px); }
+}
+
+@keyframes screenShakeL {
+  0%,100% { transform: translate(0,0); }
+  10% { transform: translate(7px,-7px); }
+  20% { transform: translate(-7px,7px); }
+  30% { transform: translate(7px,7px); }
+  40% { transform: translate(-7px,-7px); }
+  50% { transform: translate(0,0); }
+  60% { transform: translate(7px,0); }
+  70% { transform: translate(0,-7px); }
+  80% { transform: translate(-7px,0); }
+  90% { transform: translate(0,7px); }
+}
+
+@keyframes screenShakeXL {
+  0%,100% { transform: translate(0,0) rotate(0deg); }
+  10% { transform: translate(12px,-12px) rotate(0.5deg); }
+  20% { transform: translate(-12px,12px) rotate(-0.5deg); }
+  30% { transform: translate(12px,12px) rotate(0.4deg); }
+  40% { transform: translate(-12px,-12px) rotate(-0.4deg); }
+  50% { transform: translate(0,0) rotate(0deg); }
+  60% { transform: translate(12px,0) rotate(0.3deg); }
+  70% { transform: translate(0,-12px) rotate(-0.3deg); }
+  80% { transform: translate(-12px,0) rotate(0.2deg); }
+  90% { transform: translate(0,12px) rotate(-0.2deg); }
+}
+
+/* Apply to body so the whole screen shakes */
+body.shake-xs { animation: screenShakeXS 320ms ease-in-out; }
+body.shake-s  { animation: screenShakeS  450ms ease-in-out; }
+body.shake-m  { animation: screenShakeM  600ms ease-in-out; }
+body.shake-l  { animation: screenShakeL  750ms ease-in-out; }
+body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
+
+/* Reduced-motion users: keep it tiny/short */
+@media (prefers-reduced-motion: reduce) {
+  body.shake-s, body.shake-m, body.shake-l, body.shake-xl {
+    animation: screenShakeXS 180ms ease-in-out;
+  }
 }
