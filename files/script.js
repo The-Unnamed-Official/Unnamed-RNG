@@ -10998,10 +10998,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const settingsHeader = settingsMenu?.querySelector(".settings-header");
   const settingsBody = settingsMenu?.querySelector(".settings-body");
   const statsDragHandle = statsMenu?.querySelector(".stats-menu__drag-handle");
+  const achievementsMenu = document.getElementById("achievementsMenu");
+  const achievementsHeader = achievementsMenu?.querySelector(".achievements-header");
+  const achievementsBody = achievementsMenu?.querySelector(".achievements-body");
+  const headerStats = statsMenu.querySelector("h3");
   let isDraggingSettings = false;
+  let isDraggingAchievements = false;
   let isDraggingStats = false;
   let offsetX = 0;
   let offsetY = 0;
+  let offsetXAchievements = 0;
+  let offsetYAchievements = 0;
   let offsetXStyle = 0;
   let offsetYStyle = 0;
 
@@ -11037,6 +11044,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
       offsetXStyle = event.clientX - rect.left;
       offsetYStyle = event.clientY - rect.top;
+  if (achievementsHeader) {
+    achievementsHeader.addEventListener("mousedown", (event) => {
+      if (event.button !== 0 || event.target.closest(".achievements-close-btn")) {
+        return;
+      }
+
+      const rect = achievementsMenu.getBoundingClientRect();
+      achievementsMenu.style.left = `${rect.left}px`;
+      achievementsMenu.style.top = `${rect.top}px`;
+      achievementsMenu.style.transform = "none";
+
+      offsetXAchievements = event.clientX - rect.left;
+      offsetYAchievements = event.clientY - rect.top;
+      isDraggingAchievements = true;
+      achievementsHeader.classList.add("is-dragging");
+      event.preventDefault();
+    });
+  }
+
+  if (headerStats) {
+    headerStats.addEventListener("mousedown", (event) => {
       isDraggingStats = true;
       statsDragHandle.classList.add("is-dragging");
       event.preventDefault();
@@ -11058,10 +11086,30 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  if (achievementsMenu && achievementsBody) {
+    achievementsMenu.addEventListener(
+      "wheel",
+      (event) => {
+        if (achievementsBody.contains(event.target)) {
+          return;
+        }
+
+        achievementsBody.scrollTop += event.deltaY;
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+  }
+
   document.addEventListener("mousemove", (event) => {
     if (isDraggingSettings) {
       settingsMenu.style.left = `${event.clientX - offsetX}px`;
       settingsMenu.style.top = `${event.clientY - offsetY}px`;
+    }
+
+    if (isDraggingAchievements) {
+      achievementsMenu.style.left = `${event.clientX - offsetXAchievements}px`;
+      achievementsMenu.style.top = `${event.clientY - offsetYAchievements}px`;
     }
 
     if (isDraggingStats) {
@@ -11074,6 +11122,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isDraggingSettings) {
       isDraggingSettings = false;
       settingsHeader?.classList.remove("is-dragging");
+    }
+
+    if (isDraggingAchievements) {
+      isDraggingAchievements = false;
+      achievementsHeader?.classList.remove("is-dragging");
     }
 
     if (isDraggingStats) {
@@ -11129,6 +11182,10 @@ closeSettings.addEventListener("click", () => {
 
 achievementsButton.addEventListener("click", () => {
   achievementsMenu.style.display = "block";
+  const achievementsBodyElement = achievementsMenu.querySelector(".achievements-body");
+  if (achievementsBodyElement) {
+    achievementsBodyElement.scrollTop = 0;
+  }
 });
 
 closeAchievements.addEventListener("click", () => {

@@ -127,55 +127,80 @@
     </div>
 
     <div id="achievementsMenu" class="achievements-menu" style="display: none;">
-        <div class="achievement-list">
-            <div class="achievement-grid">
-                <div class="achievement-item" data-roll="100" data-name="I think I like this">I think I like this</div>
-                <div class="achievement-item" data-roll="1,000" data-name="This is getting serious">This is getting serious</div>
-                <div class="achievement-item" data-roll="5,000" data-name="I'm the Roll Master">I'm the Roll Master</div>
-                <div class="achievement-item" data-roll="10,000" data-name="It's over 9000!!">It's over 9000!!</div>
-                <div class="achievement-item" data-roll="25,000" data-name="When will you stop?">When will you stop?</div>
-                <div class="achievement-item" data-roll="30,303" data-name="No Unnamed?">No Unnamed?</div>
-                <div class="achievement-item" data-roll="50,000" data-name="Beyond Luck">Beyond Luck</div>
-                <div class="achievement-item" data-roll="100,000" data-name="Rolling machine">Rolling machine</div>
-                <div class="achievement-item" data-roll="250,000" data-name="Your PC must be burning">Your PC must be burning</div>
-                <div class="achievement-item" data-roll="500,000" data-name="Half a million!1!!1">Half a million!1!!1</div>
-                <div class="achievement-item" data-roll="1,000,000" data-name="One, Two.. ..One Million!">One, Two.. ..One Million!</div>
-                <div class="achievement-item" data-roll="10,000,000" data-name="No H1di?">No H1di?</div>
-                <div class="achievement-item" data-roll="25,000,000" data-name="Are you really doing this?">Are you really doing this?</div>
-                <div class="achievement-item" data-roll="50,000,000" data-name="You have no limits...">You have no limits...</div>
-                <div class="achievement-item" data-roll="100,000,000" data-name="WHAT HAVE YOU DONE">WHAT HAVE YOU DONE</div>
-                <div class="achievement-item" data-roll="1,000,000,000" data-name="AHHHHHHHHHHH">AHHHHHHHHHHH</div>
+        <div class="achievements-panel">
+            <div class="achievements-header">
+                <h3 class="dragTxt">Achievements</h3>
+                <button id="closeAchievements" class="achievements-close-btn" type="button">Close</button>
             </div>
-            <div class="achievement-grid">
-                <div class="achievement-itemT" data-time="the game" data-name="Just the beginning">Just the beginning</div>
-                <div class="achievement-itemT" data-time="one hour" data-name="This doesn't add up">This doesn't add up</div>
-                <div class="achievement-itemT" data-time="two hours" data-name="When does it end...">When does it end...</div>
-                <div class="achievement-itemT" data-time="10 hours" data-name="I swear I'm not addicted...">I swear I'm not addicted...</div>
-                <div class="achievement-itemT" data-time="one day" data-name="Grass? What's that?">Grass? What's that?</div>
-                <div class="achievement-itemT" data-time="two days" data-name="Unnamed's RNG biggest fan">Unnamed's RNG biggest fan</div>
-                <div class="achievement-itemT" data-time="one week" data-name="RNG is life!">RNG is life!</div>
-                <div class="achievement-itemT" data-time="two weeks" data-name="I. CAN'T. STOP">I. CAN'T. STOP</div>
-                <div class="achievement-itemT" data-time="a month" data-name="No Lifer">No Lifer</div>
-                <div class="achievement-itemT" data-time="two months" data-name="Are you okay?">Are you okay?</div>
-                <div class="achievement-itemT" data-time="six months" data-name="You are a True No Lifer">You are a True No Lifer</div>
-                <div class="achievement-itemT" data-time="a year" data-name="No one's getting this legit">No one's getting this legit</div>
-            </div>
+            <div class="achievements-body achievement-list">
+                <section class="achievements-section">
+                    <h4 class="achievements-section__title">Roll Milestones</h4>
+                    <div class="achievement-grid">
+                        <div class="achievement-item" data-roll="100" data-name="I think I like this">I think I like this</div>
+                        <div class="achievement-item" data-roll="1,000" data-name="This is getting serious">This is getting serious</div>
+                        <div class="achievement-item" data-roll="5,000" data-name="I'm the Roll Master">I'm the Roll Master</div>
+                        <div class="achievement-item" data-roll="10,000" data-name="It's over 9000!!">It's over 9000!!</div>
+                        <div class="achievement-item" data-roll="25,000" data-name="When will you stop?">When will you stop?</div>
+                        <div class="achievement-item" data-roll="30,303" data-name="No Unnamed?">No Unnamed?</div>
+                        <div class="achievement-item" data-roll="50,000" data-name="Beyond Luck">Beyond Luck</div>
+                        <div class="achievement-item" data-roll="100,000" data-name="Rolling machine">Rolling machine</div>
+                        <div class="achievement-item" data-roll="250,000" data-name="Your PC must be burning">Your PC must be burning</div>
+                        <div class="achievement-item" data-roll="500,000" data-name="Half a million!1!!1">Half a million!1!!1</div>
+                        <div class="achievement-item" data-roll="1,000,000" data-name="One, Two.. ..One Million!">One, Two.. ..One Million!</div>
+                        <div class="achievement-item" data-roll="10,000,000" data-name="No H1di?">No H1di?</div>
+                        <div class="achievement-item" data-roll="25,000,000" data-name="Are you really doing this?">Are you really doing this?</div>
+                        <div class="achievement-item" data-roll="50,000,000" data-name="You have no limits...">You have no limits...</div>
+                        <div class="achievement-item" data-roll="100,000,000" data-name="WHAT HAVE YOU DONE">WHAT HAVE YOU DONE</div>
+                        <div class="achievement-item" data-roll="1,000,000,000" data-name="AHHHHHHHHHHH">AHHHHHHHHHHH</div>
+                    </div>
+                </section>
 
-            <div class="achievement-grid">
-                <div class="achievement-itemC" data-achievement="5" data-name="Achievement Collector">Achievement Collector</div>
-                <div class="achievement-itemC" data-achievement="10" data-name="Achievement Hoarder">Achievement Hoarder</div>
-                <div class="achievement-itemC" data-achievement="20" data-name="Achievement Addict">Achievement Addict</div>
-                <div class="achievement-itemC" data-achievement="33" data-name="Achievement God">Achievement God</div>
-                <div class="achievement-itemC" data-achievement="50" data-name="T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶">T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶<br>(not obtainable)</div>
-            </div>
+                <section class="achievements-section">
+                    <h4 class="achievements-section__title">Playtime Goals</h4>
+                    <div class="achievement-grid">
+                        <div class="achievement-itemT" data-time="the game" data-name="Just the beginning">Just the beginning</div>
+                        <div class="achievement-itemT" data-time="one hour" data-name="This doesn't add up">This doesn't add up</div>
+                        <div class="achievement-itemT" data-time="two hours" data-name="When does it end...">When does it end...</div>
+                        <div class="achievement-itemT" data-time="10 hours" data-name="I swear I'm not addicted...">I swear I'm not addicted...</div>
+                        <div class="achievement-itemT" data-time="one day" data-name="Grass? What's that?">Grass? What's that?</div>
+                        <div class="achievement-itemT" data-time="two days" data-name="Unnamed's RNG biggest fan">Unnamed's RNG biggest fan</div>
+                        <div class="achievement-itemT" data-time="one week" data-name="RNG is life!">RNG is life!</div>
+                        <div class="achievement-itemT" data-time="two weeks" data-name="I. CAN'T. STOP">I. CAN'T. STOP</div>
+                        <div class="achievement-itemT" data-time="a month" data-name="No Lifer">No Lifer</div>
+                        <div class="achievement-itemT" data-time="two months" data-name="Are you okay?">Are you okay?</div>
+                        <div class="achievement-itemT" data-time="six months" data-name="You are a True No Lifer">You are a True No Lifer</div>
+                        <div class="achievement-itemT" data-time="a year" data-name="No one's getting this legit">No one's getting this legit</div>
+                    </div>
+                </section>
 
-            <div class="achievement-grid">
-                <div class="achievement-itemE" data-time="the Easter Event" data-name="Happy Easter!">Happy Easter!</div>
-                <div class="achievement-itemSum" data-time="the Summer Event" data-name="Happy Summer!">Happy Summer!</div>
+                <section class="achievements-section">
+                    <h4 class="achievements-section__title">Collection Challenges</h4>
+                    <div class="achievement-grid">
+                        <div class="achievement-itemC" data-achievement="5" data-name="Achievement Collector">Achievement Collector</div>
+                        <div class="achievement-itemC" data-achievement="10" data-name="Achievement Hoarder">Achievement Hoarder</div>
+                        <div class="achievement-itemC" data-achievement="20" data-name="Achievement Addict">Achievement Addict</div>
+                        <div class="achievement-itemC" data-achievement="33" data-name="Achievement God">Achievement God</div>
+                        <div class="achievement-itemC" data-achievement="50" data-name="T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶">T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶<br>(not obtainable)</div>
+                    </div>
+                </section>
+
+                <section class="achievements-section">
+                    <h4 class="achievements-section__title">Event Exclusives</h4>
+                    <div class="achievements-subsection">
+                        <h5 class="achievements-section__subtitle">Spring &amp; Easter</h5>
+                        <div class="achievement-grid">
+                            <div class="achievement-itemE" data-time="the Easter Event" data-name="Happy Easter!">Happy Easter!</div>
+                        </div>
+                    </div>
+                    <div class="achievements-subsection">
+                        <h5 class="achievements-section__subtitle">Summer</h5>
+                        <div class="achievement-grid">
+                            <div class="achievement-itemSum" data-time="the Summer Event" data-name="Happy Summer!">Happy Summer!</div>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
-
-        <button id="closeAchievements" class="achievementsBtns">Close</button>
     </div>
 
     <button id="toggleUiBtn">Hide UI</button>
