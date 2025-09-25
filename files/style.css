@@ -3036,21 +3036,39 @@ body.griCutsceneBgImg {
   text-align: center;
   white-space: normal;
   word-break: keep-all;
-  background: var(--inventory-text-gradient, linear-gradient(120deg, #e4ecff, #f9fbff));
+  color: var(--inventory-text-fallback, #f2f5ff);
+  -webkit-text-fill-color: var(--inventory-text-fallback, #f2f5ff);
   background-size: var(--inventory-text-gradient-size, 100% 100%);
   background-position: var(--inventory-text-gradient-position, 50% 50%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  transition: background 0.35s ease;
-  animation: var(--inventory-text-gradient-animation, none);
+  background-repeat: no-repeat;
+  transition: background-size 0.35s ease, background-position 0.35s ease, color 0.35s ease;
 }
 
 .inventory-delete-btn--overlay:hover .inventory-delete-btn__label {
-  background: var(--inventory-text-gradient-hover, var(--inventory-text-gradient, linear-gradient(120deg, #f1f5ff, #ffffff)));
+  color: var(--inventory-text-fallback, #f2f5ff);
+  -webkit-text-fill-color: var(--inventory-text-fallback, #f2f5ff);
   background-size: var(--inventory-text-gradient-size, 100% 100%);
   background-position: var(--inventory-text-gradient-position, 50% 50%);
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .inventory-delete-btn__label {
+    background-image: var(--inventory-text-gradient, linear-gradient(120deg, #e4ecff, #f9fbff));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    transition: background-image 0.35s ease, background-size 0.35s ease, background-position 0.35s ease;
+    animation: var(--inventory-text-gradient-animation, none);
+  }
+
+  .inventory-delete-btn--overlay:hover .inventory-delete-btn__label {
+    background-image: var(--inventory-text-gradient-hover, var(--inventory-text-gradient, linear-gradient(120deg, #f1f5ff, #ffffff)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
 }
 
 @keyframes inventory-text-pan {
@@ -3142,6 +3160,12 @@ body.griCutsceneBgImg {
   --inventory-text-gradient-hover: radial-gradient(circle at 30% 20%, #d6fbff, #a57cff 45%, #ffe49c 80%);
   --inventory-text-gradient-size: 250% 250%;
   --inventory-text-gradient-animation: inventory-text-pan 6s ease-in-out infinite;
+}
+
+#deleteAllPumpkinButton.inventory-delete-btn--overlay {
+  --inventory-text-gradient: linear-gradient(135deg, #ff9c3b, #ffd9a3, #8f8f93);
+  --inventory-text-gradient-hover: linear-gradient(135deg, #ffb76a, #ffe6c4, #b7b7bb);
+  --inventory-text-fallback: #ffd9a8;
 }
 
 #toggleInventoryBtn {
