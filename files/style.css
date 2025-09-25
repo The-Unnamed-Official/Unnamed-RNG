@@ -1007,6 +1007,20 @@ body {
     cursor: grab;
 }
 
+#settingsMenu::-webkit-scrollbar {
+    width: 10px;
+}
+
+#settingsMenu::-webkit-scrollbar-thumb {
+    background: #7aa2ff;
+    border-radius: 8px;
+}
+
+#settingsMenu::-webkit-scrollbar-track {
+    background: #181a2c;
+    border-radius: 8px;
+}
+
 #settingsMenu {
     position: fixed;
     top: 50%;
@@ -1027,6 +1041,9 @@ body {
     z-index: 10000000;
     color: #f1f5ff;
     overflow: hidden;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #7aa2ff #181a2c;
 }
 
 .settings-panel {
@@ -4190,6 +4207,22 @@ body.griCutsceneBgImg {
     z-index: 4;
 }
 
+
+
+#achievementsMenu::-webkit-scrollbar {
+    width: 10px;
+}
+
+#achievementsMenu::-webkit-scrollbar-thumb {
+    background: #7aa2ff;
+    border-radius: 8px;
+}
+
+#achievementsMenu::-webkit-scrollbar-track {
+    background: #181a2c;
+    border-radius: 8px;
+}
+
 #achievementsMenu {
     position: fixed;
     top: 50%;
@@ -4202,6 +4235,9 @@ body.griCutsceneBgImg {
     flex-direction: column;
     color: #f1f5ff;
     z-index: 10000000;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #7aa2ff #181a2c;
 }
 
 .achievements-panel {
@@ -4209,7 +4245,7 @@ body.griCutsceneBgImg {
     flex-direction: column;
     flex: 1 1 auto;
     background:
-        linear-gradient(160deg, rgba(28, 34, 54, 0.92), rgba(12, 18, 32, 0.96)),
+        linear-gradient(160deg, rgba(28, 34, 54, 0.52), rgba(12, 18, 32, 0.76)),
         url(backgrounds/rng_master.png);
     background-size: cover;
     border-radius: 18px;
