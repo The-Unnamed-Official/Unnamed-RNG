@@ -1,9 +1,30 @@
-let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+const storage = {
+  get(key, fallback = null) {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return fallback;
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      console.warn(`Failed to parse localStorage key "${key}". Resetting value.`, error);
+      localStorage.removeItem(key);
+      return fallback;
+    }
+  },
+  set(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  },
+};
+
+const byId = (id) => document.getElementById(id);
+const $all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+let inventory = storage.get("inventory", []);
 let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
-let rollCount1 = parseInt(localStorage.getItem("rollCount")) || 0;
-let cooldownTime = 500;
+let rollCount1 = parseInt(localStorage.getItem("rollCount1")) || rollCount;
+const BASE_COOLDOWN_TIME = 500;
+let cooldownTime = BASE_COOLDOWN_TIME;
 let currentAudio = null;
 let isChangeEnabled = true;
 let autoRollInterval = null;
@@ -11,6 +32,16 @@ let audioVolume = 1;
 let isMuted = false;
 let previousVolume = audioVolume;
 let refreshTimeout;
+let hasScheduledLoad = false;
+let skipCutscene1K = true;
+let skipCutscene10K = true;
+let skipCutscene100K = true;
+let skipCutscene1M = true;
+let cooldownBuffActive = cooldownTime < BASE_COOLDOWN_TIME;
+let rollDisplayHiddenByUser = false;
+let cutsceneHidRollDisplay = false;
+let cutsceneActive = false;
+let cutsceneFailsafeTimeout = null;
 
 const STOPPABLE_AUDIO_IDS = [
   "suspenseAudio",
@@ -18,6 +49,7 @@ const STOPPABLE_AUDIO_IDS = [
   "geezerSuspenceAudio",
   "polarrSuspenceAudio",
   "scareSuspenceAudio",
+  "scareSuspenceLofiAudio",
   "waveAudio",
   "scorchingAudio",
   "beachAudio",
@@ -103,6 +135,7 @@ const STOPPABLE_AUDIO_IDS = [
   "pumpkinAudio",
   "h1diAudio",
   "bigSuspenceAudio",
+  "hugeSuspenceAudio",
   "expAudio",
   "veilAudio",
   "msfuAudio",
@@ -117,6 +150,210 @@ const STOPPABLE_AUDIO_IDS = [
   "isekailofiAudio"
 ];
 
+function setRollButtonEnabled(enabled) {
+  const button = document.getElementById("rollButton");
+  if (button) {
+    button.disabled = !enabled;
+  }
+}
+
+function restoreRollDisplayAfterCutscene() {
+  if (!cutsceneHidRollDisplay) {
+    return;
+  }
+
+  const rollDisplay = document.querySelector(".container");
+  if (!rollDisplay || rollDisplayHiddenByUser) {
+    cutsceneHidRollDisplay = false;
+    return;
+  }
+
+  rollDisplay.style.visibility = "visible";
+
+  const toggleBtn = document.getElementById("toggleRollDisplayBtn");
+  if (toggleBtn) {
+    toggleBtn.textContent = "Hide Roll & Display";
+  }
+
+  cutsceneHidRollDisplay = false;
+}
+
+function scheduleCutsceneFailsafe() {
+  clearTimeout(cutsceneFailsafeTimeout);
+  cutsceneFailsafeTimeout = setTimeout(() => {
+    if (!cutsceneActive) {
+      return;
+    }
+
+    console.warn("Cutscene safeguard triggered after timeout; restoring roll display state.");
+    isChangeEnabled = true;
+    finalizeCutsceneState();
+    setRollButtonEnabled(true);
+  }, 15000);
+}
+
+function finalizeCutsceneState() {
+  clearTimeout(cutsceneFailsafeTimeout);
+  cutsceneFailsafeTimeout = null;
+  cutsceneActive = false;
+  ensureBgStack();
+  if (__bgStack) {
+    __bgStack.classList.remove("is-hidden");
+  }
+  restoreRollDisplayAfterCutscene();
+}
+
+function hideRollDisplayForCutscene(container) {
+  if (!container) {
+    return;
+  }
+
+  const wasVisible = container.style.visibility !== "hidden";
+  cutsceneHidRollDisplay = !rollDisplayHiddenByUser && wasVisible;
+
+  container.style.visibility = "hidden";
+}
+
+const rarityCategories = {
+  under100: [
+    "commonBgImg",
+    "rareBgImg",
+    "epicBgImg",
+    "legendaryBgImg",
+    "impossibleBgImg",
+    "poweredBgImg",
+    "toxBgImg",
+    "flickerBgImg",
+    "solarpowerBgImg",
+    "belivBgImg",
+    "plabreBgImg",
+  ],
+  under1k: [
+    "unstoppableBgImg",
+    "spectralBgImg",
+    "starfallBgImg",
+    "gargBgImg",
+    "memBgImg",
+    "oblBgImg",
+    "phaBgImg",
+    "isekaiBgImg",
+    "emerBgImg",
+    "samuraiBgImg",
+    "contBgImg",
+    "wanspiBgImg",
+    "froBgImg",
+    "mysBgImg",
+    "forgBgImg",
+    "curartBgImg",
+    "specBgImg",
+  ],
+  under10k: [
+    "ethershiftBgImg",
+    "hellBgImg",
+    "frightBgImg",
+    "seraphwingBgImg",
+    "shadBgImg",
+    "shaBgImg",
+    "nighBgImg",
+    "voiBgImg",
+    "silBgImg",
+    "ghoBgImg",
+    "endBgImg",
+    "abysBgImg",
+    "darBgImg",
+    "twiligBgImg",
+    "ethpulBgImg",
+    "eniBgImg",
+    "griBgImg",
+    "fearBgImg",
+    "hauntBgImg",
+    "foundsBgImg",
+    "lostsBgImg",
+    "hauBgImg",
+    "lubjubBgImg",
+    "radBgImg",
+    "demsoBgImg",
+    "astredBgImg",
+    "isekailofiBgImg",
+  ],
+  under100k: [
+    "celdawBgImg",
+    "fatreBgImg",
+    "unnamedBgImg",
+    "eonbreakBgImg",
+    "overtureBgImg",
+    "arcanepulseBgImg",
+    "harvBgImg",
+    "devilBgImg",
+    "cursedmirageBgImg",
+    "tuonBgImg",
+    "astblaBgImg",
+    "qbearBgImg",
+    "lightBgImg",
+    "blodBgImg",
+  ],
+  under1m: [
+    "impeachedBgImg",
+    "celestialchorusBgImg",
+    "x1staBgImg",
+    "silcarBgImg",
+    "gingerBgImg",
+    "h1diBgImg",
+    "equinoxBgImg",
+    "gregBgImg",
+    "mintllieBgImg",
+    "geezerBgGif",
+    "polarrBgImg",
+  ],
+  special: [
+    "iriBgImg",
+    "veilBgImg",
+    "expBgImg",
+    "aboBgImg",
+    "blindBgImg",
+    "msfuBgImg",
+    "orbBgImg",
+    "crazeBgImg",
+    "shenviiBgImg",
+  ],
+};
+
+const RARITY_CLASS_BUCKET_MAP = Object.freeze(
+  Object.entries(rarityCategories).reduce((acc, [bucket, classes]) => {
+    classes.forEach((cls) => {
+      acc[cls] = bucket;
+    });
+    return acc;
+  }, {})
+);
+
+const RARITY_LABEL_CLASS_MAP = {
+  silcarBgImg: "under10ms",
+  gingerBgImg: "under10m",
+  h1diBgImg: "under10m",
+  equinoxBgImg: "under10me",
+  waveBgImg: "eventS",
+  beachBgImg: "eventS",
+  tidalwaveBgImg: "eventS",
+  scorchingBgImg: "eventS",
+  heartBgImg: "eventV",
+  esteggBgImg: "eventE",
+  estbunBgImg: "eventE",
+  fircraBgImg: "eventTitle",
+  pumpkinBgImg: "eventTitleHalloween",
+  norstaBgImg: "eventTitleXmas",
+  sanclaBgImg: "eventTitleXmas",
+  silnigBgImg: "eventTitleXmas",
+  reidasBgImg: "eventTitleXmas",
+  frogarBgImg: "eventTitleXmas",
+  cancansymBgImg: "eventTitleXmas",
+  ginharBgImg: "eventTitleXmas",
+  jolbelBgImg: "eventTitleXmas",
+  jolbeBgImg: "eventTitleXmas",
+  holcheBgImg: "eventTitleXmas",
+  cristoBgImg: "eventTitleXmas",
+};
+
 const AUDIO_RESET_OVERRIDES = {
   gargantuaAudio: 14.5,
   eonbreakAudio: 2,
@@ -125,6 +362,213 @@ const AUDIO_RESET_OVERRIDES = {
 
 const audioElementCache = new Map();
 const pendingAudioResetHandlers = new WeakMap();
+
+const LOADING_SEQUENCE = [
+  {
+    message: "Obtaining saves...",
+    action: () => {
+      inventory = storage.get("inventory", []);
+      rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
+      rollCount1 = parseInt(localStorage.getItem("rollCount1")) || rollCount;
+    },
+  },
+  {
+    message: "Loading assets...",
+    action: () => {
+      musicLoad();
+    },
+  },
+  {
+    message: "Polishing titles...",
+    action: () => {
+      renderInventory();
+    },
+  },
+  {
+    message: "Cleaning the UI...",
+    action: () => {
+      loadToggledStates();
+      updateRollCount(0);
+      checkAchievements();
+      updateAchievementsList();
+      loadCutsceneSkip();
+    },
+  },
+];
+
+const LOADING_STEP_MIN_DURATION = 200;
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function nextFrame() {
+  return new Promise((resolve) => {
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => resolve());
+    } else {
+      setTimeout(resolve, 16);
+    }
+  });
+}
+
+async function runInitialLoadSequence(onProgress) {
+  const report = typeof onProgress === "function" ? onProgress : () => {};
+
+  for (const { message, action } of LOADING_SEQUENCE) {
+    report(message);
+    await nextFrame();
+
+    const start = typeof performance !== "undefined" && performance.now
+      ? performance.now()
+      : Date.now();
+
+    await action();
+
+    const end = typeof performance !== "undefined" && performance.now
+      ? performance.now()
+      : Date.now();
+
+    const elapsed = end - start;
+    if (elapsed < LOADING_STEP_MIN_DURATION) {
+      await wait(LOADING_STEP_MIN_DURATION - elapsed);
+    }
+  }
+
+  report("Ready!");
+  await wait(180);
+}
+
+const CUTSCENE_SKIP_SETTINGS = [
+  { key: "skipCutscene1K", labelId: "1KTxt", label: "Skip Decent Cutscenes" },
+  { key: "skipCutscene10K", labelId: "10KTxt", label: "Skip Grand Cutscenes" },
+  { key: "skipCutscene100K", labelId: "100KTxt", label: "Skip Mastery Cutscenes" },
+  { key: "skipCutscene1M", labelId: "1MTxt", label: "Skip Supreme Cutscenes" },
+];
+
+const CUTSCENE_STATE_SETTERS = {
+  skipCutscene1K: (value) => { skipCutscene1K = value; },
+  skipCutscene10K: (value) => { skipCutscene10K = value; },
+  skipCutscene100K: (value) => { skipCutscene100K = value; },
+  skipCutscene1M: (value) => { skipCutscene1M = value; },
+};
+
+const ACHIEVEMENTS = [
+  { name: "I think I like this", count: 100 },
+  { name: "This is getting serious", count: 1000 },
+  { name: "I'm the Roll Master", count: 5000 },
+  { name: "It's over 9000!!", count: 10000 },
+  { name: "When will you stop?", count: 25000 },
+  { name: "No Unnamed?", count: 30303 },
+  { name: "Beyond Luck", count: 50000 },
+  { name: "Rolling machine", count: 100000 },
+  { name: "Your PC must be burning", count: 250000 },
+  { name: "Half a million!1!!1", count: 500000 },
+  { name: "One, Two.. ..One Million!", count: 1000000 },
+  { name: "No H1di?", count: 10000000 },
+  { name: "Are you really doing this?", count: 25000000 },
+  { name: "You have no limits...", count: 50000000 },
+  { name: "WHAT HAVE YOU DONE", count: 100000000 },
+  { name: "AHHHHHHHHHHH", count: 1000000000 },
+  { name: "Just the beginning", timeCount: 0 },
+  { name: "This doesn't add up", timeCount: 3600 },
+  { name: "When does it end...", timeCount: 7200 },
+  { name: "I swear I'm not addicted...", timeCount: 36000 },
+  { name: "Grass? What's that?", timeCount: 86400 },
+  { name: "Unnamed's RNG biggest fan", timeCount: 172800 },
+  { name: "RNG is life!", timeCount: 604800 },
+  { name: "I. CAN'T. STOP", timeCount: 1209600 },
+  { name: "No Lifer", timeCount: 2629800 },
+  { name: "Are you okay?", timeCount: 5259600 },
+  { name: "You are a True No Lifer", timeCount: 15778800 },
+  { name: "No one's getting this legit", timeCount: 31557600 },
+  { name: "Happy Summer!", timeCount: 0 },
+];
+
+const COLLECTOR_ACHIEVEMENTS = [
+  { name: "Achievement Collector", count: 5 },
+  { name: "Achievement Hoarder", count: 10 },
+  { name: "Achievement Addict", count: 20 },
+  { name: "Achievement God", count: 33 },
+  { name: "T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶", count: 50 },
+];
+
+const ACHIEVEMENT_GROUP_STYLES = [
+  { selector: ".achievement-item", unlocked: { backgroundColor: "blue" } },
+  { selector: ".achievement-itemT", unlocked: { backgroundColor: "green" } },
+  { selector: ".achievement-itemC", unlocked: { backgroundColor: "red" } },
+  { selector: ".achievement-itemE", unlocked: { backgroundColor: "yellow", color: "black" } },
+  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "orange", color: "black" } },
+];
+
+const ACHIEVEMENT_TOAST_DURATION = 3400;
+const achievementToastQueue = [];
+let achievementToastContainer = null;
+let achievementToastActive = false;
+
+function ensureAchievementToastContainer() {
+  if (achievementToastContainer && document.body.contains(achievementToastContainer)) {
+    return achievementToastContainer;
+  }
+
+  achievementToastContainer = document.createElement("div");
+  achievementToastContainer.className = "achievement-toast-stack";
+  document.body.appendChild(achievementToastContainer);
+  return achievementToastContainer;
+}
+
+function processAchievementToastQueue() {
+  if (achievementToastActive || achievementToastQueue.length === 0) {
+    return;
+  }
+
+  achievementToastActive = true;
+  const name = achievementToastQueue.shift();
+  const container = ensureAchievementToastContainer();
+
+  const toast = document.createElement("div");
+  toast.className = "achievement-toast";
+  toast.innerHTML = `
+    <div class="achievement-toast__icon"><i class="fa-solid fa-trophy"></i></div>
+    <div class="achievement-toast__content">
+      <span class="achievement-toast__title">Achievement Unlocked</span>
+      <span class="achievement-toast__name">${name}</span>
+    </div>
+  `;
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add("show");
+  });
+
+  updateAchievementsList();
+
+  const removeToast = () => {
+    if (!toast.isConnected) {
+      return;
+    }
+
+    toast.classList.remove("show");
+    toast.classList.add("hide");
+
+    let finalized = false;
+    const finalize = () => {
+      if (finalized) {
+        return;
+      }
+      finalized = true;
+      toast.remove();
+      achievementToastActive = false;
+      updateAchievementsList();
+      processAchievementToastQueue();
+    };
+
+    toast.addEventListener("transitionend", finalize, { once: true });
+    setTimeout(finalize, 320);
+  };
+
+  setTimeout(removeToast, ACHIEVEMENT_TOAST_DURATION);
+}
 
 function getAudioElement(id) {
   if (audioElementCache.has(id)) {
@@ -187,96 +631,114 @@ function stopAllAudio() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  const rollButton = document.getElementById("rollButton");
-  const startButton = document.getElementById("startButton");
-  const loadingScreen = document.getElementById("loadingScreen");
-  const menuScreen = document.getElementById("menuScreen");
+  const rollButton = byId("rollButton");
+  const startButton = byId("startButton");
+  const loadingScreen = byId("loadingScreen");
+  const menuScreen = byId("menuScreen");
+  const loadingText = loadingScreen ? loadingScreen.querySelector(".loadTxt") : null;
 
-  rollButton.disabled = true;
+  if (rollButton) {
+    rollButton.disabled = true;
+  }
 
-  startButton.addEventListener("click", () => {
-    mainAudio.play();
-    menuScreen.style.display = "none";
-    loadingScreen.style.display = "flex";
-    load();
-    setTimeout(() => {
-      load();
-      loadContent();
-    }, 1000);
-    setTimeout(() => {
-      rollButton.disabled = false;
+  if (!startButton) {
+    return;
+  }
+
+  startButton.addEventListener("click", async () => {
+    if (startButton.disabled) {
+      return;
+    }
+
+    startButton.disabled = true;
+
+    try {
+      if (typeof mainAudio !== "undefined" && mainAudio && typeof mainAudio.play === "function") {
+        // Kick off playback without awaiting so UI initialisation continues even if the
+        // browser delays or blocks autoplay.
+        const playAttempt = mainAudio.play();
+        if (playAttempt && typeof playAttempt.catch === "function") {
+          playAttempt.catch((error) => {
+            console.warn("Unable to start background audio immediately.", error);
+          });
+        }
+      }
+    } catch (error) {
+      console.warn("Unable to start background audio immediately.", error);
+    }
+
+    if (menuScreen) {
+      menuScreen.style.display = "none";
+    }
+
+    if (loadingScreen) {
+      loadingScreen.style.display = "flex";
+    }
+
+    const updateMessage = (message) => {
+      if (loadingText) {
+        loadingText.textContent = message;
+      }
+    };
+
+    try {
+      await runInitialLoadSequence(updateMessage);
+    } catch (error) {
+      console.error("Failed to initialise game state.", error);
+      updateMessage("Load failed. Tap play to retry.");
+      if (loadingScreen) {
+        loadingScreen.style.display = "none";
+      }
+      if (menuScreen) {
+        menuScreen.style.display = "flex";
+      }
+      startButton.disabled = false;
+      return;
+    }
+
+    if (loadingScreen) {
       loadingScreen.style.display = "none";
-      formatRollCount();
-      loadToggledStates();
-      checkAchievements();
-      loadCutsceneSkip();
-      updateAchievementsList();
-    }, 2000);
+    }
+
+    if (rollButton) {
+      rollButton.disabled = false;
+    }
   });
 });
 
 function loadContent() {
-  const storedInventory = localStorage.getItem("inventory");
-  if (storedInventory) {
-    inventory = JSON.parse(storedInventory);
-  }
-  renderInventory();
-  musicLoad();
-  loadToggledStates();
-  updateRollCount();
-  checkAchievements();
-  updateAchievementsList();
-  loadCutsceneSkip();
-  document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
-  document.getElementById("rollCountDisplay1").innerText = rollCount1;
+  LOADING_SEQUENCE.forEach(({ action }) => action());
 }
 
 function load() {
-  document.addEventListener("DOMContentLoaded", (event) => {
-    const storedInventory = localStorage.getItem("inventory");
-    if (storedInventory) {
-      inventory = JSON.parse(storedInventory);
-    }
-    renderInventory();
-    musicLoad();
-    loadToggledStates();
-    updateRollCount();
-    formatRollCount();
-    checkAchievements();
-    updateAchievementsList();
-    loadCutsceneSkip();
-  });
+  if (document.readyState === "loading" && !hasScheduledLoad) {
+    hasScheduledLoad = true;
+    document.addEventListener("DOMContentLoaded", () => {
+      hasScheduledLoad = false;
+      loadContent();
+    }, { once: true });
+  }
 }
 
 function loadCutsceneSkip() {
-  skipCutscene1K = JSON.parse(localStorage.getItem('skipCutscene1K'));
-  if (skipCutscene1K === null) {
-    skipCutscene1K = true;
-    localStorage.setItem('skipCutscene1K', JSON.stringify(skipCutscene1K));
-  }
+  CUTSCENE_SKIP_SETTINGS.forEach(({ key, labelId, label }) => {
+    const storedValue = storage.get(key);
+    const resolvedValue = typeof storedValue === "boolean" ? storedValue : true;
 
-  skipCutscene10K = JSON.parse(localStorage.getItem('skipCutscene10K'));
-  if (skipCutscene10K === null) {
-    skipCutscene10K = true;
-    localStorage.setItem('skipCutscene10K', JSON.stringify(skipCutscene10K));
-  }
+    if (storedValue !== resolvedValue) {
+      storage.set(key, resolvedValue);
+    }
 
-  skipCutscene100K = JSON.parse(localStorage.getItem('skipCutscene100K'));
-  if (skipCutscene100K === null) {
-    skipCutscene100K = true;
-    localStorage.setItem('skipCutscene100K', JSON.stringify(skipCutscene100K));
-  }
+    const assignState = CUTSCENE_STATE_SETTERS[key];
+    if (assignState) {
+      assignState(resolvedValue);
+    }
 
-  skipCutscene1M = JSON.parse(localStorage.getItem('skipCutscene1M'));
-  if (skipCutscene1M === null) {
-    skipCutscene1M = true;
-    localStorage.setItem('skipCutscene1M', JSON.stringify(skipCutscene1M));
-  }
-  
-  document.getElementById("1KTxt").textContent = `Skip Decent Cutscenes ${skipCutscene1K ? "" : "On"}`;
-  document.getElementById("10KTxt").textContent = `Skip Grand Cutscenes ${skipCutscene10K ? "" : "On"}`;
-  document.getElementById("100KTxt").textContent = `Skip Mastery Cutscenes ${skipCutscene100K ? "" : "On"}`;
-  document.getElementById("1MTxt").textContent = `Skip Supreme Cutscenes ${skipCutscene1M ? "" : "On"}`;
+    const labelElement = byId(labelId);
+    if (labelElement) {
+      labelElement.textContent = `${label} ${resolvedValue ? "" : "On"}`;
+    }
+  });
 }
 
 function musicLoad() {
@@ -298,171 +760,97 @@ function formatRollCount(count) {
   return count.toString();
 }
 
+function updateRollDisplays() {
+  const compactDisplay = byId("rollCountDisplay");
+  if (compactDisplay) {
+    compactDisplay.textContent = formatRollCount(rollCount);
+  }
+
+  const rawDisplay = byId("rollCountDisplay1");
+  if (rawDisplay) {
+    rawDisplay.textContent = rollCount1;
+  }
+}
+
 function updateRollCount(increment = 1) {
-  rollCount += increment;
-  rollCount1 += increment;
-  const display = document.getElementById('rollCountDisplay');
-  const display1 = document.getElementById('rollCountDisplay');
-  display.textContent = formatRollCount(rollCount);
-  display1.textContent = rollCount1;
+  if (increment) {
+    rollCount += increment;
+    rollCount1 += increment;
+  }
+  updateRollDisplays();
+}
+
+function persistUnlockedAchievements(unlocked) {
+  storage.set("unlockedAchievements", Array.from(unlocked));
+}
+
+function unlockAchievement(name, unlocked) {
+  if (unlocked.has(name)) {
+    return;
+  }
+  unlocked.add(name);
+  persistUnlockedAchievements(unlocked);
+  showAchievementPopup(name);
 }
 
 function checkAchievements() {
-  let achievements = [
-    // Rolls
-      { name: "I think I like this", count: 100 },
-      { name: "This is getting serious", count: 1000 },
-      { name: "I'm the Roll Master", count: 5000 },
-      { name: "It's over 9000!!", count: 10000 },
-      { name: "When will you stop?", count: 25000 },
-      { name: "No Unnamed?", count: 30303 },
-      { name: "Beyond Luck", count: 50000 },
-      { name: "Rolling machine", count: 100000 },
-      { name: "Your PC must be burning", count: 250000 },
-      { name: "Half a million!1!!1", count: 500000 },
-      { name: "One, Two.. ..One Million!", count: 1000000 },
-      { name: "No H1di?", count: 10000000 },
-      { name: "Are you really doing this?", count: 25000000 },
-      { name: "You have no limits...", count: 50000000 },
-      { name: "WHAT HAVE YOU DONE", count: 100000000 },
-      { name: "AHHHHHHHHHHH", count: 1000000000 },
+  const unlocked = new Set(storage.get("unlockedAchievements", []));
 
-      // Time
-      { name: "Just the beginning", timeCount: 0 },
-      { name: "This doesn't add up", timeCount: 3600 },
-      { name: "When does it end...", timeCount: 7200 },
-      { name: "I swear I'm not addicted...", timeCount: 36000 },
-      { name: "Grass? What's that?", timeCount: 86400 },
-      { name: "Unnamed's RNG biggest fan", timeCount: 172800 },
-      { name: "RNG is life!", timeCount: 604800 },
-      { name: "I. CAN'T. STOP", timeCount: 1209600 },
-      { name: "No Lifer", timeCount: 2629800 },
-      { name: "Are you okay?", timeCount: 5259600 },
-      { name: "You are a True No Lifer", timeCount: 15778800 },
-      { name: "No one's getting this legit", timeCount: 31557600 },
+  ACHIEVEMENTS.forEach((achievement) => {
+    if (achievement.count && rollCount >= achievement.count) {
+      unlockAchievement(achievement.name, unlocked);
+    }
 
-      // Event
-      { name: "Happy Summer!", timeCount: 0 },
-  ];
+    if (achievement.timeCount !== undefined && typeof playTime !== "undefined" && playTime >= achievement.timeCount) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+  });
 
-  // Achievements collected
-  let collectorAchievements = [
-      { name: "Achievement Collector", count: 5 },
-      { name: "Achievement Hoarder", count: 10 },
-      { name: "Achievement Addict", count: 20 },
-      { name: "Achievement God", count: 33 },
-      { name: "T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶", count: 50 }
-  ];
+  const unlockedCount = unlocked.size;
 
-  let unlockedAchievements = JSON.parse(localStorage.getItem("unlockedAchievements")) || [];
-
-  achievements.forEach(achievement => {
-      if (rollCount >= achievement.count && !unlockedAchievements.includes(achievement.name)) {
-          unlockedAchievements.push(achievement.name);
-          localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
-          showAchievementPopup(achievement.name);
-      }
-      if (playTime >= achievement.timeCount && !unlockedAchievements.includes(achievement.name)) {
-        unlockedAchievements.push(achievement.name);
-        localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
-        showAchievementPopup(achievement.name);
-      }
-
-      let unlockedCount = unlockedAchievements.length;
-      collectorAchievements.forEach(collector => {
-          if (unlockedCount >= collector.count && !unlockedAchievements.includes(collector.name)) {
-              unlockedAchievements.push(collector.name);
-              localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
-              showAchievementPopup(collector.name);
-          }
-      });
+  COLLECTOR_ACHIEVEMENTS.forEach((collector) => {
+    if (unlockedCount >= collector.count) {
+      unlockAchievement(collector.name, unlocked);
+    }
   });
 }
 
 function showAchievementPopup(name) {
-  let popup = document.createElement("div");
-  popup.className = "achievement-popup";
-  popup.textContent = `Achievement Unlocked: ${name}`;
-  document.body.appendChild(popup);
-  
-  setTimeout(() => {
-      popup.classList.add("show");
-      updateAchievementsList();
-  }, 100);
-  
-  setTimeout(() => {
-      popup.classList.remove("show");
-      setTimeout(() => popup.remove(), 500);
-      updateAchievementsList();
-  }, 3000);
+  achievementToastQueue.push(name);
+  processAchievementToastQueue();
 }
 
 function updateAchievementsList() {
-  let unlockedAchievements = JSON.parse(localStorage.getItem("unlockedAchievements")) || [];
+  const unlocked = new Set(storage.get("unlockedAchievements", []));
 
-  let achievementItems = document.querySelectorAll(".achievement-item");
-  let achievementItemsT = document.querySelectorAll(".achievement-itemT");
-  let achievementItemsC = document.querySelectorAll(".achievement-itemC");
-  let achievementItemsE = document.querySelectorAll(".achievement-itemE");
-  let achievementItemsSum = document.querySelectorAll(".achievement-itemSum");
+  ACHIEVEMENT_GROUP_STYLES.forEach(({ selector, unlocked: unlockedStyles }) => {
+    $all(selector).forEach((item) => {
+      const achievementName = item.getAttribute("data-name");
+      const isUnlocked = achievementName && unlocked.has(achievementName);
 
-  achievementItems.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "blue";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
-  });
-
-  achievementItemsT.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "green";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
-  });
-
-  achievementItemsC.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "red";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
-  });
-
-  achievementItemsE.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "yellow";
-      item.style.color = "black";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
-  });
-
-  achievementItemsSum.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "orange";
-      item.style.color = "black";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
+      item.style.backgroundColor = isUnlocked ? unlockedStyles.backgroundColor : "gray";
+      item.style.color = isUnlocked && unlockedStyles.color ? unlockedStyles.color : "";
+    });
   });
 }
 
 document.addEventListener("DOMContentLoaded", updateAchievementsList);
 
 document.getElementById("rollButton").addEventListener("click", function () {
-  let rollButton = document.getElementById("rollButton");
+  const rollButton = byId("rollButton");
+  if (!rollButton) {
+    return;
+  }
+
+  const rollDisplay = document.querySelector(".container");
+  if (rollDisplay && !rollDisplayHiddenByUser && rollDisplay.style.visibility === "hidden") {
+    rollDisplay.style.visibility = "visible";
+    cutsceneHidRollDisplay = false;
+    const toggleBtn = document.getElementById("toggleRollDisplayBtn");
+    if (toggleBtn) {
+      toggleBtn.textContent = "Hide Roll & Display";
+    }
+  }
 
   mainAudio.pause();
 
@@ -480,8 +868,14 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
   rollButton.disabled = true;
 
-  document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
-  document.getElementById("rollCountDisplay1").innerText = rollCount1;
+  const rollCountDisplay = byId("rollCountDisplay");
+  if (rollCountDisplay) {
+    rollCountDisplay.textContent = formatRollCount(rollCount);
+  }
+  const rollCountDisplayRaw = byId("rollCountDisplay1");
+  if (rollCountDisplayRaw) {
+    rollCountDisplayRaw.textContent = rollCount1;
+  }
 
   if (
     rarity.type === "Cursed Mirage [1 in 11,111]" ||
@@ -573,10 +967,15 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Beach [1 in 12,555]" ||
     rarity.type === "Tidal Wave [1 in 25,500]"
   ) {
-    document.getElementById("result").innerText = "";
+    const resultContainer = byId("result");
+    if (resultContainer) {
+      resultContainer.textContent = "";
+    }
     const titleCont = document.querySelector(".container");
-
-    titleCont.style.visibility = "hidden";
+    if (!titleCont) {
+      return;
+    }
+    hideRollDisplayForCutscene(titleCont);
 
     if (rarity.type === "Fright [1 in 1,075]") {
       frightAudio.play();
@@ -8531,12 +8930,6 @@ document.getElementById("rollButton").addEventListener("click", function () {
   load();
 });
 
-let skipCutscene1K = true;
-let skipCutscene10K = true;
-let skipCutscene100K = true;
-let skipCutscene1M = true;
-
-
 const toggleCutscene1KBtn = document.getElementById("toggleCutscene1K");
 const toggleCutscene1KTxt = document.getElementById("1KTxt");
 toggleCutscene1KBtn.addEventListener("click", function () {
@@ -9296,22 +9689,41 @@ function getAutoDeleteSet() {
 }
 
 function normalizeRarityBucket(rarityClass) {
-  if (!rarityClass || typeof rarityClass !== 'string') return '';
+  if (!rarityClass || typeof rarityClass !== "string") return "";
   const cls = rarityClass.trim();
 
-  // Order matters when prefixes overlap
-  if (cls.startsWith('under100k')) return 'under100k';
-  if (cls.startsWith('under10k'))  return 'under10k';
-  if (cls.startsWith('under1m'))   return 'under1m';
-  if (cls.startsWith('under1k'))   return 'under1k';
-  if (cls.startsWith('under100'))  return 'under100';
-  if (cls === 'special')           return 'special';
+  const prefixMatches = [
+    { prefix: "under10me", bucket: "under1m" },
+    { prefix: "under10ms", bucket: "under1m" },
+    { prefix: "under10m", bucket: "under1m" },
+    { prefix: "under1m", bucket: "under1m" },
+    { prefix: "under100k", bucket: "under100k" },
+    { prefix: "under10k", bucket: "under10k" },
+    { prefix: "under1k", bucket: "under1k" },
+    { prefix: "under100", bucket: "under100" },
+  ];
 
-  // Fallback: direct bucket names
-  if (['under100','under1k','under10k','under100k','under1m','special'].includes(cls)) {
+  for (const { prefix, bucket } of prefixMatches) {
+    if (cls.startsWith(prefix)) {
+      return bucket;
+    }
+  }
+
+  if (cls === "special") return "special";
+  if (["under100", "under1k", "under10k", "under100k", "under1m", "special"].includes(cls)) {
     return cls;
   }
-  return '';
+
+  return RARITY_CLASS_BUCKET_MAP[cls] || "";
+}
+
+function getLabelClassForRarity(rarityClass, bucket) {
+  if (!rarityClass || typeof rarityClass !== "string") {
+    return bucket || "";
+  }
+
+  const cls = rarityClass.trim();
+  return RARITY_LABEL_CLASS_MAP[cls] || bucket || "";
 }
 
 function deleteByRarityBucket(bucket) {
@@ -9417,12 +9829,15 @@ document
 
     if (isVisible) {
       inventorySection.style.visibility = "hidden";
+      rollDisplayHiddenByUser = true;
       this.textContent = "Show Roll & Display";
     } else {
       inventorySection.style.visibility = "visible";
+      rollDisplayHiddenByUser = false;
+      cutsceneHidRollDisplay = false;
       this.textContent = "Hide Roll & Display";
     }
-});
+  });
 
 window.addEventListener("resize", function () {
   const container = document.querySelector(".container1");
@@ -9680,12 +10095,13 @@ function triggerScreenShakeByBucket(bucket) {
 
 function enableChange() {
   isChangeEnabled = true;
-  ensureBgStack();
-  __bgStack.classList.remove("is-hidden");
+  finalizeCutsceneState();
 }
 
 function disableChange() {
   isChangeEnabled = false;
+  cutsceneActive = true;
+  scheduleCutsceneFailsafe();
   // Hide stack during cutscenes (body backgrounds/gifs will show)
   if (__bgStack) __bgStack.classList.add("is-hidden");
 }
@@ -9705,10 +10121,18 @@ function renderInventory() {
     const listItem = document.createElement("li");
     listItem.className = item.rarityClass;
     listItem.dataset.locked = lockedItems[item.title] ? "true" : "false";
+    const bucket = normalizeRarityBucket(item.rarityClass);
+    if (bucket) {
+      listItem.dataset.bucket = bucket;
+    }
 
     const itemTitle = document.createElement("span");
     itemTitle.className = "rarity-text";
     itemTitle.textContent = item.title.toUpperCase();
+    const labelClass = getLabelClassForRarity(item.rarityClass, bucket);
+    if (labelClass) {
+      itemTitle.classList.add(labelClass);
+    }
 
     const rarityText = document.createElement("span");
     listItem.appendChild(itemTitle);
@@ -10451,86 +10875,45 @@ function startAnimationBlackHole() {
   });
 }
 
-function createCooldownButton() {
-  if (document.getElementById("cooldownButton")) {
-    return;
-  }
+const COOLDOWN_BUTTON_CONFIGS = [
+  { id: "cooldownButton", reduceTo: 350, effectSeconds: 90, resetDelay: 90000, spawnDelay: 120000 },
+  { id: "cooldownButton1", reduceTo: 200, effectSeconds: 60, resetDelay: 60000, spawnDelay: 300000 },
+  { id: "cooldownButton2", reduceTo: 75, effectSeconds: 30, resetDelay: 30000, spawnDelay: 600000 },
+];
 
-  const button = document.createElement("button");
-  button.innerText = "Reduce Cooldown";
-  button.id = "cooldownButton";
-  button.style.position = "absolute";
+const cooldownSpawnTimers = new Map();
 
-  const randomX = Math.floor(Math.random() * (window.innerWidth - 100));
-  const randomY = Math.floor(Math.random() * (window.innerHeight - 50));
-  button.style.left = `${randomX}px`;
-  button.style.top = `${randomY}px`;
-
-  button.addEventListener("click", () => {
-    cooldownTime = 350;
-
-    showCooldownEffect(90);
-
-    button.innerText = "Cooldown Reduced!";
-    setTimeout(() => {
-      document.body.removeChild(button);
-    }, 1000);
-
-    setTimeout(() => {
-      cooldownTime = 500;
-      console.log("Cooldown reset to 500ms");
-    }, 90000);
-
-    scheduleButtonAppearance();
-  });
-
-  document.body.appendChild(button);
+function getActiveCooldownButton() {
+  return document.querySelector("#cooldownButton, #cooldownButton1, #cooldownButton2");
 }
 
-function createCooldownButton1() {
-  if (document.getElementById("cooldownButton")) {
-    return;
+function scheduleCooldownButton(config, delay = config.spawnDelay) {
+  const existingTimer = cooldownSpawnTimers.get(config.id);
+  if (existingTimer) {
+    clearTimeout(existingTimer);
   }
 
-  const button = document.createElement("button");
-  button.innerText = "Reduce Cooldown";
-  button.id = "cooldownButton1";
-  button.style.position = "absolute";
+  const timer = setTimeout(() => {
+    if (cooldownBuffActive || cooldownTime < BASE_COOLDOWN_TIME || getActiveCooldownButton()) {
+      scheduleCooldownButton(config, 10000);
+      return;
+    }
 
-  const randomX = Math.floor(Math.random() * (window.innerWidth - 100));
-  const randomY = Math.floor(Math.random() * (window.innerHeight - 50));
-  button.style.left = `${randomX}px`;
-  button.style.top = `${randomY}px`;
+    spawnCooldownButton(config);
+  }, delay);
 
-  button.addEventListener("click", () => {
-    cooldownTime = 200;
-
-    showCooldownEffect(60);
-
-    button.innerText = "Cooldown Reduced!";
-    setTimeout(() => {
-      document.body.removeChild(button);
-    }, 1000);
-
-    setTimeout(() => {
-      cooldownTime = 500;
-      console.log("Cooldown reset to 500ms");
-    }, 60000);
-
-    scheduleButtonAppearance();
-  });
-
-  document.body.appendChild(button);
+  cooldownSpawnTimers.set(config.id, timer);
 }
 
-function createCooldownButton2() {
-  if (document.getElementById("cooldownButton")) {
+function spawnCooldownButton(config) {
+  if (cooldownBuffActive || cooldownTime < BASE_COOLDOWN_TIME || getActiveCooldownButton()) {
+    scheduleCooldownButton(config, 10000);
     return;
   }
 
   const button = document.createElement("button");
   button.innerText = "Reduce Cooldown";
-  button.id = "cooldownButton2";
+  button.id = config.id;
   button.style.position = "absolute";
 
   const randomX = Math.floor(Math.random() * (window.innerWidth - 100));
@@ -10539,27 +10922,40 @@ function createCooldownButton2() {
   button.style.top = `${randomY}px`;
 
   button.addEventListener("click", () => {
-    cooldownTime = 75;
+    if (cooldownBuffActive) {
+      return;
+    }
 
-    showCooldownEffect(30);
+    cooldownBuffActive = true;
+    cooldownTime = config.reduceTo;
+
+    showCooldownEffect(config.effectSeconds);
 
     button.innerText = "Cooldown Reduced!";
+    button.disabled = true;
+
     setTimeout(() => {
-      document.body.removeChild(button);
+      if (button.isConnected) {
+        document.body.removeChild(button);
+      }
     }, 1000);
 
     setTimeout(() => {
-      cooldownTime = 500;
-      console.log("Cooldown reset to 500ms");
-    }, 30000);
-
-    scheduleButtonAppearance();
+      cooldownTime = BASE_COOLDOWN_TIME;
+      cooldownBuffActive = false;
+      scheduleAllCooldownButtons();
+    }, config.resetDelay);
   });
 
   document.body.appendChild(button);
 }
 
 function showCooldownEffect(duration) {
+  const existingDisplay = document.getElementById("countdownDisplay");
+  if (existingDisplay) {
+    existingDisplay.remove();
+  }
+
   const countdownDisplay = document.createElement("div");
   countdownDisplay.id = "countdownDisplay";
   countdownDisplay.style.position = "fixed";
@@ -10571,81 +10967,218 @@ function showCooldownEffect(duration) {
   countdownDisplay.style.borderRadius = "5px";
   countdownDisplay.style.zIndex = "100000";
 
+  countdownDisplay.innerText = `Roll-Cooldown Effect: ${duration}s`;
   document.body.appendChild(countdownDisplay);
 
-  let timeLeft = duration;
+  let timeLeft = duration - 1;
   const interval = setInterval(() => {
-    if (timeLeft <= 0) {
+    if (timeLeft < 0) {
       clearInterval(interval);
-      countdownDisplay.innerText = "";
-      document.body.removeChild(countdownDisplay);
-    } else {
-      countdownDisplay.innerText = `Roll-Cooldown Effect: ${timeLeft}s`;
+      if (countdownDisplay.isConnected) {
+        document.body.removeChild(countdownDisplay);
+      }
+      return;
     }
+
+    countdownDisplay.innerText = `Roll-Cooldown Effect: ${timeLeft}s`;
     timeLeft--;
   }, 1000);
 }
 
-function scheduleButtonAppearance() {
-
-  setTimeout(() => {
-    createCooldownButton();
-  }, 120000);
-
-  setTimeout(() => {
-    createCooldownButton1();
-  }, 300000);
-
-  setTimeout(() => {
-    createCooldownButton2();
-  }, 600000);
+function scheduleAllCooldownButtons() {
+  COOLDOWN_BUTTON_CONFIGS.forEach((config) => {
+    scheduleCooldownButton(config);
+  });
 }
 
-scheduleButtonAppearance();
+scheduleAllCooldownButtons();
 
 document.addEventListener("DOMContentLoaded", () => {
   const settingsMenu = document.getElementById("settingsMenu");
-  const header = settingsMenu.querySelector("h3");
+  const settingsHeader = settingsMenu?.querySelector(".settings-header");
+  const settingsBody = settingsMenu?.querySelector(".settings-body");
+  const achievementsMenu = document.getElementById("achievementsMenu");
+  const achievementsHeader = achievementsMenu?.querySelector(".achievements-header");
+  const achievementsBody = achievementsMenu?.querySelector(".achievements-body");
+  const statsMenu = document.getElementById("statsMenu");
+  const statsHeader = statsMenu?.querySelector(".stats-header");
+  const statsDragHandle = statsMenu?.querySelector(".stats-menu__drag-handle");
+  const achievementsMenu = document.getElementById("achievementsMenu");
+  const achievementsHeader = achievementsMenu?.querySelector(".achievements-header");
+  const achievementsBody = achievementsMenu?.querySelector(".achievements-body");
   const headerStats = statsMenu.querySelector("h3");
-  let isDragging = false;
+  let isDraggingSettings = false;
+  let isDraggingAchievements = false;
   let isDraggingStats = false;
-  let offsetX, offsetY;
-  let offsetXStyle, offsetYStyle;
+  let offsetX = 0;
+  let offsetY = 0;
+  let offsetXAchievements = 0;
+  let offsetYAchievements = 0;
+  let offsetXStats = 0;
+  let offsetYStats = 0;
+  let offsetXStyle = 0;
+  let offsetYStyle = 0;
 
-  header.addEventListener("mousedown", (e) => {
-      isDragging = true;
-      offsetX = e.clientX - settingsMenu.offsetLeft;
-      offsetY = e.clientY - settingsMenu.offsetTop;
-      header.style.cursor = "grabbing";
-  });
+  if (settingsHeader) {
+    settingsHeader.addEventListener("mousedown", (event) => {
+      if (event.button !== 0 || event.target.closest(".settings-close-btn")) {
+        return;
+      }
 
-  headerStats.addEventListener("mousedown", (a) => {
-    isDraggingStats = true;
-    offsetXStyle = a.clientX - statsMenu.offsetLeft;
-    offsetYStyle = a.clientY - statsMenu.offsetTop;
-    headerStats.style.cursor = "grabbing";
-  })
+      const rect = settingsMenu.getBoundingClientRect();
+      settingsMenu.style.left = `${rect.left}px`;
+      settingsMenu.style.top = `${rect.top}px`;
+      settingsMenu.style.transform = "none";
 
-  document.addEventListener("mousemove", (e) => {
-      if (!isDragging) return;
-      settingsMenu.style.left = e.clientX - offsetX + "px";
-      settingsMenu.style.top = e.clientY - offsetY + "px";
-  });
+      offsetX = event.clientX - rect.left;
+      offsetY = event.clientY - rect.top;
+      isDraggingSettings = true;
+      settingsHeader.classList.add("is-dragging");
+      event.preventDefault();
+    });
+  }
 
-  document.addEventListener("mousemove", (a) => {
-      if (!isDraggingStats) return;
-      statsMenu.style.left = a.clientX - offsetXStyle + "px";
-      statsMenu.style.top = a.clientY - offsetYStyle + "px";
+  if (statsMenu && statsDragHandle) {
+    statsDragHandle.addEventListener("mousedown", (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+
+      const rect = statsMenu.getBoundingClientRect();
+      statsMenu.style.left = `${rect.left}px`;
+      statsMenu.style.top = `${rect.top}px`;
+      statsMenu.style.transform = "none";
+
+      offsetXStyle = event.clientX - rect.left;
+      offsetYStyle = event.clientY - rect.top;
+    });
+  }
+
+  if (achievementsHeader) {
+    achievementsHeader.addEventListener("mousedown", (event) => {
+      if (event.button !== 0 || event.target.closest(".achievements-close-btn")) {
+        return;
+      }
+
+      const rect = achievementsMenu.getBoundingClientRect();
+      achievementsMenu.style.left = `${rect.left}px`;
+      achievementsMenu.style.top = `${rect.top}px`;
+      achievementsMenu.style.transform = "none";
+
+      offsetXAchievements = event.clientX - rect.left;
+      offsetYAchievements = event.clientY - rect.top;
+      isDraggingAchievements = true;
+      achievementsHeader.classList.add("is-dragging");
+      event.preventDefault();
+    });
+  }
+
+  if (statsHeader && statsMenu) {
+    statsHeader.addEventListener("mousedown", (event) => {
+      if (event.button !== 0 || event.target.closest(".stats-close-btn")) {
+        return;
+      }
+
+      const rect = statsMenu.getBoundingClientRect();
+      statsMenu.style.left = `${rect.left}px`;
+      statsMenu.style.top = `${rect.top}px`;
+      statsMenu.style.transform = "none";
+
+      offsetXStats = event.clientX - rect.left;
+      offsetYStats = event.clientY - rect.top;
+      isDraggingStats = true;
+      statsHeader.classList.add("is-dragging");
+  if (headerStats) {
+    headerStats.addEventListener("mousedown", (event) => {
+      isDraggingStats = true;
+      statsDragHandle.classList.add("is-dragging");
+      event.preventDefault();
+    });
+  }
+
+  if (settingsMenu && settingsBody) {
+    settingsMenu.addEventListener(
+      "wheel",
+      (event) => {
+        if (settingsBody.contains(event.target)) {
+          return;
+        }
+
+        settingsBody.scrollTop += event.deltaY;
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+  }
+
+  if (achievementsMenu && achievementsBody) {
+    achievementsMenu.addEventListener(
+      "wheel",
+      (event) => {
+        if (achievementsBody.contains(event.target)) {
+          return;
+        }
+
+        achievementsBody.scrollTop += event.deltaY;
+        event.preventDefault();
+      },
+      { passive: false }
+    );
+  }
+
+  document.addEventListener("mousemove", (event) => {
+    if (isDraggingSettings) {
+      settingsMenu.style.left = `${event.clientX - offsetX}px`;
+      settingsMenu.style.top = `${event.clientY - offsetY}px`;
+    }
+
+    if (isDraggingAchievements) {
+      achievementsMenu.style.left = `${event.clientX - offsetXAchievements}px`;
+      achievementsMenu.style.top = `${event.clientY - offsetYAchievements}px`;
+    }
+
+    if (isDraggingStats && statsMenu) {
+      statsMenu.style.left = `${event.clientX - offsetXStats}px`;
+      statsMenu.style.top = `${event.clientY - offsetYStats}px`;
+    }
   });
 
   document.addEventListener("mouseup", () => {
-      isDragging = false;
-      header.style.cursor = "grab";
-  });
+    if (isDraggingSettings) {
+      isDraggingSettings = false;
+      settingsHeader?.classList.remove("is-dragging");
+    }
 
-  document.addEventListener("mouseup", () => {
+    if (isDraggingAchievements) {
+      isDraggingAchievements = false;
+      achievementsHeader?.classList.remove("is-dragging");
+    }
+
+    if (isDraggingStats) {
       isDraggingStats = false;
-      headerStats.style.cursor = "grab";
+      statsHeader?.classList.remove("is-dragging"
+    }
+  });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".inventory-delete-btn").forEach((button) => {
+    if (button.childElementCount > 0) {
+      return;
+    }
+
+    const label = button.textContent.replace(/\s+/g, " ").trim();
+    if (!label) {
+      return;
+    }
+
+    const labelSpan = document.createElement("span");
+    labelSpan.className = "inventory-delete-btn__label";
+    labelSpan.textContent = label;
+
+    button.textContent = "";
+    button.appendChild(labelSpan);
+    button.classList.add("inventory-delete-btn--overlay");
   });
 });
 
@@ -10659,6 +11192,7 @@ const closeStats = document.getElementById("closeStats");
 const settingsMenu = document.getElementById("settingsMenu");
 const closeSettings = document.getElementById("closeSettings");
 const audioSlider = document.getElementById("audioSlider");
+const audioSliderValueLabel = document.getElementById("audioSliderValue");
 const resetDataButton = document.getElementById("resetDataButton");
 const autoRollButton = document.getElementById("autoRollButton");
 const rollButton = document.getElementById("rollButton");
@@ -10673,6 +11207,10 @@ closeSettings.addEventListener("click", () => {
 
 achievementsButton.addEventListener("click", () => {
   achievementsMenu.style.display = "block";
+  const achievementsBodyElement = achievementsMenu.querySelector(".achievements-body");
+  if (achievementsBodyElement) {
+    achievementsBodyElement.scrollTop = 0;
+  }
 });
 
 closeAchievements.addEventListener("click", () => {
@@ -10681,6 +11219,9 @@ closeAchievements.addEventListener("click", () => {
 
 statsButton.addEventListener("click", () => {
   statsMenu.style.display = "block";
+  statsMenu.style.transform = "translate(-50%, -50%)";
+  statsMenu.style.left = "50%";
+  statsMenu.style.top = "50%";
 });
 
 closeStats.addEventListener("click", () => {
@@ -10698,20 +11239,22 @@ if (savedVolume !== null) {
 } else {
   updateAudioElements(audioVolume);
 }
+setSliderMutedState(audioVolume === 0);
+updateAudioSliderUi();
 
 audioSlider.addEventListener("input", () => {
   audioVolume = parseFloat(audioSlider.value);
   if (audioVolume === 0) {
     isMuted = true;
-    setThumbColor(true);
+    setSliderMutedState(true);
   } else {
     isMuted = false;
-    setThumbColor(false);
     previousVolume = audioVolume;
+    setSliderMutedState(false);
   }
-  console.log(`Audio volume set to: ${audioVolume}`);
   localStorage.setItem("audioVolume", audioVolume);
   updateAudioElements(audioVolume);
+  updateAudioSliderUi();
 });
 
 muteButton.addEventListener("click", () => {
@@ -10726,9 +11269,9 @@ muteButton.addEventListener("click", () => {
 
   audioSlider.value = audioVolume;
   localStorage.setItem("audioVolume", audioVolume);
-  console.log(`Mute toggled. Audio volume is now: ${audioVolume}`);
   updateAudioElements(audioVolume);
-  setThumbColor(isMuted);
+  setSliderMutedState(isMuted);
+  updateAudioSliderUi();
 });
 
 function updateAudioElements(volume) {
@@ -10736,12 +11279,39 @@ function updateAudioElements(volume) {
   audioElements.forEach((audio) => (audio.volume = volume));
 }
 
-function setThumbColor(muted) {
-  if (muted) {
-    audioSlider.classList.add("muted");
-  } else {
-    audioSlider.classList.remove("muted");
+function setSliderMutedState(muted) {
+  if (!audioSlider) {
+    return;
   }
+
+  audioSlider.classList.toggle("muted", Boolean(muted));
+}
+
+function updateAudioSliderUi() {
+  if (!audioSlider) {
+    return;
+  }
+
+  const value = Math.max(0, Math.min(1, parseFloat(audioSlider.value) || 0));
+  const percentage = Math.round(value * 100);
+  if (audioSliderValueLabel) {
+    audioSliderValueLabel.textContent = `${percentage}%`;
+  }
+
+  const startColor = { r: 96, g: 0, b: 126 };
+  const endColor = { r: 255, g: 165, b: 0 };
+  const r = Math.round(startColor.r + (endColor.r - startColor.r) * value);
+  const g = Math.round(startColor.g + (endColor.g - startColor.g) * value);
+  const b = Math.round(startColor.b + (endColor.b - startColor.b) * value);
+  const thumbColor = `rgb(${r}, ${g}, ${b})`;
+
+  audioSlider.style.setProperty("--thumb-color", thumbColor);
+
+  const trackColor = audioSlider.classList.contains("muted")
+    ? "rgba(128, 96, 186, 0.75)"
+    : thumbColor;
+
+  audioSlider.style.background = `linear-gradient(90deg, ${trackColor} ${percentage}%, rgba(255, 255, 255, 0.12) ${percentage}%)`;
 }
 
 resetDataButton.addEventListener("click", () => {
@@ -10793,24 +11363,7 @@ function stopAutoRoll() {
   localStorage.setItem("autoRollEnabled", "false");
 }
 
-const slider = document.getElementById("audioSlider");
-
-slider.addEventListener("input", function () {
-  const value = slider.value;
-
-  const startColor = { r: 96, g: 0, b: 126 };
-  const endColor = { r: 255, g: 165, b: 0 };
-
-  const r = Math.round(startColor.r + (endColor.r - startColor.r) * value);
-  const g = Math.round(startColor.g + (endColor.g - startColor.g) * value);
-  const b = Math.round(startColor.b + (endColor.b - startColor.b) * value);
-
-  const thumbColor = `rgb(${r}, ${g}, ${b})`;
-
-  slider.style.setProperty("--thumb-color", thumbColor);
-});
-
-slider.dispatchEvent(new Event("input"));
+updateAudioSliderUi();
 
 const heartContainer = document.createElement('div');
 document.body.appendChild(heartContainer);
@@ -11546,30 +12099,6 @@ function createParticleGroup() {
   }
 }
 
-const rarityCategories = {
-  under100: [
-    "commonBgImg", "rareBgImg", "epicBgImg", "legendaryBgImg", "impossibleBgImg",
-    "poweredBgImg", "plabreBgImg", "solarpowerBgImg", "belivBgImg", "flickerBgImg", "toxBgImg"
-  ],
-  under1k: [
-    "unstoppableBgImg", "spectralBgImg", "starfallBgImg", "gargBgImg", "memBgImg", "oblBgImg",
-    "phaBgImg", "isekaiBgImg", "emerBgImg", "samuraiBgImg", "contBgImg", "wanspiBgImg",
-    "froBgImg", "mysBgImg", "forgBgImg", "curartBgImg", "specBgImg"
-  ],
-  under10k: [
-    "ethershiftBgImg", "hellBgImg", "frightBgImg", "seraphwingBgImg", "shadBgImg", "shaBgImg",
-    "nighBgImg", "voiBgImg", "silBgImg", "ghoBgImg", "endBgImg", "abysBgImg", "darBgImg",
-    "twiligBgImg", "ethpulBgImg", "eniBgImg", "griBgImg", "fearBgImg", "hauntBgImg",
-    "foundsBgImg", "lostsBgImg", "hauBgImg", "lubjubBgImg", "radBgImg", "demsoBgImg", "isekailofiBgImg"
-  ],
-  under100k: [
-    "celdawBgImg", "fatreBgImg", "unnamedBgImg", "eonbreakBgImg", "overtureBgImg",
-    "arcanepulseBgImg", "harvBgImg", "devilBgImg", "cursedmirageBgImg", "tuonBgImg", "astblaBgImg", "qbearBgImg", "lightBgImg"
-  ],
-  under1m: ["impeachedBgImg", "celestialchorusBgImg", "x1staBgImg"],
-  special: ["iriBgImg", "veilBgImg", "expBgImg", "aboBgImg", "blindBgImg", "msfuBgImg", "orbBgImg", "crazeBgImg", "shenviiBgImg"]
-};
-
 document.querySelectorAll(".rarity-button").forEach(button => {
   button.addEventListener("click", () => {
     button.classList.toggle("active");
@@ -11711,6 +12240,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 let __bgStack, __bgLayerA, __bgLayerB, __bgActive = 0;
+let __currentBgClass = null;
 
 function ensureBgStack() {
   if (__bgStack) return;
@@ -11747,6 +12277,15 @@ function changeBackground(rarityClass, itemTitle) {
 
   const details = backgroundDetails[rarityClass];
   if (!details) return;
+
+  // Update the body class so existing rarity-based styling keeps working.
+  if (__currentBgClass !== rarityClass) {
+    if (__currentBgClass) {
+      document.body.classList.remove(__currentBgClass);
+    }
+    document.body.classList.add(rarityClass);
+    __currentBgClass = rarityClass;
+  }
 
   // Prepare the stack
   ensureBgStack();

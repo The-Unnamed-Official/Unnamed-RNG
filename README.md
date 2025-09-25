@@ -13,7 +13,7 @@
 ```
 
 
-Thank you for choosing to be a part of our beta testing!
+Thank you for choosing to be a part of my project/game!
 
 To get started with the "Unnamed RNG" game, please follow these simple steps:
 
