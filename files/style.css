@@ -1076,11 +1076,9 @@ body {
     flex: 1;
     overflow-y: auto;
     padding: 20px 24px 28px 24px;
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: 18px;
-    grid-template-columns: minmax(0, 1fr);
-    grid-auto-flow: row dense;
-    align-content: start;
     min-height: 0;
     scrollbar-gutter: stable both-edges;
     scrollbar-width: thin;
@@ -1088,6 +1086,13 @@ body {
     overscroll-behavior: contain;
     touch-action: pan-y;
     -webkit-overflow-scrolling: touch;
+}
+
+.settings-layout {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    align-content: start;
 }
 
 .settings-body::-webkit-scrollbar {
@@ -1121,7 +1126,7 @@ body {
 }
 
 .settings-section--full {
-    grid-column: 1 / -1;
+    width: 100%;
 }
 
 .settings-section__title {
@@ -1139,7 +1144,7 @@ body {
 }
 
 @media (min-width: 720px) {
-    .settings-body {
+    .settings-layout {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
@@ -3015,6 +3020,46 @@ body.griCutsceneBgImg {
   border-color: rgba(176, 210, 255, 0.45);
 }
 
+.inventory-delete-btn--overlay {
+  position: relative;
+  color: var(--inventory-text-fallback, #f2f5ff);
+}
+
+.inventory-delete-btn__label {
+  display: block;
+  width: 100%;
+  text-align: center;
+  white-space: normal;
+  word-break: keep-all;
+  background: var(--inventory-text-gradient, linear-gradient(120deg, #e4ecff, #f9fbff));
+  background-size: var(--inventory-text-gradient-size, 100% 100%);
+  background-position: var(--inventory-text-gradient-position, 50% 50%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  transition: background 0.35s ease;
+  animation: var(--inventory-text-gradient-animation, none);
+}
+
+.inventory-delete-btn--overlay:hover .inventory-delete-btn__label {
+  background: var(--inventory-text-gradient-hover, var(--inventory-text-gradient, linear-gradient(120deg, #f1f5ff, #ffffff)));
+  background-size: var(--inventory-text-gradient-size, 100% 100%);
+  background-position: var(--inventory-text-gradient-position, 50% 50%);
+}
+
+@keyframes inventory-text-pan {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 .inventory-group--basic {
   --group-bg-a: rgba(24, 46, 96, 0.72);
   --group-bg-b: rgba(12, 24, 48, 0.92);
@@ -3023,6 +3068,11 @@ body.griCutsceneBgImg {
 
 .inventory-group--basic .inventory-delete-btn {
   background: rgba(36, 58, 108, 0.78);
+}
+
+.inventory-group--basic .inventory-delete-btn--overlay {
+  --inventory-text-gradient: linear-gradient(130deg, #b7cbff, #f5f8ff);
+  --inventory-text-gradient-hover: linear-gradient(130deg, #d7e3ff, #ffffff);
 }
 
 .inventory-group--decent {
@@ -3035,10 +3085,20 @@ body.griCutsceneBgImg {
   background: rgba(24, 66, 66, 0.76);
 }
 
+.inventory-group--decent .inventory-delete-btn--overlay {
+  --inventory-text-gradient: linear-gradient(135deg, #54f7e2, #9df6ff);
+  --inventory-text-gradient-hover: linear-gradient(135deg, #7fffee, #d4fbff);
+}
+
 .inventory-group--grand {
   --group-bg-a: rgba(34, 68, 38, 0.72);
   --group-bg-b: rgba(16, 28, 24, 0.92);
   --group-border: rgba(138, 236, 160, 0.28);
+}
+
+.inventory-group--grand .inventory-delete-btn--overlay {
+  --inventory-text-gradient: linear-gradient(140deg, #9dffb5, #4be690, #e2ffe8);
+  --inventory-text-gradient-hover: linear-gradient(140deg, #c1ffd0, #6dffad, #ffffff);
 }
 
 .inventory-group--events {
@@ -3059,10 +3119,24 @@ body.griCutsceneBgImg {
   --group-border: rgba(255, 172, 140, 0.3);
 }
 
+.inventory-group--mastery .inventory-delete-btn--overlay {
+  --inventory-text-gradient: radial-gradient(circle at 20% 20%, #ffdfd3, #ff7ab8 45%, #ffc764 85%);
+  --inventory-text-gradient-hover: radial-gradient(circle at 20% 20%, #ffe8e0, #ff8ec6 45%, #ffd27d 85%);
+  --inventory-text-gradient-size: 220% 220%;
+  --inventory-text-gradient-animation: inventory-text-pan 7s ease-in-out infinite;
+}
+
 .inventory-group--supreme {
   --group-bg-a: rgba(68, 28, 74, 0.72);
   --group-bg-b: rgba(28, 12, 36, 0.92);
   --group-border: rgba(224, 156, 255, 0.32);
+}
+
+.inventory-group--supreme .inventory-delete-btn--overlay {
+  --inventory-text-gradient: radial-gradient(circle at 30% 20%, #bbf7ff, #8c5bff 45%, #ffd67a 80%);
+  --inventory-text-gradient-hover: radial-gradient(circle at 30% 20%, #d6fbff, #a57cff 45%, #ffe49c 80%);
+  --inventory-text-gradient-size: 250% 250%;
+  --inventory-text-gradient-animation: inventory-text-pan 6s ease-in-out infinite;
 }
 
 #toggleInventoryBtn {
