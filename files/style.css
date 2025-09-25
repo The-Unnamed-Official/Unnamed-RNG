@@ -539,6 +539,7 @@ button:hover::after,
   display: inline-block;
 }
 
+
 /* History list panel and items */
 #historyList {
   list-style: none;
@@ -551,9 +552,14 @@ button:hover::after,
 #historyList li {
   font-size: 15px;
   line-height: 1.5;
-  padding: 6px 0;
-  margin: 0;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: #ffffff25 1px solid;
+  margin-bottom: 10px;
   word-break: break-word;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.20), rgba(0,0,0,0.20)),
+    linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
 }
 
 #historyList li .history-entry-text {
