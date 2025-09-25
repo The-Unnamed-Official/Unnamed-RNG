@@ -12212,6 +12212,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 let __bgStack, __bgLayerA, __bgLayerB, __bgActive = 0;
+let __currentBgClass = null;
 
 function ensureBgStack() {
   if (__bgStack) return;
@@ -12248,6 +12249,15 @@ function changeBackground(rarityClass, itemTitle) {
 
   const details = backgroundDetails[rarityClass];
   if (!details) return;
+
+  // Update the body class so existing rarity-based styling keeps working.
+  if (__currentBgClass !== rarityClass) {
+    if (__currentBgClass) {
+      document.body.classList.remove(__currentBgClass);
+    }
+    document.body.classList.add(rarityClass);
+    __currentBgClass = rarityClass;
+  }
 
   // Prepare the stack
   ensureBgStack();
