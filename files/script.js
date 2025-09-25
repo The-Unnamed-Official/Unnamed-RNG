@@ -361,6 +361,7 @@ function processAchievementToastQueue() {
 
   setTimeout(removeToast, ACHIEVEMENT_TOAST_DURATION);
 }
+
 function getAudioElement(id) {
   if (audioElementCache.has(id)) {
     const cached = audioElementCache.get(id);
@@ -378,6 +379,14 @@ function getAudioElement(id) {
   audioElementCache.set(id, element);
   return element;
 }
+function getAudioElement(id) {
+  if (audioElementCache.has(id)) {
+    const cached = audioElementCache.get(id);
+    if (cached && document.contains(cached)) {
+      return cached;
+    }
+    audioElementCache.delete(id);
+  }
 
 function resetAudioState(audio, id) {
   if (!audio) return;
@@ -420,6 +429,7 @@ function stopAllAudio() {
     resetAudioState(audio, id);
   });
 }
+
 document.addEventListener("DOMContentLoaded", () => {
   const rollButton = byId("rollButton");
   const startButton = byId("startButton");
@@ -430,6 +440,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (rollButton) {
     rollButton.disabled = true;
   }
+}
+
+function stopAllAudio() {
+  STOPPABLE_AUDIO_IDS.forEach((id) => {
+    const audio = getAudioElement(id);
+    if (!audio) {
+      return;
+    }
 
   if (!startButton) {
     return;
@@ -610,6 +628,7 @@ function updateAchievementsList() {
     $all(selector).forEach((item) => {
       const achievementName = item.getAttribute("data-name");
       const isUnlocked = achievementName && unlocked.has(achievementName);
+
       item.style.backgroundColor = isUnlocked ? unlockedStyles.backgroundColor : "gray";
       item.style.color = isUnlocked && unlockedStyles.color ? unlockedStyles.color : "";
     });
@@ -10669,7 +10688,6 @@ function spawnCooldownButton(config) {
 
     cooldownBuffActive = true;
     cooldownTime = config.reduceTo;
-
     showCooldownEffect(config.effectSeconds);
 
     button.innerText = "Cooldown Reduced!";
@@ -10736,47 +10754,65 @@ scheduleAllCooldownButtons();
 
 document.addEventListener("DOMContentLoaded", () => {
   const settingsMenu = document.getElementById("settingsMenu");
-  const header = settingsMenu.querySelector("h3");
+  const settingsHeader = settingsMenu?.querySelector(".settings-header");
   const headerStats = statsMenu.querySelector("h3");
-  let isDragging = false;
+  let isDraggingSettings = false;
   let isDraggingStats = false;
-  let offsetX, offsetY;
-  let offsetXStyle, offsetYStyle;
+  let offsetX = 0;
+  let offsetY = 0;
+  let offsetXStyle = 0;
+  let offsetYStyle = 0;
 
-  header.addEventListener("mousedown", (e) => {
-      isDragging = true;
-      offsetX = e.clientX - settingsMenu.offsetLeft;
-      offsetY = e.clientY - settingsMenu.offsetTop;
-      header.style.cursor = "grabbing";
-  });
+  if (settingsHeader) {
+    settingsHeader.addEventListener("mousedown", (event) => {
+      if (event.button !== 0 || event.target.closest(".settings-close-btn")) {
+        return;
+      }
 
-  headerStats.addEventListener("mousedown", (a) => {
-    isDraggingStats = true;
-    offsetXStyle = a.clientX - statsMenu.offsetLeft;
-    offsetYStyle = a.clientY - statsMenu.offsetTop;
-    headerStats.style.cursor = "grabbing";
-  })
+      const rect = settingsMenu.getBoundingClientRect();
+      settingsMenu.style.left = `${rect.left}px`;
+      settingsMenu.style.top = `${rect.top}px`;
+      settingsMenu.style.transform = "none";
 
-  document.addEventListener("mousemove", (e) => {
-      if (!isDragging) return;
-      settingsMenu.style.left = e.clientX - offsetX + "px";
-      settingsMenu.style.top = e.clientY - offsetY + "px";
-  });
+      offsetX = event.clientX - rect.left;
+      offsetY = event.clientY - rect.top;
+      isDraggingSettings = true;
+      settingsHeader.classList.add("is-dragging");
+      event.preventDefault();
+    });
+  }
 
-  document.addEventListener("mousemove", (a) => {
-      if (!isDraggingStats) return;
-      statsMenu.style.left = a.clientX - offsetXStyle + "px";
-      statsMenu.style.top = a.clientY - offsetYStyle + "px";
+  if (headerStats) {
+    headerStats.addEventListener("mousedown", (event) => {
+      isDraggingStats = true;
+      offsetXStyle = event.clientX - statsMenu.offsetLeft;
+      offsetYStyle = event.clientY - statsMenu.offsetTop;
+      headerStats.style.cursor = "grabbing";
+    });
+  }
+
+  document.addEventListener("mousemove", (event) => {
+    if (isDraggingSettings) {
+      settingsMenu.style.left = `${event.clientX - offsetX}px`;
+      settingsMenu.style.top = `${event.clientY - offsetY}px`;
+    }
+
+    if (isDraggingStats) {
+      statsMenu.style.left = `${event.clientX - offsetXStyle}px`;
+      statsMenu.style.top = `${event.clientY - offsetYStyle}px`;
+    }
   });
 
   document.addEventListener("mouseup", () => {
-      isDragging = false;
-      header.style.cursor = "grab";
-  });
+    if (isDraggingSettings) {
+      isDraggingSettings = false;
+      settingsHeader?.classList.remove("is-dragging");
+    }
 
-  document.addEventListener("mouseup", () => {
+    if (isDraggingStats) {
       isDraggingStats = false;
       headerStats.style.cursor = "grab";
+    }
   });
 });
 
