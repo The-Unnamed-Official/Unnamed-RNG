@@ -11052,7 +11052,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    button.dataset.label = label;
+    const labelSpan = document.createElement("span");
+    labelSpan.className = "inventory-delete-btn__label";
+    labelSpan.textContent = label;
+
+    button.textContent = "";
+    button.appendChild(labelSpan);
     button.classList.add("inventory-delete-btn--overlay");
   });
 });

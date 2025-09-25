@@ -3027,35 +3027,27 @@ body.griCutsceneBgImg {
 
 .inventory-delete-btn--overlay {
   position: relative;
-  color: transparent;
+  color: var(--inventory-text-fallback, #f2f5ff);
 }
 
-.inventory-delete-btn--overlay::after {
-  content: attr(data-label);
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 12px;
+.inventory-delete-btn__label {
+  display: block;
+  width: 100%;
   text-align: center;
-  font: inherit;
-  line-height: inherit;
-  letter-spacing: inherit;
   white-space: normal;
   word-break: keep-all;
-  pointer-events: none;
   background: var(--inventory-text-gradient, linear-gradient(120deg, #e4ecff, #f9fbff));
   background-size: var(--inventory-text-gradient-size, 100% 100%);
   background-position: var(--inventory-text-gradient-position, 50% 50%);
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   color: transparent;
   transition: background 0.35s ease;
   animation: var(--inventory-text-gradient-animation, none);
 }
 
-.inventory-delete-btn--overlay:hover::after {
+.inventory-delete-btn--overlay:hover .inventory-delete-btn__label {
   background: var(--inventory-text-gradient-hover, var(--inventory-text-gradient, linear-gradient(120deg, #f1f5ff, #ffffff)));
   background-size: var(--inventory-text-gradient-size, 100% 100%);
   background-position: var(--inventory-text-gradient-position, 50% 50%);
