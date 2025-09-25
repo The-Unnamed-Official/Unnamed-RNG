@@ -12,6 +12,180 @@ let isMuted = false;
 let previousVolume = audioVolume;
 let refreshTimeout;
 
+const STOPPABLE_AUDIO_IDS = [
+  "suspenseAudio",
+  "expOpeningAudio",
+  "geezerSuspenceAudio",
+  "polarrSuspenceAudio",
+  "scareSuspenceAudio",
+  "waveAudio",
+  "scorchingAudio",
+  "beachAudio",
+  "tidalwaveAudio",
+  "gingerAudio",
+  "x1staAudio",
+  "lightAudio",
+  "astblaAudio",
+  "heartAudio",
+  "tuonAudio",
+  "blindAudio",
+  "iriAudio",
+  "aboAudio",
+  "shaAudio",
+  "lubjubAudio",
+  "demsoAudio",
+  "fircraAudio",
+  "plabreAudio",
+  "harvAudio",
+  "norstaAudio",
+  "sanclaAudio",
+  "silnigAudio",
+  "reidasAudio",
+  "frogarAudio",
+  "cancansymAudio",
+  "ginharAudio",
+  "jolbelAudio",
+  "eniAudio",
+  "darAudio",
+  "nighAudio",
+  "specAudio",
+  "twiligAudio",
+  "silAudio",
+  "isekaiAudio",
+  "equinoxAudio",
+  "emerAudio",
+  "samuraiAudio",
+  "contAudio",
+  "unstoppableAudio",
+  "gargantuaAudio",
+  "spectralAudio",
+  "starfallAudio",
+  "memAudio",
+  "oblAudio",
+  "phaAudio",
+  "frightAudio",
+  "unnamedAudio",
+  "overtureAudio",
+  "impeachedAudio",
+  "eonbreakAudio",
+  "celAudio",
+  "silcarAudio",
+  "gregAudio",
+  "mintllieAudio",
+  "geezerAudio",
+  "polarrAudio",
+  "oppAudio",
+  "serAudio",
+  "arcAudio",
+  "ethAudio",
+  "curAudio",
+  "hellAudio",
+  "wanspiAudio",
+  "mysAudio",
+  "voiAudio",
+  "endAudio",
+  "shadAudio",
+  "froAudio",
+  "forgAudio",
+  "curartAudio",
+  "ghoAudio",
+  "abysAudio",
+  "ethpulAudio",
+  "griAudio",
+  "celdawAudio",
+  "fatreAudio",
+  "fearAudio",
+  "hauAudio",
+  "foundsAudio",
+  "lostsAudio",
+  "hauntAudio",
+  "devilAudio",
+  "pumpkinAudio",
+  "h1diAudio",
+  "bigSuspenceAudio",
+  "expAudio",
+  "veilAudio",
+  "msfuAudio",
+  "blodAudio",
+  "orbAudio",
+  "astredAudio",
+  "crazeAudio",
+  "shenviiAudio",
+  "qbearAudio",
+  "estbunAudio",
+  "esteggAudio",
+  "isekailofiAudio"
+];
+
+const AUDIO_RESET_OVERRIDES = {
+  gargantuaAudio: 14.5,
+  eonbreakAudio: 2,
+  mintllieAudio: 37
+};
+
+const audioElementCache = new Map();
+const pendingAudioResetHandlers = new WeakMap();
+
+function getAudioElement(id) {
+  if (audioElementCache.has(id)) {
+    const cached = audioElementCache.get(id);
+    if (cached && document.contains(cached)) {
+      return cached;
+    }
+    audioElementCache.delete(id);
+  }
+
+  const element = document.getElementById(id) || window[id] || null;
+  if (element && element.preload === "none") {
+    element.preload = "auto";
+  }
+
+  audioElementCache.set(id, element);
+  return element;
+}
+
+function resetAudioState(audio, id) {
+  if (!audio) return;
+
+  const targetTime = AUDIO_RESET_OVERRIDES[id] ?? 0;
+  const assignTime = () => {
+    if (typeof audio.currentTime === "number" && audio.currentTime !== targetTime) {
+      try {
+        audio.currentTime = targetTime;
+      } catch (error) {
+        // Ignore errors that occur if metadata isn't available yet.
+      }
+    }
+  };
+
+  assignTime();
+
+  if (audio.readyState < 1 && !pendingAudioResetHandlers.has(audio)) {
+    const handler = () => {
+      pendingAudioResetHandlers.delete(audio);
+      audio.removeEventListener("loadedmetadata", handler);
+      assignTime();
+    };
+    pendingAudioResetHandlers.set(audio, handler);
+    audio.addEventListener("loadedmetadata", handler, { once: true });
+  }
+}
+
+function stopAllAudio() {
+  STOPPABLE_AUDIO_IDS.forEach((id) => {
+    const audio = getAudioElement(id);
+    if (!audio) {
+      return;
+    }
+
+    if (typeof audio.pause === "function") {
+      audio.pause();
+    }
+
+    resetAudioState(audio, id);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const rollButton = document.getElementById("rollButton");
   const startButton = document.getElementById("startButton");
@@ -106,314 +280,7 @@ function loadCutsceneSkip() {
 }
 
 function musicLoad() {
-  let suspenseAudio = document.getElementById("suspenseAudio");
-  let expOpeningAudio = document.getElementById("expOpeningAudio");
-  let geezerSuspenceAudio = document.getElementById("geezerSuspenceAudio");
-  let polarrSuspenceAudio = document.getElementById("polarrSuspenceAudio");
-  let scareSuspenceAudio = document.getElementById("scareSuspenceAudio");
-  let bigSuspenceAudio = document.getElementById("bigSuspenceAudio");
-  let waveAudio = document.getElementById("waveAudio");
-  let scorchingAudio = document.getElementById("scorchingAudio");
-  let beachAudio = document.getElementById("beachAudio");
-  let tidalwaveAudio = document.getElementById("tidalwaveAudio");
-  let gingerAudio = document.getElementById("gingerAudio");
-  let astblaAudio = document.getElementById("astblaAudio");
-  let iriAudio = document.getElementById("iriAudio");
-  let heartAudio = document.getElementById("heartAudio");
-  let tuonAudio = document.getElementById("tuonAudio");
-  let aboAudio = document.getElementById("aboAudio");
-  let lubjubAudio = document.getElementById("lubjubAudio");
-  let plabreAudio = document.getElementById("plabreAudio");
-  let isekaiAudio = document.getElementById("isekaiAudio");
-  let equinoxAudio = document.getElementById("equinoxAudio");
-  let fircraAudio = document.getElementById("fircraAudio");
-  let emerAudio = document.getElementById("emerAudio");
-  let shadAudio = document.getElementById("shadAudio");
-  let samuraiAudio = document.getElementById("samuraiAudio");
-  let contAudio = document.getElementById("contAudio");
-  let unstoppableAudio = document.getElementById("unstoppableAudio");
-  let gargantuaAudio = document.getElementById("gargantuaAudio");
-  let spectralAudio = document.getElementById("spectralAudio");
-  let starfallAudio = document.getElementById("starfallAudio");
-  let memAudio = document.getElementById("memAudio");
-  let oblAudio = document.getElementById("oblAudio");
-  let phaAudio = document.getElementById("phaAudio");
-  let frightAudio = document.getElementById("frightAudio");
-  let unnamedAudio = document.getElementById("unnamedAudio");
-  let overtureAudio = document.getElementById("overtureAudio");
-  let impeachedAudio = document.getElementById("impeachedAudio");
-  let eonbreakAudio = document.getElementById("eonbreakAudio");
-  let ethAudio = document.getElementById("ethAudio");
-  let celAudio = document.getElementById("celAudio");
-  let serAudio = document.getElementById("serAudio");
-  let arcAudio = document.getElementById("arcAudio");
-  let silcarAudio = document.getElementById("silcarAudio");
-  let gregAudio = document.getElementById("gregAudio");
-  let mintllieAudio = document.getElementById("mintllieAudio");
-  let geezerAudio = document.getElementById("geezerAudio");
-  let polarrAudio = document.getElementById("polarrAudio");
-  let oppAudio = document.getElementById("oppAudio");
-  let curAudio = document.getElementById("curAudio");
-  let wanspiAudio = document.getElementById("wanspiAudio");
-  let nighAudio = document.getElementById("nighAudio");
-  let mysAudio = document.getElementById("mysAudio");
-  let voiAudio = document.getElementById("voiAudio");
-  let endAudio = document.getElementById("endAudio");
-  let shaAudio = document.getElementById("shadAudio");
-  let twiligAudio = document.getElementById("twiligAudio");
-  let specAudio = document.getElementById("specAudio");
-  let silAudio = document.getElementById("silAudio");
-  let froAudio = document.getElementById("froAudio");
-  let forgAudio = document.getElementById("forgAudio");
-  let ghoAudio = document.getElementById("ghoAudio");
-  let curartAudio = document.getElementById("curartAudio");
-  let abysAudio = document.getElementById("abysAudio");
-  let hellAudio = document.getElementById("hellAudio");
-  let eniAudio = document.getElementById("eniAudio");
-  let griAudio = document.getElementById("griAudio");
-  let fatreAudio = document.getElementById("fatreAudio");
-  let fearAudio = document.getElementById("fearAudio");
-  let hauAudio = document.getElementById("hauAudio");
-  let celdawAudio = document.getElementById("celdawAudio");
-  let lostsAudio = document.getElementById("lostsAudio");
-  let hauntAudio = document.getElementById("hauntAudio");
-  let devilAudio = document.getElementById("devilAudio");
-  let darAudio = document.getElementById("darAudio");
-  let h1diAudio = document.getElementById("h1diAudio");
-  let pumpkinAudio = document.getElementById("pumpkinAudio");
-  let foundsAudio = document.getElementById("foundsAudio");
-  let ethpulAudio = document.getElementById("ethpulAudio");
-  let norstaAudio = document.getElementById("norstaAudio");
-  let sanclaAudio = document.getElementById("sanclaAudio");
-  let silnigAudio = document.getElementById("silnigAudio");
-  let reidasAudio = document.getElementById("reidasAudio");
-  let frogarAudio = document.getElementById("frogarAudio");
-  let cancansymAudio = document.getElementById("cancansymAudio");
-  let ginharAudio = document.getElementById("ginharAudio");
-  let jolbelAudio = document.getElementById("jolbelAudio");
-  let harvAudio = document.getElementById("harvAudio");
-  let expAudio = document.getElementById("expAudio");
-  let veilAudio = document.getElementById("veilAudio");
-  let demsoAudio = document.getElementById("demsoAudio");
-  let blindAudio = document.getElementById("blindAudio");
-  let msfuAudio = document.getElementById("msfuAudio");
-  let blodAudio = document.getElementById("blodAudio");
-  let orbAudio = document.getElementById("orbAudio");
-  let astredAudio = document.getElementById("astredAudio");
-  let crazeAudio = document.getElementById("crazeAudio");
-  let shenviiAudio = document.getElementById("shenviiAudio");
-  let qbearAudio = document.getElementById("qbearAudio");
-  let lightAudio = document.getElementById("lightAudio");
-  let x1staAudio = document.getElementById("x1staAudio");
-  let esteggAudio = document.getElementById("esteggAudio");
-  let estbunAudio = document.getElementById("estbunAudio");
-  let isekailofiAudio= document.getElementById("isekailofiAudio");
-
-  suspenseAudio.pause();
-  expOpeningAudio.pause();
-  geezerSuspenceAudio.pause();
-  polarrSuspenceAudio.pause();
-  scareSuspenceAudio.pause();
-  waveAudio.pause();
-  scorchingAudio.pause();
-  beachAudio.pause();
-  tidalwaveAudio.pause();
-  gingerAudio.pause();
-  x1staAudio.pause();
-  lightAudio.pause();
-  astblaAudio.pause();
-  heartAudio.pause();
-  tuonAudio.pause();
-  blindAudio.pause();
-  iriAudio.pause();
-  aboAudio.pause();
-  shaAudio.pause();
-  lubjubAudio.pause();
-  demsoAudio.pause();
-  fircraAudio.pause();
-  plabreAudio.pause();
-  harvAudio.pause();
-  norstaAudio.pause();
-  sanclaAudio.pause();
-  silnigAudio.pause();
-  reidasAudio.pause();
-  frogarAudio.pause();
-  cancansymAudio.pause();
-  ginharAudio.pause();
-  jolbelAudio.pause();
-  eniAudio.pause();
-  darAudio.pause();
-  nighAudio.pause();
-  specAudio.pause();
-  twiligAudio.pause();
-  silAudio.pause();
-  isekaiAudio.pause();
-  equinoxAudio.pause();
-  emerAudio.pause();
-  samuraiAudio.pause();
-  contAudio.pause();
-  unstoppableAudio.pause();
-  gargantuaAudio.pause();
-  spectralAudio.pause();
-  starfallAudio.pause();
-  memAudio.pause();
-  oblAudio.pause();
-  phaAudio.pause();
-  frightAudio.pause();
-  unnamedAudio.pause();
-  overtureAudio.pause();
-  impeachedAudio.pause();
-  eonbreakAudio.pause();
-  celAudio.pause();
-  silcarAudio.pause();
-  gregAudio.pause();
-  mintllieAudio.pause();
-  geezerAudio.pause();
-  polarrAudio.pause();
-  oppAudio.pause();
-  serAudio.pause();
-  arcAudio.pause();
-  ethAudio.pause();
-  curAudio.pause();
-  hellAudio.pause();
-  wanspiAudio.pause();
-  mysAudio.pause();
-  voiAudio.pause();
-  endAudio.pause();
-  shadAudio.pause();
-  froAudio.pause();
-  forgAudio.pause();
-  curartAudio.pause();
-  ghoAudio.pause();
-  abysAudio.pause();
-  ethpulAudio.pause();
-  griAudio.pause();
-  celdawAudio.pause();
-  fatreAudio.pause();
-  fearAudio.pause();
-  hauAudio.pause();
-  foundsAudio.pause();
-  lostsAudio.pause();
-  hauntAudio.pause();
-  devilAudio.pause();
-  pumpkinAudio.pause();
-  h1diAudio.pause();
-  bigSuspenceAudio.pause();
-  expAudio.pause();
-  veilAudio.pause();
-  msfuAudio.pause();
-  blodAudio.pause();
-  orbAudio.pause();
-  astredAudio.pause();
-  crazeAudio.pause();
-  shenviiAudio.pause();
-  qbearAudio.pause();
-  estbunAudio.pause();
-  esteggAudio.pause();
-  isekailofiAudio.pause();
-
-  suspenseAudio.currentTime = 0;
-  expOpeningAudio.currentTime = 0;
-  geezerSuspenceAudio.currentTime = 0;
-  polarrSuspenceAudio.currentTime = 0;
-  scareSuspenceAudio.currentTime = 0;
-  waveAudio.currentTime = 0;
-  scorchingAudio.currentTime = 0;
-  beachAudio.currentTime = 0;
-  tidalwaveAudio.currentTime = 0;
-  gingerAudio.currentTime = 0;
-  x1staAudio.currentTime = 0;
-  lightAudio.currentTime = 0;
-  tuonAudio.currentTime = 0;
-  astblaAudio.currentTime = 0;
-  heartAudio.currentTime = 0;
-  iriAudio.currentTime = 0;
-  blindAudio.currentTime = 0;
-  aboAudio.currentTime = 0;
-  shaAudio.currentTime = 0;
-  demsoAudio.currentTime = 0;
-  lubjubAudio.currentTime = 0;
-  fircraAudio.currentTime = 0;
-  plabreAudio.currentTime = 0;
-  harvAudio.currentTime = 0;
-  h1diAudio.currentTime = 0;
-  jolbelAudio.currentTime = 0;
-  ginharAudio.currentTime = 0;
-  cancansymAudio.currentTime = 0;
-  frogarAudio.currentTime = 0;
-  reidasAudio.currentTime = 0;
-  silnigAudio.currentTime = 0;
-  sanclaAudio.currentTime = 0;
-  norstaAudio.currentTime = 0;
-  nighAudio.currentTime = 0;
-  pumpkinAudio.currentTime = 0;
-  devilAudio.currentTime = 0;
-  hauntAudio.currentTime = 0;
-  lostsAudio.currentTime = 0;
-  foundsAudio.currentTime = 0;
-  hauAudio.currentTime = 0;
-  fatreAudio.currentTime = 0;
-  fearAudio.currentTime = 0;
-  celdawAudio.currentTime = 0;
-  griAudio.currentTime = 0;
-  eniAudio.currentTime = 0;
-  curartAudio.currentTime = 0;
-  ethpulAudio.currentTime = 0;
-  ghoAudio.currentTime = 0;
-  froAudio.currentTime = 0;
-  silAudio.currentTime = 0;
-  shadAudio.currentTime = 0;
-  specAudio.currentTime = 0;
-  twiligAudio.currentTime = 0;
-  isekaiAudio.currentTime = 0;
-  equinoxAudio.currentTime = 0;
-  emerAudio.currentTime = 0;
-  samuraiAudio.currentTime = 0;
-  contAudio.currentTime = 0;
-  unstoppableAudio.currentTime = 0;
-  gargantuaAudio.currentTime = 14.5;
-  spectralAudio.currentTime = 0;
-  starfallAudio.currentTime = 0;
-  memAudio.currentTime = 0;
-  oblAudio.currentTime = 0;
-  phaAudio.currentTime = 0;
-  frightAudio.currentTime = 0;
-  unnamedAudio.currentTime = 0;
-  overtureAudio.currentTime = 0;
-  impeachedAudio.currentTime = 0;
-  eonbreakAudio.currentTime = 2;
-  celAudio.currentTime = 0;
-  silcarAudio.currentTime = 0;
-  gregAudio.currentTime = 0;
-  mintllieAudio.currentTime = 37;
-  geezerAudio.currentTime = 0;
-  polarrAudio.currentTime = 0;
-  oppAudio.currentTime = 0;
-  serAudio.currentTime = 0;
-  arcAudio.currentTime = 0;
-  ethAudio.currentTime = 0;
-  curAudio.currentTime = 0;
-  hellAudio.currentTime = 0;
-  wanspiAudio.currentTime = 0;
-  mysAudio.currentTime = 0;
-  voiAudio.currentTime = 0;
-  endAudio.currentTime = 0;
-  forgAudio.currentTime = 0;
-  darAudio.currentTime = 0;
-  abysAudio.currentTime = 0;
-  bigSuspenceAudio.currentTime = 0;
-  expAudio.currentTime = 0;
-  veilAudio.currentTime = 0;
-  msfuAudio.currentTime = 0;
-  blodAudio.currentTime = 0;
-  orbAudio.currentTime = 0;
-  astredAudio.currentTime = 0;
-  crazeAudio.currentTime = 0;
-  shenviiAudio.currentTime = 0;
-  qbearAudio.currentTime = 0;
-  estbunAudio.currentTime = 0;
-  esteggAudio.currentTime = 0;
-  isekailofiAudio.currentTime = 0;
+  stopAllAudio();
 }
 
 function formatRollCount(count) {
@@ -606,211 +473,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rollCount++;
   }
 
-  suspenseAudio.pause();
-  geezerSuspenceAudio.pause();
-  polarrSuspenceAudio.pause();
-  scareSuspenceAudio.pause();
-  waveAudio.pause();
-  scorchingAudio.pause();
-  beachAudio.pause();
-  tidalwaveAudio.pause();
-  lightAudio.pause();
-  qbearAudio.pause();
-  shenviiAudio.pause();
-  astblaAudio.pause();
-  tuonAudio.pause();
-  iriAudio.pause();
-  aboAudio.pause();
-  shaAudio.pause();
-  lubjubAudio.pause();
-  plabreAudio.pause();
-  demsoAudio.pause();
-  harvAudio.pause();
-  norstaAudio.pause();
-  sanclaAudio.pause();
-  silnigAudio.pause();
-  reidasAudio.pause();
-  frogarAudio.pause();
-  cancansymAudio.pause();
-  ginharAudio.pause();
-  jolbelAudio.pause();
-  eniAudio.pause();
-  darAudio.pause();
-  nighAudio.pause();
-  specAudio.pause();
-  twiligAudio.pause();
-  silAudio.pause();
-  isekaiAudio.pause();
-  equinoxAudio.pause();
-  gingerAudio.pause();
-  emerAudio.pause();
-  samuraiAudio.pause();
-  contAudio.pause();
-  unstoppableAudio.pause();
-  gargantuaAudio.pause();
-  spectralAudio.pause();
-  starfallAudio.pause();
-  memAudio.pause();
-  oblAudio.pause();
-  phaAudio.pause();
-  frightAudio.pause();
-  unnamedAudio.pause();
-  overtureAudio.pause();
-  impeachedAudio.pause();
-  eonbreakAudio.pause();
-  celAudio.pause();
-  silcarAudio.pause();
-  gregAudio.pause();
-  mintllieAudio.pause();
-  geezerAudio.pause();
-  polarrAudio.pause();
-  oppAudio.pause();
-  serAudio.pause();
-  arcAudio.pause();
-  ethAudio.pause();
-  curAudio.pause();
-  hellAudio.pause();
-  wanspiAudio.pause();
-  mysAudio.pause();
-  voiAudio.pause();
-  endAudio.pause();
-  shadAudio.pause();
-  froAudio.pause();
-  forgAudio.pause();
-  curartAudio.pause();
-  ghoAudio.pause();
-  abysAudio.pause();
-  ethpulAudio.pause();
-  griAudio.pause();
-  celdawAudio.pause();
-  fatreAudio.pause();
-  fearAudio.pause();
-  hauAudio.pause();
-  foundsAudio.pause();
-  lostsAudio.pause();
-  hauntAudio.pause();
-  devilAudio.pause();
-  pumpkinAudio.pause();
-  h1diAudio.pause();
-  bigSuspenceAudio.pause();
-  expAudio.pause();
-  expOpeningAudio.pause();
-  veilAudio.pause();
-  fircraAudio.pause();
-  blindAudio.pause();
-  msfuAudio.pause();
-  blodAudio.pause();
-  orbAudio.pause();
-  heartAudio.pause();
-  astredAudio.pause();
-  crazeAudio.pause();
-  x1staAudio.pause();
-  esteggAudio.pause();
-  estbunAudio.pause();
-  isekailofiAudio.pause();
-
-  suspenseAudio.currentTime = 0;
-  geezerSuspenceAudio.currentTime = 0;
-  polarrSuspenceAudio.currentTime = 0;
-  scareSuspenceAudio.currentTime = 0;
-  waveAudio.currentTime = 0;
-  scorchingAudio.currentTime = 0;
-  beachAudio.currentTime = 0;
-  tidalwaveAudio.currentTime = 0;
-  lightAudio.currentTime = 0;
-  qbearAudio.currentTime = 0;
-  shenviiAudio.currentTime = 0;
-  heartAudio.currentTime = 0;
-  iriAudio.currentTime = 0;
-  aboAudio.currentTime = 0;
-  shaAudio.currentTime = 0;
-  lubjubAudio.currentTime = 0;
-  demsoAudio.currentTime = 0;
-  astblaAudio.currentTime = 0;
-  plabreAudio.currentTime = 0;
-  harvAudio.currentTime = 0;
-  h1diAudio.currentTime = 0;
-  jolbelAudio.currentTime = 0;
-  ginharAudio.currentTime = 0;
-  cancansymAudio.currentTime = 0;
-  frogarAudio.currentTime = 0;
-  reidasAudio.currentTime = 0;
-  silnigAudio.currentTime = 0;
-  sanclaAudio.currentTime = 0;
-  norstaAudio.currentTime = 0;
-  nighAudio.currentTime = 0;
-  pumpkinAudio.currentTime = 0;
-  tuonAudio.currentTime = 0;
-  devilAudio.currentTime = 0;
-  hauntAudio.currentTime = 0;
-  lostsAudio.currentTime = 0;
-  foundsAudio.currentTime = 0;
-  hauAudio.currentTime = 0;
-  fatreAudio.currentTime = 0;
-  fearAudio.currentTime = 0;
-  celdawAudio.currentTime = 0;
-  griAudio.currentTime = 0;
-  eniAudio.currentTime = 0;
-  curartAudio.currentTime = 0;
-  ethpulAudio.currentTime = 0;
-  ghoAudio.currentTime = 0;
-  froAudio.currentTime = 0;
-  silAudio.currentTime = 0;
-  shadAudio.currentTime = 0;
-  specAudio.currentTime = 0;
-  twiligAudio.currentTime = 0;
-  isekaiAudio.currentTime = 0;
-  equinoxAudio.currentTime = 0;
-  gingerAudio.currentTime = 0;
-  emerAudio.currentTime = 0;
-  samuraiAudio.currentTime = 0;
-  contAudio.currentTime = 0;
-  unstoppableAudio.currentTime = 0;
-  gargantuaAudio.currentTime = 14.5;
-  spectralAudio.currentTime = 0;
-  starfallAudio.currentTime = 0;
-  memAudio.currentTime = 0;
-  oblAudio.currentTime = 0;
-  phaAudio.currentTime = 0;
-  frightAudio.currentTime = 0;
-  unnamedAudio.currentTime = 0;
-  overtureAudio.currentTime = 0;
-  impeachedAudio.currentTime = 0;
-  eonbreakAudio.currentTime = 2;
-  celAudio.currentTime = 0;
-  silcarAudio.currentTime = 0;
-  gregAudio.currentTime = 0;
-  mintllieAudio.currentTime = 37;
-  geezerAudio.currentTime = 0;
-  polarrAudio.currentTime = 0;
-  oppAudio.currentTime = 0;
-  serAudio.currentTime = 0;
-  arcAudio.currentTime = 0;
-  ethAudio.currentTime = 0;
-  curAudio.currentTime = 0;
-  hellAudio.currentTime = 0;
-  wanspiAudio.currentTime = 0;
-  mysAudio.currentTime = 0;
-  voiAudio.currentTime = 0;
-  endAudio.currentTime = 0;
-  forgAudio.currentTime = 0;
-  darAudio.currentTime = 0;
-  abysAudio.currentTime = 0;
-  bigSuspenceAudio.currentTime = 0;
-  expAudio.currentTime = 0;
-  expOpeningAudio.currentTime = 0;
-  veilAudio.currentTime = 0;
-  fircraAudio.currentTime = 0;
-  blindAudio.currentTime = 0;
-  msfuAudio.currentTime = 0;
-  blodAudio.currentTime = 0;
-  orbAudio.currentTime = 0;
-  astredAudio.currentTime = 0;
-  crazeAudio.currentTime = 0;
-  x1staAudio.currenttime = 0;
-  esteggAudio.currenttime = 0;
-  estbunAudio.currenttime = 0;
-  isekailofiAudio.currenttime = 0;
+  stopAllAudio();
 
   let rarity = rollRarity();
   let title = selectTitle(rarity);
