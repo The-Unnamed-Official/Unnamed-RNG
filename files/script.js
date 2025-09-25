@@ -38,6 +38,10 @@ let skipCutscene10K = true;
 let skipCutscene100K = true;
 let skipCutscene1M = true;
 let cooldownBuffActive = cooldownTime < BASE_COOLDOWN_TIME;
+let rollDisplayHiddenByUser = false;
+let cutsceneHidRollDisplay = false;
+let cutsceneActive = false;
+let cutsceneFailsafeTimeout = null;
 
 const STOPPABLE_AUDIO_IDS = [
   "suspenseAudio",
@@ -145,6 +149,70 @@ const STOPPABLE_AUDIO_IDS = [
   "esteggAudio",
   "isekailofiAudio"
 ];
+
+function setRollButtonEnabled(enabled) {
+  const button = document.getElementById("rollButton");
+  if (button) {
+    button.disabled = !enabled;
+  }
+}
+
+function restoreRollDisplayAfterCutscene() {
+  if (!cutsceneHidRollDisplay) {
+    return;
+  }
+
+  const rollDisplay = document.querySelector(".container");
+  if (!rollDisplay || rollDisplayHiddenByUser) {
+    cutsceneHidRollDisplay = false;
+    return;
+  }
+
+  rollDisplay.style.visibility = "visible";
+
+  const toggleBtn = document.getElementById("toggleRollDisplayBtn");
+  if (toggleBtn) {
+    toggleBtn.textContent = "Hide Roll & Display";
+  }
+
+  cutsceneHidRollDisplay = false;
+}
+
+function scheduleCutsceneFailsafe() {
+  clearTimeout(cutsceneFailsafeTimeout);
+  cutsceneFailsafeTimeout = setTimeout(() => {
+    if (!cutsceneActive) {
+      return;
+    }
+
+    console.warn("Cutscene safeguard triggered after timeout; restoring roll display state.");
+    isChangeEnabled = true;
+    finalizeCutsceneState();
+    setRollButtonEnabled(true);
+  }, 15000);
+}
+
+function finalizeCutsceneState() {
+  clearTimeout(cutsceneFailsafeTimeout);
+  cutsceneFailsafeTimeout = null;
+  cutsceneActive = false;
+  ensureBgStack();
+  if (__bgStack) {
+    __bgStack.classList.remove("is-hidden");
+  }
+  restoreRollDisplayAfterCutscene();
+}
+
+function hideRollDisplayForCutscene(container) {
+  if (!container) {
+    return;
+  }
+
+  const wasVisible = container.style.visibility !== "hidden";
+  cutsceneHidRollDisplay = !rollDisplayHiddenByUser && wasVisible;
+
+  container.style.visibility = "hidden";
+}
 
 const rarityCategories = {
   under100: [
@@ -774,6 +842,16 @@ document.getElementById("rollButton").addEventListener("click", function () {
     return;
   }
 
+  const rollDisplay = document.querySelector(".container");
+  if (rollDisplay && !rollDisplayHiddenByUser && rollDisplay.style.visibility === "hidden") {
+    rollDisplay.style.visibility = "visible";
+    cutsceneHidRollDisplay = false;
+    const toggleBtn = document.getElementById("toggleRollDisplayBtn");
+    if (toggleBtn) {
+      toggleBtn.textContent = "Hide Roll & Display";
+    }
+  }
+
   mainAudio.pause();
 
   checkAchievements();
@@ -897,7 +975,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     if (!titleCont) {
       return;
     }
-    titleCont.style.visibility = "hidden";
+    hideRollDisplayForCutscene(titleCont);
 
     if (rarity.type === "Fright [1 in 1,075]") {
       frightAudio.play();
@@ -9751,12 +9829,15 @@ document
 
     if (isVisible) {
       inventorySection.style.visibility = "hidden";
+      rollDisplayHiddenByUser = true;
       this.textContent = "Show Roll & Display";
     } else {
       inventorySection.style.visibility = "visible";
+      rollDisplayHiddenByUser = false;
+      cutsceneHidRollDisplay = false;
       this.textContent = "Hide Roll & Display";
     }
-});
+  });
 
 window.addEventListener("resize", function () {
   const container = document.querySelector(".container1");
@@ -10014,12 +10095,13 @@ function triggerScreenShakeByBucket(bucket) {
 
 function enableChange() {
   isChangeEnabled = true;
-  ensureBgStack();
-  __bgStack.classList.remove("is-hidden");
+  finalizeCutsceneState();
 }
 
 function disableChange() {
   isChangeEnabled = false;
+  cutsceneActive = true;
+  scheduleCutsceneFailsafe();
   // Hide stack during cutscenes (body backgrounds/gifs will show)
   if (__bgStack) __bgStack.classList.add("is-hidden");
 }
@@ -10920,6 +11002,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const achievementsBody = achievementsMenu?.querySelector(".achievements-body");
   const statsMenu = document.getElementById("statsMenu");
   const statsHeader = statsMenu?.querySelector(".stats-header");
+  const statsDragHandle = statsMenu?.querySelector(".stats-menu__drag-handle");
+  const achievementsMenu = document.getElementById("achievementsMenu");
+  const achievementsHeader = achievementsMenu?.querySelector(".achievements-header");
+  const achievementsBody = achievementsMenu?.querySelector(".achievements-body");
+  const headerStats = statsMenu.querySelector("h3");
   let isDraggingSettings = false;
   let isDraggingAchievements = false;
   let isDraggingStats = false;
@@ -10929,6 +11016,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let offsetYAchievements = 0;
   let offsetXStats = 0;
   let offsetYStats = 0;
+  let offsetXStyle = 0;
+  let offsetYStyle = 0;
 
   if (settingsHeader) {
     settingsHeader.addEventListener("mousedown", (event) => {
@@ -10946,6 +11035,22 @@ document.addEventListener("DOMContentLoaded", () => {
       isDraggingSettings = true;
       settingsHeader.classList.add("is-dragging");
       event.preventDefault();
+    });
+  }
+
+  if (statsMenu && statsDragHandle) {
+    statsDragHandle.addEventListener("mousedown", (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+
+      const rect = statsMenu.getBoundingClientRect();
+      statsMenu.style.left = `${rect.left}px`;
+      statsMenu.style.top = `${rect.top}px`;
+      statsMenu.style.transform = "none";
+
+      offsetXStyle = event.clientX - rect.left;
+      offsetYStyle = event.clientY - rect.top;
     });
   }
 
@@ -10983,6 +11088,10 @@ document.addEventListener("DOMContentLoaded", () => {
       offsetYStats = event.clientY - rect.top;
       isDraggingStats = true;
       statsHeader.classList.add("is-dragging");
+  if (headerStats) {
+    headerStats.addEventListener("mousedown", (event) => {
+      isDraggingStats = true;
+      statsDragHandle.classList.add("is-dragging");
       event.preventDefault();
     });
   }
@@ -11047,7 +11156,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (isDraggingStats) {
       isDraggingStats = false;
-      statsHeader?.classList.remove("is-dragging");
+      statsHeader?.classList.remove("is-dragging"
     }
   });
 });
@@ -11063,7 +11172,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    button.dataset.label = label;
+    const labelSpan = document.createElement("span");
+    labelSpan.className = "inventory-delete-btn__label";
+    labelSpan.textContent = label;
+
+    button.textContent = "";
+    button.appendChild(labelSpan);
     button.classList.add("inventory-delete-btn--overlay");
   });
 });
@@ -12126,6 +12240,7 @@ document.addEventListener("visibilitychange", () => {
 });
 
 let __bgStack, __bgLayerA, __bgLayerB, __bgActive = 0;
+let __currentBgClass = null;
 
 function ensureBgStack() {
   if (__bgStack) return;
@@ -12162,6 +12277,15 @@ function changeBackground(rarityClass, itemTitle) {
 
   const details = backgroundDetails[rarityClass];
   if (!details) return;
+
+  // Update the body class so existing rarity-based styling keeps working.
+  if (__currentBgClass !== rarityClass) {
+    if (__currentBgClass) {
+      document.body.classList.remove(__currentBgClass);
+    }
+    document.body.classList.add(rarityClass);
+    __currentBgClass = rarityClass;
+  }
 
   // Prepare the stack
   ensureBgStack();

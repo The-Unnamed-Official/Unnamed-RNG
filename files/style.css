@@ -1002,9 +1002,28 @@ body {
 }
 
 .dragTxt {
-    opacity: 0.5;
-    padding: 3px;
-    cursor: grab;
+    opacity: 0.75;
+    padding: 0;
+    cursor: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    user-select: none;
+}
+
+#settingsMenu::-webkit-scrollbar {
+    width: 10px;
+}
+
+#settingsMenu::-webkit-scrollbar-thumb {
+    background: #7aa2ff;
+    border-radius: 8px;
+}
+
+#settingsMenu::-webkit-scrollbar-track {
+    background: #181a2c;
+    border-radius: 8px;
 }
 
 #settingsMenu {
@@ -1027,6 +1046,9 @@ body {
     z-index: 10000000;
     color: #f1f5ff;
     overflow: hidden;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #7aa2ff #181a2c;
 }
 
 .settings-panel {
@@ -1315,6 +1337,36 @@ body {
     cursor: not-allowed;
 }
 
+.statsBtns {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 18px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    color: #0b0d22;
+    background:
+        linear-gradient(135deg, rgba(150, 230, 255, 0.95) 0%, rgba(127, 176, 255, 0.98) 48%, rgba(198, 146, 255, 0.98) 100%);
+    box-shadow: 0 16px 32px rgba(77, 118, 255, 0.35);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.statsBtns:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 22px 36px rgba(91, 129, 255, 0.45);
+}
+
+.statsBtns:active {
+    transform: translateY(0);
+    box-shadow: 0 12px 24px rgba(91, 129, 255, 0.32);
+}
+
 .aSlid {
     margin-top: 25px;
 }
@@ -1403,7 +1455,7 @@ body {
 
 
 #startButton {
-    padding: 40px 50px;
+    padding: 50px 50px;
     font-size: 74px;
     font-weight: bold;
     color: #fff;
@@ -2998,38 +3050,48 @@ body.griCutsceneBgImg {
 
 .inventory-delete-btn--overlay {
   position: relative;
-  color: transparent;
+  color: var(--inventory-text-fallback, #f2f5ff);
 }
 
-.inventory-delete-btn--overlay::after {
-  content: attr(data-label);
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 12px;
+.inventory-delete-btn__label {
+  display: block;
+  width: 100%;
   text-align: center;
-  font: inherit;
-  line-height: inherit;
-  letter-spacing: inherit;
   white-space: normal;
   word-break: keep-all;
-  pointer-events: none;
-  background: var(--inventory-text-gradient, linear-gradient(120deg, #e4ecff, #f9fbff));
+  color: var(--inventory-text-fallback, #f2f5ff);
+  -webkit-text-fill-color: var(--inventory-text-fallback, #f2f5ff);
   background-size: var(--inventory-text-gradient-size, 100% 100%);
   background-position: var(--inventory-text-gradient-position, 50% 50%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  transition: background 0.35s ease;
-  animation: var(--inventory-text-gradient-animation, none);
+  background-repeat: no-repeat;
+  transition: background-size 0.35s ease, background-position 0.35s ease, color 0.35s ease;
 }
 
-.inventory-delete-btn--overlay:hover::after {
-  background: var(--inventory-text-gradient-hover, var(--inventory-text-gradient, linear-gradient(120deg, #f1f5ff, #ffffff)));
+.inventory-delete-btn--overlay:hover .inventory-delete-btn__label {
+  color: var(--inventory-text-fallback, #f2f5ff);
+  -webkit-text-fill-color: var(--inventory-text-fallback, #f2f5ff);
   background-size: var(--inventory-text-gradient-size, 100% 100%);
   background-position: var(--inventory-text-gradient-position, 50% 50%);
+}
+
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .inventory-delete-btn__label {
+    background-image: var(--inventory-text-gradient, linear-gradient(120deg, #e4ecff, #f9fbff));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    transition: background-image 0.35s ease, background-size 0.35s ease, background-position 0.35s ease;
+    animation: var(--inventory-text-gradient-animation, none);
+  }
+
+  .inventory-delete-btn--overlay:hover .inventory-delete-btn__label {
+    background-image: var(--inventory-text-gradient-hover, var(--inventory-text-gradient, linear-gradient(120deg, #f1f5ff, #ffffff)));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
 }
 
 @keyframes inventory-text-pan {
@@ -3123,6 +3185,12 @@ body.griCutsceneBgImg {
   --inventory-text-gradient-animation: inventory-text-pan 6s ease-in-out infinite;
 }
 
+#deleteAllPumpkinButton.inventory-delete-btn--overlay {
+  --inventory-text-gradient: linear-gradient(135deg, #ff9c3b, #ffd9a3, #8f8f93);
+  --inventory-text-gradient-hover: linear-gradient(135deg, #ffb76a, #ffe6c4, #b7b7bb);
+  --inventory-text-fallback: #ffd9a8;
+}
+
 #toggleInventoryBtn {
     position: absolute;
     background-color: #ff6347;
@@ -3166,6 +3234,7 @@ body.griCutsceneBgImg {
 .pagination {
     text-align: center;
     margin-top: 10px;
+    color: white;
 }
 
 .rollsCount {
@@ -3174,40 +3243,6 @@ body.griCutsceneBgImg {
     border-radius: 15px;
     padding: 10px 6px;
     z-index: 9999999;
-}
-
-.statistics {
-    color: #fff;
-    margin-bottom: 40px;
-}
-
-.rollsCount1 {
-    position: relative;
-    background: #ffffff05;
-    backdrop-filter: blur(5px);
-    color: #fff;
-    margin-bottom: 20px;
-    border-radius: 15px;
-    padding: 10px 6px;
-    z-index: 9999999;
-}
-
-.rollsCount2 {
-    background: #ffffff21;
-    color: #fff;
-    margin-bottom: 20px;
-    border-radius: 15px;
-    padding: 10px 6px;
-    z-index: 9999999;
-}
-
-.timerTotal {
-    margin-top: 20px;
-}
-
-.count1 {
-    top: 22px;
-    left: 30px;
 }
 
 .count {
@@ -4178,6 +4213,20 @@ body.griCutsceneBgImg {
     z-index: 4;
 }
 
+#achievementsMenu::-webkit-scrollbar {
+    width: 10px;
+}
+
+#achievementsMenu::-webkit-scrollbar-thumb {
+    background: #7aa2ff;
+    border-radius: 8px;
+}
+
+#achievementsMenu::-webkit-scrollbar-track {
+    background: #181a2c;
+    border-radius: 8px;
+}
+
 #achievementsMenu {
     position: fixed;
     top: 50%;
@@ -4190,6 +4239,9 @@ body.griCutsceneBgImg {
     flex-direction: column;
     color: #f1f5ff;
     z-index: 10000000;
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #7aa2ff #181a2c;
 }
 
 .achievements-panel {
@@ -4197,7 +4249,7 @@ body.griCutsceneBgImg {
     flex-direction: column;
     flex: 1 1 auto;
     background:
-        linear-gradient(160deg, rgba(28, 34, 54, 0.92), rgba(12, 18, 32, 0.96)),
+        linear-gradient(160deg, rgba(28, 34, 54, 0.52), rgba(12, 18, 32, 0.76)),
         url(backgrounds/rng_master.png);
     background-size: cover;
     border-radius: 18px;
@@ -4349,6 +4401,72 @@ body.griCutsceneBgImg {
 
 #closeAchievements:hover {
     background: rgba(255, 0, 0, 1);
+}
+
+.stat-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.9;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.stat-card--rolls::before {
+    background: linear-gradient(135deg, rgba(117, 79, 255, 0.16), rgba(89, 196, 255, 0.2));
+}
+
+.stat-card--playtime::before {
+    background: linear-gradient(135deg, rgba(255, 177, 109, 0.18), rgba(122, 255, 206, 0.18));
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+.stat-card__label {
+    position: relative;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(221, 230, 255, 0.75);
+    margin: 0;
+}
+
+.stat-card__value {
+    position: relative;
+    font-size: clamp(2rem, 1.4rem + 1.2vw, 2.8rem);
+    font-weight: 800;
+    color: #fdfcff;
+    text-shadow: 0 12px 26px rgba(36, 62, 120, 0.65);
+    letter-spacing: 0.05em;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-card__hint {
+    position: relative;
+    margin: 0;
+    color: rgba(218, 228, 255, 0.55);
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.stats-menu__footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+@media (max-width: 520px) {
+    .stats-menu__panel {
+        padding: 24px 22px 20px;
+    }
+
+    .stat-card {
+        min-height: unset;
+    }
 }
 
 .AutoDeletionTxt {
