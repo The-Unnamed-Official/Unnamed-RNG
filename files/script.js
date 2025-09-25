@@ -572,6 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (rollButton) {
     rollButton.disabled = true;
   }
+}
 
   if (!startButton) {
     return;
