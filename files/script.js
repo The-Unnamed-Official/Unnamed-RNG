@@ -13,6 +13,9 @@ const storage = {
   set(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
   },
+  remove(key) {
+    localStorage.removeItem(key);
+  },
 };
 
 const byId = (id) => document.getElementById(id);
@@ -25,6 +28,7 @@ let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 let rollCount1 = parseInt(localStorage.getItem("rollCount1")) || 0;
 const BASE_COOLDOWN_TIME = 500;
 let cooldownTime = BASE_COOLDOWN_TIME;
+let equippedItem = normalizeEquippedItemRecord(storage.get("equippedItem", null));
 let currentAudio = null;
 let isChangeEnabled = true;
 let autoRollInterval = null;
@@ -47,6 +51,9 @@ let lastRollAutoDeleted = false;
 let lastRollRarityClass = null;
 let allowForcedAudioPlayback = false;
 let pinnedAudioId = null;
+let pausedEquippedAudioState = null;
+let resumeEquippedAudioAfterCutscene = false;
+const rolledRarityBuckets = new Set(storage.get("rolledRarityBuckets", []));
 
 const STOPPABLE_AUDIO_IDS = [
   "suspenseAudio",
@@ -412,6 +419,7 @@ const LOADING_SEQUENCE = [
     message: "Polishing titles...",
     action: () => {
       renderInventory();
+      applyEquippedItemOnStartup();
     },
   },
   {
@@ -513,6 +521,10 @@ const ACHIEVEMENTS = [
   { name: "You are a True No Lifer", timeCount: 15778800 },
   { name: "No one's getting this legit", timeCount: 31557600 },
   { name: "Happy Summer!", timeCount: 0 },
+  { name: "Grand Entrance", rarityBucket: "under10k" },
+  { name: "One of a Kind", rarityBucket: "special" },
+  { name: "Mastered the Odds", rarityBucket: "under100k" },
+  { name: "Supreme Fortune", rarityBucket: "under1m" },
 ];
 
 const COLLECTOR_ACHIEVEMENTS = [
@@ -529,6 +541,7 @@ const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-itemC", unlocked: { backgroundColor: "red" } },
   { selector: ".achievement-itemE", unlocked: { backgroundColor: "yellow", color: "black" } },
   { selector: ".achievement-itemSum", unlocked: { backgroundColor: "orange", color: "black" } },
+  { selector: ".achievement-itemR", unlocked: { backgroundColor: "#6d8bff" } },
 ];
 
 const ACHIEVEMENT_TOAST_DURATION = 3400;
@@ -680,7 +693,202 @@ function stopAllAudio(options = {}) {
     }
 
     resetAudioState(audio, id);
+
+    if (pausedEquippedAudioState && pausedEquippedAudioState.element === audio) {
+      pausedEquippedAudioState = null;
+      resumeEquippedAudioAfterCutscene = false;
+    }
+
+    if (currentAudio === audio) {
+      currentAudio = null;
+      if (pinnedAudioId === id) {
+        pinnedAudioId = null;
+      }
+    }
   });
+}
+
+function pauseEquippedAudioForRarity(rarity) {
+  if (!currentAudio) {
+    resumeEquippedAudioAfterCutscene = false;
+    pausedEquippedAudioState = null;
+    return;
+  }
+
+  const rarityClass = rarity && typeof rarity === "object" ? rarity.class : null;
+  const hasEquippableBackground = Boolean(
+    rarityClass &&
+    typeof backgroundDetails !== "undefined" &&
+    backgroundDetails &&
+    backgroundDetails[rarityClass]
+  );
+
+  const shouldResume = !hasEquippableBackground;
+
+  try {
+    const time = typeof currentAudio.currentTime === "number" ? currentAudio.currentTime : 0;
+    const wasPlaying = !currentAudio.paused;
+    if (wasPlaying) {
+      currentAudio.pause();
+    }
+    pausedEquippedAudioState = {
+      element: currentAudio,
+      time,
+      wasPlaying,
+    };
+  } catch (error) {
+    pausedEquippedAudioState = {
+      element: currentAudio,
+      time: 0,
+      wasPlaying: false,
+    };
+  }
+
+  resumeEquippedAudioAfterCutscene = shouldResume;
+}
+
+function resumePausedEquippedAudio() {
+  if (!resumeEquippedAudioAfterCutscene) {
+    pausedEquippedAudioState = null;
+    return;
+  }
+
+  const state = pausedEquippedAudioState;
+  if (!state || !state.element) {
+    resumeEquippedAudioAfterCutscene = false;
+    pausedEquippedAudioState = null;
+    return;
+  }
+
+  if (currentAudio && currentAudio !== state.element) {
+    resumeEquippedAudioAfterCutscene = false;
+    pausedEquippedAudioState = null;
+    return;
+  }
+
+  const audio = state.element;
+
+  try {
+    if (typeof state.time === "number" && !Number.isNaN(state.time)) {
+      audio.currentTime = state.time;
+    }
+  } catch (error) {
+    /* no-op */
+  }
+
+  if (state.wasPlaying) {
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {});
+    }
+  }
+
+  currentAudio = audio;
+  resumeEquippedAudioAfterCutscene = false;
+  pausedEquippedAudioState = null;
+}
+
+function normalizeEquippedItemRecord(raw) {
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+
+  const { title, rarityClass } = raw;
+  if (typeof title !== "string" || typeof rarityClass !== "string") {
+    return null;
+  }
+
+  const record = {
+    title,
+    rarityClass,
+  };
+
+  if (typeof raw.rolledAt === "number" && Number.isFinite(raw.rolledAt)) {
+    record.rolledAt = raw.rolledAt;
+  }
+
+  return record;
+}
+
+function equippedRecordsMatch(a, b) {
+  if (!a || !b) {
+    return false;
+  }
+
+  if (a.title !== b.title || a.rarityClass !== b.rarityClass) {
+    return false;
+  }
+
+  if (typeof a.rolledAt === "number" && typeof b.rolledAt === "number") {
+    return a.rolledAt === b.rolledAt;
+  }
+
+  return true;
+}
+
+function isItemCurrentlyEquipped(item) {
+  if (!equippedItem) {
+    return false;
+  }
+
+  const candidate = normalizeEquippedItemRecord(item);
+  if (!candidate) {
+    return false;
+  }
+
+  return equippedRecordsMatch(candidate, equippedItem);
+}
+
+function playMainMenuAudio() {
+  if (typeof mainAudio === "undefined" || !mainAudio) {
+    return;
+  }
+
+  try {
+    if (typeof audioVolume === "number") {
+      mainAudio.volume = audioVolume;
+    }
+    const playPromise = mainAudio.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {});
+    }
+  } catch (error) {
+    /* no-op */
+  }
+}
+
+function applyEquippedItemOnStartup() {
+  if (!equippedItem) {
+    return;
+  }
+
+  const match = inventory.find((item) => isItemCurrentlyEquipped(item));
+  if (!match) {
+    equippedItem = null;
+    storage.remove("equippedItem");
+    changeBackground("menuDefault", null, { force: true });
+    playMainMenuAudio();
+    return;
+  }
+
+  const normalized = normalizeEquippedItemRecord(match);
+  if (!normalized) {
+    equippedItem = null;
+    storage.remove("equippedItem");
+    changeBackground("menuDefault", null, { force: true });
+    playMainMenuAudio();
+    return;
+  }
+
+  equippedItem = normalized;
+  handleEquippedItem(normalized);
+  if (typeof mainAudio !== "undefined" && mainAudio && typeof mainAudio.pause === "function") {
+    try {
+      mainAudio.pause();
+    } catch (error) {
+      /* no-op */
+    }
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -846,8 +1054,11 @@ function unlockAchievement(name, unlocked) {
   showAchievementPopup(name);
 }
 
-function checkAchievements() {
+function checkAchievements(context = {}) {
   const unlocked = new Set(storage.get("unlockedAchievements", []));
+  const rarityBuckets = context && context.rarityBuckets instanceof Set
+    ? context.rarityBuckets
+    : new Set(storage.get("rolledRarityBuckets", []));
 
   ACHIEVEMENTS.forEach((achievement) => {
     if (achievement.count && rollCount >= achievement.count) {
@@ -855,6 +1066,10 @@ function checkAchievements() {
     }
 
     if (achievement.timeCount !== undefined && typeof playTime !== "undefined" && playTime >= achievement.timeCount) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (achievement.rarityBucket && rarityBuckets.has(achievement.rarityBucket)) {
       unlockAchievement(achievement.name, unlocked);
     }
   });
@@ -914,9 +1129,24 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rollCount++;
   }
 
-  stopAllAudio({ preservePinned: true });
-
   let rarity = rollRarity();
+  pauseEquippedAudioForRarity(rarity);
+
+  const preservedAudioIds = [];
+  if (
+    resumeEquippedAudioAfterCutscene &&
+    pausedEquippedAudioState &&
+    pausedEquippedAudioState.element &&
+    pausedEquippedAudioState.element.id
+  ) {
+    preservedAudioIds.push(pausedEquippedAudioState.element.id);
+  }
+
+  stopAllAudio({
+    preservePinned: true,
+    preserve: preservedAudioIds,
+  });
+
   let title = selectTitle(rarity);
 
   rollButton.disabled = true;
@@ -4581,7 +4811,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       setTimeout(() => {
         clearInterval(squareInterval);
-      }, 20350); // Stop after 20.35 seconds
+      }, 29500); // Stop after 29.5 seconds to cover the longer cutscene duration
 
       const container = document.getElementById("starContainer");
 
@@ -4622,7 +4852,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           griAudio.play();
         }, 100);
         enableChange();
-      }, 23800); // Wait for 23.8 seconds
+      }, 32000); // Wait for 32 seconds to allow the full Grim Destiny cutscene
     } else if (rarity.type === "Impeached [1 in 101,010]") {
       if (skipCutscene1M) {
         document.body.className = "blackBg";
@@ -6096,7 +6326,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
             titleCont.style.visibility = "visible";
           }, 100);
           enableChange();
-        }, 27400); // Wait for 27.4 seconds
+        }, 32000); // Wait for 32 seconds to match the extended cutscene
       } else {
         addToInventory(title, rarity.class);
         updateRollingHistory(title, rarity.type);
@@ -8746,7 +8976,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         titleCont.style.visibility = "visible";
         foundsAudio.play();
       }
-    } else if (rarity.type === "Haunted Reality [1 in 5,000]") {
+    } else if (rarity.type === "Haunted Reality [1 in 5,500]") {
       if (skipCutscene10K) {
         document.body.className = "blackBg";
         disableChange();
@@ -8852,7 +9082,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         ethAudio.play();
         titleCont.style.visibility = "visible";
       }
-    } else if (rarity.type === "Serap's Wing [1 in 1,333]") {
+    } else if (rarity.type === "Seraph's Wing [1 in 1,333]") {
       if (skipCutscene10K) {
         document.body.className = "blackBg";
         disableChange();
@@ -9709,9 +9939,11 @@ function addToInventory(title, rarityClass) {
     : parseInt(localStorage.getItem("rollCount")) || 0;
   const autoDeleteSet = getAutoDeleteSet();
   const bucket = normalizeRarityBucket(rarityClass);
+  recordRarityBucketRoll(bucket);
   if (autoDeleteSet.has(bucket)) {
     lastRollPersisted = false;
     lastRollAutoDeleted = true;
+    resumeEquippedAudioAfterCutscene = true;
     showStatusMessage(`${title} auto-deleted`, 800);
     return false; // not persisted
   }
@@ -9722,6 +9954,7 @@ function addToInventory(title, rarityClass) {
     if (excludedRarities.has(category) && rarityCategories[category].includes(rarityClass)) {
       lastRollPersisted = false;
       lastRollAutoDeleted = true;
+      resumeEquippedAudioAfterCutscene = true;
       return false;
     }
   }
@@ -9803,9 +10036,25 @@ function displayResult(title, rarity) {
   resultDiv.innerHTML = "";
   resultDiv.appendChild(card);
 
+  resumePausedEquippedAudio();
+
   requestAnimationFrame(() => {
     card.classList.add("is-visible");
   });
+}
+
+function recordRarityBucketRoll(bucket) {
+  if (!bucket) {
+    return;
+  }
+
+  if (rolledRarityBuckets.has(bucket)) {
+    return;
+  }
+
+  rolledRarityBuckets.add(bucket);
+  storage.set("rolledRarityBuckets", Array.from(rolledRarityBuckets));
+  checkAchievements({ rarityBuckets: rolledRarityBuckets });
 }
 
 function getAutoDeleteSet() {
@@ -10027,6 +10276,7 @@ document
 });
 
 const backgroundDetails = {
+  menuDefault: { image: "files/backgrounds/menu.png", audio: null },
   commonBgImg: { image: "files/backgrounds/common.png", audio: null },
   rareBgImg: { image: "files/backgrounds/rare.png", audio: null },
   epicBgImg: { image: "files/backgrounds/epic.png", audio: null },
@@ -10237,6 +10487,20 @@ function renderInventory() {
   const inventoryList = document.getElementById("inventoryList");
   inventoryList.innerHTML = "";
 
+  let newBucketRecorded = false;
+  inventory.forEach((item) => {
+    const bucket = normalizeRarityBucket(item.rarityClass);
+    if (bucket && !rolledRarityBuckets.has(bucket)) {
+      rolledRarityBuckets.add(bucket);
+      newBucketRecorded = true;
+    }
+  });
+
+  if (newBucketRecorded) {
+    storage.set("rolledRarityBuckets", Array.from(rolledRarityBuckets));
+    checkAchievements({ rarityBuckets: rolledRarityBuckets });
+  }
+
   const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
 
   const start = (currentPage - 1) * itemsPerPage;
@@ -10246,12 +10510,17 @@ function renderInventory() {
   paginatedItems.forEach((item, index) => {
     const absoluteIndex = start + index;
     const listItem = document.createElement("li");
-    listItem.className = item.rarityClass;
+    listItem.className = item.rarityClass || "";
+    listItem.classList.add("inventory-item");
     listItem.dataset.locked = lockedItems[item.title] ? "true" : "false";
     const bucket = normalizeRarityBucket(item.rarityClass);
     if (bucket) {
       listItem.dataset.bucket = bucket;
     }
+
+    const isEquipped = isItemCurrentlyEquipped(item);
+    listItem.dataset.equipped = isEquipped ? "true" : "false";
+    listItem.classList.toggle("inventory-item--equipped", Boolean(isEquipped));
 
     const itemTitle = document.createElement("span");
     itemTitle.className = "rarity-text";
@@ -10295,10 +10564,15 @@ function renderInventory() {
     
     const equipButton = document.createElement("button");
     equipButton.className = "dropdown-item";
-    equipButton.innerHTML = "Equip";
+    equipButton.textContent = isEquipped ? "Unequip" : "Equip";
+    equipButton.classList.toggle("dropdown-item--unequip", Boolean(isEquipped));
     equipButton.addEventListener("click", (event) => {
       event.stopPropagation();
-      equipItem(item);
+      if (isItemCurrentlyEquipped(item)) {
+        unequipItem();
+      } else {
+        equipItem(item);
+      }
     });
 
     const deleteButton = document.createElement("button");
@@ -10374,13 +10648,65 @@ function deleteFromInventory(absoluteIndex) {
 }
 
 function equipItem(item) {
-  equippedItem = item;
-  console.log(`Equipped item: ${item.title}`);
-  handleEquippedItem(item);
-  mainAudio.pause();
+  const normalized = normalizeEquippedItemRecord(item);
+  if (!normalized) {
+    return;
+  }
+
+  equippedItem = normalized;
+  storage.set("equippedItem", normalized);
+
+  resumeEquippedAudioAfterCutscene = false;
+  pausedEquippedAudioState = null;
+
+  handleEquippedItem(normalized);
+
+  if (typeof mainAudio !== "undefined" && mainAudio && typeof mainAudio.pause === "function") {
+    try {
+      mainAudio.pause();
+    } catch (error) {
+      /* no-op */
+    }
+  }
+
+  renderInventory();
+}
+
+function unequipItem() {
+  if (!equippedItem) {
+    return;
+  }
+
+  equippedItem = null;
+  storage.remove("equippedItem");
+
+  resumeEquippedAudioAfterCutscene = false;
+  pausedEquippedAudioState = null;
+
+  if (currentAudio) {
+    try {
+      currentAudio.pause();
+    } catch (error) {
+      /* no-op */
+    }
+    if (currentAudio.id) {
+      resetAudioState(currentAudio, currentAudio.id);
+    }
+  }
+  currentAudio = null;
+  pinnedAudioId = null;
+
+  changeBackground("menuDefault", null, { force: true });
+  playMainMenuAudio();
+
+  renderInventory();
 }
 
 function handleEquippedItem(item) {
+  if (!item) {
+    return;
+  }
+
   changeBackground(item.rarityClass, item.title, { force: true });
 }
 
@@ -12414,7 +12740,13 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
   const details = backgroundDetails[rarityClass];
   if (!details) return;
 
-  pinnedAudioId = details.audio || null;
+  const shouldSkipAudioUpdate = !force && resumeEquippedAudioAfterCutscene && pausedEquippedAudioState && pausedEquippedAudioState.element;
+
+  if (!shouldSkipAudioUpdate) {
+    pinnedAudioId = details.audio || null;
+    resumeEquippedAudioAfterCutscene = false;
+    pausedEquippedAudioState = null;
+  }
 
   const previousForcedState = allowForcedAudioPlayback;
   if (force) {
@@ -12453,22 +12785,24 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
     });
 
     // Maintain your audio behavior
-    if (currentAudio) {
-      currentAudio.pause();
-      currentAudio.currentTime = 0;
-    }
-    if (details.audio) {
-      const newAudio = document.getElementById(details.audio);
-      if (newAudio) {
-        newAudio.volume = typeof audioVolume === "number" ? audioVolume : 1;
-        const playPromise = newAudio.play();
-        if (playPromise && typeof playPromise.catch === "function") {
-          playPromise.catch(() => {});
-        }
-        currentAudio = newAudio;
+    if (!shouldSkipAudioUpdate) {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
       }
-    } else {
-      currentAudio = null;
+      if (details.audio) {
+        const newAudio = document.getElementById(details.audio);
+        if (newAudio) {
+          newAudio.volume = typeof audioVolume === "number" ? audioVolume : 1;
+          const playPromise = newAudio.play();
+          if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(() => {});
+          }
+          currentAudio = newAudio;
+        }
+      } else {
+        currentAudio = null;
+      }
     }
 
     // Clear direct body background inline style so the stack is the only visual source.
