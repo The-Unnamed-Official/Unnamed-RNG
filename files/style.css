@@ -601,7 +601,7 @@ body {
 /* Replace the old .container block with this */
 .container {
   position: relative;
-  margin: 33vh auto 0 auto;          /* keep your vertical offset, center horizontally */
+  margin: 25vh auto 0 auto;          /* keep your vertical offset, center horizontally */
   display: inline-block;
   padding: 18px 18px 22px;
   width: min(92vw, 740px);
@@ -780,7 +780,7 @@ body {
   opacity: 0;
   transform: translateY(14px) scale(0.97);
   transition: opacity 240ms ease, transform 280ms cubic-bezier(.16,.78,.32,1.18);
-  --roll-card-accent: linear-gradient(140deg, rgba(122,162,255,0.7), rgba(134,96,255,0.45));
+  --roll-card-accent: linear-gradient(140deg, rgba(122, 162, 255, 0.336), rgba(133, 96, 255, 0.322));
 }
 
 .roll-result-card::before {
@@ -881,27 +881,27 @@ body {
 }
 
 .roll-result-card--under100 {
-  --roll-card-accent: linear-gradient(135deg, rgba(116,196,255,0.6), rgba(60,137,255,0.52));
+  --roll-card-accent: linear-gradient(135deg, rgba(116, 197, 255, 0.1), rgba(60,137,255,0.1));
 }
 
 .roll-result-card--under1k {
-  --roll-card-accent: linear-gradient(135deg, rgba(118,255,214,0.6), rgba(44,186,142,0.5));
+  --roll-card-accent: linear-gradient(135deg, rgba(118,255,214,0.1), rgba(65, 255, 91, 0.1));
 }
 
 .roll-result-card--under10k {
-  --roll-card-accent: linear-gradient(135deg, rgba(255,208,140,0.6), rgba(255,153,51,0.5));
+  --roll-card-accent: linear-gradient(135deg, rgba(255,208,140,0.1), rgba(255, 51, 129, 0.1));
 }
 
 .roll-result-card--under100k {
-  --roll-card-accent: linear-gradient(135deg, rgba(200,158,255,0.62), rgba(132,76,255,0.5));
+  --roll-card-accent: linear-gradient(135deg, rgba(200,158,255,0.1), rgba(76, 234, 255, 0.1));
 }
 
 .roll-result-card--under1m {
-  --roll-card-accent: linear-gradient(135deg, rgba(255,144,220,0.6), rgba(178,96,255,0.5));
+  --roll-card-accent: linear-gradient(135deg, rgba(255,144,220,0.1), rgba(255, 234, 45, 0.1));
 }
 
 .roll-result-card--special {
-  --roll-card-accent: linear-gradient(135deg, rgba(255,243,173,0.62), rgba(255,206,109,0.52));
+  --roll-card-accent: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.1));
 }
 
 @media (max-width: 520px) {
@@ -3405,7 +3405,7 @@ body.griCutsceneBgImg {
 
 .gameTitle,
 .res {
-    background: #ffffff77;
+    background: #ffffff00;
     border-radius: 10px;
     padding: 0 6px;
 }
