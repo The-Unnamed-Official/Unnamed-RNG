@@ -24,5 +24,4 @@ That's it! The game will open in your browser, and you can start playing right a
 
 We hope you enjoy the game and appreciate your feedback!
 
-The Unnamed
->>>>>>> parent of 6ada09b (1st Attempt on fixing pages error)
+## The Unnamed
