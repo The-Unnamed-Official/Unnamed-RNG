@@ -11044,6 +11044,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       offsetXStyle = event.clientX - rect.left;
       offsetYStyle = event.clientY - rect.top;
+    });
+  }
+
   if (achievementsHeader) {
     achievementsHeader.addEventListener("mousedown", (event) => {
       if (event.button !== 0 || event.target.closest(".achievements-close-btn")) {
