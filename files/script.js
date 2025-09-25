@@ -38,6 +38,10 @@ let skipCutscene10K = true;
 let skipCutscene100K = true;
 let skipCutscene1M = true;
 let cooldownBuffActive = cooldownTime < BASE_COOLDOWN_TIME;
+let rollDisplayHiddenByUser = false;
+let cutsceneHidRollDisplay = false;
+let cutsceneActive = false;
+let cutsceneFailsafeTimeout = null;
 
 const STOPPABLE_AUDIO_IDS = [
   "suspenseAudio",
@@ -145,6 +149,70 @@ const STOPPABLE_AUDIO_IDS = [
   "esteggAudio",
   "isekailofiAudio"
 ];
+
+function setRollButtonEnabled(enabled) {
+  const button = document.getElementById("rollButton");
+  if (button) {
+    button.disabled = !enabled;
+  }
+}
+
+function restoreRollDisplayAfterCutscene() {
+  if (!cutsceneHidRollDisplay) {
+    return;
+  }
+
+  const rollDisplay = document.querySelector(".container");
+  if (!rollDisplay || rollDisplayHiddenByUser) {
+    cutsceneHidRollDisplay = false;
+    return;
+  }
+
+  rollDisplay.style.visibility = "visible";
+
+  const toggleBtn = document.getElementById("toggleRollDisplayBtn");
+  if (toggleBtn) {
+    toggleBtn.textContent = "Hide Roll & Display";
+  }
+
+  cutsceneHidRollDisplay = false;
+}
+
+function scheduleCutsceneFailsafe() {
+  clearTimeout(cutsceneFailsafeTimeout);
+  cutsceneFailsafeTimeout = setTimeout(() => {
+    if (!cutsceneActive) {
+      return;
+    }
+
+    console.warn("Cutscene safeguard triggered after timeout; restoring roll display state.");
+    isChangeEnabled = true;
+    finalizeCutsceneState();
+    setRollButtonEnabled(true);
+  }, 15000);
+}
+
+function finalizeCutsceneState() {
+  clearTimeout(cutsceneFailsafeTimeout);
+  cutsceneFailsafeTimeout = null;
+  cutsceneActive = false;
+  ensureBgStack();
+  if (__bgStack) {
+    __bgStack.classList.remove("is-hidden");
+  }
+  restoreRollDisplayAfterCutscene();
+}
+
+function hideRollDisplayForCutscene(container) {
+  if (!container) {
+    return;
+  }
+
+  const wasVisible = container.style.visibility !== "hidden";
+  cutsceneHidRollDisplay = !rollDisplayHiddenByUser && wasVisible;
+
+  container.style.visibility = "hidden";
+}
 
 const rarityCategories = {
   under100: [
@@ -774,6 +842,16 @@ document.getElementById("rollButton").addEventListener("click", function () {
     return;
   }
 
+  const rollDisplay = document.querySelector(".container");
+  if (rollDisplay && !rollDisplayHiddenByUser && rollDisplay.style.visibility === "hidden") {
+    rollDisplay.style.visibility = "visible";
+    cutsceneHidRollDisplay = false;
+    const toggleBtn = document.getElementById("toggleRollDisplayBtn");
+    if (toggleBtn) {
+      toggleBtn.textContent = "Hide Roll & Display";
+    }
+  }
+
   mainAudio.pause();
 
   checkAchievements();
@@ -897,7 +975,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     if (!titleCont) {
       return;
     }
-    titleCont.style.visibility = "hidden";
+    hideRollDisplayForCutscene(titleCont);
 
     if (rarity.type === "Fright [1 in 1,075]") {
       frightAudio.play();
@@ -9751,12 +9829,15 @@ document
 
     if (isVisible) {
       inventorySection.style.visibility = "hidden";
+      rollDisplayHiddenByUser = true;
       this.textContent = "Show Roll & Display";
     } else {
       inventorySection.style.visibility = "visible";
+      rollDisplayHiddenByUser = false;
+      cutsceneHidRollDisplay = false;
       this.textContent = "Hide Roll & Display";
     }
-});
+  });
 
 window.addEventListener("resize", function () {
   const container = document.querySelector(".container1");
@@ -10014,12 +10095,13 @@ function triggerScreenShakeByBucket(bucket) {
 
 function enableChange() {
   isChangeEnabled = true;
-  ensureBgStack();
-  __bgStack.classList.remove("is-hidden");
+  finalizeCutsceneState();
 }
 
 function disableChange() {
   isChangeEnabled = false;
+  cutsceneActive = true;
+  scheduleCutsceneFailsafe();
   // Hide stack during cutscenes (body backgrounds/gifs will show)
   if (__bgStack) __bgStack.classList.add("is-hidden");
 }
