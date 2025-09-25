@@ -1129,10 +1129,23 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rollCount++;
   }
 
-  stopAllAudio({ preservePinned: true });
-
   let rarity = rollRarity();
   pauseEquippedAudioForRarity(rarity);
+
+  const preservedAudioIds = [];
+  if (
+    resumeEquippedAudioAfterCutscene &&
+    pausedEquippedAudioState &&
+    pausedEquippedAudioState.element &&
+    pausedEquippedAudioState.element.id
+  ) {
+    preservedAudioIds.push(pausedEquippedAudioState.element.id);
+  }
+
+  stopAllAudio({
+    preservePinned: true,
+    preserve: preservedAudioIds,
+  });
   let title = selectTitle(rarity);
 
   rollButton.disabled = true;
