@@ -442,13 +442,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 }
 
-function stopAllAudio() {
-  STOPPABLE_AUDIO_IDS.forEach((id) => {
-    const audio = getAudioElement(id);
-    if (!audio) {
-      return;
-    }
-
   if (!startButton) {
     return;
   }
@@ -461,8 +454,15 @@ function stopAllAudio() {
     startButton.disabled = true;
 
     try {
-      if (typeof mainAudio !== "undefined" && mainAudio) {
-        await mainAudio.play();
+      if (typeof mainAudio !== "undefined" && mainAudio && typeof mainAudio.play === "function") {
+        // Kick off playback without awaiting so UI initialisation continues even if the
+        // browser delays or blocks autoplay.
+        const playAttempt = mainAudio.play();
+        if (playAttempt && typeof playAttempt.catch === "function") {
+          playAttempt.catch((error) => {
+            console.warn("Unable to start background audio immediately.", error);
+          });
+        }
       }
     } catch (error) {
       console.warn("Unable to start background audio immediately.", error);
@@ -10688,6 +10688,7 @@ function spawnCooldownButton(config) {
 
     cooldownBuffActive = true;
     cooldownTime = config.reduceTo;
+
     showCooldownEffect(config.effectSeconds);
 
     button.innerText = "Cooldown Reduced!";

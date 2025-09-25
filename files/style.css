@@ -3862,13 +3862,18 @@ body.griCutsceneBgImg {
 }
 
 .achievement-toast {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 14px;
     min-width: 260px;
     max-width: min(420px, calc(100vw - 32px));
     padding: 14px 18px;
-    background: linear-gradient(135deg, rgba(35, 46, 78, 0.92), rgba(18, 22, 38, 0.92));
+    background:
+        linear-gradient(135deg, rgba(35, 46, 78, 0.88), rgba(18, 22, 38, 0.92)),
+        url(backgrounds/rng_master.png);
+    background-size: cover;
+    background-position: center;
     border: 1px solid rgba(132, 184, 255, 0.35);
     border-radius: 16px;
     box-shadow: 0 22px 46px rgba(0, 0, 0, 0.45);
@@ -3876,6 +3881,17 @@ body.griCutsceneBgImg {
     transform: translateY(110%);
     opacity: 0;
     transition: transform 0.45s cubic-bezier(.22,1,.36,1), opacity 0.45s ease;
+    overflow: hidden;
+}
+
+.achievement-toast::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 45%);
+    opacity: 0.45;
+    mix-blend-mode: screen;
+    pointer-events: none;
 }
 
 .achievement-toast.show {
@@ -3899,6 +3915,11 @@ body.griCutsceneBgImg {
     color: #1a1420;
     font-size: 1.4rem;
     box-shadow: 0 8px 18px rgba(244, 138, 70, 0.45);
+}
+
+.achievement-toast > * {
+    position: relative;
+    z-index: 1;
 }
 
 .achievement-toast__content {
