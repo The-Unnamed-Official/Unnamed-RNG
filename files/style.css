@@ -563,6 +563,10 @@ button:hover::after,
   word-break: break-word;
 }
 
+#historyList li .history-entry-text {
+  display: inline-block;
+}
+
 /* Use the same sheen animation keyframes as the main container */
 @keyframes containerSheen {
   0%   { transform: translateX(-120%); }
