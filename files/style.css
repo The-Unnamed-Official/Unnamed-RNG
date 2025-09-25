@@ -558,8 +558,8 @@ button:hover::after,
 
 #historyList li .history-entry-text {
   display: inline-block;
-  padding: 4px 6px;
-  border-radius: 8px;
+  padding: 0;
+  border-radius: 0;
 }
 
 /* Use the same sheen animation keyframes as the main container */
@@ -3743,7 +3743,12 @@ body.griCutsceneBgImg {
 
 .under100 {
     color: #e0ffff;
-    background: #6495ed;
+    background: linear-gradient(135deg, #9fc7ff 0%, #d6ecff 50%, #ffffff 100%);
+    background-size: 220% 220%;
+    animation: gradient-shift 6s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .under100T {
@@ -3752,7 +3757,12 @@ body.griCutsceneBgImg {
 
 .eventTitleHalloween {
     color: #ffa500;
-    background: #6495ed;
+    background: linear-gradient(135deg, #ffb347 0%, #ffd166 45%, #ff6b35 100%);
+    background-size: 240% 240%;
+    animation: gradient-shift 5s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .eventTitleXmas {
@@ -3775,7 +3785,12 @@ body.griCutsceneBgImg {
 
 .under1k {
     color: #00ffff;
-    background: #6495ed;
+    background: linear-gradient(135deg, #66ffe7 0%, #45d9ff 50%, #b7fff5 100%);
+    background-size: 220% 220%;
+    animation: gradient-shift 6s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .under1kT {
@@ -3784,7 +3799,12 @@ body.griCutsceneBgImg {
 
 .under10k {
     color: #90ee90;
-    background: #6495ed;
+    background: linear-gradient(135deg, #a9ffb2 0%, #e9ff9a 50%, #fff2b2 100%);
+    background-size: 220% 220%;
+    animation: gradient-shift 6s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .under10kT {
