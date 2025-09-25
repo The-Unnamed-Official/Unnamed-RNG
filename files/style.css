@@ -16,6 +16,9 @@
   --btn-accent-2: #76e4c3;    /* Secondary accent */
   --btn-danger: #ff6b6b;      /* Danger accent */
   --btn-ghost: rgba(255,255,255,.08);
+
+  /* Layout */
+  --layout-max-width: 1120px;
 }
 
 /* Motion safety */
@@ -1688,6 +1691,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .starShenvii {
@@ -1697,6 +1702,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .cutsceneStarBig {
@@ -1706,6 +1713,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .cutsceneStarSmall {
@@ -1715,6 +1724,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .cutsceneStarEaster {
@@ -1723,6 +1734,8 @@ body {
     left: 40%;
     scale: 0;
     pointer-events: none;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .msfuStar {
@@ -1741,6 +1754,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 @keyframes spin {
@@ -3034,6 +3049,14 @@ body.griCutsceneBgImg {
   background-color: #5a2f2f;
 }
 
+.dropdown-item--unequip {
+  color: #ffbca7;
+}
+
+.dropdown-item--unequip:hover {
+  background-color: rgba(255, 160, 122, 0.18);
+}
+
 /* Keep burger icon subtle but touch-friendly */
 .burger-bar {
   display: inline-block;
@@ -3066,6 +3089,17 @@ body.griCutsceneBgImg {
     position: relative;
     transition: transform 0.2s ease;
     overflow: visible;
+}
+
+#inventoryList li.inventory-item--equipped {
+  background: linear-gradient(135deg, rgba(68, 68, 68, 0.92), rgba(68, 68, 68, 0.75));
+  box-shadow:
+    0 0 0 2px rgba(118, 228, 195, 0.35),
+    0 10px 22px rgba(0, 0, 0, 0.35);
+}
+
+#inventoryList li.inventory-item--equipped .rarity-text {
+  text-shadow: 0 0 8px rgba(118, 228, 195, 0.55);
 }
 
 #inventoryList li:hover {
@@ -4292,7 +4326,8 @@ body.griCutsceneBgImg {
 .achievement-itemT,
 .achievement-itemC,
 .achievement-itemE,
-.achievement-itemSum {
+.achievement-itemSum,
+.achievement-itemR {
     position: relative;
     padding: 16px 14px;
     text-align: center;
@@ -4315,7 +4350,8 @@ body.griCutsceneBgImg {
 .achievement-itemT,
 .achievement-itemC,
 .achievement-itemE,
-.achievement-itemSum {
+.achievement-itemSum,
+.achievement-itemR {
     font-size: 0.9rem;
     padding-left: 12px;
     padding-right: 12px;
@@ -4325,7 +4361,8 @@ body.griCutsceneBgImg {
 .achievement-itemT:hover,
 .achievement-itemC:hover,
 .achievement-itemE:hover,
-.achievement-itemSum:hover {
+.achievement-itemSum:hover,
+.achievement-itemR:hover {
     transform: translateY(-2px);
     background: linear-gradient(155deg, rgba(62, 86, 138, 0.9), rgba(26, 36, 64, 0.95));
     border-color: rgba(167, 205, 255, 0.4);
@@ -4344,7 +4381,8 @@ body.griCutsceneBgImg {
 }
 
 .achievement-itemE:hover::after,
-.achievement-itemSum:hover::after {
+.achievement-itemSum:hover::after,
+.achievement-itemR:hover::after {
     content: "Play in " attr(data-time) " to unlock this achievement";
 }
 
@@ -4352,7 +4390,8 @@ body.griCutsceneBgImg {
 .achievement-itemT:hover::after,
 .achievement-itemC:hover::after,
 .achievement-itemE:hover::after,
-.achievement-itemSum:hover::after {
+.achievement-itemSum:hover::after,
+.achievement-itemR:hover::after {
     position: absolute;
     bottom: 100%;
     left: 50%;
@@ -4374,7 +4413,8 @@ body.griCutsceneBgImg {
 .achievement-itemT:hover::before,
 .achievement-itemC:hover::before,
 .achievement-itemE:hover::before,
-.achievement-itemSum:hover::before {
+.achievement-itemSum:hover::before,
+.achievement-itemR:hover::before {
     content: "";
     position: absolute;
     bottom: 100%;
@@ -4883,4 +4923,195 @@ body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
 /* Reduced-motion fallback: tiny/quick */
 @media (prefers-reduced-motion: reduce) {
   @keyframes rngShakeXL { from { transform: translate(0,0) } to { transform: translate(1px,-1px) } }
+}
+
+/* ------------------------------------------------------------ */
+/* Responsive layout refresh                                     */
+/* ------------------------------------------------------------ */
+
+.ui {
+  position: relative;
+  width: min(var(--layout-max-width), 100%);
+  margin: clamp(16px, 4vw, 54px) auto;
+  padding: 0 clamp(16px, 4vw, 36px) clamp(48px, 7vw, 80px);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: clamp(16px, 3vw, 32px);
+  align-items: start;
+}
+
+.ui > * {
+  min-width: 0;
+}
+
+.ui .container,
+.ui .historySection,
+.ui .container1,
+.ui .info2 {
+  position: relative;
+  inset: auto;
+  margin: 0;
+  width: 100%;
+}
+
+.ui .container {
+  display: flex;
+  justify-content: center;
+}
+
+.ui .container .containerInside {
+  width: min(100%, 520px);
+}
+
+.historySection,
+.container1,
+.info2 {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2vw, 18px);
+  padding: clamp(16px, 2.6vw, 22px);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(12, 16, 28, 0.72), rgba(12, 16, 28, 0.82)),
+    url(backgrounds/rng_master.png);
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(120, 164, 255, 0.22);
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.42);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.historySection h3,
+.info2 h3,
+.info2 h2 {
+  margin: 0;
+}
+
+.historySection {
+  gap: 14px;
+}
+
+.historySection ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: clamp(200px, 45vh, 360px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.historySection ul::-webkit-scrollbar {
+  width: 8px;
+}
+
+.historySection ul::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(120, 164, 255, 0.6), rgba(72, 112, 190, 0.7));
+  border-radius: 999px;
+}
+
+.container1 .orange-button,
+.container1 .toggle-button,
+.container1 button {
+  width: 100%;
+}
+
+.info2 {
+  align-items: center;
+  text-align: center;
+  gap: clamp(10px, 2vw, 16px);
+}
+
+.info2 .creator {
+  width: 100%;
+}
+
+.info2 .creatorUnnamed {
+  justify-content: center;
+}
+
+#toggleUiBtn {
+  position: fixed;
+  top: clamp(14px, 4vw, 26px);
+  right: clamp(14px, 5vw, 32px);
+  border-radius: var(--btn-radius);
+  padding: 10px 16px;
+  z-index: 100000;
+}
+
+@media (min-width: 1040px) {
+  .ui {
+    grid-template-columns: minmax(240px, 320px) minmax(340px, 1fr) minmax(220px, 280px);
+  }
+
+  .ui .container {
+    grid-column: 2 / 3;
+  }
+
+  .ui .historySection {
+    grid-column: 1 / 2;
+  }
+
+  .ui .container1,
+  .ui .info2 {
+    grid-column: 3 / 4;
+  }
+}
+
+@media (max-width: 900px) {
+  .ui {
+    padding-bottom: clamp(36px, 10vw, 64px);
+  }
+
+  .historySection ul {
+    max-height: clamp(200px, 38vh, 320px);
+  }
+}
+
+@media (max-width: 720px) {
+  .ui {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0 clamp(14px, 6vw, 22px) clamp(48px, 12vw, 72px);
+    gap: clamp(14px, 5vw, 24px);
+  }
+
+  .ui .container .containerInside {
+    width: 100%;
+  }
+
+  #toggleUiBtn {
+    top: auto;
+    bottom: clamp(18px, 8vw, 36px);
+    right: clamp(18px, 8vw, 36px);
+  }
+}
+
+@media (max-width: 820px) {
+  #rollingHistory {
+    visibility: visible;
+  }
+}
+
+@media (max-width: 540px) {
+  .historySection ul {
+    max-height: clamp(220px, 55vh, 360px);
+  }
+}
+
+@media (max-width: 480px) {
+  .historySection ul {
+    max-height: clamp(240px, 60vh, 380px);
+  }
+}
+
+@media (max-width: 420px) {
+  .historySection,
+  .container1,
+  .info2 {
+    padding: clamp(14px, 5vw, 18px);
+  }
+
+  .info2 .creatorUnnamed img {
+    width: clamp(64px, 24vw, 80px);
+  }
 }
