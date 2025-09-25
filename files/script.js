@@ -1,4 +1,24 @@
-let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+const storage = {
+  get(key, fallback = null) {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return fallback;
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      console.warn(`Failed to parse localStorage key "${key}". Resetting value.`, error);
+      localStorage.removeItem(key);
+      return fallback;
+    }
+  },
+  set(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  },
+};
+
+const byId = (id) => document.getElementById(id);
+const $all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+let inventory = storage.get("inventory", []);
 let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
@@ -11,6 +31,247 @@ let audioVolume = 1;
 let isMuted = false;
 let previousVolume = audioVolume;
 let refreshTimeout;
+let hasScheduledLoad = false;
+let skipCutscene1K = true;
+let skipCutscene10K = true;
+let skipCutscene100K = true;
+let skipCutscene1M = true;
+
+const STOPPABLE_AUDIO_IDS = [
+  "suspenseAudio",
+  "expOpeningAudio",
+  "geezerSuspenceAudio",
+  "polarrSuspenceAudio",
+  "scareSuspenceAudio",
+  "waveAudio",
+  "scorchingAudio",
+  "beachAudio",
+  "tidalwaveAudio",
+  "gingerAudio",
+  "x1staAudio",
+  "lightAudio",
+  "astblaAudio",
+  "heartAudio",
+  "tuonAudio",
+  "blindAudio",
+  "iriAudio",
+  "aboAudio",
+  "shaAudio",
+  "lubjubAudio",
+  "demsoAudio",
+  "fircraAudio",
+  "plabreAudio",
+  "harvAudio",
+  "norstaAudio",
+  "sanclaAudio",
+  "silnigAudio",
+  "reidasAudio",
+  "frogarAudio",
+  "cancansymAudio",
+  "ginharAudio",
+  "jolbelAudio",
+  "eniAudio",
+  "darAudio",
+  "nighAudio",
+  "specAudio",
+  "twiligAudio",
+  "silAudio",
+  "isekaiAudio",
+  "equinoxAudio",
+  "emerAudio",
+  "samuraiAudio",
+  "contAudio",
+  "unstoppableAudio",
+  "gargantuaAudio",
+  "spectralAudio",
+  "starfallAudio",
+  "memAudio",
+  "oblAudio",
+  "phaAudio",
+  "frightAudio",
+  "unnamedAudio",
+  "overtureAudio",
+  "impeachedAudio",
+  "eonbreakAudio",
+  "celAudio",
+  "silcarAudio",
+  "gregAudio",
+  "mintllieAudio",
+  "geezerAudio",
+  "polarrAudio",
+  "oppAudio",
+  "serAudio",
+  "arcAudio",
+  "ethAudio",
+  "curAudio",
+  "hellAudio",
+  "wanspiAudio",
+  "mysAudio",
+  "voiAudio",
+  "endAudio",
+  "shadAudio",
+  "froAudio",
+  "forgAudio",
+  "curartAudio",
+  "ghoAudio",
+  "abysAudio",
+  "ethpulAudio",
+  "griAudio",
+  "celdawAudio",
+  "fatreAudio",
+  "fearAudio",
+  "hauAudio",
+  "foundsAudio",
+  "lostsAudio",
+  "hauntAudio",
+  "devilAudio",
+  "pumpkinAudio",
+  "h1diAudio",
+  "bigSuspenceAudio",
+  "expAudio",
+  "veilAudio",
+  "msfuAudio",
+  "blodAudio",
+  "orbAudio",
+  "astredAudio",
+  "crazeAudio",
+  "shenviiAudio",
+  "qbearAudio",
+  "estbunAudio",
+  "esteggAudio",
+  "isekailofiAudio"
+];
+
+const AUDIO_RESET_OVERRIDES = {
+  gargantuaAudio: 14.5,
+  eonbreakAudio: 2,
+  mintllieAudio: 37
+};
+
+const audioElementCache = new Map();
+const pendingAudioResetHandlers = new WeakMap();
+
+const CUTSCENE_SKIP_SETTINGS = [
+  { key: "skipCutscene1K", labelId: "1KTxt", label: "Skip Decent Cutscenes" },
+  { key: "skipCutscene10K", labelId: "10KTxt", label: "Skip Grand Cutscenes" },
+  { key: "skipCutscene100K", labelId: "100KTxt", label: "Skip Mastery Cutscenes" },
+  { key: "skipCutscene1M", labelId: "1MTxt", label: "Skip Supreme Cutscenes" },
+];
+
+const CUTSCENE_STATE_SETTERS = {
+  skipCutscene1K: (value) => { skipCutscene1K = value; },
+  skipCutscene10K: (value) => { skipCutscene10K = value; },
+  skipCutscene100K: (value) => { skipCutscene100K = value; },
+  skipCutscene1M: (value) => { skipCutscene1M = value; },
+};
+
+const ACHIEVEMENTS = [
+  { name: "I think I like this", count: 100 },
+  { name: "This is getting serious", count: 1000 },
+  { name: "I'm the Roll Master", count: 5000 },
+  { name: "It's over 9000!!", count: 10000 },
+  { name: "When will you stop?", count: 25000 },
+  { name: "No Unnamed?", count: 30303 },
+  { name: "Beyond Luck", count: 50000 },
+  { name: "Rolling machine", count: 100000 },
+  { name: "Your PC must be burning", count: 250000 },
+  { name: "Half a million!1!!1", count: 500000 },
+  { name: "One, Two.. ..One Million!", count: 1000000 },
+  { name: "No H1di?", count: 10000000 },
+  { name: "Are you really doing this?", count: 25000000 },
+  { name: "You have no limits...", count: 50000000 },
+  { name: "WHAT HAVE YOU DONE", count: 100000000 },
+  { name: "AHHHHHHHHHHH", count: 1000000000 },
+  { name: "Just the beginning", timeCount: 0 },
+  { name: "This doesn't add up", timeCount: 3600 },
+  { name: "When does it end...", timeCount: 7200 },
+  { name: "I swear I'm not addicted...", timeCount: 36000 },
+  { name: "Grass? What's that?", timeCount: 86400 },
+  { name: "Unnamed's RNG biggest fan", timeCount: 172800 },
+  { name: "RNG is life!", timeCount: 604800 },
+  { name: "I. CAN'T. STOP", timeCount: 1209600 },
+  { name: "No Lifer", timeCount: 2629800 },
+  { name: "Are you okay?", timeCount: 5259600 },
+  { name: "You are a True No Lifer", timeCount: 15778800 },
+  { name: "No one's getting this legit", timeCount: 31557600 },
+  { name: "Happy Summer!", timeCount: 0 },
+];
+
+const COLLECTOR_ACHIEVEMENTS = [
+  { name: "Achievement Collector", count: 5 },
+  { name: "Achievement Hoarder", count: 10 },
+  { name: "Achievement Addict", count: 20 },
+  { name: "Achievement God", count: 33 },
+  { name: "T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶", count: 50 },
+];
+
+const ACHIEVEMENT_GROUP_STYLES = [
+  { selector: ".achievement-item", unlocked: { backgroundColor: "blue" } },
+  { selector: ".achievement-itemT", unlocked: { backgroundColor: "green" } },
+  { selector: ".achievement-itemC", unlocked: { backgroundColor: "red" } },
+  { selector: ".achievement-itemE", unlocked: { backgroundColor: "yellow", color: "black" } },
+  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "orange", color: "black" } },
+];
+
+function getAudioElement(id) {
+  if (audioElementCache.has(id)) {
+    const cached = audioElementCache.get(id);
+    if (cached && document.contains(cached)) {
+      return cached;
+    }
+    audioElementCache.delete(id);
+  }
+
+  const element = document.getElementById(id) || window[id] || null;
+  if (element && element.preload === "none") {
+    element.preload = "auto";
+  }
+
+  audioElementCache.set(id, element);
+  return element;
+}
+
+function resetAudioState(audio, id) {
+  if (!audio) return;
+
+  const targetTime = AUDIO_RESET_OVERRIDES[id] ?? 0;
+  const assignTime = () => {
+    if (typeof audio.currentTime === "number" && audio.currentTime !== targetTime) {
+      try {
+        audio.currentTime = targetTime;
+      } catch (error) {
+        // Ignore errors that occur if metadata isn't available yet.
+      }
+    }
+  };
+
+  assignTime();
+
+  if (audio.readyState < 1 && !pendingAudioResetHandlers.has(audio)) {
+    const handler = () => {
+      pendingAudioResetHandlers.delete(audio);
+      audio.removeEventListener("loadedmetadata", handler);
+      assignTime();
+    };
+    pendingAudioResetHandlers.set(audio, handler);
+    audio.addEventListener("loadedmetadata", handler, { once: true });
+  }
+}
+
+function stopAllAudio() {
+  STOPPABLE_AUDIO_IDS.forEach((id) => {
+    const audio = getAudioElement(id);
+    if (!audio) {
+      return;
+    }
+
+    if (typeof audio.pause === "function") {
+      audio.pause();
+    }
+
+    resetAudioState(audio, id);
+  });
+}
 
 const STOPPABLE_AUDIO_IDS = [
   "suspenseAudio",
@@ -216,67 +477,45 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function loadContent() {
-  const storedInventory = localStorage.getItem("inventory");
-  if (storedInventory) {
-    inventory = JSON.parse(storedInventory);
-  }
+  inventory = storage.get("inventory", []);
   renderInventory();
   musicLoad();
   loadToggledStates();
-  updateRollCount();
+  updateRollCount(0);
   checkAchievements();
   updateAchievementsList();
   loadCutsceneSkip();
-  document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
-  document.getElementById("rollCountDisplay1").innerText = rollCount1;
 }
 
 function load() {
-  document.addEventListener("DOMContentLoaded", (event) => {
-    const storedInventory = localStorage.getItem("inventory");
-    if (storedInventory) {
-      inventory = JSON.parse(storedInventory);
-    }
-    renderInventory();
-    musicLoad();
-    loadToggledStates();
-    updateRollCount();
-    formatRollCount();
-    checkAchievements();
-    updateAchievementsList();
-    loadCutsceneSkip();
-  });
+  if (document.readyState === "loading" && !hasScheduledLoad) {
+    hasScheduledLoad = true;
+    document.addEventListener("DOMContentLoaded", () => {
+      hasScheduledLoad = false;
+      loadContent();
+    }, { once: true });
+  }
 }
 
 function loadCutsceneSkip() {
-  skipCutscene1K = JSON.parse(localStorage.getItem('skipCutscene1K'));
-  if (skipCutscene1K === null) {
-    skipCutscene1K = true;
-    localStorage.setItem('skipCutscene1K', JSON.stringify(skipCutscene1K));
-  }
+  CUTSCENE_SKIP_SETTINGS.forEach(({ key, labelId, label }) => {
+    const storedValue = storage.get(key);
+    const resolvedValue = typeof storedValue === "boolean" ? storedValue : true;
 
-  skipCutscene10K = JSON.parse(localStorage.getItem('skipCutscene10K'));
-  if (skipCutscene10K === null) {
-    skipCutscene10K = true;
-    localStorage.setItem('skipCutscene10K', JSON.stringify(skipCutscene10K));
-  }
+    if (storedValue !== resolvedValue) {
+      storage.set(key, resolvedValue);
+    }
 
-  skipCutscene100K = JSON.parse(localStorage.getItem('skipCutscene100K'));
-  if (skipCutscene100K === null) {
-    skipCutscene100K = true;
-    localStorage.setItem('skipCutscene100K', JSON.stringify(skipCutscene100K));
-  }
+    const assignState = CUTSCENE_STATE_SETTERS[key];
+    if (assignState) {
+      assignState(resolvedValue);
+    }
 
-  skipCutscene1M = JSON.parse(localStorage.getItem('skipCutscene1M'));
-  if (skipCutscene1M === null) {
-    skipCutscene1M = true;
-    localStorage.setItem('skipCutscene1M', JSON.stringify(skipCutscene1M));
-  }
-  
-  document.getElementById("1KTxt").textContent = `Skip Decent Cutscenes ${skipCutscene1K ? "" : "On"}`;
-  document.getElementById("10KTxt").textContent = `Skip Grand Cutscenes ${skipCutscene10K ? "" : "On"}`;
-  document.getElementById("100KTxt").textContent = `Skip Mastery Cutscenes ${skipCutscene100K ? "" : "On"}`;
-  document.getElementById("1MTxt").textContent = `Skip Supreme Cutscenes ${skipCutscene1M ? "" : "On"}`;
+    const labelElement = byId(labelId);
+    if (labelElement) {
+      labelElement.textContent = `${label} ${resolvedValue ? "" : "On"}`;
+    }
+  });
 }
 
 function musicLoad() {
@@ -298,84 +537,58 @@ function formatRollCount(count) {
   return count.toString();
 }
 
+function updateRollDisplays() {
+  const compactDisplay = byId("rollCountDisplay");
+  if (compactDisplay) {
+    compactDisplay.textContent = formatRollCount(rollCount);
+  }
+
+  const rawDisplay = byId("rollCountDisplay1");
+  if (rawDisplay) {
+    rawDisplay.textContent = rollCount1;
+  }
+}
+
 function updateRollCount(increment = 1) {
-  rollCount += increment;
-  rollCount1 += increment;
-  const display = document.getElementById('rollCountDisplay');
-  const display1 = document.getElementById('rollCountDisplay');
-  display.textContent = formatRollCount(rollCount);
-  display1.textContent = rollCount1;
+  if (increment) {
+    rollCount += increment;
+    rollCount1 += increment;
+  }
+  updateRollDisplays();
+}
+
+function persistUnlockedAchievements(unlocked) {
+  storage.set("unlockedAchievements", Array.from(unlocked));
+}
+
+function unlockAchievement(name, unlocked) {
+  if (unlocked.has(name)) {
+    return;
+  }
+  unlocked.add(name);
+  persistUnlockedAchievements(unlocked);
+  showAchievementPopup(name);
 }
 
 function checkAchievements() {
-  let achievements = [
-    // Rolls
-      { name: "I think I like this", count: 100 },
-      { name: "This is getting serious", count: 1000 },
-      { name: "I'm the Roll Master", count: 5000 },
-      { name: "It's over 9000!!", count: 10000 },
-      { name: "When will you stop?", count: 25000 },
-      { name: "No Unnamed?", count: 30303 },
-      { name: "Beyond Luck", count: 50000 },
-      { name: "Rolling machine", count: 100000 },
-      { name: "Your PC must be burning", count: 250000 },
-      { name: "Half a million!1!!1", count: 500000 },
-      { name: "One, Two.. ..One Million!", count: 1000000 },
-      { name: "No H1di?", count: 10000000 },
-      { name: "Are you really doing this?", count: 25000000 },
-      { name: "You have no limits...", count: 50000000 },
-      { name: "WHAT HAVE YOU DONE", count: 100000000 },
-      { name: "AHHHHHHHHHHH", count: 1000000000 },
+  const unlocked = new Set(storage.get("unlockedAchievements", []));
 
-      // Time
-      { name: "Just the beginning", timeCount: 0 },
-      { name: "This doesn't add up", timeCount: 3600 },
-      { name: "When does it end...", timeCount: 7200 },
-      { name: "I swear I'm not addicted...", timeCount: 36000 },
-      { name: "Grass? What's that?", timeCount: 86400 },
-      { name: "Unnamed's RNG biggest fan", timeCount: 172800 },
-      { name: "RNG is life!", timeCount: 604800 },
-      { name: "I. CAN'T. STOP", timeCount: 1209600 },
-      { name: "No Lifer", timeCount: 2629800 },
-      { name: "Are you okay?", timeCount: 5259600 },
-      { name: "You are a True No Lifer", timeCount: 15778800 },
-      { name: "No one's getting this legit", timeCount: 31557600 },
+  ACHIEVEMENTS.forEach((achievement) => {
+    if (achievement.count && rollCount >= achievement.count) {
+      unlockAchievement(achievement.name, unlocked);
+    }
 
-      // Event
-      { name: "Happy Summer!", timeCount: 0 },
-  ];
+    if (achievement.timeCount !== undefined && typeof playTime !== "undefined" && playTime >= achievement.timeCount) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+  });
 
-  // Achievements collected
-  let collectorAchievements = [
-      { name: "Achievement Collector", count: 5 },
-      { name: "Achievement Hoarder", count: 10 },
-      { name: "Achievement Addict", count: 20 },
-      { name: "Achievement God", count: 33 },
-      { name: "T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶", count: 50 }
-  ];
+  const unlockedCount = unlocked.size;
 
-  let unlockedAchievements = JSON.parse(localStorage.getItem("unlockedAchievements")) || [];
-
-  achievements.forEach(achievement => {
-      if (rollCount >= achievement.count && !unlockedAchievements.includes(achievement.name)) {
-          unlockedAchievements.push(achievement.name);
-          localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
-          showAchievementPopup(achievement.name);
-      }
-      if (playTime >= achievement.timeCount && !unlockedAchievements.includes(achievement.name)) {
-        unlockedAchievements.push(achievement.name);
-        localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
-        showAchievementPopup(achievement.name);
-      }
-
-      let unlockedCount = unlockedAchievements.length;
-      collectorAchievements.forEach(collector => {
-          if (unlockedCount >= collector.count && !unlockedAchievements.includes(collector.name)) {
-              unlockedAchievements.push(collector.name);
-              localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
-              showAchievementPopup(collector.name);
-          }
-      });
+  COLLECTOR_ACHIEVEMENTS.forEach((collector) => {
+    if (unlockedCount >= collector.count) {
+      unlockAchievement(collector.name, unlocked);
+    }
   });
 }
 
@@ -398,64 +611,16 @@ function showAchievementPopup(name) {
 }
 
 function updateAchievementsList() {
-  let unlockedAchievements = JSON.parse(localStorage.getItem("unlockedAchievements")) || [];
+  const unlocked = new Set(storage.get("unlockedAchievements", []));
 
-  let achievementItems = document.querySelectorAll(".achievement-item");
-  let achievementItemsT = document.querySelectorAll(".achievement-itemT");
-  let achievementItemsC = document.querySelectorAll(".achievement-itemC");
-  let achievementItemsE = document.querySelectorAll(".achievement-itemE");
-  let achievementItemsSum = document.querySelectorAll(".achievement-itemSum");
+  ACHIEVEMENT_GROUP_STYLES.forEach(({ selector, unlocked: unlockedStyles }) => {
+    $all(selector).forEach((item) => {
+      const achievementName = item.getAttribute("data-name");
+      const isUnlocked = achievementName && unlocked.has(achievementName);
 
-  achievementItems.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "blue";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
-  });
-
-  achievementItemsT.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "green";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
-  });
-
-  achievementItemsC.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "red";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
-  });
-
-  achievementItemsE.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "yellow";
-      item.style.color = "black";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
-  });
-
-  achievementItemsSum.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "orange";
-      item.style.color = "black";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
+      item.style.backgroundColor = isUnlocked ? unlockedStyles.backgroundColor : "gray";
+      item.style.color = isUnlocked && unlockedStyles.color ? unlockedStyles.color : "";
+    });
   });
 }
 
@@ -8530,12 +8695,6 @@ document.getElementById("rollButton").addEventListener("click", function () {
   localStorage.setItem("rollCount1", rollCount1);
   load();
 });
-
-let skipCutscene1K = true;
-let skipCutscene10K = true;
-let skipCutscene100K = true;
-let skipCutscene1M = true;
-
 
 const toggleCutscene1KBtn = document.getElementById("toggleCutscene1K");
 const toggleCutscene1KTxt = document.getElementById("1KTxt");
