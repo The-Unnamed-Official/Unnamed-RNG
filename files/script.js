@@ -42,6 +42,10 @@ let rollDisplayHiddenByUser = false;
 let cutsceneHidRollDisplay = false;
 let cutsceneActive = false;
 let cutsceneFailsafeTimeout = null;
+let lastRollPersisted = true;
+let lastRollAutoDeleted = false;
+let lastRollRarityClass = null;
+let allowForcedAudioPlayback = false;
 
 const STOPPABLE_AUDIO_IDS = [
   "suspenseAudio",
@@ -149,6 +153,31 @@ const STOPPABLE_AUDIO_IDS = [
   "esteggAudio",
   "isekailofiAudio"
 ];
+
+const STOPPABLE_AUDIO_SET = new Set(STOPPABLE_AUDIO_IDS);
+
+const RARITY_BUCKET_LABELS = {
+  under100: "Basic",
+  under1k: "Decent",
+  under10k: "Grand",
+  under100k: "Mastery",
+  under1m: "Supreme",
+  special: "Special"
+};
+
+const originalAudioPlay = HTMLMediaElement.prototype.play;
+HTMLMediaElement.prototype.play = function (...args) {
+  if (
+    this instanceof HTMLAudioElement &&
+    STOPPABLE_AUDIO_SET.has(this.id) &&
+    !lastRollPersisted &&
+    !allowForcedAudioPlayback
+  ) {
+    return Promise.resolve();
+  }
+
+  return originalAudioPlay.apply(this, args);
+};
 
 function setRollButtonEnabled(enabled) {
   const button = document.getElementById("rollButton");
@@ -8967,6 +8996,11 @@ toggleCutscene1MBtn.addEventListener("click", function () {
 });
 
 function rollRarity() {
+  lastRollPersisted = true;
+  lastRollAutoDeleted = false;
+  lastRollRarityClass = null;
+  allowForcedAudioPlayback = false;
+
   const rarities = [
     {
       type: "Common [1 in 2.5]",
@@ -9644,25 +9678,16 @@ function selectTitle(rarity) {
   return titles[Math.floor(Math.random() * titles.length)];
 }
 
-function displayResult(title, rarity) {
-  const resultDiv = document.getElementById("result");
-  resultDiv.innerText = `You rolled a ${rarity}
-    Item: ${title}!`;
-}
-
-function changeBackground(rarityClass) {
-  const body = document.body;
-  body.className = "";
-  body.classList.add(rarityClass);
-}
-
 function addToInventory(title, rarityClass) {
+  lastRollRarityClass = rarityClass || null;
   const rolledAt = typeof rollCount === "number"
     ? rollCount
     : parseInt(localStorage.getItem("rollCount")) || 0;
   const autoDeleteSet = getAutoDeleteSet();
   const bucket = normalizeRarityBucket(rarityClass);
   if (autoDeleteSet.has(bucket)) {
+    lastRollPersisted = false;
+    lastRollAutoDeleted = true;
     showStatusMessage(`${title} auto-deleted`, 800);
     return false; // not persisted
   }
@@ -9671,14 +9696,92 @@ function addToInventory(title, rarityClass) {
 
   for (const category in rarityCategories) {
     if (excludedRarities.has(category) && rarityCategories[category].includes(rarityClass)) {
-      return;
+      lastRollPersisted = false;
+      lastRollAutoDeleted = true;
+      return false;
     }
   }
 
   inventory.push({ title, rarityClass, rolledAt });
   localStorage.setItem("inventory", JSON.stringify(inventory));
   renderInventory();
+  lastRollPersisted = true;
+  lastRollAutoDeleted = false;
   return true; // persisted
+}
+
+function displayResult(title, rarity) {
+  const resultDiv = document.getElementById("result");
+  if (!resultDiv) {
+    return;
+  }
+
+  const rarityValue = rarity == null ? "" : rarity;
+  const rarityText = typeof rarityValue === "string" ? rarityValue : String(rarityValue);
+  const [rarityName, oddsRaw] = rarityText.split(" [");
+  const odds = oddsRaw ? oddsRaw.replace(/\]$/, "") : "";
+  const bucket = normalizeRarityBucket(lastRollRarityClass);
+  const bucketClass = bucket ? `roll-result-card--${bucket}` : "";
+  const bucketLabel = bucket ? (RARITY_BUCKET_LABELS[bucket] || bucket) : "";
+  const labelClass = getLabelClassForRarity(lastRollRarityClass, bucket);
+
+  const card = document.createElement("div");
+  card.className = "roll-result-card";
+  if (bucketClass) {
+    card.classList.add(bucketClass);
+  }
+  if (lastRollAutoDeleted) {
+    card.classList.add("roll-result-card--skipped");
+  }
+
+  const header = document.createElement("div");
+  header.className = "roll-result-card__header";
+
+  const rarityLabel = document.createElement("span");
+  rarityLabel.className = "roll-result-card__rarity";
+  if (labelClass) {
+    rarityLabel.classList.add(labelClass);
+  }
+  rarityLabel.textContent = (rarityName || rarityText || "Unknown").trim();
+  header.appendChild(rarityLabel);
+
+  if (odds) {
+    const oddsEl = document.createElement("span");
+    oddsEl.className = "roll-result-card__odds";
+    oddsEl.textContent = odds;
+    header.appendChild(oddsEl);
+  }
+
+  const badge = document.createElement("span");
+  badge.className = "roll-result-card__badge";
+  badge.textContent = lastRollAutoDeleted ? "Skipped" : "New Title";
+  header.appendChild(badge);
+
+  const titleEl = document.createElement("div");
+  titleEl.className = "roll-result-card__title";
+  titleEl.textContent = title || "Unknown";
+
+  const statusEl = document.createElement("div");
+  statusEl.className = "roll-result-card__status";
+  if (lastRollAutoDeleted) {
+    statusEl.textContent = bucketLabel
+      ? `Auto-deleted (${bucketLabel})`
+      : "Auto-deleted";
+    statusEl.classList.add("roll-result-card__status--skipped");
+  } else {
+    statusEl.textContent = "Added to inventory";
+  }
+
+  card.appendChild(header);
+  card.appendChild(titleEl);
+  card.appendChild(statusEl);
+
+  resultDiv.innerHTML = "";
+  resultDiv.appendChild(card);
+
+  requestAnimationFrame(() => {
+    card.classList.add("is-visible");
+  });
 }
 
 function getAutoDeleteSet() {
@@ -10254,7 +10357,7 @@ function equipItem(item) {
 }
 
 function handleEquippedItem(item) {
-  changeBackground(item.rarityClass, item.title);
+  changeBackground(item.rarityClass, item.title, { force: true });
 }
 
 function updatePagination() {
@@ -12275,58 +12378,79 @@ function ensureBgStack() {
   }
 }
 
-function changeBackground(rarityClass, itemTitle) {
-  if (!isChangeEnabled) return;
+function changeBackground(rarityClass, itemTitle, options = {}) {
+  const force = typeof options === "object" && options !== null
+    ? Boolean(options.force)
+    : Boolean(options);
+
+  if (!force && (!isChangeEnabled || !lastRollPersisted)) {
+    return;
+  }
 
   const details = backgroundDetails[rarityClass];
   if (!details) return;
 
-  // Update the body class so existing rarity-based styling keeps working.
-  if (__currentBgClass !== rarityClass) {
-    if (__currentBgClass) {
-      document.body.classList.remove(__currentBgClass);
+  const previousForcedState = allowForcedAudioPlayback;
+  if (force) {
+    allowForcedAudioPlayback = true;
+  }
+
+  try {
+    // Update the body class so existing rarity-based styling keeps working.
+    if (__currentBgClass !== rarityClass) {
+      if (__currentBgClass) {
+        document.body.classList.remove(__currentBgClass);
+      }
+      document.body.classList.add(rarityClass);
+      __currentBgClass = rarityClass;
     }
-    document.body.classList.add(rarityClass);
-    __currentBgClass = rarityClass;
-  }
 
-  // Prepare the stack
-  ensureBgStack();
+    // Prepare the stack
+    ensureBgStack();
 
-  // Determine next layer and set its image
-  const nextLayer = __bgActive === 0 ? __bgLayerB : __bgLayerA;
-  const currLayer = __bgActive === 0 ? __bgLayerA : __bgLayerB;
+    // Determine next layer and set its image
+    const nextLayer = __bgActive === 0 ? __bgLayerB : __bgLayerA;
+    const currLayer = __bgActive === 0 ? __bgLayerA : __bgLayerB;
 
-  // Point to the file URL (string or template is ok)
-  nextLayer.style.backgroundImage = `url(${details.image})`;
+    // Point to the file URL (string or template is ok)
+    nextLayer.style.backgroundImage = `url(${details.image})`;
 
-  const bucket = normalizeRarityBucket(rarityClass);
-  triggerScreenShakeByBucket(bucket);
+    const bucket = normalizeRarityBucket(rarityClass);
+    triggerScreenShakeByBucket(bucket);
 
-  // Trigger the crossfade on the next animation frame to ensure style is applied
-  requestAnimationFrame(() => {
-    // Bring the next one in, send the current one out
-    nextLayer.classList.add("is-active");
-    currLayer.classList.remove("is-active");
-    __bgActive = __bgActive === 0 ? 1 : 0;
-  });
+    // Trigger the crossfade on the next animation frame to ensure style is applied
+    requestAnimationFrame(() => {
+      // Bring the next one in, send the current one out
+      nextLayer.classList.add("is-active");
+      currLayer.classList.remove("is-active");
+      __bgActive = __bgActive === 0 ? 1 : 0;
+    });
 
-  // Maintain your audio behavior
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio.currentTime = 0;
-  }
-  if (details.audio) {
-    const newAudio = document.getElementById(details.audio);
-    if (newAudio) {
-      newAudio.play();
-      currentAudio = newAudio;
+    // Maintain your audio behavior
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
     }
-  } else {
-    currentAudio = null;
-  }
+    if (details.audio) {
+      const newAudio = document.getElementById(details.audio);
+      if (newAudio) {
+        newAudio.volume = typeof audioVolume === "number" ? audioVolume : 1;
+        const playPromise = newAudio.play();
+        if (playPromise && typeof playPromise.catch === "function") {
+          playPromise.catch(() => {});
+        }
+        currentAudio = newAudio;
+      }
+    } else {
+      currentAudio = null;
+    }
 
-  // Clear direct body background inline style so the stack is the only visual source.
-  // This prevents flicker if some other code set document.body.style.backgroundImage.
-  document.body.style.backgroundImage = "";
+    // Clear direct body background inline style so the stack is the only visual source.
+    // This prevents flicker if some other code set document.body.style.backgroundImage.
+    document.body.style.backgroundImage = "";
+  } finally {
+    if (force) {
+      allowForcedAudioPlayback = previousForcedState;
+    }
+  }
 }
