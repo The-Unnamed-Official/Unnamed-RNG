@@ -12414,11 +12414,7 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
   const details = backgroundDetails[rarityClass];
   if (!details) return;
 
-  if (force) {
-    pinnedAudioId = details.audio || null;
-  } else {
-    pinnedAudioId = null;
-  }
+  pinnedAudioId = details.audio || null;
 
   const previousForcedState = allowForcedAudioPlayback;
   if (force) {
@@ -12447,6 +12443,7 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
 
     const bucket = normalizeRarityBucket(rarityClass);
     triggerScreenShakeByBucket(bucket);
+
     // Trigger the crossfade on the next animation frame to ensure style is applied
     requestAnimationFrame(() => {
       // Bring the next one in, send the current one out
