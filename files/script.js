@@ -361,7 +361,6 @@ function processAchievementToastQueue() {
 
   setTimeout(removeToast, ACHIEVEMENT_TOAST_DURATION);
 }
-
 function getAudioElement(id) {
   if (audioElementCache.has(id)) {
     const cached = audioElementCache.get(id);
@@ -421,7 +420,6 @@ function stopAllAudio() {
     resetAudioState(audio, id);
   });
 }
-
 document.addEventListener("DOMContentLoaded", () => {
   const rollButton = byId("rollButton");
   const startButton = byId("startButton");
@@ -612,7 +610,6 @@ function updateAchievementsList() {
     $all(selector).forEach((item) => {
       const achievementName = item.getAttribute("data-name");
       const isUnlocked = achievementName && unlocked.has(achievementName);
-
       item.style.backgroundColor = isUnlocked ? unlockedStyles.backgroundColor : "gray";
       item.style.color = isUnlocked && unlockedStyles.color ? unlockedStyles.color : "";
     });
