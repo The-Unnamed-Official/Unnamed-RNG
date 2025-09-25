@@ -10991,6 +10991,22 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".inventory-delete-btn").forEach((button) => {
+    if (button.childElementCount > 0) {
+      return;
+    }
+
+    const label = button.textContent.replace(/\s+/g, " ").trim();
+    if (!label) {
+      return;
+    }
+
+    button.dataset.label = label;
+    button.classList.add("inventory-delete-btn--overlay");
+  });
+});
+
 const settingsButton = document.getElementById("settingsButton");
 const achievementsButton = document.getElementById("achievementsButton");
 const achievementsMenu = document.getElementById("achievementsMenu");
