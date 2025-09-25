@@ -10997,6 +10997,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const settingsMenu = document.getElementById("settingsMenu");
   const settingsHeader = settingsMenu?.querySelector(".settings-header");
   const settingsBody = settingsMenu?.querySelector(".settings-body");
+  const achievementsMenu = document.getElementById("achievementsMenu");
+  const achievementsHeader = achievementsMenu?.querySelector(".achievements-header");
+  const achievementsBody = achievementsMenu?.querySelector(".achievements-body");
+  const statsMenu = document.getElementById("statsMenu");
+  const statsHeader = statsMenu?.querySelector(".stats-header");
   const statsDragHandle = statsMenu?.querySelector(".stats-menu__drag-handle");
   const achievementsMenu = document.getElementById("achievementsMenu");
   const achievementsHeader = achievementsMenu?.querySelector(".achievements-header");
@@ -11009,6 +11014,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let offsetY = 0;
   let offsetXAchievements = 0;
   let offsetYAchievements = 0;
+  let offsetXStats = 0;
+  let offsetYStats = 0;
   let offsetXStyle = 0;
   let offsetYStyle = 0;
 
@@ -11066,6 +11073,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  if (statsHeader && statsMenu) {
+    statsHeader.addEventListener("mousedown", (event) => {
+      if (event.button !== 0 || event.target.closest(".stats-close-btn")) {
+        return;
+      }
+
+      const rect = statsMenu.getBoundingClientRect();
+      statsMenu.style.left = `${rect.left}px`;
+      statsMenu.style.top = `${rect.top}px`;
+      statsMenu.style.transform = "none";
+
+      offsetXStats = event.clientX - rect.left;
+      offsetYStats = event.clientY - rect.top;
+      isDraggingStats = true;
+      statsHeader.classList.add("is-dragging");
   if (headerStats) {
     headerStats.addEventListener("mousedown", (event) => {
       isDraggingStats = true;
@@ -11115,9 +11137,9 @@ document.addEventListener("DOMContentLoaded", () => {
       achievementsMenu.style.top = `${event.clientY - offsetYAchievements}px`;
     }
 
-    if (isDraggingStats) {
-      statsMenu.style.left = `${event.clientX - offsetXStyle}px`;
-      statsMenu.style.top = `${event.clientY - offsetYStyle}px`;
+    if (isDraggingStats && statsMenu) {
+      statsMenu.style.left = `${event.clientX - offsetXStats}px`;
+      statsMenu.style.top = `${event.clientY - offsetYStats}px`;
     }
   });
 
@@ -11134,7 +11156,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (isDraggingStats) {
       isDraggingStats = false;
-      statsDragHandle?.classList.remove("is-dragging");
+      statsHeader?.classList.remove("is-dragging"
     }
   });
 });
@@ -11197,6 +11219,9 @@ closeAchievements.addEventListener("click", () => {
 
 statsButton.addEventListener("click", () => {
   statsMenu.style.display = "block";
+  statsMenu.style.transform = "translate(-50%, -50%)";
+  statsMenu.style.left = "50%";
+  statsMenu.style.top = "50%";
 });
 
 closeStats.addEventListener("click", () => {
