@@ -12447,7 +12447,6 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
 
     const bucket = normalizeRarityBucket(rarityClass);
     triggerScreenShakeByBucket(bucket);
-
     // Trigger the crossfade on the next animation frame to ensure style is applied
     requestAnimationFrame(() => {
       // Bring the next one in, send the current one out
