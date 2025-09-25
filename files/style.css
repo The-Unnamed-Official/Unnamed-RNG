@@ -750,18 +750,168 @@ body {
   transform: translateX(0%);
 }
 
-/* Result display chip */
+/* Result display panel */
 .container .res {
-  min-height: 36px;
-  padding: 6px 12px;
-  border-radius: 10px;
-  color: #fff;
-  font-weight: 700;
-  letter-spacing: 0.4px;
+  width: 100%;
+  min-height: 110px;
+  padding: 12px 6px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
 
-  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+.roll-result-card {
+  position: relative;
+  width: min(100%, 440px);
+  padding: 20px 24px 22px;
+  border-radius: 18px;
+  color: #f6f8ff;
+  background: linear-gradient(165deg, rgba(28,32,52,0.88), rgba(16,18,28,0.86));
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 16px 38px rgba(4,9,30,0.45), inset 0 1px 0 rgba(255,255,255,0.12);
+  overflow: hidden;
+  isolation: isolate;
+  opacity: 0;
+  transform: translateY(14px) scale(0.97);
+  transition: opacity 240ms ease, transform 280ms cubic-bezier(.16,.78,.32,1.18);
+  --roll-card-accent: linear-gradient(140deg, rgba(122,162,255,0.7), rgba(134,96,255,0.45));
+}
+
+.roll-result-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 18px;
+  background: var(--roll-card-accent);
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: -2;
+}
+
+.roll-result-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: radial-gradient(120% 140% at 25% 0%, rgba(255,255,255,0.28), transparent 60%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.roll-result-card.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.roll-result-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.roll-result-card__rarity {
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.roll-result-card__odds {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(224,230,255,0.68);
+  white-space: nowrap;
+}
+
+.roll-result-card__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.28);
+  color: rgba(245,248,255,0.86);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.roll-result-card__title {
+  font-size: clamp(1.28rem, 3.2vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.roll-result-card__status {
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(214,224,255,0.74);
+}
+
+.roll-result-card__status--skipped {
+  color: #ffb6c1;
+}
+
+.roll-result-card--skipped {
+  --roll-card-accent: linear-gradient(135deg, rgba(255,120,136,0.48), rgba(255,99,132,0.36));
+  background: linear-gradient(165deg, rgba(44,18,26,0.9), rgba(22,10,16,0.92));
+}
+
+.roll-result-card--skipped .roll-result-card__badge {
+  background: rgba(255,105,132,0.14);
+  border-color: rgba(255,142,164,0.45);
+  color: #ffced9;
+}
+
+.roll-result-card--under100 {
+  --roll-card-accent: linear-gradient(135deg, rgba(116,196,255,0.6), rgba(60,137,255,0.52));
+}
+
+.roll-result-card--under1k {
+  --roll-card-accent: linear-gradient(135deg, rgba(118,255,214,0.6), rgba(44,186,142,0.5));
+}
+
+.roll-result-card--under10k {
+  --roll-card-accent: linear-gradient(135deg, rgba(255,208,140,0.6), rgba(255,153,51,0.5));
+}
+
+.roll-result-card--under100k {
+  --roll-card-accent: linear-gradient(135deg, rgba(200,158,255,0.62), rgba(132,76,255,0.5));
+}
+
+.roll-result-card--under1m {
+  --roll-card-accent: linear-gradient(135deg, rgba(255,144,220,0.6), rgba(178,96,255,0.5));
+}
+
+.roll-result-card--special {
+  --roll-card-accent: linear-gradient(135deg, rgba(255,243,173,0.62), rgba(255,206,109,0.52));
+}
+
+@media (max-width: 520px) {
+  .roll-result-card {
+    padding: 18px 18px 20px;
+  }
+
+  .roll-result-card__header {
+    gap: 8px;
+  }
+
+  .roll-result-card__badge {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 2px;
+  }
 }
 
 /* Compact screens */
@@ -781,6 +931,9 @@ body {
     transition: none !important;
   }
   .container .rButton {
+    transition: none !important;
+  }
+  .roll-result-card {
     transition: none !important;
   }
 }
