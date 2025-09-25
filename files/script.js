@@ -146,6 +146,146 @@ const STOPPABLE_AUDIO_IDS = [
   "isekailofiAudio"
 ];
 
+const rarityCategories = {
+  under100: [
+    "commonBgImg",
+    "rareBgImg",
+    "epicBgImg",
+    "legendaryBgImg",
+    "impossibleBgImg",
+    "poweredBgImg",
+    "toxBgImg",
+    "flickerBgImg",
+    "solarpowerBgImg",
+    "belivBgImg",
+    "plabreBgImg",
+  ],
+  under1k: [
+    "unstoppableBgImg",
+    "spectralBgImg",
+    "starfallBgImg",
+    "gargBgImg",
+    "memBgImg",
+    "oblBgImg",
+    "phaBgImg",
+    "isekaiBgImg",
+    "emerBgImg",
+    "samuraiBgImg",
+    "contBgImg",
+    "wanspiBgImg",
+    "froBgImg",
+    "mysBgImg",
+    "forgBgImg",
+    "curartBgImg",
+    "specBgImg",
+  ],
+  under10k: [
+    "ethershiftBgImg",
+    "hellBgImg",
+    "frightBgImg",
+    "seraphwingBgImg",
+    "shadBgImg",
+    "shaBgImg",
+    "nighBgImg",
+    "voiBgImg",
+    "silBgImg",
+    "ghoBgImg",
+    "endBgImg",
+    "abysBgImg",
+    "darBgImg",
+    "twiligBgImg",
+    "ethpulBgImg",
+    "eniBgImg",
+    "griBgImg",
+    "fearBgImg",
+    "hauntBgImg",
+    "foundsBgImg",
+    "lostsBgImg",
+    "hauBgImg",
+    "lubjubBgImg",
+    "radBgImg",
+    "demsoBgImg",
+    "astredBgImg",
+    "isekailofiBgImg",
+  ],
+  under100k: [
+    "celdawBgImg",
+    "fatreBgImg",
+    "unnamedBgImg",
+    "eonbreakBgImg",
+    "overtureBgImg",
+    "arcanepulseBgImg",
+    "harvBgImg",
+    "devilBgImg",
+    "cursedmirageBgImg",
+    "tuonBgImg",
+    "astblaBgImg",
+    "qbearBgImg",
+    "lightBgImg",
+    "blodBgImg",
+  ],
+  under1m: [
+    "impeachedBgImg",
+    "celestialchorusBgImg",
+    "x1staBgImg",
+    "silcarBgImg",
+    "gingerBgImg",
+    "h1diBgImg",
+    "equinoxBgImg",
+    "gregBgImg",
+    "mintllieBgImg",
+    "geezerBgGif",
+    "polarrBgImg",
+  ],
+  special: [
+    "iriBgImg",
+    "veilBgImg",
+    "expBgImg",
+    "aboBgImg",
+    "blindBgImg",
+    "msfuBgImg",
+    "orbBgImg",
+    "crazeBgImg",
+    "shenviiBgImg",
+  ],
+};
+
+const RARITY_CLASS_BUCKET_MAP = Object.freeze(
+  Object.entries(rarityCategories).reduce((acc, [bucket, classes]) => {
+    classes.forEach((cls) => {
+      acc[cls] = bucket;
+    });
+    return acc;
+  }, {})
+);
+
+const RARITY_LABEL_CLASS_MAP = {
+  silcarBgImg: "under10ms",
+  gingerBgImg: "under10m",
+  h1diBgImg: "under10m",
+  equinoxBgImg: "under10me",
+  waveBgImg: "eventS",
+  beachBgImg: "eventS",
+  tidalwaveBgImg: "eventS",
+  scorchingBgImg: "eventS",
+  heartBgImg: "eventV",
+  esteggBgImg: "eventE",
+  estbunBgImg: "eventE",
+  fircraBgImg: "eventTitle",
+  pumpkinBgImg: "eventTitleHalloween",
+  norstaBgImg: "eventTitleXmas",
+  sanclaBgImg: "eventTitleXmas",
+  silnigBgImg: "eventTitleXmas",
+  reidasBgImg: "eventTitleXmas",
+  frogarBgImg: "eventTitleXmas",
+  cancansymBgImg: "eventTitleXmas",
+  ginharBgImg: "eventTitleXmas",
+  jolbelBgImg: "eventTitleXmas",
+  jolbeBgImg: "eventTitleXmas",
+  holcheBgImg: "eventTitleXmas",
+  cristoBgImg: "eventTitleXmas",
+};
+
 const AUDIO_RESET_OVERRIDES = {
   gargantuaAudio: 14.5,
   eonbreakAudio: 2,
@@ -379,14 +519,6 @@ function getAudioElement(id) {
   audioElementCache.set(id, element);
   return element;
 }
-function getAudioElement(id) {
-  if (audioElementCache.has(id)) {
-    const cached = audioElementCache.get(id);
-    if (cached && document.contains(cached)) {
-      return cached;
-    }
-    audioElementCache.delete(id);
-  }
 
 function resetAudioState(audio, id) {
   if (!audio) return;
@@ -9480,22 +9612,41 @@ function getAutoDeleteSet() {
 }
 
 function normalizeRarityBucket(rarityClass) {
-  if (!rarityClass || typeof rarityClass !== 'string') return '';
+  if (!rarityClass || typeof rarityClass !== "string") return "";
   const cls = rarityClass.trim();
 
-  // Order matters when prefixes overlap
-  if (cls.startsWith('under100k')) return 'under100k';
-  if (cls.startsWith('under10k'))  return 'under10k';
-  if (cls.startsWith('under1m'))   return 'under1m';
-  if (cls.startsWith('under1k'))   return 'under1k';
-  if (cls.startsWith('under100'))  return 'under100';
-  if (cls === 'special')           return 'special';
+  const prefixMatches = [
+    { prefix: "under10me", bucket: "under1m" },
+    { prefix: "under10ms", bucket: "under1m" },
+    { prefix: "under10m", bucket: "under1m" },
+    { prefix: "under1m", bucket: "under1m" },
+    { prefix: "under100k", bucket: "under100k" },
+    { prefix: "under10k", bucket: "under10k" },
+    { prefix: "under1k", bucket: "under1k" },
+    { prefix: "under100", bucket: "under100" },
+  ];
 
-  // Fallback: direct bucket names
-  if (['under100','under1k','under10k','under100k','under1m','special'].includes(cls)) {
+  for (const { prefix, bucket } of prefixMatches) {
+    if (cls.startsWith(prefix)) {
+      return bucket;
+    }
+  }
+
+  if (cls === "special") return "special";
+  if (["under100", "under1k", "under10k", "under100k", "under1m", "special"].includes(cls)) {
     return cls;
   }
-  return '';
+
+  return RARITY_CLASS_BUCKET_MAP[cls] || "";
+}
+
+function getLabelClassForRarity(rarityClass, bucket) {
+  if (!rarityClass || typeof rarityClass !== "string") {
+    return bucket || "";
+  }
+
+  const cls = rarityClass.trim();
+  return RARITY_LABEL_CLASS_MAP[cls] || bucket || "";
 }
 
 function deleteByRarityBucket(bucket) {
@@ -9889,10 +10040,18 @@ function renderInventory() {
     const listItem = document.createElement("li");
     listItem.className = item.rarityClass;
     listItem.dataset.locked = lockedItems[item.title] ? "true" : "false";
+    const bucket = normalizeRarityBucket(item.rarityClass);
+    if (bucket) {
+      listItem.dataset.bucket = bucket;
+    }
 
     const itemTitle = document.createElement("span");
     itemTitle.className = "rarity-text";
     itemTitle.textContent = item.title.toUpperCase();
+    const labelClass = getLabelClassForRarity(item.rarityClass, bucket);
+    if (labelClass) {
+      itemTitle.classList.add(labelClass);
+    }
 
     const rarityText = document.createElement("span");
     listItem.appendChild(itemTitle);
@@ -11726,30 +11885,6 @@ function createParticleGroup() {
     system.appendChild(particle);
   }
 }
-
-const rarityCategories = {
-  under100: [
-    "commonBgImg", "rareBgImg", "epicBgImg", "legendaryBgImg", "impossibleBgImg",
-    "poweredBgImg", "plabreBgImg", "solarpowerBgImg", "belivBgImg", "flickerBgImg", "toxBgImg"
-  ],
-  under1k: [
-    "unstoppableBgImg", "spectralBgImg", "starfallBgImg", "gargBgImg", "memBgImg", "oblBgImg",
-    "phaBgImg", "isekaiBgImg", "emerBgImg", "samuraiBgImg", "contBgImg", "wanspiBgImg",
-    "froBgImg", "mysBgImg", "forgBgImg", "curartBgImg", "specBgImg"
-  ],
-  under10k: [
-    "ethershiftBgImg", "hellBgImg", "frightBgImg", "seraphwingBgImg", "shadBgImg", "shaBgImg",
-    "nighBgImg", "voiBgImg", "silBgImg", "ghoBgImg", "endBgImg", "abysBgImg", "darBgImg",
-    "twiligBgImg", "ethpulBgImg", "eniBgImg", "griBgImg", "fearBgImg", "hauntBgImg",
-    "foundsBgImg", "lostsBgImg", "hauBgImg", "lubjubBgImg", "radBgImg", "demsoBgImg", "isekailofiBgImg"
-  ],
-  under100k: [
-    "celdawBgImg", "fatreBgImg", "unnamedBgImg", "eonbreakBgImg", "overtureBgImg",
-    "arcanepulseBgImg", "harvBgImg", "devilBgImg", "cursedmirageBgImg", "tuonBgImg", "astblaBgImg", "qbearBgImg", "lightBgImg"
-  ],
-  under1m: ["impeachedBgImg", "celestialchorusBgImg", "x1staBgImg"],
-  special: ["iriBgImg", "veilBgImg", "expBgImg", "aboBgImg", "blindBgImg", "msfuBgImg", "orbBgImg", "crazeBgImg", "shenviiBgImg"]
-};
 
 document.querySelectorAll(".rarity-button").forEach(button => {
   button.addEventListener("click", () => {

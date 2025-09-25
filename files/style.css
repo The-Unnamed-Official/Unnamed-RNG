@@ -1012,8 +1012,8 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: min(640px, calc(100vw - 32px));
-    max-height: min(80vh, 620px);
+    width: min(700px, calc(100vw - 32px));
+    max-height: min(88vh, 700px);
     padding: 0;
     background:
         linear-gradient(160deg, rgba(28,34,54,0.88), rgba(12,18,32,0.95)),
@@ -1073,10 +1073,14 @@ body {
     flex: 1;
     overflow-y: auto;
     padding: 20px 22px 24px 22px;
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: 18px;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
     min-height: 0;
+    scrollbar-gutter: stable both-edges;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
 }
 
 .settings-header.is-dragging {
@@ -1094,6 +1098,10 @@ body {
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
 }
 
+.settings-section--full {
+    grid-column: 1 / -1;
+}
+
 .settings-section__title {
     margin: 0;
     font-size: 0.95rem;
@@ -1106,6 +1114,34 @@ body {
     display: grid;
     gap: 12px;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+@media (min-width: 720px) {
+    .settings-body {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    #settingsMenu {
+        width: min(620px, calc(100vw - 24px));
+        max-height: calc(100vh - 32px);
+    }
+}
+
+@media (max-width: 540px) {
+    #settingsMenu {
+        left: 50%;
+        top: 12px;
+        transform: translate(-50%, 0);
+        width: calc(100vw - 20px);
+        height: calc(100vh - 24px);
+        max-height: none;
+    }
+
+    .settings-panel {
+        height: 100%;
+    }
 }
 
 .settings-btn,
