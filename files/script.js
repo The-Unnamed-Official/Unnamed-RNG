@@ -10915,6 +10915,7 @@ scheduleAllCooldownButtons();
 document.addEventListener("DOMContentLoaded", () => {
   const settingsMenu = document.getElementById("settingsMenu");
   const settingsHeader = settingsMenu?.querySelector(".settings-header");
+  const settingsBody = settingsMenu?.querySelector(".settings-body");
   const headerStats = statsMenu.querySelector("h3");
   let isDraggingSettings = false;
   let isDraggingStats = false;
@@ -10949,6 +10950,21 @@ document.addEventListener("DOMContentLoaded", () => {
       offsetYStyle = event.clientY - statsMenu.offsetTop;
       headerStats.style.cursor = "grabbing";
     });
+  }
+
+  if (settingsMenu && settingsBody) {
+    settingsMenu.addEventListener(
+      "wheel",
+      (event) => {
+        if (settingsBody.contains(event.target)) {
+          return;
+        }
+
+        settingsBody.scrollTop += event.deltaY;
+        event.preventDefault();
+      },
+      { passive: false }
+    );
   }
 
   document.addEventListener("mousemove", (event) => {
