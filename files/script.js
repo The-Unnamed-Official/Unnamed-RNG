@@ -293,6 +293,74 @@ const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-itemSum", unlocked: { backgroundColor: "orange", color: "black" } },
 ];
 
+const ACHIEVEMENT_TOAST_DURATION = 3400;
+const achievementToastQueue = [];
+let achievementToastContainer = null;
+let achievementToastActive = false;
+
+function ensureAchievementToastContainer() {
+  if (achievementToastContainer && document.body.contains(achievementToastContainer)) {
+    return achievementToastContainer;
+  }
+
+  achievementToastContainer = document.createElement("div");
+  achievementToastContainer.className = "achievement-toast-stack";
+  document.body.appendChild(achievementToastContainer);
+  return achievementToastContainer;
+}
+
+function processAchievementToastQueue() {
+  if (achievementToastActive || achievementToastQueue.length === 0) {
+    return;
+  }
+
+  achievementToastActive = true;
+  const name = achievementToastQueue.shift();
+  const container = ensureAchievementToastContainer();
+
+  const toast = document.createElement("div");
+  toast.className = "achievement-toast";
+  toast.innerHTML = `
+    <div class="achievement-toast__icon"><i class="fa-solid fa-trophy"></i></div>
+    <div class="achievement-toast__content">
+      <span class="achievement-toast__title">Achievement Unlocked</span>
+      <span class="achievement-toast__name">${name}</span>
+    </div>
+  `;
+  container.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add("show");
+  });
+
+  updateAchievementsList();
+
+  const removeToast = () => {
+    if (!toast.isConnected) {
+      return;
+    }
+
+    toast.classList.remove("show");
+    toast.classList.add("hide");
+
+    let finalized = false;
+    const finalize = () => {
+      if (finalized) {
+        return;
+      }
+      finalized = true;
+      toast.remove();
+      achievementToastActive = false;
+      updateAchievementsList();
+      processAchievementToastQueue();
+    };
+
+    toast.addEventListener("transitionend", finalize, { once: true });
+    setTimeout(finalize, 320);
+  };
+
+  setTimeout(removeToast, ACHIEVEMENT_TOAST_DURATION);
+}
 function getAudioElement(id) {
   if (audioElementCache.has(id)) {
     const cached = audioElementCache.get(id);
@@ -352,7 +420,6 @@ function stopAllAudio() {
     resetAudioState(audio, id);
   });
 }
-
 document.addEventListener("DOMContentLoaded", () => {
   const rollButton = byId("rollButton");
   const startButton = byId("startButton");
@@ -532,21 +599,8 @@ function checkAchievements() {
 }
 
 function showAchievementPopup(name) {
-  let popup = document.createElement("div");
-  popup.className = "achievement-popup";
-  popup.textContent = `Achievement Unlocked: ${name}`;
-  document.body.appendChild(popup);
-  
-  setTimeout(() => {
-      popup.classList.add("show");
-      updateAchievementsList();
-  }, 100);
-  
-  setTimeout(() => {
-      popup.classList.remove("show");
-      setTimeout(() => popup.remove(), 500);
-      updateAchievementsList();
-  }, 3000);
+  achievementToastQueue.push(name);
+  processAchievementToastQueue();
 }
 
 function updateAchievementsList() {
@@ -556,7 +610,6 @@ function updateAchievementsList() {
     $all(selector).forEach((item) => {
       const achievementName = item.getAttribute("data-name");
       const isUnlocked = achievementName && unlocked.has(achievementName);
-
       item.style.backgroundColor = isUnlocked ? unlockedStyles.backgroundColor : "gray";
       item.style.color = isUnlocked && unlockedStyles.color ? unlockedStyles.color : "";
     });
@@ -10737,6 +10790,7 @@ const closeStats = document.getElementById("closeStats");
 const settingsMenu = document.getElementById("settingsMenu");
 const closeSettings = document.getElementById("closeSettings");
 const audioSlider = document.getElementById("audioSlider");
+const audioSliderValueLabel = document.getElementById("audioSliderValue");
 const resetDataButton = document.getElementById("resetDataButton");
 const autoRollButton = document.getElementById("autoRollButton");
 const rollButton = document.getElementById("rollButton");
@@ -10776,20 +10830,22 @@ if (savedVolume !== null) {
 } else {
   updateAudioElements(audioVolume);
 }
+setSliderMutedState(audioVolume === 0);
+updateAudioSliderUi();
 
 audioSlider.addEventListener("input", () => {
   audioVolume = parseFloat(audioSlider.value);
   if (audioVolume === 0) {
     isMuted = true;
-    setThumbColor(true);
+    setSliderMutedState(true);
   } else {
     isMuted = false;
-    setThumbColor(false);
     previousVolume = audioVolume;
+    setSliderMutedState(false);
   }
-  console.log(`Audio volume set to: ${audioVolume}`);
   localStorage.setItem("audioVolume", audioVolume);
   updateAudioElements(audioVolume);
+  updateAudioSliderUi();
 });
 
 muteButton.addEventListener("click", () => {
@@ -10804,9 +10860,9 @@ muteButton.addEventListener("click", () => {
 
   audioSlider.value = audioVolume;
   localStorage.setItem("audioVolume", audioVolume);
-  console.log(`Mute toggled. Audio volume is now: ${audioVolume}`);
   updateAudioElements(audioVolume);
-  setThumbColor(isMuted);
+  setSliderMutedState(isMuted);
+  updateAudioSliderUi();
 });
 
 function updateAudioElements(volume) {
@@ -10814,12 +10870,39 @@ function updateAudioElements(volume) {
   audioElements.forEach((audio) => (audio.volume = volume));
 }
 
-function setThumbColor(muted) {
-  if (muted) {
-    audioSlider.classList.add("muted");
-  } else {
-    audioSlider.classList.remove("muted");
+function setSliderMutedState(muted) {
+  if (!audioSlider) {
+    return;
   }
+
+  audioSlider.classList.toggle("muted", Boolean(muted));
+}
+
+function updateAudioSliderUi() {
+  if (!audioSlider) {
+    return;
+  }
+
+  const value = Math.max(0, Math.min(1, parseFloat(audioSlider.value) || 0));
+  const percentage = Math.round(value * 100);
+  if (audioSliderValueLabel) {
+    audioSliderValueLabel.textContent = `${percentage}%`;
+  }
+
+  const startColor = { r: 96, g: 0, b: 126 };
+  const endColor = { r: 255, g: 165, b: 0 };
+  const r = Math.round(startColor.r + (endColor.r - startColor.r) * value);
+  const g = Math.round(startColor.g + (endColor.g - startColor.g) * value);
+  const b = Math.round(startColor.b + (endColor.b - startColor.b) * value);
+  const thumbColor = `rgb(${r}, ${g}, ${b})`;
+
+  audioSlider.style.setProperty("--thumb-color", thumbColor);
+
+  const trackColor = audioSlider.classList.contains("muted")
+    ? "rgba(128, 96, 186, 0.75)"
+    : thumbColor;
+
+  audioSlider.style.background = `linear-gradient(90deg, ${trackColor} ${percentage}%, rgba(255, 255, 255, 0.12) ${percentage}%)`;
 }
 
 resetDataButton.addEventListener("click", () => {
@@ -10871,24 +10954,7 @@ function stopAutoRoll() {
   localStorage.setItem("autoRollEnabled", "false");
 }
 
-const slider = document.getElementById("audioSlider");
-
-slider.addEventListener("input", function () {
-  const value = slider.value;
-
-  const startColor = { r: 96, g: 0, b: 126 };
-  const endColor = { r: 255, g: 165, b: 0 };
-
-  const r = Math.round(startColor.r + (endColor.r - startColor.r) * value);
-  const g = Math.round(startColor.g + (endColor.g - startColor.g) * value);
-  const b = Math.round(startColor.b + (endColor.b - startColor.b) * value);
-
-  const thumbColor = `rgb(${r}, ${g}, ${b})`;
-
-  slider.style.setProperty("--thumb-color", thumbColor);
-});
-
-slider.dispatchEvent(new Event("input"));
+updateAudioSliderUi();
 
 const heartContainer = document.createElement('div');
 document.body.appendChild(heartContainer);
