@@ -46,6 +46,7 @@ let lastRollPersisted = true;
 let lastRollAutoDeleted = false;
 let lastRollRarityClass = null;
 let allowForcedAudioPlayback = false;
+let pinnedAudioId = null;
 
 const STOPPABLE_AUDIO_IDS = [
   "suspenseAudio",
@@ -644,8 +645,31 @@ function resetAudioState(audio, id) {
   }
 }
 
-function stopAllAudio() {
+function stopAllAudio(options = {}) {
+  const preserveIds = new Set();
+
+  if (options) {
+    const { preservePinned = false, preserve = null } = options;
+    if (preservePinned && pinnedAudioId) {
+      preserveIds.add(pinnedAudioId);
+    }
+
+    if (typeof preserve === "string") {
+      preserveIds.add(preserve);
+    } else if (Array.isArray(preserve)) {
+      preserve.forEach((id) => {
+        if (id) {
+          preserveIds.add(id);
+        }
+      });
+    }
+  }
+
   STOPPABLE_AUDIO_IDS.forEach((id) => {
+    if (preserveIds.has(id)) {
+      return;
+    }
+
     const audio = getAudioElement(id);
     if (!audio) {
       return;
@@ -890,7 +914,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rollCount++;
   }
 
-  stopAllAudio();
+  stopAllAudio({ preservePinned: true });
 
   let rarity = rollRarity();
   let title = selectTitle(rarity);
@@ -12390,6 +12414,12 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
   const details = backgroundDetails[rarityClass];
   if (!details) return;
 
+  if (force) {
+    pinnedAudioId = details.audio || null;
+  } else {
+    pinnedAudioId = null;
+  }
+
   const previousForcedState = allowForcedAudioPlayback;
   if (force) {
     allowForcedAudioPlayback = true;
@@ -12417,7 +12447,6 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
 
     const bucket = normalizeRarityBucket(rarityClass);
     triggerScreenShakeByBucket(bucket);
-
     // Trigger the crossfade on the next animation frame to ensure style is applied
     requestAnimationFrame(() => {
       // Bring the next one in, send the current one out

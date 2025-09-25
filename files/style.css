@@ -780,7 +780,7 @@ body {
   opacity: 0;
   transform: translateY(14px) scale(0.97);
   transition: opacity 240ms ease, transform 280ms cubic-bezier(.16,.78,.32,1.18);
-  --roll-card-accent: linear-gradient(140deg, rgba(122, 162, 255, 0.336), rgba(133, 96, 255, 0.322));
+  --roll-card-accent: linear-gradient(140deg, rgba(122,162,255,0.7), rgba(134,96,255,0.45));
 }
 
 .roll-result-card::before {
