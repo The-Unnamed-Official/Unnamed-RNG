@@ -1315,30 +1315,6 @@ body {
     cursor: not-allowed;
 }
 
-.achievementsBtns {
-    display: inline-block;
-    padding: 10px 15px;
-    margin: 10px 0;
-    font-size: 1rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-}
-
-.statsBtns {
-    display: inline-block;
-    padding: 10px 15px;
-    margin: 10px 0;
-    font-size: 1rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-}
-
 .aSlid {
     margin-top: 25px;
 }
@@ -4092,237 +4068,114 @@ body.griCutsceneBgImg {
 }
 
 .achievement-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 10px;
-    background: #222;
-    padding: 10px;
-    border-radius: 8px;
-    align-items: center;
-    margin: 10px;
-    margin-bottom: 5px;
+    display: grid;
+    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
-.achievement-item {
+.achievement-grid + .achievement-grid {
+    margin-top: 10px;
+}
+
+.achievement-item,
+.achievement-itemT,
+.achievement-itemC,
+.achievement-itemE,
+.achievement-itemSum {
     position: relative;
-    padding: 20px;
+    padding: 16px 14px;
     text-align: center;
-    border-radius: 5px;
-    font-weight: bold;
-    font-size: 13px;
-    color: white;
-    background: #444;
-    flex: 0 0 calc(25% - 10px);
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #f3f6ff;
+    background: linear-gradient(155deg, rgba(40, 56, 94, 0.82), rgba(18, 28, 52, 0.88));
+    border: 1px solid rgba(130, 176, 255, 0.22);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
     cursor: pointer;
-    z-index: 9999999999;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    z-index: 1;
+    line-height: 1.35;
+    backdrop-filter: blur(4px);
+    text-wrap: balance;
+    word-break: break-word;
+}
+
+.achievement-itemT,
+.achievement-itemC,
+.achievement-itemE,
+.achievement-itemSum {
+    font-size: 0.9rem;
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+.achievement-item:hover,
+.achievement-itemT:hover,
+.achievement-itemC:hover,
+.achievement-itemE:hover,
+.achievement-itemSum:hover {
+    transform: translateY(-2px);
+    background: linear-gradient(155deg, rgba(62, 86, 138, 0.9), rgba(26, 36, 64, 0.95));
+    border-color: rgba(167, 205, 255, 0.4);
 }
 
 .achievement-item:hover::after {
     content: "Roll " attr(data-roll) " rolls to unlock this achievement";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 10px;
-    border-radius: 5px;
-    white-space: nowrap;
-    pointer-events: none;
-    margin-bottom: 5px;
-    font-size: 12px;
-    z-index: 999999999999;
-}
-
-.achievement-item:hover::before {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
-    z-index: 999999999999;
-}
-
-.achievement-itemT {
-    position: relative;
-    padding: 20px;
-    padding-left: 5px;
-    padding-right: 5px;
-    text-align: center;
-    border-radius: 5px;
-    font-weight: bold;
-    font-size: 15px;
-    color: white;
-    background: #444;
-    flex: 0 0 calc(25% - 10px);
-    cursor: pointer;
-    z-index: 1;
 }
 
 .achievement-itemT:hover::after {
     content: "Play " attr(data-time) " to unlock this achievement";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 10px;
-    border-radius: 5px;
-    white-space: nowrap;
-    pointer-events: none;
-    margin-bottom: 5px;
-    font-size: 12px;
-    z-index: 999999999;
-}
-
-.achievement-itemT:hover::before {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
-    z-index: 999999999999;
-}
-
-.achievement-itemC {
-    position: relative;
-    padding: 20px;
-    padding-left: 5px;
-    padding-right: 5px;
-    text-align: center;
-    border-radius: 5px;
-    font-weight: bold;
-    font-size: 15px;
-    color: white;
-    background: #444;
-    flex: 0 0 calc(25% - 10px);
-    cursor: pointer;
-    z-index: 1;
 }
 
 .achievement-itemC:hover::after {
     content: "Collect " attr(data-achievement) " achievements to unlock this achievement";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 10px;
-    border-radius: 5px;
-    white-space: nowrap;
-    pointer-events: none;
-    margin-bottom: 5px;
-    font-size: 12px;
-    z-index: 999999999;
 }
 
-.achievement-itemC:hover::before {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
-    z-index: 999999999999;
-}
-
-.achievement-itemE {
-    position: relative;
-    padding: 20px;
-    padding-left: 5px;
-    padding-right: 5px;
-    text-align: center;
-    border-radius: 5px;
-    font-weight: bold;
-    font-size: 15px;
-    color: white;
-    background: #444;
-    flex: 0 0 calc(25% - 10px);
-    cursor: pointer;
-    z-index: 1;
-}
-
-.achievement-itemE:hover::after {
-    content: "Play in " attr(data-time) " to unlock this achievement";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 10px;
-    border-radius: 5px;
-    white-space: nowrap;
-    pointer-events: none;
-    margin-bottom: 5px;
-    font-size: 12px;
-    z-index: 999999999;
-}
-
-.achievement-itemE:hover::before {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
-    border-style: solid;
-    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
-    z-index: 999999999999;
-}
-
-.achievement-itemSum {
-    position: relative;
-    padding: 20px;
-    text-align: center;
-    border-radius: 5px;
-    font-weight: bold;
-    font-size: 13px;
-    color: white;
-    background: #444;
-    flex: 0 0 calc(25% - 10px);
-    cursor: pointer;
-    z-index: 9999999999;
-}
-
+.achievement-itemE:hover::after,
 .achievement-itemSum:hover::after {
     content: "Play in " attr(data-time) " to unlock this achievement";
+}
+
+.achievement-item:hover::after,
+.achievement-itemT:hover::after,
+.achievement-itemC:hover::after,
+.achievement-itemE:hover::after,
+.achievement-itemSum:hover::after {
     position: absolute;
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    color: #fff;
-    padding: 10px;
-    border-radius: 5px;
+    background: rgba(6, 10, 22, 0.94);
+    color: #f4f7ff;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(130, 176, 255, 0.35);
     white-space: nowrap;
     pointer-events: none;
-    margin-bottom: 5px;
-    font-size: 12px;
-    z-index: 999999999999;
+    margin-bottom: 8px;
+    font-size: 0.78rem;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+    z-index: 5;
 }
 
+.achievement-item:hover::before,
+.achievement-itemT:hover::before,
+.achievement-itemC:hover::before,
+.achievement-itemE:hover::before,
 .achievement-itemSum:hover::before {
     content: "";
     position: absolute;
     bottom: 100%;
     left: 50%;
-    transform: translateX(-50%);
-    border-width: 5px;
+    transform: translate(-50%, -3px);
+    border-width: 6px;
     border-style: solid;
-    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
-    z-index: 999999999999;
+    border-color: transparent transparent rgba(6, 10, 22, 0.94) transparent;
+    z-index: 4;
 }
 
 #achievementsMenu {
@@ -4330,52 +4183,168 @@ body.griCutsceneBgImg {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 80%;
-    max-height: 70vh;
-    padding: 20px;
-    background: url(backgrounds/rng_master.png);
-    border-radius: 10px;
-    border-style: groove;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    z-index: 90000000;
-    color: white;
-    font-family: 'Arial', sans-serif;
-    text-align: center;
+    width: min(760px, calc(100vw - 32px));
+    max-height: min(88vh, 720px);
+    padding: 0;
     display: flex;
     flex-direction: column;
+    color: #f1f5ff;
+    z-index: 10000000;
+}
+
+.achievements-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    background:
+        linear-gradient(160deg, rgba(28, 34, 54, 0.92), rgba(12, 18, 32, 0.96)),
+        url(backgrounds/rng_master.png);
+    background-size: cover;
+    border-radius: 18px;
+    border: 1px solid rgba(120, 164, 255, 0.24);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    overflow: hidden;
+    min-height: 0;
+}
+
+.achievements-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px 14px 22px;
+    border-bottom: 1px solid rgba(120, 164, 255, 0.16);
+    background: rgba(10, 14, 26, 0.65);
+    backdrop-filter: blur(12px);
+    cursor: grab;
+    user-select: none;
+}
+
+.achievements-header .dragTxt {
+    opacity: 0.85;
+    font-size: 1.25rem;
+    font-weight: 600;
+    padding: 0;
+}
+
+.achievements-header.is-dragging {
+    cursor: grabbing;
+}
+
+.achievements-close-btn {
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    background: rgba(40, 62, 110, 0.55);
+    color: #f4f7ff;
+    padding: 10px 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: center;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.achievements-close-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(76, 104, 163, 0.75);
+    border-color: rgba(167, 200, 255, 0.4);
+}
+
+.achievements-close-btn:active {
+    transform: translateY(0);
+}
+
+.achievements-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px 28px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-height: 0;
+    scrollbar-gutter: stable both-edges;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(120, 164, 255, 0.55) rgba(12, 18, 32, 0.35);
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+}
+
+.achievements-body::-webkit-scrollbar {
+    width: 10px;
+}
+
+.achievements-body::-webkit-scrollbar-track {
+    background: rgba(12, 18, 32, 0.35);
+    border-radius: 999px;
+}
+
+.achievements-body::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(120, 164, 255, 0.75), rgba(74, 110, 190, 0.85));
+    border-radius: 999px;
+    border: 2px solid rgba(12, 18, 32, 0.35);
+}
+
+.achievements-section {
+    background: rgba(15, 22, 38, 0.78);
+    border: 1px solid rgba(120, 164, 255, 0.14);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.achievements-section__title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0;
+    color: color-mix(in srgb, #c8d8ff 82%, #fff 18%);
+}
+
+.achievements-section__subtitle {
+    margin: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(199, 215, 255, 0.75);
+}
+
+.achievements-subsection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .achievement-list {
-    flex-grow: 1;
-    max-height: 50vh;
-    overflow-y: auto;
-    padding: 10px;
-    margin-bottom: 10px;
+    display: contents;
 }
 
-.achievement-list::-webkit-scrollbar {
-    width: 8px;
+@media (max-width: 720px) {
+    #achievementsMenu {
+        width: min(640px, calc(100vw - 24px));
+        max-height: calc(100vh - 32px);
+    }
 }
 
-.achievement-list::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.5);
-    border-radius: 4px;
+@media (max-width: 540px) {
+    #achievementsMenu {
+        left: 50%;
+        top: 12px;
+        transform: translate(-50%, 0);
+        width: calc(100vw - 20px);
+        height: calc(100vh - 24px);
+        max-height: none;
+    }
+
+    .achievements-panel {
+        height: 100%;
+    }
 }
 
-.achievement-list::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 4px;
-}
-
-#closeAchievements {
-    margin-top: auto;
-    padding: 10px 20px;
-    background: rgba(255, 0, 0, 0.8);
-    border: none;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    border-radius: 5px;
+@media (max-width: 640px) {
+    .achievement-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
 }
 
 #closeAchievements:hover {
@@ -4422,16 +4391,130 @@ body.griCutsceneBgImg {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 20%;
+    width: min(480px, calc(100vw - 32px));
+    max-height: min(72vh, 420px);
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    background:
+        linear-gradient(160deg, rgba(28,34,54,0.88), rgba(12,18,32,0.95)),
+        url(backgrounds/rng_master.png);
+    background-size: cover;
+    border-radius: 18px;
+    border: 1px solid rgba(120, 164, 255, 0.25);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    z-index: 10000000;
+    color: #f1f5ff;
+    overflow: hidden;
+}
+
+.stats-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: 100%;
+    min-height: 0;
+}
+
+.stats-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 22px 14px 22px;
+    border-bottom: 1px solid rgba(120, 164, 255, 0.16);
+    background: rgba(10, 14, 26, 0.65);
+    backdrop-filter: blur(12px);
+    cursor: grab;
+    user-select: none;
+}
+
+.stats-header .dragTxt {
+    opacity: 0.85;
+    font-size: 1.2rem;
+    font-weight: 600;
+    padding: 0;
+}
+
+.stats-header.is-dragging {
+    cursor: grabbing;
+}
+
+.stats-close-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f1f5ff;
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.stats-close-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+.stats-body {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+}
+
+.stats-overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 18px;
+}
+
+.stat-card {
+    background: rgba(15, 22, 38, 0.78);
+    border: 1px solid rgba(120, 164, 255, 0.14);
+    border-radius: 14px;
     padding: 20px;
-    background: url(backgrounds/rng_master.png);
-    border-radius: 10px;
-    border-style: groove;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    z-index: 90000000;
-    color: white;
-    font-family: 'Arial', sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
     text-align: center;
+    box-shadow: inset 0 1px 0 rgba(120, 164, 255, 0.12);
+}
+
+.stat-label {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(199, 215, 255, 0.78);
+}
+
+.stat-value {
+    font-size: clamp(1.8rem, 2vw + 1rem, 2.4rem);
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 8px 22px rgba(16, 22, 42, 0.6);
+}
+
+.stat-timer {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.08em;
+}
+
+@media (max-width: 540px) {
+    #statsMenu {
+        left: 50%;
+        top: 12px;
+        transform: translate(-50%, 0);
+        width: calc(100vw - 20px);
+        height: calc(100vh - 24px);
+        max-height: none;
+    }
+
+    .stats-panel {
+        height: 100%;
+    }
 }
 
 @keyframes rngShakeXS {
