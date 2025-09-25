@@ -11491,13 +11491,16 @@ function updateRollingHistory(title, rarity) {
     historyList.innerHTML = '';
     rollingHistory.forEach((roll) => {
         const listItem = document.createElement('li');
-        listItem.textContent = `${roll.rarity} - ${roll.title}`;
+        const entryText = document.createElement('span');
+        entryText.classList.add('history-entry-text');
+        entryText.textContent = `${roll.rarity} - ${roll.title}`;
 
         const rarityClass = getClassForRarity(roll.rarity);
         if (rarityClass) {
-            listItem.classList.add(rarityClass);
+            entryText.classList.add(rarityClass);
         }
 
+        listItem.appendChild(entryText);
         historyList.appendChild(listItem);
     });
 }
