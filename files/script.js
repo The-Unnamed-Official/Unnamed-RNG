@@ -275,6 +275,180 @@ function stopAllAudio() {
   });
 }
 
+const STOPPABLE_AUDIO_IDS = [
+  "suspenseAudio",
+  "expOpeningAudio",
+  "geezerSuspenceAudio",
+  "polarrSuspenceAudio",
+  "scareSuspenceAudio",
+  "waveAudio",
+  "scorchingAudio",
+  "beachAudio",
+  "tidalwaveAudio",
+  "gingerAudio",
+  "x1staAudio",
+  "lightAudio",
+  "astblaAudio",
+  "heartAudio",
+  "tuonAudio",
+  "blindAudio",
+  "iriAudio",
+  "aboAudio",
+  "shaAudio",
+  "lubjubAudio",
+  "demsoAudio",
+  "fircraAudio",
+  "plabreAudio",
+  "harvAudio",
+  "norstaAudio",
+  "sanclaAudio",
+  "silnigAudio",
+  "reidasAudio",
+  "frogarAudio",
+  "cancansymAudio",
+  "ginharAudio",
+  "jolbelAudio",
+  "eniAudio",
+  "darAudio",
+  "nighAudio",
+  "specAudio",
+  "twiligAudio",
+  "silAudio",
+  "isekaiAudio",
+  "equinoxAudio",
+  "emerAudio",
+  "samuraiAudio",
+  "contAudio",
+  "unstoppableAudio",
+  "gargantuaAudio",
+  "spectralAudio",
+  "starfallAudio",
+  "memAudio",
+  "oblAudio",
+  "phaAudio",
+  "frightAudio",
+  "unnamedAudio",
+  "overtureAudio",
+  "impeachedAudio",
+  "eonbreakAudio",
+  "celAudio",
+  "silcarAudio",
+  "gregAudio",
+  "mintllieAudio",
+  "geezerAudio",
+  "polarrAudio",
+  "oppAudio",
+  "serAudio",
+  "arcAudio",
+  "ethAudio",
+  "curAudio",
+  "hellAudio",
+  "wanspiAudio",
+  "mysAudio",
+  "voiAudio",
+  "endAudio",
+  "shadAudio",
+  "froAudio",
+  "forgAudio",
+  "curartAudio",
+  "ghoAudio",
+  "abysAudio",
+  "ethpulAudio",
+  "griAudio",
+  "celdawAudio",
+  "fatreAudio",
+  "fearAudio",
+  "hauAudio",
+  "foundsAudio",
+  "lostsAudio",
+  "hauntAudio",
+  "devilAudio",
+  "pumpkinAudio",
+  "h1diAudio",
+  "bigSuspenceAudio",
+  "expAudio",
+  "veilAudio",
+  "msfuAudio",
+  "blodAudio",
+  "orbAudio",
+  "astredAudio",
+  "crazeAudio",
+  "shenviiAudio",
+  "qbearAudio",
+  "estbunAudio",
+  "esteggAudio",
+  "isekailofiAudio"
+];
+
+const AUDIO_RESET_OVERRIDES = {
+  gargantuaAudio: 14.5,
+  eonbreakAudio: 2,
+  mintllieAudio: 37
+};
+
+const audioElementCache = new Map();
+const pendingAudioResetHandlers = new WeakMap();
+
+function getAudioElement(id) {
+  if (audioElementCache.has(id)) {
+    const cached = audioElementCache.get(id);
+    if (cached && document.contains(cached)) {
+      return cached;
+    }
+    audioElementCache.delete(id);
+  }
+
+  const element = document.getElementById(id) || window[id] || null;
+  if (element && element.preload === "none") {
+    element.preload = "auto";
+  }
+
+  audioElementCache.set(id, element);
+  return element;
+}
+
+function resetAudioState(audio, id) {
+  if (!audio) return;
+
+  const targetTime = AUDIO_RESET_OVERRIDES[id] ?? 0;
+  const assignTime = () => {
+    if (typeof audio.currentTime === "number" && audio.currentTime !== targetTime) {
+      try {
+        audio.currentTime = targetTime;
+      } catch (error) {
+        // Ignore errors that occur if metadata isn't available yet.
+      }
+    }
+  };
+
+  assignTime();
+
+  if (audio.readyState < 1 && !pendingAudioResetHandlers.has(audio)) {
+    const handler = () => {
+      pendingAudioResetHandlers.delete(audio);
+      audio.removeEventListener("loadedmetadata", handler);
+      assignTime();
+    };
+    pendingAudioResetHandlers.set(audio, handler);
+    audio.addEventListener("loadedmetadata", handler, { once: true });
+  }
+}
+
+function stopAllAudio() {
+  STOPPABLE_AUDIO_IDS.forEach((id) => {
+    const audio = getAudioElement(id);
+    if (!audio) {
+      return;
+    }
+
+    if (typeof audio.pause === "function") {
+      audio.pause();
+    }
+
+    resetAudioState(audio, id);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const rollButton = document.getElementById("rollButton");
   const startButton = document.getElementById("startButton");
