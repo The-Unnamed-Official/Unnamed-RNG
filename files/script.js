@@ -379,6 +379,14 @@ function getAudioElement(id) {
   audioElementCache.set(id, element);
   return element;
 }
+function getAudioElement(id) {
+  if (audioElementCache.has(id)) {
+    const cached = audioElementCache.get(id);
+    if (cached && document.contains(cached)) {
+      return cached;
+    }
+    audioElementCache.delete(id);
+  }
 
 function resetAudioState(audio, id) {
   if (!audio) return;
@@ -432,6 +440,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (rollButton) {
     rollButton.disabled = true;
   }
+}
+
+function stopAllAudio() {
+  STOPPABLE_AUDIO_IDS.forEach((id) => {
+    const audio = getAudioElement(id);
+    if (!audio) {
+      return;
+    }
 
   if (!startButton) {
     return;
@@ -10672,7 +10688,6 @@ function spawnCooldownButton(config) {
 
     cooldownBuffActive = true;
     cooldownTime = config.reduceTo;
-
     showCooldownEffect(config.effectSeconds);
 
     button.innerText = "Cooldown Reduced!";
