@@ -10997,6 +10997,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const settingsMenu = document.getElementById("settingsMenu");
   const settingsHeader = settingsMenu?.querySelector(".settings-header");
   const settingsBody = settingsMenu?.querySelector(".settings-body");
+  const statsDragHandle = statsMenu?.querySelector(".stats-menu__drag-handle");
   const achievementsMenu = document.getElementById("achievementsMenu");
   const achievementsHeader = achievementsMenu?.querySelector(".achievements-header");
   const achievementsBody = achievementsMenu?.querySelector(".achievements-body");
@@ -11030,6 +11031,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  if (statsMenu && statsDragHandle) {
+    statsDragHandle.addEventListener("mousedown", (event) => {
+      if (event.button !== 0) {
+        return;
+      }
+
+      const rect = statsMenu.getBoundingClientRect();
+      statsMenu.style.left = `${rect.left}px`;
+      statsMenu.style.top = `${rect.top}px`;
+      statsMenu.style.transform = "none";
+
+      offsetXStyle = event.clientX - rect.left;
+      offsetYStyle = event.clientY - rect.top;
   if (achievementsHeader) {
     achievementsHeader.addEventListener("mousedown", (event) => {
       if (event.button !== 0 || event.target.closest(".achievements-close-btn")) {
@@ -11052,9 +11066,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (headerStats) {
     headerStats.addEventListener("mousedown", (event) => {
       isDraggingStats = true;
-      offsetXStyle = event.clientX - statsMenu.offsetLeft;
-      offsetYStyle = event.clientY - statsMenu.offsetTop;
-      headerStats.style.cursor = "grabbing";
+      statsDragHandle.classList.add("is-dragging");
+      event.preventDefault();
     });
   }
 
@@ -11118,7 +11131,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (isDraggingStats) {
       isDraggingStats = false;
-      headerStats.style.cursor = "grab";
+      statsDragHandle?.classList.remove("is-dragging");
     }
   });
 });

@@ -99,19 +99,31 @@
         </div>
     </div>
 
-    <div id="statsMenu" class="stats-menu" style="display: none;"> <h3 class="dragTxt">Hold me to drag</h3>
-            <div class="rollsCount1">
-                <h1 class="statistics">Statistics</h1>
-                <h3 class="count1">Total Rolls:</h3>
-                <a class="totalCount1" id="rollCountDisplay1">NaN</a>
-                <br>
-                <div class="timer-container">
-                    <h3 class="timerTotal">Playtime Timer:</h3>
-                    <div class="timer" id="timer">00:00:00</div>
-                </div>
+    <div id="statsMenu" class="stats-menu" style="display: none;">
+        <div class="stats-menu__panel">
+            <div class="stats-menu__drag-handle">
+                <span class="dragTxt">Hold me to drag</span>
             </div>
-
-        <button id="closeStats" class="statsBtns">Close</button>
+            <header class="stats-menu__header">
+                <h1 class="stats-menu__title">Statistics</h1>
+                <p class="stats-menu__subtitle">Track your progress at a glance.</p>
+            </header>
+            <div class="stats-menu__content">
+                <article class="stat-card stat-card--rolls">
+                    <h2 class="stat-card__label">Total Rolls</h2>
+                    <div class="stat-card__value" id="rollCountDisplay1">NaN</div>
+                    <p class="stat-card__hint">All-time rolls across every session.</p>
+                </article>
+                <article class="stat-card stat-card--playtime">
+                    <h2 class="stat-card__label">Playtime Timer</h2>
+                    <div class="stat-card__value" id="timer">00:00:00</div>
+                    <p class="stat-card__hint">Live runtime for your current save.</p>
+                </article>
+            </div>
+            <div class="stats-menu__footer">
+                <button id="closeStats" class="statsBtns" type="button">Close</button>
+            </div>
+        </div>
     </div>
 
     <div id="achievementsMenu" class="achievements-menu" style="display: none;">

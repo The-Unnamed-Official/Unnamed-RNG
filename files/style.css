@@ -1002,9 +1002,14 @@ body {
 }
 
 .dragTxt {
-    opacity: 0.5;
-    padding: 3px;
-    cursor: grab;
+    opacity: 0.75;
+    padding: 0;
+    cursor: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.78rem;
+    font-weight: 600;
+    user-select: none;
 }
 
 #settingsMenu::-webkit-scrollbar {
@@ -1333,15 +1338,33 @@ body {
 }
 
 .statsBtns {
-    display: inline-block;
-    padding: 10px 15px;
-    margin: 10px 0;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 18px;
     font-size: 1rem;
-    font-weight: bold;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     border: none;
-    border-radius: 5px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: all 0.3s ease-in-out;
+    color: #0b0d22;
+    background:
+        linear-gradient(135deg, rgba(150, 230, 255, 0.95) 0%, rgba(127, 176, 255, 0.98) 48%, rgba(198, 146, 255, 0.98) 100%);
+    box-shadow: 0 16px 32px rgba(77, 118, 255, 0.35);
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.statsBtns:hover {
+    transform: translateY(-2px) scale(1.01);
+    box-shadow: 0 22px 36px rgba(91, 129, 255, 0.45);
+}
+
+.statsBtns:active {
+    transform: translateY(0);
+    box-shadow: 0 12px 24px rgba(91, 129, 255, 0.32);
 }
 
 .aSlid {
@@ -3222,40 +3245,6 @@ body.griCutsceneBgImg {
     z-index: 9999999;
 }
 
-.statistics {
-    color: #fff;
-    margin-bottom: 40px;
-}
-
-.rollsCount1 {
-    position: relative;
-    background: #ffffff05;
-    backdrop-filter: blur(5px);
-    color: #fff;
-    margin-bottom: 20px;
-    border-radius: 15px;
-    padding: 10px 6px;
-    z-index: 9999999;
-}
-
-.rollsCount2 {
-    background: #ffffff21;
-    color: #fff;
-    margin-bottom: 20px;
-    border-radius: 15px;
-    padding: 10px 6px;
-    z-index: 9999999;
-}
-
-.timerTotal {
-    margin-top: 20px;
-}
-
-.count1 {
-    top: 22px;
-    left: 30px;
-}
-
 .count {
     top: 22px;
     left: 30px;
@@ -4416,6 +4405,198 @@ body.griCutsceneBgImg {
     background: rgba(255, 0, 0, 1);
 }
 
+#statsMenu {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(520px, calc(100vw - 32px));
+    max-height: min(82vh, 560px);
+    z-index: 90000000;
+    color: #f4f7ff;
+    font-family: 'Arial', sans-serif;
+}
+
+.stats-menu__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 28px 28px 24px;
+    background:
+        linear-gradient(168deg, rgba(23, 26, 46, 0.92), rgba(8, 10, 26, 0.94)),
+        url(backgrounds/rng_master.png);
+    background-size: cover;
+    border-radius: 22px;
+    border: 1px solid rgba(122, 159, 255, 0.35);
+    box-shadow: 0 28px 68px rgba(4, 8, 30, 0.65);
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.stats-menu__panel::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(120% 120% at 0% 0%, rgba(121, 204, 255, 0.16) 0%, transparent 55%),
+                radial-gradient(100% 120% at 100% 0%, rgba(209, 132, 255, 0.2) 0%, transparent 55%),
+                linear-gradient(185deg, rgba(255, 255, 255, 0.05), transparent 48%, rgba(139, 202, 255, 0.08) 98%);
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+.stats-menu__drag-handle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(120deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    cursor: grab;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(215, 226, 255, 0.8);
+    font-size: 0.75rem;
+    font-weight: 600;
+    user-select: none;
+}
+
+.stats-menu__drag-handle::before {
+    content: "";
+    width: 28px;
+    height: 3px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.15));
+    box-shadow: 0 6px 12px rgba(13, 17, 38, 0.45);
+}
+
+.stats-menu__drag-handle.is-dragging,
+.stats-menu__drag-handle:active {
+    cursor: grabbing;
+}
+
+.stats-menu__header {
+    position: relative;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 6px;
+}
+
+.stats-menu__title {
+    font-size: clamp(1.8rem, 1.4rem + 1vw, 2.4rem);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 0;
+    color: #fdfdff;
+    text-shadow: 0 6px 24px rgba(47, 77, 180, 0.6);
+}
+
+.stats-menu__subtitle {
+    margin: 0;
+    color: rgba(226, 235, 255, 0.65);
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+}
+
+.stats-menu__content {
+    display: grid;
+    gap: 18px;
+    grid-auto-rows: minmax(0, 1fr);
+}
+
+@media (min-width: 520px) {
+    .stats-menu__content {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.stat-card {
+    position: relative;
+    padding: 20px 22px 24px;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(162deg, rgba(16, 21, 44, 0.82), rgba(17, 16, 40, 0.66));
+    box-shadow: 0 18px 36px rgba(8, 12, 36, 0.55);
+    overflow: hidden;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.stat-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0.9;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.stat-card--rolls::before {
+    background: linear-gradient(135deg, rgba(117, 79, 255, 0.16), rgba(89, 196, 255, 0.2));
+}
+
+.stat-card--playtime::before {
+    background: linear-gradient(135deg, rgba(255, 177, 109, 0.18), rgba(122, 255, 206, 0.18));
+}
+
+.stat-card:hover::before {
+    opacity: 1;
+}
+
+.stat-card__label {
+    position: relative;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(221, 230, 255, 0.75);
+    margin: 0;
+}
+
+.stat-card__value {
+    position: relative;
+    font-size: clamp(2rem, 1.4rem + 1.2vw, 2.8rem);
+    font-weight: 800;
+    color: #fdfcff;
+    text-shadow: 0 12px 26px rgba(36, 62, 120, 0.65);
+    letter-spacing: 0.05em;
+    font-variant-numeric: tabular-nums;
+}
+
+.stat-card__hint {
+    position: relative;
+    margin: 0;
+    color: rgba(218, 228, 255, 0.55);
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.stats-menu__footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 8px;
+}
+
+@media (max-width: 520px) {
+    .stats-menu__panel {
+        padding: 24px 22px 20px;
+    }
+
+    .stat-card {
+        min-height: unset;
+    }
+}
+
 .AutoDeletionTxt {
     background: #222;
     padding: 10px;
@@ -4449,23 +4630,6 @@ body.griCutsceneBgImg {
   
 .cutsceneSkipBtb:hover {
     background: #555;
-}
-
-#statsMenu {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 20%;
-    padding: 20px;
-    background: url(backgrounds/rng_master.png);
-    border-radius: 10px;
-    border-style: groove;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-    z-index: 90000000;
-    color: white;
-    font-family: 'Arial', sans-serif;
-    text-align: center;
 }
 
 @keyframes rngShakeXS {
