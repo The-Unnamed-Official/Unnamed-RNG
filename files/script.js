@@ -22,7 +22,7 @@ let inventory = storage.get("inventory", []);
 let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
-let rollCount1 = parseInt(localStorage.getItem("rollCount")) || 0;
+let rollCount1 = parseInt(localStorage.getItem("rollCount1")) || rollCount;
 const BASE_COOLDOWN_TIME = 500;
 let cooldownTime = BASE_COOLDOWN_TIME;
 let currentAudio = null;
@@ -45,6 +45,7 @@ const STOPPABLE_AUDIO_IDS = [
   "geezerSuspenceAudio",
   "polarrSuspenceAudio",
   "scareSuspenceAudio",
+  "scareSuspenceLofiAudio",
   "waveAudio",
   "scorchingAudio",
   "beachAudio",
@@ -130,6 +131,7 @@ const STOPPABLE_AUDIO_IDS = [
   "pumpkinAudio",
   "h1diAudio",
   "bigSuspenceAudio",
+  "hugeSuspenceAudio",
   "expAudio",
   "veilAudio",
   "msfuAudio",
@@ -152,6 +154,82 @@ const AUDIO_RESET_OVERRIDES = {
 
 const audioElementCache = new Map();
 const pendingAudioResetHandlers = new WeakMap();
+
+const LOADING_SEQUENCE = [
+  {
+    message: "Obtaining saves...",
+    action: () => {
+      inventory = storage.get("inventory", []);
+      rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
+      rollCount1 = parseInt(localStorage.getItem("rollCount1")) || rollCount;
+    },
+  },
+  {
+    message: "Loading assets...",
+    action: () => {
+      musicLoad();
+    },
+  },
+  {
+    message: "Polishing titles...",
+    action: () => {
+      renderInventory();
+    },
+  },
+  {
+    message: "Cleaning the UI...",
+    action: () => {
+      loadToggledStates();
+      updateRollCount(0);
+      checkAchievements();
+      updateAchievementsList();
+      loadCutsceneSkip();
+    },
+  },
+];
+
+const LOADING_STEP_MIN_DURATION = 200;
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function nextFrame() {
+  return new Promise((resolve) => {
+    if (typeof requestAnimationFrame === "function") {
+      requestAnimationFrame(() => resolve());
+    } else {
+      setTimeout(resolve, 16);
+    }
+  });
+}
+
+async function runInitialLoadSequence(onProgress) {
+  const report = typeof onProgress === "function" ? onProgress : () => {};
+
+  for (const { message, action } of LOADING_SEQUENCE) {
+    report(message);
+    await nextFrame();
+
+    const start = typeof performance !== "undefined" && performance.now
+      ? performance.now()
+      : Date.now();
+
+    await action();
+
+    const end = typeof performance !== "undefined" && performance.now
+      ? performance.now()
+      : Date.now();
+
+    const elapsed = end - start;
+    if (elapsed < LOADING_STEP_MIN_DURATION) {
+      await wait(LOADING_STEP_MIN_DURATION - elapsed);
+    }
+  }
+
+  report("Ready!");
+  await wait(180);
+}
 
 const CUTSCENE_SKIP_SETTINGS = [
   { key: "skipCutscene1K", labelId: "1KTxt", label: "Skip Decent Cutscenes" },
@@ -275,218 +353,77 @@ function stopAllAudio() {
   });
 }
 
-const STOPPABLE_AUDIO_IDS = [
-  "suspenseAudio",
-  "expOpeningAudio",
-  "geezerSuspenceAudio",
-  "polarrSuspenceAudio",
-  "scareSuspenceAudio",
-  "waveAudio",
-  "scorchingAudio",
-  "beachAudio",
-  "tidalwaveAudio",
-  "gingerAudio",
-  "x1staAudio",
-  "lightAudio",
-  "astblaAudio",
-  "heartAudio",
-  "tuonAudio",
-  "blindAudio",
-  "iriAudio",
-  "aboAudio",
-  "shaAudio",
-  "lubjubAudio",
-  "demsoAudio",
-  "fircraAudio",
-  "plabreAudio",
-  "harvAudio",
-  "norstaAudio",
-  "sanclaAudio",
-  "silnigAudio",
-  "reidasAudio",
-  "frogarAudio",
-  "cancansymAudio",
-  "ginharAudio",
-  "jolbelAudio",
-  "eniAudio",
-  "darAudio",
-  "nighAudio",
-  "specAudio",
-  "twiligAudio",
-  "silAudio",
-  "isekaiAudio",
-  "equinoxAudio",
-  "emerAudio",
-  "samuraiAudio",
-  "contAudio",
-  "unstoppableAudio",
-  "gargantuaAudio",
-  "spectralAudio",
-  "starfallAudio",
-  "memAudio",
-  "oblAudio",
-  "phaAudio",
-  "frightAudio",
-  "unnamedAudio",
-  "overtureAudio",
-  "impeachedAudio",
-  "eonbreakAudio",
-  "celAudio",
-  "silcarAudio",
-  "gregAudio",
-  "mintllieAudio",
-  "geezerAudio",
-  "polarrAudio",
-  "oppAudio",
-  "serAudio",
-  "arcAudio",
-  "ethAudio",
-  "curAudio",
-  "hellAudio",
-  "wanspiAudio",
-  "mysAudio",
-  "voiAudio",
-  "endAudio",
-  "shadAudio",
-  "froAudio",
-  "forgAudio",
-  "curartAudio",
-  "ghoAudio",
-  "abysAudio",
-  "ethpulAudio",
-  "griAudio",
-  "celdawAudio",
-  "fatreAudio",
-  "fearAudio",
-  "hauAudio",
-  "foundsAudio",
-  "lostsAudio",
-  "hauntAudio",
-  "devilAudio",
-  "pumpkinAudio",
-  "h1diAudio",
-  "bigSuspenceAudio",
-  "expAudio",
-  "veilAudio",
-  "msfuAudio",
-  "blodAudio",
-  "orbAudio",
-  "astredAudio",
-  "crazeAudio",
-  "shenviiAudio",
-  "qbearAudio",
-  "estbunAudio",
-  "esteggAudio",
-  "isekailofiAudio"
-];
+document.addEventListener("DOMContentLoaded", () => {
+  const rollButton = byId("rollButton");
+  const startButton = byId("startButton");
+  const loadingScreen = byId("loadingScreen");
+  const menuScreen = byId("menuScreen");
+  const loadingText = loadingScreen ? loadingScreen.querySelector(".loadTxt") : null;
 
-const AUDIO_RESET_OVERRIDES = {
-  gargantuaAudio: 14.5,
-  eonbreakAudio: 2,
-  mintllieAudio: 37
-};
-
-const audioElementCache = new Map();
-const pendingAudioResetHandlers = new WeakMap();
-
-function getAudioElement(id) {
-  if (audioElementCache.has(id)) {
-    const cached = audioElementCache.get(id);
-    if (cached && document.contains(cached)) {
-      return cached;
-    }
-    audioElementCache.delete(id);
+  if (rollButton) {
+    rollButton.disabled = true;
   }
 
-  const element = document.getElementById(id) || window[id] || null;
-  if (element && element.preload === "none") {
-    element.preload = "auto";
+  if (!startButton) {
+    return;
   }
 
-  audioElementCache.set(id, element);
-  return element;
-}
-
-function resetAudioState(audio, id) {
-  if (!audio) return;
-
-  const targetTime = AUDIO_RESET_OVERRIDES[id] ?? 0;
-  const assignTime = () => {
-    if (typeof audio.currentTime === "number" && audio.currentTime !== targetTime) {
-      try {
-        audio.currentTime = targetTime;
-      } catch (error) {
-        // Ignore errors that occur if metadata isn't available yet.
-      }
-    }
-  };
-
-  assignTime();
-
-  if (audio.readyState < 1 && !pendingAudioResetHandlers.has(audio)) {
-    const handler = () => {
-      pendingAudioResetHandlers.delete(audio);
-      audio.removeEventListener("loadedmetadata", handler);
-      assignTime();
-    };
-    pendingAudioResetHandlers.set(audio, handler);
-    audio.addEventListener("loadedmetadata", handler, { once: true });
-  }
-}
-
-function stopAllAudio() {
-  STOPPABLE_AUDIO_IDS.forEach((id) => {
-    const audio = getAudioElement(id);
-    if (!audio) {
+  startButton.addEventListener("click", async () => {
+    if (startButton.disabled) {
       return;
     }
 
-    if (typeof audio.pause === "function") {
-      audio.pause();
+    startButton.disabled = true;
+
+    try {
+      if (typeof mainAudio !== "undefined" && mainAudio) {
+        await mainAudio.play();
+      }
+    } catch (error) {
+      console.warn("Unable to start background audio immediately.", error);
     }
 
-    resetAudioState(audio, id);
-  });
-}
+    if (menuScreen) {
+      menuScreen.style.display = "none";
+    }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const rollButton = document.getElementById("rollButton");
-  const startButton = document.getElementById("startButton");
-  const loadingScreen = document.getElementById("loadingScreen");
-  const menuScreen = document.getElementById("menuScreen");
+    if (loadingScreen) {
+      loadingScreen.style.display = "flex";
+    }
 
-  rollButton.disabled = true;
+    const updateMessage = (message) => {
+      if (loadingText) {
+        loadingText.textContent = message;
+      }
+    };
 
-  startButton.addEventListener("click", () => {
-    mainAudio.play();
-    menuScreen.style.display = "none";
-    loadingScreen.style.display = "flex";
-    load();
-    setTimeout(() => {
-      load();
-      loadContent();
-    }, 1000);
-    setTimeout(() => {
-      rollButton.disabled = false;
+    try {
+      await runInitialLoadSequence(updateMessage);
+    } catch (error) {
+      console.error("Failed to initialise game state.", error);
+      updateMessage("Load failed. Tap play to retry.");
+      if (loadingScreen) {
+        loadingScreen.style.display = "none";
+      }
+      if (menuScreen) {
+        menuScreen.style.display = "flex";
+      }
+      startButton.disabled = false;
+      return;
+    }
+
+    if (loadingScreen) {
       loadingScreen.style.display = "none";
-      formatRollCount();
-      loadToggledStates();
-      checkAchievements();
-      loadCutsceneSkip();
-      updateAchievementsList();
-    }, 2000);
+    }
+
+    if (rollButton) {
+      rollButton.disabled = false;
+    }
   });
 });
 
 function loadContent() {
-  inventory = storage.get("inventory", []);
-  renderInventory();
-  musicLoad();
-  loadToggledStates();
-  updateRollCount(0);
-  checkAchievements();
-  updateAchievementsList();
-  loadCutsceneSkip();
+  LOADING_SEQUENCE.forEach(({ action }) => action());
 }
 
 function load() {
@@ -629,7 +566,10 @@ function updateAchievementsList() {
 document.addEventListener("DOMContentLoaded", updateAchievementsList);
 
 document.getElementById("rollButton").addEventListener("click", function () {
-  let rollButton = document.getElementById("rollButton");
+  const rollButton = byId("rollButton");
+  if (!rollButton) {
+    return;
+  }
 
   mainAudio.pause();
 
@@ -647,8 +587,14 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
   rollButton.disabled = true;
 
-  document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
-  document.getElementById("rollCountDisplay1").innerText = rollCount1;
+  const rollCountDisplay = byId("rollCountDisplay");
+  if (rollCountDisplay) {
+    rollCountDisplay.textContent = formatRollCount(rollCount);
+  }
+  const rollCountDisplayRaw = byId("rollCountDisplay1");
+  if (rollCountDisplayRaw) {
+    rollCountDisplayRaw.textContent = rollCount1;
+  }
 
   if (
     rarity.type === "Cursed Mirage [1 in 11,111]" ||
@@ -740,9 +686,14 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Beach [1 in 12,555]" ||
     rarity.type === "Tidal Wave [1 in 25,500]"
   ) {
-    document.getElementById("result").innerText = "";
+    const resultContainer = byId("result");
+    if (resultContainer) {
+      resultContainer.textContent = "";
+    }
     const titleCont = document.querySelector(".container");
-
+    if (!titleCont) {
+      return;
+    }
     titleCont.style.visibility = "hidden";
 
     if (rarity.type === "Fright [1 in 1,075]") {
