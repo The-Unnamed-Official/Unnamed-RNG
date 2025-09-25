@@ -40,47 +40,49 @@
                 <button id="closeSettings" class="settings-close-btn" type="button">Close</button>
             </div>
             <div class="settings-body">
-                <section class="settings-section">
-                    <h4 class="settings-section__title">Audio</h4>
-                    <div class="settings-audio">
-                        <label class="settings-audio__label" for="audioSlider">Master Volume</label>
-                        <div class="settings-audio__controls">
-                            <div class="settings-audio__slider">
-                                <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
-                                <span id="audioSliderValue" class="settings-audio__value">100%</span>
+                <div class="settings-layout">
+                    <section class="settings-section">
+                        <h4 class="settings-section__title">Audio</h4>
+                        <div class="settings-audio">
+                            <label class="settings-audio__label" for="audioSlider">Master Volume</label>
+                            <div class="settings-audio__controls">
+                                <div class="settings-audio__slider">
+                                    <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
+                                    <span id="audioSliderValue" class="settings-audio__value">100%</span>
+                                </div>
+                                <button id="muteButton" class="settings-btn settings-btn--ghost" type="button">Mute</button>
                             </div>
-                            <button id="muteButton" class="settings-btn settings-btn--ghost" type="button">Mute</button>
                         </div>
-                    </div>
-                </section>
+                    </section>
 
-                <section class="settings-section">
-                    <h4 class="settings-section__title">Data Management</h4>
-                    <div class="settings-grid">
-                        <button id="saveButton" class="settings-btn" type="button">Save Data</button>
-                        <button id="importButton" class="settings-btn" type="button">Import Data</button>
-                        <button id="resetDataButton" class="settings-btn settings-btn--danger" type="button">Reset Data</button>
-                    </div>
-                    <p id="status" class="statusImport"></p>
-                </section>
+                    <section class="settings-section">
+                        <h4 class="settings-section__title">Data Management</h4>
+                        <div class="settings-grid">
+                            <button id="saveButton" class="settings-btn" type="button">Save Data</button>
+                            <button id="importButton" class="settings-btn" type="button">Import Data</button>
+                            <button id="resetDataButton" class="settings-btn settings-btn--danger" type="button">Reset Data</button>
+                        </div>
+                        <p id="status" class="statusImport"></p>
+                    </section>
 
-                <section class="settings-section">
-                    <h4 class="settings-section__title">Interface</h4>
-                    <div class="settings-grid">
-                        <button id="toggleRollDisplayBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll &amp; Display</button>
-                        <button id="toggleRollHistoryBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll History</button>
-                    </div>
-                </section>
+                    <section class="settings-section">
+                        <h4 class="settings-section__title">Interface</h4>
+                        <div class="settings-grid">
+                            <button id="toggleRollDisplayBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll &amp; Display</button>
+                            <button id="toggleRollHistoryBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll History</button>
+                        </div>
+                    </section>
 
-                <section class="settings-section">
-                    <h4 class="settings-section__title">Cutscene Skip</h4>
-                    <div id="rarityChecklistC" class="settings-chip-group">
-                        <button id="toggleCutscene1K" class="cutsceneSkipBtb" type="button"><span id="1KTxt" class="under1kT">Skip Decent Cutscenes</span></button>
-                        <button id="toggleCutscene10K" class="cutsceneSkipBtb" type="button"><span id="10KTxt" class="under10kT">Skip Grand Cutscenes</span></button>
-                        <button id="toggleCutscene100K" class="cutsceneSkipBtb" type="button"><span id="100KTxt" class="under100k">Skip Mastery Cutscenes</span></button>
-                        <button id="toggleCutscene1M" class="cutsceneSkipBtb" type="button"><span id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</span></button>
-                    </div>
-                </section>
+                    <section class="settings-section">
+                        <h4 class="settings-section__title">Cutscene Skip</h4>
+                        <div id="rarityChecklistC" class="settings-chip-group">
+                            <button id="toggleCutscene1K" class="cutsceneSkipBtb" type="button"><span id="1KTxt" class="under1kT">Skip Decent Cutscenes</span></button>
+                            <button id="toggleCutscene10K" class="cutsceneSkipBtb" type="button"><span id="10KTxt" class="under10kT">Skip Grand Cutscenes</span></button>
+                            <button id="toggleCutscene100K" class="cutsceneSkipBtb" type="button"><span id="100KTxt" class="under100k">Skip Mastery Cutscenes</span></button>
+                            <button id="toggleCutscene1M" class="cutsceneSkipBtb" type="button"><span id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</span></button>
+                        </div>
+                    </section>
+                </div>
 
                 <section class="settings-section settings-section--full">
                     <h4 class="settings-section__title">Auto Delete Rarity</h4>
