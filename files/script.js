@@ -379,6 +379,14 @@ function getAudioElement(id) {
   audioElementCache.set(id, element);
   return element;
 }
+function getAudioElement(id) {
+  if (audioElementCache.has(id)) {
+    const cached = audioElementCache.get(id);
+    if (cached && document.contains(cached)) {
+      return cached;
+    }
+    audioElementCache.delete(id);
+  }
 
 function resetAudioState(audio, id) {
   if (!audio) return;
@@ -432,6 +440,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (rollButton) {
     rollButton.disabled = true;
   }
+}
 
   if (!startButton) {
     return;

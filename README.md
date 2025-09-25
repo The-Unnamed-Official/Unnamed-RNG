@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-# Named-RNG
-A simple and quick, but fun RNG game if you're bored (I got bored so I made this to not get bored)
-
-# Have fun :D
-=======
 # Unnamed-RNG
 
 
@@ -30,5 +24,4 @@ That's it! The game will open in your browser, and you can start playing right a
 
 We hope you enjoy the game and appreciate your feedback!
 
-The Unnamed
->>>>>>> parent of 6ada09b (1st Attempt on fixing pages error)
+## The Unnamed
