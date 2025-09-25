@@ -40,47 +40,49 @@
                 <button id="closeSettings" class="settings-close-btn" type="button">Close</button>
             </div>
             <div class="settings-body">
-                <section class="settings-section">
-                    <h4 class="settings-section__title">Audio</h4>
-                    <div class="settings-audio">
-                        <label class="settings-audio__label" for="audioSlider">Master Volume</label>
-                        <div class="settings-audio__controls">
-                            <div class="settings-audio__slider">
-                                <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
-                                <span id="audioSliderValue" class="settings-audio__value">100%</span>
+                <div class="settings-layout">
+                    <section class="settings-section">
+                        <h4 class="settings-section__title">Audio</h4>
+                        <div class="settings-audio">
+                            <label class="settings-audio__label" for="audioSlider">Master Volume</label>
+                            <div class="settings-audio__controls">
+                                <div class="settings-audio__slider">
+                                    <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
+                                    <span id="audioSliderValue" class="settings-audio__value">100%</span>
+                                </div>
+                                <button id="muteButton" class="settings-btn settings-btn--ghost" type="button">Mute</button>
                             </div>
-                            <button id="muteButton" class="settings-btn settings-btn--ghost" type="button">Mute</button>
                         </div>
-                    </div>
-                </section>
+                    </section>
 
-                <section class="settings-section">
-                    <h4 class="settings-section__title">Data Management</h4>
-                    <div class="settings-grid">
-                        <button id="saveButton" class="settings-btn" type="button">Save Data</button>
-                        <button id="importButton" class="settings-btn" type="button">Import Data</button>
-                        <button id="resetDataButton" class="settings-btn settings-btn--danger" type="button">Reset Data</button>
-                    </div>
-                    <p id="status" class="statusImport"></p>
-                </section>
+                    <section class="settings-section">
+                        <h4 class="settings-section__title">Data Management</h4>
+                        <div class="settings-grid">
+                            <button id="saveButton" class="settings-btn" type="button">Save Data</button>
+                            <button id="importButton" class="settings-btn" type="button">Import Data</button>
+                            <button id="resetDataButton" class="settings-btn settings-btn--danger" type="button">Reset Data</button>
+                        </div>
+                        <p id="status" class="statusImport"></p>
+                    </section>
 
-                <section class="settings-section">
-                    <h4 class="settings-section__title">Interface</h4>
-                    <div class="settings-grid">
-                        <button id="toggleRollDisplayBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll &amp; Display</button>
-                        <button id="toggleRollHistoryBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll History</button>
-                    </div>
-                </section>
+                    <section class="settings-section">
+                        <h4 class="settings-section__title">Interface</h4>
+                        <div class="settings-grid">
+                            <button id="toggleRollDisplayBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll &amp; Display</button>
+                            <button id="toggleRollHistoryBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll History</button>
+                        </div>
+                    </section>
 
-                <section class="settings-section">
-                    <h4 class="settings-section__title">Cutscene Skip</h4>
-                    <div id="rarityChecklistC" class="settings-chip-group">
-                        <button id="toggleCutscene1K" class="cutsceneSkipBtb" type="button"><span id="1KTxt" class="under1kT">Skip Decent Cutscenes</span></button>
-                        <button id="toggleCutscene10K" class="cutsceneSkipBtb" type="button"><span id="10KTxt" class="under10kT">Skip Grand Cutscenes</span></button>
-                        <button id="toggleCutscene100K" class="cutsceneSkipBtb" type="button"><span id="100KTxt" class="under100k">Skip Mastery Cutscenes</span></button>
-                        <button id="toggleCutscene1M" class="cutsceneSkipBtb" type="button"><span id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</span></button>
-                    </div>
-                </section>
+                    <section class="settings-section">
+                        <h4 class="settings-section__title">Cutscene Skip</h4>
+                        <div id="rarityChecklistC" class="settings-chip-group">
+                            <button id="toggleCutscene1K" class="cutsceneSkipBtb" type="button"><span id="1KTxt" class="under1kT">Skip Decent Cutscenes</span></button>
+                            <button id="toggleCutscene10K" class="cutsceneSkipBtb" type="button"><span id="10KTxt" class="under10kT">Skip Grand Cutscenes</span></button>
+                            <button id="toggleCutscene100K" class="cutsceneSkipBtb" type="button"><span id="100KTxt" class="under100k">Skip Mastery Cutscenes</span></button>
+                            <button id="toggleCutscene1M" class="cutsceneSkipBtb" type="button"><span id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</span></button>
+                        </div>
+                    </section>
+                </div>
 
                 <section class="settings-section settings-section--full">
                     <h4 class="settings-section__title">Auto Delete Rarity</h4>
@@ -97,19 +99,31 @@
         </div>
     </div>
 
-    <div id="statsMenu" class="stats-menu" style="display: none;"> <h3 class="dragTxt">Hold me to drag</h3>
-            <div class="rollsCount1">
-                <h1 class="statistics">Statistics</h1>
-                <h3 class="count1">Total Rolls:</h3>
-                <a class="totalCount1" id="rollCountDisplay1">NaN</a>
-                <br>
-                <div class="timer-container">
-                    <h3 class="timerTotal">Playtime Timer:</h3>
-                    <div class="timer" id="timer">00:00:00</div>
-                </div>
+    <div id="statsMenu" class="stats-menu" style="display: none;">
+        <div class="stats-menu__panel">
+            <div class="stats-menu__drag-handle">
+                <span class="dragTxt">Hold me to drag</span>
             </div>
-
-        <button id="closeStats" class="statsBtns">Close</button>
+            <header class="stats-menu__header">
+                <h1 class="stats-menu__title">Statistics</h1>
+                <p class="stats-menu__subtitle">Track your progress at a glance.</p>
+            </header>
+            <div class="stats-menu__content">
+                <article class="stat-card stat-card--rolls">
+                    <h2 class="stat-card__label">Total Rolls</h2>
+                    <div class="stat-card__value" id="rollCountDisplay1">NaN</div>
+                    <p class="stat-card__hint">All-time rolls across every session.</p>
+                </article>
+                <article class="stat-card stat-card--playtime">
+                    <h2 class="stat-card__label">Playtime Timer</h2>
+                    <div class="stat-card__value" id="timer">00:00:00</div>
+                    <p class="stat-card__hint">Live runtime for your current save.</p>
+                </article>
+            </div>
+            <div class="stats-menu__footer">
+                <button id="closeStats" class="statsBtns" type="button">Close</button>
+            </div>
+        </div>
     </div>
 
     <div id="achievementsMenu" class="achievements-menu" style="display: none;">
