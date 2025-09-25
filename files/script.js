@@ -1,9 +1,30 @@
-let inventory = JSON.parse(localStorage.getItem("inventory")) || [];
+const storage = {
+  get(key, fallback = null) {
+    const raw = localStorage.getItem(key);
+    if (raw === null) return fallback;
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      console.warn(`Failed to parse localStorage key "${key}". Resetting value.`, error);
+      localStorage.removeItem(key);
+      return fallback;
+    }
+  },
+  set(key, value) {
+    localStorage.setItem(key, JSON.stringify(value));
+  },
+};
+
+const byId = (id) => document.getElementById(id);
+const $all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+let inventory = storage.get("inventory", []);
 let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 let rollCount1 = parseInt(localStorage.getItem("rollCount")) || 0;
-let cooldownTime = 500;
+const BASE_COOLDOWN_TIME = 500;
+let cooldownTime = BASE_COOLDOWN_TIME;
 let currentAudio = null;
 let isChangeEnabled = true;
 let autoRollInterval = null;
@@ -11,6 +32,248 @@ let audioVolume = 1;
 let isMuted = false;
 let previousVolume = audioVolume;
 let refreshTimeout;
+let hasScheduledLoad = false;
+let skipCutscene1K = true;
+let skipCutscene10K = true;
+let skipCutscene100K = true;
+let skipCutscene1M = true;
+let cooldownBuffActive = cooldownTime < BASE_COOLDOWN_TIME;
+
+const STOPPABLE_AUDIO_IDS = [
+  "suspenseAudio",
+  "expOpeningAudio",
+  "geezerSuspenceAudio",
+  "polarrSuspenceAudio",
+  "scareSuspenceAudio",
+  "waveAudio",
+  "scorchingAudio",
+  "beachAudio",
+  "tidalwaveAudio",
+  "gingerAudio",
+  "x1staAudio",
+  "lightAudio",
+  "astblaAudio",
+  "heartAudio",
+  "tuonAudio",
+  "blindAudio",
+  "iriAudio",
+  "aboAudio",
+  "shaAudio",
+  "lubjubAudio",
+  "demsoAudio",
+  "fircraAudio",
+  "plabreAudio",
+  "harvAudio",
+  "norstaAudio",
+  "sanclaAudio",
+  "silnigAudio",
+  "reidasAudio",
+  "frogarAudio",
+  "cancansymAudio",
+  "ginharAudio",
+  "jolbelAudio",
+  "eniAudio",
+  "darAudio",
+  "nighAudio",
+  "specAudio",
+  "twiligAudio",
+  "silAudio",
+  "isekaiAudio",
+  "equinoxAudio",
+  "emerAudio",
+  "samuraiAudio",
+  "contAudio",
+  "unstoppableAudio",
+  "gargantuaAudio",
+  "spectralAudio",
+  "starfallAudio",
+  "memAudio",
+  "oblAudio",
+  "phaAudio",
+  "frightAudio",
+  "unnamedAudio",
+  "overtureAudio",
+  "impeachedAudio",
+  "eonbreakAudio",
+  "celAudio",
+  "silcarAudio",
+  "gregAudio",
+  "mintllieAudio",
+  "geezerAudio",
+  "polarrAudio",
+  "oppAudio",
+  "serAudio",
+  "arcAudio",
+  "ethAudio",
+  "curAudio",
+  "hellAudio",
+  "wanspiAudio",
+  "mysAudio",
+  "voiAudio",
+  "endAudio",
+  "shadAudio",
+  "froAudio",
+  "forgAudio",
+  "curartAudio",
+  "ghoAudio",
+  "abysAudio",
+  "ethpulAudio",
+  "griAudio",
+  "celdawAudio",
+  "fatreAudio",
+  "fearAudio",
+  "hauAudio",
+  "foundsAudio",
+  "lostsAudio",
+  "hauntAudio",
+  "devilAudio",
+  "pumpkinAudio",
+  "h1diAudio",
+  "bigSuspenceAudio",
+  "expAudio",
+  "veilAudio",
+  "msfuAudio",
+  "blodAudio",
+  "orbAudio",
+  "astredAudio",
+  "crazeAudio",
+  "shenviiAudio",
+  "qbearAudio",
+  "estbunAudio",
+  "esteggAudio",
+  "isekailofiAudio"
+];
+
+const AUDIO_RESET_OVERRIDES = {
+  gargantuaAudio: 14.5,
+  eonbreakAudio: 2,
+  mintllieAudio: 37
+};
+
+const audioElementCache = new Map();
+const pendingAudioResetHandlers = new WeakMap();
+
+const CUTSCENE_SKIP_SETTINGS = [
+  { key: "skipCutscene1K", labelId: "1KTxt", label: "Skip Decent Cutscenes" },
+  { key: "skipCutscene10K", labelId: "10KTxt", label: "Skip Grand Cutscenes" },
+  { key: "skipCutscene100K", labelId: "100KTxt", label: "Skip Mastery Cutscenes" },
+  { key: "skipCutscene1M", labelId: "1MTxt", label: "Skip Supreme Cutscenes" },
+];
+
+const CUTSCENE_STATE_SETTERS = {
+  skipCutscene1K: (value) => { skipCutscene1K = value; },
+  skipCutscene10K: (value) => { skipCutscene10K = value; },
+  skipCutscene100K: (value) => { skipCutscene100K = value; },
+  skipCutscene1M: (value) => { skipCutscene1M = value; },
+};
+
+const ACHIEVEMENTS = [
+  { name: "I think I like this", count: 100 },
+  { name: "This is getting serious", count: 1000 },
+  { name: "I'm the Roll Master", count: 5000 },
+  { name: "It's over 9000!!", count: 10000 },
+  { name: "When will you stop?", count: 25000 },
+  { name: "No Unnamed?", count: 30303 },
+  { name: "Beyond Luck", count: 50000 },
+  { name: "Rolling machine", count: 100000 },
+  { name: "Your PC must be burning", count: 250000 },
+  { name: "Half a million!1!!1", count: 500000 },
+  { name: "One, Two.. ..One Million!", count: 1000000 },
+  { name: "No H1di?", count: 10000000 },
+  { name: "Are you really doing this?", count: 25000000 },
+  { name: "You have no limits...", count: 50000000 },
+  { name: "WHAT HAVE YOU DONE", count: 100000000 },
+  { name: "AHHHHHHHHHHH", count: 1000000000 },
+  { name: "Just the beginning", timeCount: 0 },
+  { name: "This doesn't add up", timeCount: 3600 },
+  { name: "When does it end...", timeCount: 7200 },
+  { name: "I swear I'm not addicted...", timeCount: 36000 },
+  { name: "Grass? What's that?", timeCount: 86400 },
+  { name: "Unnamed's RNG biggest fan", timeCount: 172800 },
+  { name: "RNG is life!", timeCount: 604800 },
+  { name: "I. CAN'T. STOP", timeCount: 1209600 },
+  { name: "No Lifer", timeCount: 2629800 },
+  { name: "Are you okay?", timeCount: 5259600 },
+  { name: "You are a True No Lifer", timeCount: 15778800 },
+  { name: "No one's getting this legit", timeCount: 31557600 },
+  { name: "Happy Summer!", timeCount: 0 },
+];
+
+const COLLECTOR_ACHIEVEMENTS = [
+  { name: "Achievement Collector", count: 5 },
+  { name: "Achievement Hoarder", count: 10 },
+  { name: "Achievement Addict", count: 20 },
+  { name: "Achievement God", count: 33 },
+  { name: "T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶", count: 50 },
+];
+
+const ACHIEVEMENT_GROUP_STYLES = [
+  { selector: ".achievement-item", unlocked: { backgroundColor: "blue" } },
+  { selector: ".achievement-itemT", unlocked: { backgroundColor: "green" } },
+  { selector: ".achievement-itemC", unlocked: { backgroundColor: "red" } },
+  { selector: ".achievement-itemE", unlocked: { backgroundColor: "yellow", color: "black" } },
+  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "orange", color: "black" } },
+];
+
+function getAudioElement(id) {
+  if (audioElementCache.has(id)) {
+    const cached = audioElementCache.get(id);
+    if (cached && document.contains(cached)) {
+      return cached;
+    }
+    audioElementCache.delete(id);
+  }
+
+  const element = document.getElementById(id) || window[id] || null;
+  if (element && element.preload === "none") {
+    element.preload = "auto";
+  }
+
+  audioElementCache.set(id, element);
+  return element;
+}
+
+function resetAudioState(audio, id) {
+  if (!audio) return;
+
+  const targetTime = AUDIO_RESET_OVERRIDES[id] ?? 0;
+  const assignTime = () => {
+    if (typeof audio.currentTime === "number" && audio.currentTime !== targetTime) {
+      try {
+        audio.currentTime = targetTime;
+      } catch (error) {
+        // Ignore errors that occur if metadata isn't available yet.
+      }
+    }
+  };
+
+  assignTime();
+
+  if (audio.readyState < 1 && !pendingAudioResetHandlers.has(audio)) {
+    const handler = () => {
+      pendingAudioResetHandlers.delete(audio);
+      audio.removeEventListener("loadedmetadata", handler);
+      assignTime();
+    };
+    pendingAudioResetHandlers.set(audio, handler);
+    audio.addEventListener("loadedmetadata", handler, { once: true });
+  }
+}
+
+function stopAllAudio() {
+  STOPPABLE_AUDIO_IDS.forEach((id) => {
+    const audio = getAudioElement(id);
+    if (!audio) {
+      return;
+    }
+
+    if (typeof audio.pause === "function") {
+      audio.pause();
+    }
+
+    resetAudioState(audio, id);
+  });
+}
 
 document.addEventListener("DOMContentLoaded", () => {
   const rollButton = document.getElementById("rollButton");
@@ -42,378 +305,49 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function loadContent() {
-  const storedInventory = localStorage.getItem("inventory");
-  if (storedInventory) {
-    inventory = JSON.parse(storedInventory);
-  }
+  inventory = storage.get("inventory", []);
   renderInventory();
   musicLoad();
   loadToggledStates();
-  updateRollCount();
+  updateRollCount(0);
   checkAchievements();
   updateAchievementsList();
   loadCutsceneSkip();
-  document.getElementById("rollCountDisplay").innerText = formatRollCount(rollCount);
-  document.getElementById("rollCountDisplay1").innerText = rollCount1;
 }
 
 function load() {
-  document.addEventListener("DOMContentLoaded", (event) => {
-    const storedInventory = localStorage.getItem("inventory");
-    if (storedInventory) {
-      inventory = JSON.parse(storedInventory);
-    }
-    renderInventory();
-    musicLoad();
-    loadToggledStates();
-    updateRollCount();
-    formatRollCount();
-    checkAchievements();
-    updateAchievementsList();
-    loadCutsceneSkip();
-  });
+  if (document.readyState === "loading" && !hasScheduledLoad) {
+    hasScheduledLoad = true;
+    document.addEventListener("DOMContentLoaded", () => {
+      hasScheduledLoad = false;
+      loadContent();
+    }, { once: true });
+  }
 }
 
 function loadCutsceneSkip() {
-  skipCutscene1K = JSON.parse(localStorage.getItem('skipCutscene1K'));
-  if (skipCutscene1K === null) {
-    skipCutscene1K = true;
-    localStorage.setItem('skipCutscene1K', JSON.stringify(skipCutscene1K));
-  }
+  CUTSCENE_SKIP_SETTINGS.forEach(({ key, labelId, label }) => {
+    const storedValue = storage.get(key);
+    const resolvedValue = typeof storedValue === "boolean" ? storedValue : true;
 
-  skipCutscene10K = JSON.parse(localStorage.getItem('skipCutscene10K'));
-  if (skipCutscene10K === null) {
-    skipCutscene10K = true;
-    localStorage.setItem('skipCutscene10K', JSON.stringify(skipCutscene10K));
-  }
+    if (storedValue !== resolvedValue) {
+      storage.set(key, resolvedValue);
+    }
 
-  skipCutscene100K = JSON.parse(localStorage.getItem('skipCutscene100K'));
-  if (skipCutscene100K === null) {
-    skipCutscene100K = true;
-    localStorage.setItem('skipCutscene100K', JSON.stringify(skipCutscene100K));
-  }
+    const assignState = CUTSCENE_STATE_SETTERS[key];
+    if (assignState) {
+      assignState(resolvedValue);
+    }
 
-  skipCutscene1M = JSON.parse(localStorage.getItem('skipCutscene1M'));
-  if (skipCutscene1M === null) {
-    skipCutscene1M = true;
-    localStorage.setItem('skipCutscene1M', JSON.stringify(skipCutscene1M));
-  }
-  
-  document.getElementById("1KTxt").textContent = `Skip Decent Cutscenes ${skipCutscene1K ? "" : "On"}`;
-  document.getElementById("10KTxt").textContent = `Skip Grand Cutscenes ${skipCutscene10K ? "" : "On"}`;
-  document.getElementById("100KTxt").textContent = `Skip Mastery Cutscenes ${skipCutscene100K ? "" : "On"}`;
-  document.getElementById("1MTxt").textContent = `Skip Supreme Cutscenes ${skipCutscene1M ? "" : "On"}`;
+    const labelElement = byId(labelId);
+    if (labelElement) {
+      labelElement.textContent = `${label} ${resolvedValue ? "" : "On"}`;
+    }
+  });
 }
 
 function musicLoad() {
-  let suspenseAudio = document.getElementById("suspenseAudio");
-  let expOpeningAudio = document.getElementById("expOpeningAudio");
-  let geezerSuspenceAudio = document.getElementById("geezerSuspenceAudio");
-  let polarrSuspenceAudio = document.getElementById("polarrSuspenceAudio");
-  let scareSuspenceAudio = document.getElementById("scareSuspenceAudio");
-  let bigSuspenceAudio = document.getElementById("bigSuspenceAudio");
-  let waveAudio = document.getElementById("waveAudio");
-  let scorchingAudio = document.getElementById("scorchingAudio");
-  let beachAudio = document.getElementById("beachAudio");
-  let tidalwaveAudio = document.getElementById("tidalwaveAudio");
-  let gingerAudio = document.getElementById("gingerAudio");
-  let astblaAudio = document.getElementById("astblaAudio");
-  let iriAudio = document.getElementById("iriAudio");
-  let heartAudio = document.getElementById("heartAudio");
-  let tuonAudio = document.getElementById("tuonAudio");
-  let aboAudio = document.getElementById("aboAudio");
-  let lubjubAudio = document.getElementById("lubjubAudio");
-  let plabreAudio = document.getElementById("plabreAudio");
-  let isekaiAudio = document.getElementById("isekaiAudio");
-  let equinoxAudio = document.getElementById("equinoxAudio");
-  let fircraAudio = document.getElementById("fircraAudio");
-  let emerAudio = document.getElementById("emerAudio");
-  let shadAudio = document.getElementById("shadAudio");
-  let samuraiAudio = document.getElementById("samuraiAudio");
-  let contAudio = document.getElementById("contAudio");
-  let unstoppableAudio = document.getElementById("unstoppableAudio");
-  let gargantuaAudio = document.getElementById("gargantuaAudio");
-  let spectralAudio = document.getElementById("spectralAudio");
-  let starfallAudio = document.getElementById("starfallAudio");
-  let memAudio = document.getElementById("memAudio");
-  let oblAudio = document.getElementById("oblAudio");
-  let phaAudio = document.getElementById("phaAudio");
-  let frightAudio = document.getElementById("frightAudio");
-  let unnamedAudio = document.getElementById("unnamedAudio");
-  let overtureAudio = document.getElementById("overtureAudio");
-  let impeachedAudio = document.getElementById("impeachedAudio");
-  let eonbreakAudio = document.getElementById("eonbreakAudio");
-  let ethAudio = document.getElementById("ethAudio");
-  let celAudio = document.getElementById("celAudio");
-  let serAudio = document.getElementById("serAudio");
-  let arcAudio = document.getElementById("arcAudio");
-  let silcarAudio = document.getElementById("silcarAudio");
-  let gregAudio = document.getElementById("gregAudio");
-  let mintllieAudio = document.getElementById("mintllieAudio");
-  let geezerAudio = document.getElementById("geezerAudio");
-  let polarrAudio = document.getElementById("polarrAudio");
-  let oppAudio = document.getElementById("oppAudio");
-  let curAudio = document.getElementById("curAudio");
-  let wanspiAudio = document.getElementById("wanspiAudio");
-  let nighAudio = document.getElementById("nighAudio");
-  let mysAudio = document.getElementById("mysAudio");
-  let voiAudio = document.getElementById("voiAudio");
-  let endAudio = document.getElementById("endAudio");
-  let shaAudio = document.getElementById("shadAudio");
-  let twiligAudio = document.getElementById("twiligAudio");
-  let specAudio = document.getElementById("specAudio");
-  let silAudio = document.getElementById("silAudio");
-  let froAudio = document.getElementById("froAudio");
-  let forgAudio = document.getElementById("forgAudio");
-  let ghoAudio = document.getElementById("ghoAudio");
-  let curartAudio = document.getElementById("curartAudio");
-  let abysAudio = document.getElementById("abysAudio");
-  let hellAudio = document.getElementById("hellAudio");
-  let eniAudio = document.getElementById("eniAudio");
-  let griAudio = document.getElementById("griAudio");
-  let fatreAudio = document.getElementById("fatreAudio");
-  let fearAudio = document.getElementById("fearAudio");
-  let hauAudio = document.getElementById("hauAudio");
-  let celdawAudio = document.getElementById("celdawAudio");
-  let lostsAudio = document.getElementById("lostsAudio");
-  let hauntAudio = document.getElementById("hauntAudio");
-  let devilAudio = document.getElementById("devilAudio");
-  let darAudio = document.getElementById("darAudio");
-  let h1diAudio = document.getElementById("h1diAudio");
-  let pumpkinAudio = document.getElementById("pumpkinAudio");
-  let foundsAudio = document.getElementById("foundsAudio");
-  let ethpulAudio = document.getElementById("ethpulAudio");
-  let norstaAudio = document.getElementById("norstaAudio");
-  let sanclaAudio = document.getElementById("sanclaAudio");
-  let silnigAudio = document.getElementById("silnigAudio");
-  let reidasAudio = document.getElementById("reidasAudio");
-  let frogarAudio = document.getElementById("frogarAudio");
-  let cancansymAudio = document.getElementById("cancansymAudio");
-  let ginharAudio = document.getElementById("ginharAudio");
-  let jolbelAudio = document.getElementById("jolbelAudio");
-  let harvAudio = document.getElementById("harvAudio");
-  let expAudio = document.getElementById("expAudio");
-  let veilAudio = document.getElementById("veilAudio");
-  let demsoAudio = document.getElementById("demsoAudio");
-  let blindAudio = document.getElementById("blindAudio");
-  let msfuAudio = document.getElementById("msfuAudio");
-  let blodAudio = document.getElementById("blodAudio");
-  let orbAudio = document.getElementById("orbAudio");
-  let astredAudio = document.getElementById("astredAudio");
-  let crazeAudio = document.getElementById("crazeAudio");
-  let shenviiAudio = document.getElementById("shenviiAudio");
-  let qbearAudio = document.getElementById("qbearAudio");
-  let lightAudio = document.getElementById("lightAudio");
-  let x1staAudio = document.getElementById("x1staAudio");
-  let esteggAudio = document.getElementById("esteggAudio");
-  let estbunAudio = document.getElementById("estbunAudio");
-  let isekailofiAudio= document.getElementById("isekailofiAudio");
-
-  suspenseAudio.pause();
-  expOpeningAudio.pause();
-  geezerSuspenceAudio.pause();
-  polarrSuspenceAudio.pause();
-  scareSuspenceAudio.pause();
-  waveAudio.pause();
-  scorchingAudio.pause();
-  beachAudio.pause();
-  tidalwaveAudio.pause();
-  gingerAudio.pause();
-  x1staAudio.pause();
-  lightAudio.pause();
-  astblaAudio.pause();
-  heartAudio.pause();
-  tuonAudio.pause();
-  blindAudio.pause();
-  iriAudio.pause();
-  aboAudio.pause();
-  shaAudio.pause();
-  lubjubAudio.pause();
-  demsoAudio.pause();
-  fircraAudio.pause();
-  plabreAudio.pause();
-  harvAudio.pause();
-  norstaAudio.pause();
-  sanclaAudio.pause();
-  silnigAudio.pause();
-  reidasAudio.pause();
-  frogarAudio.pause();
-  cancansymAudio.pause();
-  ginharAudio.pause();
-  jolbelAudio.pause();
-  eniAudio.pause();
-  darAudio.pause();
-  nighAudio.pause();
-  specAudio.pause();
-  twiligAudio.pause();
-  silAudio.pause();
-  isekaiAudio.pause();
-  equinoxAudio.pause();
-  emerAudio.pause();
-  samuraiAudio.pause();
-  contAudio.pause();
-  unstoppableAudio.pause();
-  gargantuaAudio.pause();
-  spectralAudio.pause();
-  starfallAudio.pause();
-  memAudio.pause();
-  oblAudio.pause();
-  phaAudio.pause();
-  frightAudio.pause();
-  unnamedAudio.pause();
-  overtureAudio.pause();
-  impeachedAudio.pause();
-  eonbreakAudio.pause();
-  celAudio.pause();
-  silcarAudio.pause();
-  gregAudio.pause();
-  mintllieAudio.pause();
-  geezerAudio.pause();
-  polarrAudio.pause();
-  oppAudio.pause();
-  serAudio.pause();
-  arcAudio.pause();
-  ethAudio.pause();
-  curAudio.pause();
-  hellAudio.pause();
-  wanspiAudio.pause();
-  mysAudio.pause();
-  voiAudio.pause();
-  endAudio.pause();
-  shadAudio.pause();
-  froAudio.pause();
-  forgAudio.pause();
-  curartAudio.pause();
-  ghoAudio.pause();
-  abysAudio.pause();
-  ethpulAudio.pause();
-  griAudio.pause();
-  celdawAudio.pause();
-  fatreAudio.pause();
-  fearAudio.pause();
-  hauAudio.pause();
-  foundsAudio.pause();
-  lostsAudio.pause();
-  hauntAudio.pause();
-  devilAudio.pause();
-  pumpkinAudio.pause();
-  h1diAudio.pause();
-  bigSuspenceAudio.pause();
-  expAudio.pause();
-  veilAudio.pause();
-  msfuAudio.pause();
-  blodAudio.pause();
-  orbAudio.pause();
-  astredAudio.pause();
-  crazeAudio.pause();
-  shenviiAudio.pause();
-  qbearAudio.pause();
-  estbunAudio.pause();
-  esteggAudio.pause();
-  isekailofiAudio.pause();
-
-  suspenseAudio.currentTime = 0;
-  expOpeningAudio.currentTime = 0;
-  geezerSuspenceAudio.currentTime = 0;
-  polarrSuspenceAudio.currentTime = 0;
-  scareSuspenceAudio.currentTime = 0;
-  waveAudio.currentTime = 0;
-  scorchingAudio.currentTime = 0;
-  beachAudio.currentTime = 0;
-  tidalwaveAudio.currentTime = 0;
-  gingerAudio.currentTime = 0;
-  x1staAudio.currentTime = 0;
-  lightAudio.currentTime = 0;
-  tuonAudio.currentTime = 0;
-  astblaAudio.currentTime = 0;
-  heartAudio.currentTime = 0;
-  iriAudio.currentTime = 0;
-  blindAudio.currentTime = 0;
-  aboAudio.currentTime = 0;
-  shaAudio.currentTime = 0;
-  demsoAudio.currentTime = 0;
-  lubjubAudio.currentTime = 0;
-  fircraAudio.currentTime = 0;
-  plabreAudio.currentTime = 0;
-  harvAudio.currentTime = 0;
-  h1diAudio.currentTime = 0;
-  jolbelAudio.currentTime = 0;
-  ginharAudio.currentTime = 0;
-  cancansymAudio.currentTime = 0;
-  frogarAudio.currentTime = 0;
-  reidasAudio.currentTime = 0;
-  silnigAudio.currentTime = 0;
-  sanclaAudio.currentTime = 0;
-  norstaAudio.currentTime = 0;
-  nighAudio.currentTime = 0;
-  pumpkinAudio.currentTime = 0;
-  devilAudio.currentTime = 0;
-  hauntAudio.currentTime = 0;
-  lostsAudio.currentTime = 0;
-  foundsAudio.currentTime = 0;
-  hauAudio.currentTime = 0;
-  fatreAudio.currentTime = 0;
-  fearAudio.currentTime = 0;
-  celdawAudio.currentTime = 0;
-  griAudio.currentTime = 0;
-  eniAudio.currentTime = 0;
-  curartAudio.currentTime = 0;
-  ethpulAudio.currentTime = 0;
-  ghoAudio.currentTime = 0;
-  froAudio.currentTime = 0;
-  silAudio.currentTime = 0;
-  shadAudio.currentTime = 0;
-  specAudio.currentTime = 0;
-  twiligAudio.currentTime = 0;
-  isekaiAudio.currentTime = 0;
-  equinoxAudio.currentTime = 0;
-  emerAudio.currentTime = 0;
-  samuraiAudio.currentTime = 0;
-  contAudio.currentTime = 0;
-  unstoppableAudio.currentTime = 0;
-  gargantuaAudio.currentTime = 14.5;
-  spectralAudio.currentTime = 0;
-  starfallAudio.currentTime = 0;
-  memAudio.currentTime = 0;
-  oblAudio.currentTime = 0;
-  phaAudio.currentTime = 0;
-  frightAudio.currentTime = 0;
-  unnamedAudio.currentTime = 0;
-  overtureAudio.currentTime = 0;
-  impeachedAudio.currentTime = 0;
-  eonbreakAudio.currentTime = 2;
-  celAudio.currentTime = 0;
-  silcarAudio.currentTime = 0;
-  gregAudio.currentTime = 0;
-  mintllieAudio.currentTime = 37;
-  geezerAudio.currentTime = 0;
-  polarrAudio.currentTime = 0;
-  oppAudio.currentTime = 0;
-  serAudio.currentTime = 0;
-  arcAudio.currentTime = 0;
-  ethAudio.currentTime = 0;
-  curAudio.currentTime = 0;
-  hellAudio.currentTime = 0;
-  wanspiAudio.currentTime = 0;
-  mysAudio.currentTime = 0;
-  voiAudio.currentTime = 0;
-  endAudio.currentTime = 0;
-  forgAudio.currentTime = 0;
-  darAudio.currentTime = 0;
-  abysAudio.currentTime = 0;
-  bigSuspenceAudio.currentTime = 0;
-  expAudio.currentTime = 0;
-  veilAudio.currentTime = 0;
-  msfuAudio.currentTime = 0;
-  blodAudio.currentTime = 0;
-  orbAudio.currentTime = 0;
-  astredAudio.currentTime = 0;
-  crazeAudio.currentTime = 0;
-  shenviiAudio.currentTime = 0;
-  qbearAudio.currentTime = 0;
-  estbunAudio.currentTime = 0;
-  esteggAudio.currentTime = 0;
-  isekailofiAudio.currentTime = 0;
+  stopAllAudio();
 }
 
 function formatRollCount(count) {
@@ -431,84 +365,58 @@ function formatRollCount(count) {
   return count.toString();
 }
 
+function updateRollDisplays() {
+  const compactDisplay = byId("rollCountDisplay");
+  if (compactDisplay) {
+    compactDisplay.textContent = formatRollCount(rollCount);
+  }
+
+  const rawDisplay = byId("rollCountDisplay1");
+  if (rawDisplay) {
+    rawDisplay.textContent = rollCount1;
+  }
+}
+
 function updateRollCount(increment = 1) {
-  rollCount += increment;
-  rollCount1 += increment;
-  const display = document.getElementById('rollCountDisplay');
-  const display1 = document.getElementById('rollCountDisplay');
-  display.textContent = formatRollCount(rollCount);
-  display1.textContent = rollCount1;
+  if (increment) {
+    rollCount += increment;
+    rollCount1 += increment;
+  }
+  updateRollDisplays();
+}
+
+function persistUnlockedAchievements(unlocked) {
+  storage.set("unlockedAchievements", Array.from(unlocked));
+}
+
+function unlockAchievement(name, unlocked) {
+  if (unlocked.has(name)) {
+    return;
+  }
+  unlocked.add(name);
+  persistUnlockedAchievements(unlocked);
+  showAchievementPopup(name);
 }
 
 function checkAchievements() {
-  let achievements = [
-    // Rolls
-      { name: "I think I like this", count: 100 },
-      { name: "This is getting serious", count: 1000 },
-      { name: "I'm the Roll Master", count: 5000 },
-      { name: "It's over 9000!!", count: 10000 },
-      { name: "When will you stop?", count: 25000 },
-      { name: "No Unnamed?", count: 30303 },
-      { name: "Beyond Luck", count: 50000 },
-      { name: "Rolling machine", count: 100000 },
-      { name: "Your PC must be burning", count: 250000 },
-      { name: "Half a million!1!!1", count: 500000 },
-      { name: "One, Two.. ..One Million!", count: 1000000 },
-      { name: "No H1di?", count: 10000000 },
-      { name: "Are you really doing this?", count: 25000000 },
-      { name: "You have no limits...", count: 50000000 },
-      { name: "WHAT HAVE YOU DONE", count: 100000000 },
-      { name: "AHHHHHHHHHHH", count: 1000000000 },
+  const unlocked = new Set(storage.get("unlockedAchievements", []));
 
-      // Time
-      { name: "Just the beginning", timeCount: 0 },
-      { name: "This doesn't add up", timeCount: 3600 },
-      { name: "When does it end...", timeCount: 7200 },
-      { name: "I swear I'm not addicted...", timeCount: 36000 },
-      { name: "Grass? What's that?", timeCount: 86400 },
-      { name: "Unnamed's RNG biggest fan", timeCount: 172800 },
-      { name: "RNG is life!", timeCount: 604800 },
-      { name: "I. CAN'T. STOP", timeCount: 1209600 },
-      { name: "No Lifer", timeCount: 2629800 },
-      { name: "Are you okay?", timeCount: 5259600 },
-      { name: "You are a True No Lifer", timeCount: 15778800 },
-      { name: "No one's getting this legit", timeCount: 31557600 },
+  ACHIEVEMENTS.forEach((achievement) => {
+    if (achievement.count && rollCount >= achievement.count) {
+      unlockAchievement(achievement.name, unlocked);
+    }
 
-      // Event
-      { name: "Happy Summer!", timeCount: 0 },
-  ];
+    if (achievement.timeCount !== undefined && typeof playTime !== "undefined" && playTime >= achievement.timeCount) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+  });
 
-  // Achievements collected
-  let collectorAchievements = [
-      { name: "Achievement Collector", count: 5 },
-      { name: "Achievement Hoarder", count: 10 },
-      { name: "Achievement Addict", count: 20 },
-      { name: "Achievement God", count: 33 },
-      { name: "T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶", count: 50 }
-  ];
+  const unlockedCount = unlocked.size;
 
-  let unlockedAchievements = JSON.parse(localStorage.getItem("unlockedAchievements")) || [];
-
-  achievements.forEach(achievement => {
-      if (rollCount >= achievement.count && !unlockedAchievements.includes(achievement.name)) {
-          unlockedAchievements.push(achievement.name);
-          localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
-          showAchievementPopup(achievement.name);
-      }
-      if (playTime >= achievement.timeCount && !unlockedAchievements.includes(achievement.name)) {
-        unlockedAchievements.push(achievement.name);
-        localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
-        showAchievementPopup(achievement.name);
-      }
-
-      let unlockedCount = unlockedAchievements.length;
-      collectorAchievements.forEach(collector => {
-          if (unlockedCount >= collector.count && !unlockedAchievements.includes(collector.name)) {
-              unlockedAchievements.push(collector.name);
-              localStorage.setItem("unlockedAchievements", JSON.stringify(unlockedAchievements));
-              showAchievementPopup(collector.name);
-          }
-      });
+  COLLECTOR_ACHIEVEMENTS.forEach((collector) => {
+    if (unlockedCount >= collector.count) {
+      unlockAchievement(collector.name, unlocked);
+    }
   });
 }
 
@@ -531,64 +439,16 @@ function showAchievementPopup(name) {
 }
 
 function updateAchievementsList() {
-  let unlockedAchievements = JSON.parse(localStorage.getItem("unlockedAchievements")) || [];
+  const unlocked = new Set(storage.get("unlockedAchievements", []));
 
-  let achievementItems = document.querySelectorAll(".achievement-item");
-  let achievementItemsT = document.querySelectorAll(".achievement-itemT");
-  let achievementItemsC = document.querySelectorAll(".achievement-itemC");
-  let achievementItemsE = document.querySelectorAll(".achievement-itemE");
-  let achievementItemsSum = document.querySelectorAll(".achievement-itemSum");
+  ACHIEVEMENT_GROUP_STYLES.forEach(({ selector, unlocked: unlockedStyles }) => {
+    $all(selector).forEach((item) => {
+      const achievementName = item.getAttribute("data-name");
+      const isUnlocked = achievementName && unlocked.has(achievementName);
 
-  achievementItems.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "blue";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
-  });
-
-  achievementItemsT.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "green";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
-  });
-
-  achievementItemsC.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "red";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
-  });
-
-  achievementItemsE.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "yellow";
-      item.style.color = "black";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
-  });
-
-  achievementItemsSum.forEach(item => {
-    const achievementName = item.getAttribute("data-name");
-
-    if (unlockedAchievements.includes(achievementName)) {
-      item.style.backgroundColor = "orange";
-      item.style.color = "black";
-    } else {
-      item.style.backgroundColor = "gray";
-    }
+      item.style.backgroundColor = isUnlocked ? unlockedStyles.backgroundColor : "gray";
+      item.style.color = isUnlocked && unlockedStyles.color ? unlockedStyles.color : "";
+    });
   });
 }
 
@@ -606,211 +466,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rollCount++;
   }
 
-  suspenseAudio.pause();
-  geezerSuspenceAudio.pause();
-  polarrSuspenceAudio.pause();
-  scareSuspenceAudio.pause();
-  waveAudio.pause();
-  scorchingAudio.pause();
-  beachAudio.pause();
-  tidalwaveAudio.pause();
-  lightAudio.pause();
-  qbearAudio.pause();
-  shenviiAudio.pause();
-  astblaAudio.pause();
-  tuonAudio.pause();
-  iriAudio.pause();
-  aboAudio.pause();
-  shaAudio.pause();
-  lubjubAudio.pause();
-  plabreAudio.pause();
-  demsoAudio.pause();
-  harvAudio.pause();
-  norstaAudio.pause();
-  sanclaAudio.pause();
-  silnigAudio.pause();
-  reidasAudio.pause();
-  frogarAudio.pause();
-  cancansymAudio.pause();
-  ginharAudio.pause();
-  jolbelAudio.pause();
-  eniAudio.pause();
-  darAudio.pause();
-  nighAudio.pause();
-  specAudio.pause();
-  twiligAudio.pause();
-  silAudio.pause();
-  isekaiAudio.pause();
-  equinoxAudio.pause();
-  gingerAudio.pause();
-  emerAudio.pause();
-  samuraiAudio.pause();
-  contAudio.pause();
-  unstoppableAudio.pause();
-  gargantuaAudio.pause();
-  spectralAudio.pause();
-  starfallAudio.pause();
-  memAudio.pause();
-  oblAudio.pause();
-  phaAudio.pause();
-  frightAudio.pause();
-  unnamedAudio.pause();
-  overtureAudio.pause();
-  impeachedAudio.pause();
-  eonbreakAudio.pause();
-  celAudio.pause();
-  silcarAudio.pause();
-  gregAudio.pause();
-  mintllieAudio.pause();
-  geezerAudio.pause();
-  polarrAudio.pause();
-  oppAudio.pause();
-  serAudio.pause();
-  arcAudio.pause();
-  ethAudio.pause();
-  curAudio.pause();
-  hellAudio.pause();
-  wanspiAudio.pause();
-  mysAudio.pause();
-  voiAudio.pause();
-  endAudio.pause();
-  shadAudio.pause();
-  froAudio.pause();
-  forgAudio.pause();
-  curartAudio.pause();
-  ghoAudio.pause();
-  abysAudio.pause();
-  ethpulAudio.pause();
-  griAudio.pause();
-  celdawAudio.pause();
-  fatreAudio.pause();
-  fearAudio.pause();
-  hauAudio.pause();
-  foundsAudio.pause();
-  lostsAudio.pause();
-  hauntAudio.pause();
-  devilAudio.pause();
-  pumpkinAudio.pause();
-  h1diAudio.pause();
-  bigSuspenceAudio.pause();
-  expAudio.pause();
-  expOpeningAudio.pause();
-  veilAudio.pause();
-  fircraAudio.pause();
-  blindAudio.pause();
-  msfuAudio.pause();
-  blodAudio.pause();
-  orbAudio.pause();
-  heartAudio.pause();
-  astredAudio.pause();
-  crazeAudio.pause();
-  x1staAudio.pause();
-  esteggAudio.pause();
-  estbunAudio.pause();
-  isekailofiAudio.pause();
-
-  suspenseAudio.currentTime = 0;
-  geezerSuspenceAudio.currentTime = 0;
-  polarrSuspenceAudio.currentTime = 0;
-  scareSuspenceAudio.currentTime = 0;
-  waveAudio.currentTime = 0;
-  scorchingAudio.currentTime = 0;
-  beachAudio.currentTime = 0;
-  tidalwaveAudio.currentTime = 0;
-  lightAudio.currentTime = 0;
-  qbearAudio.currentTime = 0;
-  shenviiAudio.currentTime = 0;
-  heartAudio.currentTime = 0;
-  iriAudio.currentTime = 0;
-  aboAudio.currentTime = 0;
-  shaAudio.currentTime = 0;
-  lubjubAudio.currentTime = 0;
-  demsoAudio.currentTime = 0;
-  astblaAudio.currentTime = 0;
-  plabreAudio.currentTime = 0;
-  harvAudio.currentTime = 0;
-  h1diAudio.currentTime = 0;
-  jolbelAudio.currentTime = 0;
-  ginharAudio.currentTime = 0;
-  cancansymAudio.currentTime = 0;
-  frogarAudio.currentTime = 0;
-  reidasAudio.currentTime = 0;
-  silnigAudio.currentTime = 0;
-  sanclaAudio.currentTime = 0;
-  norstaAudio.currentTime = 0;
-  nighAudio.currentTime = 0;
-  pumpkinAudio.currentTime = 0;
-  tuonAudio.currentTime = 0;
-  devilAudio.currentTime = 0;
-  hauntAudio.currentTime = 0;
-  lostsAudio.currentTime = 0;
-  foundsAudio.currentTime = 0;
-  hauAudio.currentTime = 0;
-  fatreAudio.currentTime = 0;
-  fearAudio.currentTime = 0;
-  celdawAudio.currentTime = 0;
-  griAudio.currentTime = 0;
-  eniAudio.currentTime = 0;
-  curartAudio.currentTime = 0;
-  ethpulAudio.currentTime = 0;
-  ghoAudio.currentTime = 0;
-  froAudio.currentTime = 0;
-  silAudio.currentTime = 0;
-  shadAudio.currentTime = 0;
-  specAudio.currentTime = 0;
-  twiligAudio.currentTime = 0;
-  isekaiAudio.currentTime = 0;
-  equinoxAudio.currentTime = 0;
-  gingerAudio.currentTime = 0;
-  emerAudio.currentTime = 0;
-  samuraiAudio.currentTime = 0;
-  contAudio.currentTime = 0;
-  unstoppableAudio.currentTime = 0;
-  gargantuaAudio.currentTime = 14.5;
-  spectralAudio.currentTime = 0;
-  starfallAudio.currentTime = 0;
-  memAudio.currentTime = 0;
-  oblAudio.currentTime = 0;
-  phaAudio.currentTime = 0;
-  frightAudio.currentTime = 0;
-  unnamedAudio.currentTime = 0;
-  overtureAudio.currentTime = 0;
-  impeachedAudio.currentTime = 0;
-  eonbreakAudio.currentTime = 2;
-  celAudio.currentTime = 0;
-  silcarAudio.currentTime = 0;
-  gregAudio.currentTime = 0;
-  mintllieAudio.currentTime = 37;
-  geezerAudio.currentTime = 0;
-  polarrAudio.currentTime = 0;
-  oppAudio.currentTime = 0;
-  serAudio.currentTime = 0;
-  arcAudio.currentTime = 0;
-  ethAudio.currentTime = 0;
-  curAudio.currentTime = 0;
-  hellAudio.currentTime = 0;
-  wanspiAudio.currentTime = 0;
-  mysAudio.currentTime = 0;
-  voiAudio.currentTime = 0;
-  endAudio.currentTime = 0;
-  forgAudio.currentTime = 0;
-  darAudio.currentTime = 0;
-  abysAudio.currentTime = 0;
-  bigSuspenceAudio.currentTime = 0;
-  expAudio.currentTime = 0;
-  expOpeningAudio.currentTime = 0;
-  veilAudio.currentTime = 0;
-  fircraAudio.currentTime = 0;
-  blindAudio.currentTime = 0;
-  msfuAudio.currentTime = 0;
-  blodAudio.currentTime = 0;
-  orbAudio.currentTime = 0;
-  astredAudio.currentTime = 0;
-  crazeAudio.currentTime = 0;
-  x1staAudio.currenttime = 0;
-  esteggAudio.currenttime = 0;
-  estbunAudio.currenttime = 0;
-  isekailofiAudio.currenttime = 0;
+  stopAllAudio();
 
   let rarity = rollRarity();
   let title = selectTitle(rarity);
@@ -8868,12 +8524,6 @@ document.getElementById("rollButton").addEventListener("click", function () {
   load();
 });
 
-let skipCutscene1K = true;
-let skipCutscene10K = true;
-let skipCutscene100K = true;
-let skipCutscene1M = true;
-
-
 const toggleCutscene1KBtn = document.getElementById("toggleCutscene1K");
 const toggleCutscene1KTxt = document.getElementById("1KTxt");
 toggleCutscene1KBtn.addEventListener("click", function () {
@@ -10788,86 +10438,45 @@ function startAnimationBlackHole() {
   });
 }
 
-function createCooldownButton() {
-  if (document.getElementById("cooldownButton")) {
-    return;
-  }
+const COOLDOWN_BUTTON_CONFIGS = [
+  { id: "cooldownButton", reduceTo: 350, effectSeconds: 90, resetDelay: 90000, spawnDelay: 120000 },
+  { id: "cooldownButton1", reduceTo: 200, effectSeconds: 60, resetDelay: 60000, spawnDelay: 300000 },
+  { id: "cooldownButton2", reduceTo: 75, effectSeconds: 30, resetDelay: 30000, spawnDelay: 600000 },
+];
 
-  const button = document.createElement("button");
-  button.innerText = "Reduce Cooldown";
-  button.id = "cooldownButton";
-  button.style.position = "absolute";
+const cooldownSpawnTimers = new Map();
 
-  const randomX = Math.floor(Math.random() * (window.innerWidth - 100));
-  const randomY = Math.floor(Math.random() * (window.innerHeight - 50));
-  button.style.left = `${randomX}px`;
-  button.style.top = `${randomY}px`;
-
-  button.addEventListener("click", () => {
-    cooldownTime = 350;
-
-    showCooldownEffect(90);
-
-    button.innerText = "Cooldown Reduced!";
-    setTimeout(() => {
-      document.body.removeChild(button);
-    }, 1000);
-
-    setTimeout(() => {
-      cooldownTime = 500;
-      console.log("Cooldown reset to 500ms");
-    }, 90000);
-
-    scheduleButtonAppearance();
-  });
-
-  document.body.appendChild(button);
+function getActiveCooldownButton() {
+  return document.querySelector("#cooldownButton, #cooldownButton1, #cooldownButton2");
 }
 
-function createCooldownButton1() {
-  if (document.getElementById("cooldownButton")) {
-    return;
+function scheduleCooldownButton(config, delay = config.spawnDelay) {
+  const existingTimer = cooldownSpawnTimers.get(config.id);
+  if (existingTimer) {
+    clearTimeout(existingTimer);
   }
 
-  const button = document.createElement("button");
-  button.innerText = "Reduce Cooldown";
-  button.id = "cooldownButton1";
-  button.style.position = "absolute";
+  const timer = setTimeout(() => {
+    if (cooldownBuffActive || cooldownTime < BASE_COOLDOWN_TIME || getActiveCooldownButton()) {
+      scheduleCooldownButton(config, 10000);
+      return;
+    }
 
-  const randomX = Math.floor(Math.random() * (window.innerWidth - 100));
-  const randomY = Math.floor(Math.random() * (window.innerHeight - 50));
-  button.style.left = `${randomX}px`;
-  button.style.top = `${randomY}px`;
+    spawnCooldownButton(config);
+  }, delay);
 
-  button.addEventListener("click", () => {
-    cooldownTime = 200;
-
-    showCooldownEffect(60);
-
-    button.innerText = "Cooldown Reduced!";
-    setTimeout(() => {
-      document.body.removeChild(button);
-    }, 1000);
-
-    setTimeout(() => {
-      cooldownTime = 500;
-      console.log("Cooldown reset to 500ms");
-    }, 60000);
-
-    scheduleButtonAppearance();
-  });
-
-  document.body.appendChild(button);
+  cooldownSpawnTimers.set(config.id, timer);
 }
 
-function createCooldownButton2() {
-  if (document.getElementById("cooldownButton")) {
+function spawnCooldownButton(config) {
+  if (cooldownBuffActive || cooldownTime < BASE_COOLDOWN_TIME || getActiveCooldownButton()) {
+    scheduleCooldownButton(config, 10000);
     return;
   }
 
   const button = document.createElement("button");
   button.innerText = "Reduce Cooldown";
-  button.id = "cooldownButton2";
+  button.id = config.id;
   button.style.position = "absolute";
 
   const randomX = Math.floor(Math.random() * (window.innerWidth - 100));
@@ -10876,27 +10485,40 @@ function createCooldownButton2() {
   button.style.top = `${randomY}px`;
 
   button.addEventListener("click", () => {
-    cooldownTime = 75;
+    if (cooldownBuffActive) {
+      return;
+    }
 
-    showCooldownEffect(30);
+    cooldownBuffActive = true;
+    cooldownTime = config.reduceTo;
+
+    showCooldownEffect(config.effectSeconds);
 
     button.innerText = "Cooldown Reduced!";
+    button.disabled = true;
+
     setTimeout(() => {
-      document.body.removeChild(button);
+      if (button.isConnected) {
+        document.body.removeChild(button);
+      }
     }, 1000);
 
     setTimeout(() => {
-      cooldownTime = 500;
-      console.log("Cooldown reset to 500ms");
-    }, 30000);
-
-    scheduleButtonAppearance();
+      cooldownTime = BASE_COOLDOWN_TIME;
+      cooldownBuffActive = false;
+      scheduleAllCooldownButtons();
+    }, config.resetDelay);
   });
 
   document.body.appendChild(button);
 }
 
 function showCooldownEffect(duration) {
+  const existingDisplay = document.getElementById("countdownDisplay");
+  if (existingDisplay) {
+    existingDisplay.remove();
+  }
+
   const countdownDisplay = document.createElement("div");
   countdownDisplay.id = "countdownDisplay";
   countdownDisplay.style.position = "fixed";
@@ -10908,37 +10530,31 @@ function showCooldownEffect(duration) {
   countdownDisplay.style.borderRadius = "5px";
   countdownDisplay.style.zIndex = "100000";
 
+  countdownDisplay.innerText = `Roll-Cooldown Effect: ${duration}s`;
   document.body.appendChild(countdownDisplay);
 
-  let timeLeft = duration;
+  let timeLeft = duration - 1;
   const interval = setInterval(() => {
-    if (timeLeft <= 0) {
+    if (timeLeft < 0) {
       clearInterval(interval);
-      countdownDisplay.innerText = "";
-      document.body.removeChild(countdownDisplay);
-    } else {
-      countdownDisplay.innerText = `Roll-Cooldown Effect: ${timeLeft}s`;
+      if (countdownDisplay.isConnected) {
+        document.body.removeChild(countdownDisplay);
+      }
+      return;
     }
+
+    countdownDisplay.innerText = `Roll-Cooldown Effect: ${timeLeft}s`;
     timeLeft--;
   }, 1000);
 }
 
-function scheduleButtonAppearance() {
-
-  setTimeout(() => {
-    createCooldownButton();
-  }, 120000);
-
-  setTimeout(() => {
-    createCooldownButton1();
-  }, 300000);
-
-  setTimeout(() => {
-    createCooldownButton2();
-  }, 600000);
+function scheduleAllCooldownButtons() {
+  COOLDOWN_BUTTON_CONFIGS.forEach((config) => {
+    scheduleCooldownButton(config);
+  });
 }
 
-scheduleButtonAppearance();
+scheduleAllCooldownButtons();
 
 document.addEventListener("DOMContentLoaded", () => {
   const settingsMenu = document.getElementById("settingsMenu");
