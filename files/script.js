@@ -23,7 +23,8 @@ let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 let rollCount1 = parseInt(localStorage.getItem("rollCount")) || 0;
-let cooldownTime = 500;
+const BASE_COOLDOWN_TIME = 500;
+let cooldownTime = BASE_COOLDOWN_TIME;
 let currentAudio = null;
 let isChangeEnabled = true;
 let autoRollInterval = null;
@@ -36,6 +37,7 @@ let skipCutscene1K = true;
 let skipCutscene10K = true;
 let skipCutscene100K = true;
 let skipCutscene1M = true;
+let cooldownBuffActive = cooldownTime < BASE_COOLDOWN_TIME;
 
 const STOPPABLE_AUDIO_IDS = [
   "suspenseAudio",
@@ -10610,86 +10612,45 @@ function startAnimationBlackHole() {
   });
 }
 
-function createCooldownButton() {
-  if (document.getElementById("cooldownButton")) {
-    return;
-  }
+const COOLDOWN_BUTTON_CONFIGS = [
+  { id: "cooldownButton", reduceTo: 350, effectSeconds: 90, resetDelay: 90000, spawnDelay: 120000 },
+  { id: "cooldownButton1", reduceTo: 200, effectSeconds: 60, resetDelay: 60000, spawnDelay: 300000 },
+  { id: "cooldownButton2", reduceTo: 75, effectSeconds: 30, resetDelay: 30000, spawnDelay: 600000 },
+];
 
-  const button = document.createElement("button");
-  button.innerText = "Reduce Cooldown";
-  button.id = "cooldownButton";
-  button.style.position = "absolute";
+const cooldownSpawnTimers = new Map();
 
-  const randomX = Math.floor(Math.random() * (window.innerWidth - 100));
-  const randomY = Math.floor(Math.random() * (window.innerHeight - 50));
-  button.style.left = `${randomX}px`;
-  button.style.top = `${randomY}px`;
-
-  button.addEventListener("click", () => {
-    cooldownTime = 350;
-
-    showCooldownEffect(90);
-
-    button.innerText = "Cooldown Reduced!";
-    setTimeout(() => {
-      document.body.removeChild(button);
-    }, 1000);
-
-    setTimeout(() => {
-      cooldownTime = 500;
-      console.log("Cooldown reset to 500ms");
-    }, 90000);
-
-    scheduleButtonAppearance();
-  });
-
-  document.body.appendChild(button);
+function getActiveCooldownButton() {
+  return document.querySelector("#cooldownButton, #cooldownButton1, #cooldownButton2");
 }
 
-function createCooldownButton1() {
-  if (document.getElementById("cooldownButton")) {
-    return;
+function scheduleCooldownButton(config, delay = config.spawnDelay) {
+  const existingTimer = cooldownSpawnTimers.get(config.id);
+  if (existingTimer) {
+    clearTimeout(existingTimer);
   }
 
-  const button = document.createElement("button");
-  button.innerText = "Reduce Cooldown";
-  button.id = "cooldownButton1";
-  button.style.position = "absolute";
+  const timer = setTimeout(() => {
+    if (cooldownBuffActive || cooldownTime < BASE_COOLDOWN_TIME || getActiveCooldownButton()) {
+      scheduleCooldownButton(config, 10000);
+      return;
+    }
 
-  const randomX = Math.floor(Math.random() * (window.innerWidth - 100));
-  const randomY = Math.floor(Math.random() * (window.innerHeight - 50));
-  button.style.left = `${randomX}px`;
-  button.style.top = `${randomY}px`;
+    spawnCooldownButton(config);
+  }, delay);
 
-  button.addEventListener("click", () => {
-    cooldownTime = 200;
-
-    showCooldownEffect(60);
-
-    button.innerText = "Cooldown Reduced!";
-    setTimeout(() => {
-      document.body.removeChild(button);
-    }, 1000);
-
-    setTimeout(() => {
-      cooldownTime = 500;
-      console.log("Cooldown reset to 500ms");
-    }, 60000);
-
-    scheduleButtonAppearance();
-  });
-
-  document.body.appendChild(button);
+  cooldownSpawnTimers.set(config.id, timer);
 }
 
-function createCooldownButton2() {
-  if (document.getElementById("cooldownButton")) {
+function spawnCooldownButton(config) {
+  if (cooldownBuffActive || cooldownTime < BASE_COOLDOWN_TIME || getActiveCooldownButton()) {
+    scheduleCooldownButton(config, 10000);
     return;
   }
 
   const button = document.createElement("button");
   button.innerText = "Reduce Cooldown";
-  button.id = "cooldownButton2";
+  button.id = config.id;
   button.style.position = "absolute";
 
   const randomX = Math.floor(Math.random() * (window.innerWidth - 100));
@@ -10698,27 +10659,40 @@ function createCooldownButton2() {
   button.style.top = `${randomY}px`;
 
   button.addEventListener("click", () => {
-    cooldownTime = 75;
+    if (cooldownBuffActive) {
+      return;
+    }
 
-    showCooldownEffect(30);
+    cooldownBuffActive = true;
+    cooldownTime = config.reduceTo;
+
+    showCooldownEffect(config.effectSeconds);
 
     button.innerText = "Cooldown Reduced!";
+    button.disabled = true;
+
     setTimeout(() => {
-      document.body.removeChild(button);
+      if (button.isConnected) {
+        document.body.removeChild(button);
+      }
     }, 1000);
 
     setTimeout(() => {
-      cooldownTime = 500;
-      console.log("Cooldown reset to 500ms");
-    }, 30000);
-
-    scheduleButtonAppearance();
+      cooldownTime = BASE_COOLDOWN_TIME;
+      cooldownBuffActive = false;
+      scheduleAllCooldownButtons();
+    }, config.resetDelay);
   });
 
   document.body.appendChild(button);
 }
 
 function showCooldownEffect(duration) {
+  const existingDisplay = document.getElementById("countdownDisplay");
+  if (existingDisplay) {
+    existingDisplay.remove();
+  }
+
   const countdownDisplay = document.createElement("div");
   countdownDisplay.id = "countdownDisplay";
   countdownDisplay.style.position = "fixed";
@@ -10730,37 +10704,31 @@ function showCooldownEffect(duration) {
   countdownDisplay.style.borderRadius = "5px";
   countdownDisplay.style.zIndex = "100000";
 
+  countdownDisplay.innerText = `Roll-Cooldown Effect: ${duration}s`;
   document.body.appendChild(countdownDisplay);
 
-  let timeLeft = duration;
+  let timeLeft = duration - 1;
   const interval = setInterval(() => {
-    if (timeLeft <= 0) {
+    if (timeLeft < 0) {
       clearInterval(interval);
-      countdownDisplay.innerText = "";
-      document.body.removeChild(countdownDisplay);
-    } else {
-      countdownDisplay.innerText = `Roll-Cooldown Effect: ${timeLeft}s`;
+      if (countdownDisplay.isConnected) {
+        document.body.removeChild(countdownDisplay);
+      }
+      return;
     }
+
+    countdownDisplay.innerText = `Roll-Cooldown Effect: ${timeLeft}s`;
     timeLeft--;
   }, 1000);
 }
 
-function scheduleButtonAppearance() {
-
-  setTimeout(() => {
-    createCooldownButton();
-  }, 120000);
-
-  setTimeout(() => {
-    createCooldownButton1();
-  }, 300000);
-
-  setTimeout(() => {
-    createCooldownButton2();
-  }, 600000);
+function scheduleAllCooldownButtons() {
+  COOLDOWN_BUTTON_CONFIGS.forEach((config) => {
+    scheduleCooldownButton(config);
+  });
 }
 
-scheduleButtonAppearance();
+scheduleAllCooldownButtons();
 
 document.addEventListener("DOMContentLoaded", () => {
   const settingsMenu = document.getElementById("settingsMenu");
