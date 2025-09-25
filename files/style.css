@@ -1417,13 +1417,8 @@ body {
     transform: scale(1.1);
 }
 
-#closeStats {
-    background-color: #777;
-    color: white;
-}
-
 #closeStats:hover {
-    background-color: #555;
+    background: rgba(255, 0, 0, 1);
     transform: scale(1.1);
 }
 
@@ -4559,18 +4554,21 @@ body.griCutsceneBgImg {
 }
 
 .stats-close-btn {
-    background: rgba(255, 255, 255, 0.08);
-    color: #f1f5ff;
-    border-radius: 999px;
-    padding: 8px 16px;
-    font-size: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    background: rgba(40, 62, 110, 0.55);
+    color: #f4f7ff;
+    padding: 10px 14px;
+    font-size: 0.95rem;
     font-weight: 600;
-    transition: background 0.2s ease, color 0.2s ease;
+    text-align: center;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
 .stats-close-btn:hover {
-    background: rgba(255, 255, 255, 0.14);
-    color: #fff;
+    transform: translateY(-1px);
+    background: rgba(76, 104, 163, 0.75);
+    border-color: rgba(167, 200, 255, 0.4);
 }
 
 .stats-body {

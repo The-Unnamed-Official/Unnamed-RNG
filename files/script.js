@@ -22,7 +22,7 @@ let inventory = storage.get("inventory", []);
 let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
-let rollCount1 = parseInt(localStorage.getItem("rollCount1")) || rollCount;
+let rollCount1 = parseInt(localStorage.getItem("rollCount1")) || 0;
 const BASE_COOLDOWN_TIME = 500;
 let cooldownTime = BASE_COOLDOWN_TIME;
 let currentAudio = null;
@@ -369,7 +369,7 @@ const LOADING_SEQUENCE = [
     action: () => {
       inventory = storage.get("inventory", []);
       rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
-      rollCount1 = parseInt(localStorage.getItem("rollCount1")) || rollCount;
+      rollCount1 = parseInt(localStorage.getItem("rollCount1")) || 0;
     },
   },
   {
@@ -768,14 +768,14 @@ function updateRollDisplays() {
 
   const rawDisplay = byId("rollCountDisplay1");
   if (rawDisplay) {
-    rawDisplay.textContent = rollCount1;
+    rawDisplay.textContent = rollCount1 + 1;
   }
 }
 
 function updateRollCount(increment = 1) {
   if (increment) {
     rollCount += increment;
-    rollCount1 += increment;
+    rollCount1 += increment + 1;
   }
   updateRollDisplays();
 }
@@ -874,7 +874,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   }
   const rollCountDisplayRaw = byId("rollCountDisplay1");
   if (rollCountDisplayRaw) {
-    rollCountDisplayRaw.textContent = rollCount1;
+    rollCountDisplayRaw.textContent = rollCount1 + 1;
   }
 
   if (
@@ -11003,9 +11003,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const statsMenu = document.getElementById("statsMenu");
   const statsHeader = statsMenu?.querySelector(".stats-header");
   const statsDragHandle = statsMenu?.querySelector(".stats-menu__drag-handle");
-  const achievementsMenu = document.getElementById("achievementsMenu");
-  const achievementsHeader = achievementsMenu?.querySelector(".achievements-header");
-  const achievementsBody = achievementsMenu?.querySelector(".achievements-body");
   const headerStats = statsMenu.querySelector("h3");
   let isDraggingSettings = false;
   let isDraggingAchievements = false;
@@ -11088,6 +11085,9 @@ document.addEventListener("DOMContentLoaded", () => {
       offsetYStats = event.clientY - rect.top;
       isDraggingStats = true;
       statsHeader.classList.add("is-dragging");
+    });
+  }
+
   if (headerStats) {
     headerStats.addEventListener("mousedown", (event) => {
       isDraggingStats = true;
@@ -11156,7 +11156,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (isDraggingStats) {
       isDraggingStats = false;
-      statsHeader?.classList.remove("is-dragging"
+      statsHeader?.classList.remove("is-dragging");
     }
   });
 });
