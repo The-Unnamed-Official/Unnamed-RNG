@@ -3027,6 +3027,17 @@ body.griCutsceneBgImg {
   transition: background-color 0.15s ease, transform 0.08s ease;
 }
 
+.dropdown-item:disabled,
+.dropdown-item--disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.dropdown-item:disabled:hover,
+.dropdown-item--disabled:hover {
+  background-color: transparent;
+}
+
 .dropdown-item i {
   width: 16px;
   text-align: center;
@@ -3092,10 +3103,26 @@ body.griCutsceneBgImg {
 }
 
 #inventoryList li.inventory-item--equipped {
-  background: linear-gradient(135deg, rgba(68, 68, 68, 0.92), rgba(68, 68, 68, 0.75));
   box-shadow:
     0 0 0 2px rgba(118, 228, 195, 0.35),
     0 10px 22px rgba(0, 0, 0, 0.35);
+  position: relative;
+  z-index: 0;
+}
+
+#inventoryList li.inventory-item--equipped::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(22, 86, 72, 0.32), rgba(16, 56, 47, 0.18));
+  pointer-events: none;
+  z-index: 0;
+}
+
+#inventoryList li.inventory-item--equipped > * {
+  position: relative;
+  z-index: 1;
 }
 
 #inventoryList li.inventory-item--equipped .rarity-text {
@@ -4381,7 +4408,8 @@ body.griCutsceneBgImg {
 }
 
 .achievement-itemE:hover::after,
-.achievement-itemSum:hover::after {
+.achievement-itemSum:hover::after,
+.achievement-itemR:hover::after {
     content: "Play in " attr(data-time) " to unlock this achievement";
 }
 

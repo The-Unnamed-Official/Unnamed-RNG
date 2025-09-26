@@ -234,6 +234,7 @@ function finalizeCutsceneState() {
   clearTimeout(cutsceneFailsafeTimeout);
   cutsceneFailsafeTimeout = null;
   cutsceneActive = false;
+  updateEquipToggleButtonsDisabled(false);
   ensureBgStack();
   if (__bgStack) {
     __bgStack.classList.remove("is-hidden");
@@ -659,6 +660,37 @@ function resetAudioState(audio, id) {
   }
 }
 
+function seekAudioWhenReady(audio, time) {
+  if (!audio || typeof time !== "number" || Number.isNaN(time)) {
+    return;
+  }
+
+  const assignTime = () => {
+    try {
+      if (typeof audio.currentTime === "number" && audio.currentTime !== time) {
+        audio.currentTime = time;
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  if (assignTime()) {
+    return;
+  }
+
+  const handleReady = () => {
+    if (assignTime()) {
+      audio.removeEventListener("loadedmetadata", handleReady);
+      audio.removeEventListener("canplay", handleReady);
+    }
+  };
+
+  audio.addEventListener("loadedmetadata", handleReady);
+  audio.addEventListener("canplay", handleReady);
+}
+
 function stopAllAudio(options = {}) {
   const preserveIds = new Set();
 
@@ -768,19 +800,23 @@ function resumePausedEquippedAudio() {
   }
 
   const audio = state.element;
+  const time = typeof state.time === "number" && !Number.isNaN(state.time) ? state.time : 0;
 
-  try {
-    if (typeof state.time === "number" && !Number.isNaN(state.time)) {
-      audio.currentTime = state.time;
-    }
-  } catch (error) {
-    /* no-op */
-  }
+  seekAudioWhenReady(audio, time);
 
   if (state.wasPlaying) {
     const playPromise = audio.play();
-    if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch(() => {});
+    if (playPromise && typeof playPromise.then === "function") {
+      playPromise
+        .then(() => {
+          seekAudioWhenReady(audio, time);
+        })
+        .catch(() => {});
+    } else {
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => {});
+      }
+      seekAudioWhenReady(audio, time);
     }
   }
 
@@ -10489,6 +10525,31 @@ function pauseEquippedAudioForPendingCutscene() {
   pauseEquippedAudioForRarity(rarity);
 }
 
+function setEquipToggleButtonDisabled(button, disabled) {
+  if (!button) {
+    return;
+  }
+
+  const shouldDisable = Boolean(disabled);
+  if (button.disabled !== shouldDisable) {
+    button.disabled = shouldDisable;
+  }
+
+  button.classList.toggle("dropdown-item--disabled", shouldDisable);
+
+  if (shouldDisable) {
+    button.setAttribute("aria-disabled", "true");
+  } else {
+    button.removeAttribute("aria-disabled");
+  }
+}
+
+function updateEquipToggleButtonsDisabled(disabled) {
+  $all('.dropdown-item[data-action="equip-toggle"]').forEach((button) => {
+    setEquipToggleButtonDisabled(button, disabled);
+  });
+}
+
 function disableChange() {
   isChangeEnabled = false;
   cutsceneActive = true;
@@ -10496,6 +10557,7 @@ function disableChange() {
   // Hide stack during cutscenes (body backgrounds/gifs will show)
   if (__bgStack) __bgStack.classList.add("is-hidden");
   pauseEquippedAudioForPendingCutscene();
+  updateEquipToggleButtonsDisabled(true);
 }
 
 function renderInventory() {
@@ -10579,10 +10641,15 @@ function renderInventory() {
     
     const equipButton = document.createElement("button");
     equipButton.className = "dropdown-item";
+    equipButton.dataset.action = "equip-toggle";
     equipButton.textContent = isEquipped ? "Unequip" : "Equip";
     equipButton.classList.toggle("dropdown-item--unequip", Boolean(isEquipped));
+    setEquipToggleButtonDisabled(equipButton, cutsceneActive);
     equipButton.addEventListener("click", (event) => {
       event.stopPropagation();
+      if (cutsceneActive) {
+        return;
+      }
       if (isItemCurrentlyEquipped(item)) {
         unequipItem();
       } else {
@@ -10663,6 +10730,10 @@ function deleteFromInventory(absoluteIndex) {
 }
 
 function equipItem(item) {
+  if (cutsceneActive) {
+    return;
+  }
+
   const normalized = normalizeEquippedItemRecord(item);
   if (!normalized) {
     return;
@@ -10688,6 +10759,10 @@ function equipItem(item) {
 }
 
 function unequipItem() {
+  if (cutsceneActive) {
+    return;
+  }
+
   if (!equippedItem) {
     return;
   }
