@@ -511,6 +511,7 @@ function initializeAfterStart() {
   registerRarityDeletionButtons();
   scheduleAllCooldownButtons();
   updateAchievementsList();
+  processAchievementToastQueue();
 }
 
 const CUTSCENE_SKIP_SETTINGS = [
@@ -556,7 +557,7 @@ const ACHIEVEMENTS = [
   { name: "Are you okay?", timeCount: 5259600 },
   { name: "You are a True No Lifer", timeCount: 15778800 },
   { name: "No one's getting this legit", timeCount: 31557600 },
-  { name: "Happy Summer!", timeCount: 0 },
+  { name: "Happy Summer!", timeCount: 1 },
   { name: "Grand Entrance", rarityBucket: "under10k" },
   { name: "One of a Kind", rarityBucket: "special" },
   { name: "Mastered the Odds", rarityBucket: "under100k" },
@@ -910,24 +911,6 @@ function isItemCurrentlyEquipped(item) {
   return equippedRecordsMatch(candidate, equippedItem);
 }
 
-function playMainMenuAudio() {
-  if (typeof mainAudio === "undefined" || !mainAudio) {
-    return;
-  }
-
-  try {
-    if (typeof audioVolume === "number") {
-      mainAudio.volume = audioVolume;
-    }
-    const playPromise = mainAudio.play();
-    if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch(() => {});
-    }
-  } catch (error) {
-    /* no-op */
-  }
-}
-
 function applyEquippedItemOnStartup() {
   if (!equippedItem) {
     return;
@@ -938,7 +921,6 @@ function applyEquippedItemOnStartup() {
     equippedItem = null;
     storage.remove("equippedItem");
     changeBackground("menuDefault", null, { force: true });
-    playMainMenuAudio();
     return;
   }
 
@@ -947,7 +929,6 @@ function applyEquippedItemOnStartup() {
     equippedItem = null;
     storage.remove("equippedItem");
     changeBackground("menuDefault", null, { force: true });
-    playMainMenuAudio();
     return;
   }
 
@@ -996,12 +977,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         // Kick off playback without awaiting so UI initialisation continues even if the
         // browser delays or blocks autoplay.
-        const playAttempt = mainAudio.play();
-        if (playAttempt && typeof playAttempt.catch === "function") {
-          playAttempt.catch((error) => {
-            console.warn("Unable to start background audio immediately.", error);
-          });
-        }
+        setTimeout(() => {
+          const playAttempt = mainAudio.play();
+          if (playAttempt && typeof playAttempt.catch === "function") {
+            playAttempt.catch((error) => {
+              console.warn("Unable to start background audio immediately.", error);
+            });
+          }
+        }, 300);
       }
     } catch (error) {
       console.warn("Unable to start background audio immediately.", error);
@@ -10859,7 +10842,6 @@ function unequipItem() {
   pinnedAudioId = null;
 
   changeBackground("menuDefault", null, { force: true });
-  playMainMenuAudio();
 
   renderInventory();
 }
