@@ -11838,7 +11838,7 @@ function registerMenuButtons() {
 
   if (statsButton && statsMenu) {
     statsButton.addEventListener("click", () => {
-      statsMenu.style.display = "flex";
+      statsMenu.style.display = "block";
       statsMenu.style.transform = "translate(-50%, -50%)";
       statsMenu.style.left = "50%";
       statsMenu.style.top = "50%";
@@ -12033,7 +12033,6 @@ function initializeHeartEffect() {
     heart.style.left = `${Math.random() * 100}vw`;
     heart.style.top = `${Math.random() * 100}vh`;
     heart.style.fontSize = `${Math.random() * 25 + 15}px`;
-
     heartContainerElement.appendChild(heart);
 
     setTimeout(() => {
