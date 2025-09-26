@@ -240,6 +240,7 @@ function finalizeCutsceneState() {
     __bgStack.classList.remove("is-hidden");
   }
   restoreRollDisplayAfterCutscene();
+  resumePausedEquippedAudio();
 }
 
 function hideRollDisplayForCutscene(container) {
@@ -1187,7 +1188,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     preservePinned: true,
     preserve: preservedAudioIds,
   });
-  
+
   let title = selectTitle(rarity);
 
   rollButton.disabled = true;
