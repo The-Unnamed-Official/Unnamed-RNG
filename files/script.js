@@ -538,11 +538,11 @@ const COLLECTOR_ACHIEVEMENTS = [
 
 const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-item", unlocked: { backgroundColor: "blue" } },
-  { selector: ".achievement-itemT", unlocked: { backgroundColor: "green" } },
-  { selector: ".achievement-itemC", unlocked: { backgroundColor: "red" } },
-  { selector: ".achievement-itemE", unlocked: { backgroundColor: "yellow", color: "black" } },
-  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "orange", color: "black" } },
-  { selector: ".achievement-itemR", unlocked: { backgroundColor: "#6d8bff" } },
+  { selector: ".achievement-itemT", unlocked: { backgroundColor: "#000fff" } },
+  { selector: ".achievement-itemC", unlocked: { backgroundColor: "#ff0000" } },
+  { selector: ".achievement-itemE", unlocked: { backgroundColor: "#fff000", color: "black" } },
+  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "#ff00d9ff" } },
+  { selector: ".achievement-itemR", unlocked: { backgroundColor: "#0033ffff" } },
 ];
 
 const ACHIEVEMENT_TOAST_DURATION = 3400;

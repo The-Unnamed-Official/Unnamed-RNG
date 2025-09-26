@@ -4381,9 +4381,12 @@ body.griCutsceneBgImg {
 }
 
 .achievement-itemE:hover::after,
-.achievement-itemSum:hover::after,
-.achievement-itemR:hover::after {
+.achievement-itemSum:hover::after {
     content: "Play in " attr(data-time) " to unlock this achievement";
+}
+
+.achievement-itemR:hover::after {
+    content: "Get " attr(data-rarity) " rarity to unlock this achievement";
 }
 
 .achievement-item:hover::after,
