@@ -56,6 +56,15 @@ let resumeEquippedAudioAfterCutscene = false;
 let pendingCutsceneRarity = null;
 const rolledRarityBuckets = new Set(storage.get("rolledRarityBuckets", []));
 
+let postStartInitialized = false;
+let audioSliderElement = null;
+let audioSliderValueLabelElement = null;
+let muteButtonElement = null;
+let heartContainerElement = null;
+let heartIntervalId = null;
+let playTimeIntervalId = null;
+let autoRollButtonElement = null;
+
 const STOPPABLE_AUDIO_IDS = [
   "suspenseAudio",
   "expOpeningAudio",
@@ -478,6 +487,31 @@ async function runInitialLoadSequence(onProgress) {
 
   report("Ready!");
   await wait(180);
+}
+
+function initializeAfterStart() {
+  if (postStartInitialized) {
+    return;
+  }
+
+  postStartInitialized = true;
+
+  registerRollButtonHandler();
+  registerCutsceneToggleButtons();
+  registerDeleteAllButton();
+  registerInterfaceToggleButtons();
+  registerMenuButtons();
+  registerResponsiveHandlers();
+  registerMenuDragHandlers();
+  enhanceInventoryDeleteButtons();
+  setupAudioControls();
+  initializeAutoRollControls();
+  initializeHeartEffect();
+  registerDataPersistenceButtons();
+  initializePlayTimeTracker();
+  registerRarityDeletionButtons();
+  scheduleAllCooldownButtons();
+  updateAchievementsList();
 }
 
 const CUTSCENE_SKIP_SETTINGS = [
@@ -1002,6 +1036,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (rollButton) {
       rollButton.disabled = false;
     }
+
+    initializeAfterStart();
   });
 });
 
@@ -1140,9 +1176,13 @@ function updateAchievementsList() {
   });
 }
 
-document.addEventListener("DOMContentLoaded", updateAchievementsList);
+function registerRollButtonHandler() {
+  const rollButtonElement = document.getElementById("rollButton");
+  if (!rollButtonElement) {
+    return;
+  }
 
-document.getElementById("rollButton").addEventListener("click", function () {
+  rollButtonElement.addEventListener("click", function () {
   const rollButton = byId("rollButton");
   if (!rollButton) {
     return;
@@ -9250,43 +9290,54 @@ document.getElementById("rollButton").addEventListener("click", function () {
   localStorage.setItem("rollCount", rollCount);
   localStorage.setItem("rollCount1", rollCount1);
   load();
-});
+  });
+}
 
-const toggleCutscene1KBtn = document.getElementById("toggleCutscene1K");
-const toggleCutscene1KTxt = document.getElementById("1KTxt");
-toggleCutscene1KBtn.addEventListener("click", function () {
-  skipCutscene1K = !skipCutscene1K;
-  console.log(`Cutscene skip for 1K has been set to ${skipCutscene1K}`);
-  localStorage.setItem('skipCutscene1K', JSON.stringify(skipCutscene1K));
-  toggleCutscene1KTxt.textContent = `Skip Decent Cutscenes ${skipCutscene1K ? "" : "On"}`;
-});
+function registerCutsceneToggleButtons() {
+  const toggleCutscene1KBtn = document.getElementById("toggleCutscene1K");
+  const toggleCutscene1KTxt = document.getElementById("1KTxt");
+  if (toggleCutscene1KBtn && toggleCutscene1KTxt) {
+    toggleCutscene1KBtn.addEventListener("click", function () {
+      skipCutscene1K = !skipCutscene1K;
+      console.log(`Cutscene skip for 1K has been set to ${skipCutscene1K}`);
+      localStorage.setItem("skipCutscene1K", JSON.stringify(skipCutscene1K));
+      toggleCutscene1KTxt.textContent = `Skip Decent Cutscenes ${skipCutscene1K ? "" : "On"}`;
+    });
+  }
 
-const toggleCutscene10KBtn = document.getElementById("toggleCutscene10K");
-const toggleCutscene10KTxt = document.getElementById("10KTxt");
-toggleCutscene10KBtn.addEventListener("click", function () {
-  skipCutscene10K = !skipCutscene10K;
-  console.log(`Cutscene skip for 10K has been set to ${skipCutscene10K}`);
-  localStorage.setItem('skipCutscene10K', JSON.stringify(skipCutscene10K));
-  toggleCutscene10KTxt.textContent = `Skip Grand Cutscenes ${skipCutscene10K ? "" : "On"}`;
-});
+  const toggleCutscene10KBtn = document.getElementById("toggleCutscene10K");
+  const toggleCutscene10KTxt = document.getElementById("10KTxt");
+  if (toggleCutscene10KBtn && toggleCutscene10KTxt) {
+    toggleCutscene10KBtn.addEventListener("click", function () {
+      skipCutscene10K = !skipCutscene10K;
+      console.log(`Cutscene skip for 10K has been set to ${skipCutscene10K}`);
+      localStorage.setItem("skipCutscene10K", JSON.stringify(skipCutscene10K));
+      toggleCutscene10KTxt.textContent = `Skip Grand Cutscenes ${skipCutscene10K ? "" : "On"}`;
+    });
+  }
 
-const toggleCutscene100KBtn = document.getElementById("toggleCutscene100K");
-const toggleCutscene100KTxt = document.getElementById("100KTxt");
-toggleCutscene100KBtn.addEventListener("click", function () {
-  skipCutscene100K = !skipCutscene100K;
-  console.log(`Cutscene skip for 100K has been set to ${skipCutscene100K}`);
-  localStorage.setItem('skipCutscene100K', JSON.stringify(skipCutscene100K));
-  toggleCutscene100KTxt.textContent = `Skip Mastery Cutscenes ${skipCutscene100K ? "" : "On"}`;
-});
+  const toggleCutscene100KBtn = document.getElementById("toggleCutscene100K");
+  const toggleCutscene100KTxt = document.getElementById("100KTxt");
+  if (toggleCutscene100KBtn && toggleCutscene100KTxt) {
+    toggleCutscene100KBtn.addEventListener("click", function () {
+      skipCutscene100K = !skipCutscene100K;
+      console.log(`Cutscene skip for 100K has been set to ${skipCutscene100K}`);
+      localStorage.setItem("skipCutscene100K", JSON.stringify(skipCutscene100K));
+      toggleCutscene100KTxt.textContent = `Skip Mastery Cutscenes ${skipCutscene100K ? "" : "On"}`;
+    });
+  }
 
-const toggleCutscene1MBtn = document.getElementById("toggleCutscene1M");
-const toggleCutscene1MTxt = document.getElementById("1MTxt");
-toggleCutscene1MBtn.addEventListener("click", function () {
-  skipCutscene1M = !skipCutscene1M;
-  console.log(`Cutscene skip for 1M has been set to ${skipCutscene1M}`);
-  localStorage.setItem('skipCutscene1M', JSON.stringify(skipCutscene1M));
-  toggleCutscene1MTxt.textContent = `Skip Supreme Cutscenes ${skipCutscene1M ? "" : "On"}`;
-});
+  const toggleCutscene1MBtn = document.getElementById("toggleCutscene1M");
+  const toggleCutscene1MTxt = document.getElementById("1MTxt");
+  if (toggleCutscene1MBtn && toggleCutscene1MTxt) {
+    toggleCutscene1MBtn.addEventListener("click", function () {
+      skipCutscene1M = !skipCutscene1M;
+      console.log(`Cutscene skip for 1M has been set to ${skipCutscene1M}`);
+      localStorage.setItem("skipCutscene1M", JSON.stringify(skipCutscene1M));
+      toggleCutscene1MTxt.textContent = `Skip Supreme Cutscenes ${skipCutscene1M ? "" : "On"}`;
+    });
+  }
+}
 
 function rollRarity() {
   lastRollPersisted = true;
@@ -10197,124 +10248,151 @@ function deleteAllByRarity(rarityClass) {
   renderInventory();
 }
 
-document
-  .getElementById("toggleInventoryBtn")
-  .addEventListener("click", function () {
-    const inventorySection = document.querySelector(".inventory");
-    const isVisible = inventorySection.style.visibility !== "visible";
+function registerInterfaceToggleButtons() {
+  const toggleInventoryBtn = document.getElementById("toggleInventoryBtn");
+  if (toggleInventoryBtn) {
+    toggleInventoryBtn.addEventListener("click", function () {
+      const inventorySection = document.querySelector(".inventory");
+      if (!inventorySection) {
+        return;
+      }
 
-    if (isVisible) {
-      inventorySection.style.visibility = "visible";
-      this.textContent = "Hide Inventory";
-    } else {
-      inventorySection.style.visibility = "hidden";
-      this.textContent = "Show Inventory";
-    }
-  });
+      const isVisible = inventorySection.style.visibility !== "visible";
 
-const toggleUiBtn = document.getElementById("toggleUiBtn");
-const uiSection = document.querySelector(".ui");
-
-toggleUiBtn.addEventListener("click", function (event) {
-  const isVisible = uiSection.style.visibility !== "hidden";
-
-  if (isVisible) {
-    uiSection.style.visibility = "hidden";
-    this.textContent = "Show UI";
-  } else {
-    uiSection.style.visibility = "visible";
-    this.textContent = "Hide UI";
+      if (isVisible) {
+        inventorySection.style.visibility = "visible";
+        this.textContent = "Hide Inventory";
+      } else {
+        inventorySection.style.visibility = "hidden";
+        this.textContent = "Show Inventory";
+      }
+    });
   }
 
-  if (this.textContent === "Show UI") {
-    toggleUiBtn.style.display = "none";
-    event.stopPropagation();
+  const toggleUiBtn = document.getElementById("toggleUiBtn");
+  const uiSection = document.querySelector(".ui");
+
+  if (toggleUiBtn && uiSection) {
+    toggleUiBtn.addEventListener("click", function (event) {
+      const isVisible = uiSection.style.visibility !== "hidden";
+
+      if (isVisible) {
+        uiSection.style.visibility = "hidden";
+        this.textContent = "Show UI";
+      } else {
+        uiSection.style.visibility = "visible";
+        this.textContent = "Hide UI";
+      }
+
+      if (this.textContent === "Show UI") {
+        toggleUiBtn.style.display = "none";
+        event.stopPropagation();
+      }
+    });
+
+    document.addEventListener("click", () => {
+      if (toggleUiBtn.style.display === "none") {
+        toggleUiBtn.style.display = "block";
+      }
+    });
   }
-});
 
-document.addEventListener("click", () => {
-  if (toggleUiBtn.style.display === "none") {
-    toggleUiBtn.style.display = "block";
+  const toggleRollDisplayBtn = document.getElementById("toggleRollDisplayBtn");
+  if (toggleRollDisplayBtn) {
+    toggleRollDisplayBtn.addEventListener("click", function () {
+      const inventorySection = document.querySelector(".container");
+      if (!inventorySection) {
+        return;
+      }
+
+      const isVisible = inventorySection.style.visibility !== "hidden";
+
+      if (isVisible) {
+        inventorySection.style.visibility = "hidden";
+        rollDisplayHiddenByUser = true;
+        this.textContent = "Show Roll & Display";
+      } else {
+        inventorySection.style.visibility = "visible";
+        rollDisplayHiddenByUser = false;
+        cutsceneHidRollDisplay = false;
+        this.textContent = "Hide Roll & Display";
+      }
+    });
   }
-});
 
-document
-  .getElementById("toggleRollDisplayBtn")
-  .addEventListener("click", function () {
-    const inventorySection = document.querySelector(".container");
-    const isVisible = inventorySection.style.visibility !== "hidden";
+  const toggleRollHistoryBtn = document.getElementById("toggleRollHistoryBtn");
+  if (toggleRollHistoryBtn) {
+    toggleRollHistoryBtn.addEventListener("click", function () {
+      const historySection = document.querySelector(".historySection");
+      const container = document.querySelector(".container1");
+      if (!historySection || !container) {
+        return;
+      }
 
-    if (isVisible) {
-      inventorySection.style.visibility = "hidden";
-      rollDisplayHiddenByUser = true;
-      this.textContent = "Show Roll & Display";
-    } else {
-      inventorySection.style.visibility = "visible";
-      rollDisplayHiddenByUser = false;
-      cutsceneHidRollDisplay = false;
-      this.textContent = "Hide Roll & Display";
-    }
-  });
+      const isVisible = historySection.style.visibility !== "hidden";
 
-window.addEventListener("resize", function () {
-  const container = document.querySelector(".container1");
-  const inventory = document.querySelector(".inventory");
-  const SeButton = document.getElementById("settingsButton");
-  const AButton = document.getElementById("achievementsButton");
-  const StButton = document.getElementById("statsButton");
-  const sliderContainer = document.querySelector(".slider-container");
-  const originalParent = document.querySelector(".original-parent");
-
-  if (window.innerWidth < 821) {
-    SeButton.style.display = "none";
-    AButton.style.display = "none";
-    StButton.style.display = "none";
-    container.style.left = "10px";
-    inventory.style.height = "58vh";
-    inventory.style.width = "42vh";
-
-    if (!container.contains(sliderContainer)) {
-      container.appendChild(sliderContainer);
-    }
-  } else if (window.innerWidth > 821 && window.innerHeight > 1400) { 
-    // Fix: Use '&&' instead of '&'
-    inventory.style.width = "70vh";
-    container.style.left = "383px";
-
-    if (originalParent && !originalParent.contains(sliderContainer)) {
-      originalParent.appendChild(sliderContainer);
-    }
-  } else {
-    container.style.left = "383px";
-    SeButton.style.display = "inline-block";
-    AButton.style.display = "inline-block";
-    StButton.style.display = "inline-block";
-    inventory.style.width = "60vh";
-    inventory.style.height = "85vh";
-
-    if (originalParent && !originalParent.contains(sliderContainer)) {
-      originalParent.appendChild(sliderContainer);
-    }
+      if (isVisible) {
+        historySection.style.visibility = "hidden";
+        this.textContent = "Show Roll History";
+        container.style.left = "10px";
+      } else {
+        historySection.style.visibility = "visible";
+        this.textContent = "Hide Roll History";
+        container.style.left = "383px";
+      }
+    });
   }
-});
+}
 
-document
-  .getElementById("toggleRollHistoryBtn")
-  .addEventListener("click", function () {
-    const historySection = document.querySelector(".historySection");
+function registerResponsiveHandlers() {
+  const applyLayout = () => {
     const container = document.querySelector(".container1");
-    const isVisible = historySection.style.visibility !== "hidden";
+    const inventory = document.querySelector(".inventory");
+    const settingsButton = document.getElementById("settingsButton");
+    const achievementsButton = document.getElementById("achievementsButton");
+    const statsButton = document.getElementById("statsButton");
+    const sliderContainer = document.querySelector(".slider-container");
+    const originalParent = document.querySelector(".original-parent");
 
-    if (isVisible) {
-      historySection.style.visibility = "hidden";
-      this.textContent = "Show Roll History";
-      container.style.left = "10px";
-    } else {
-      historySection.style.visibility = "visible";
-      this.textContent = "Hide Roll History";
-      container.style.left = "383px";
+    if (!container || !inventory || !settingsButton || !achievementsButton || !statsButton) {
+      return;
     }
-});
+
+    if (window.innerWidth < 821) {
+      settingsButton.style.display = "none";
+      achievementsButton.style.display = "none";
+      statsButton.style.display = "none";
+      container.style.left = "10px";
+      inventory.style.height = "58vh";
+      inventory.style.width = "42vh";
+
+      if (sliderContainer && !container.contains(sliderContainer)) {
+        container.appendChild(sliderContainer);
+      }
+    } else if (window.innerWidth > 821 && window.innerHeight > 1400) {
+      inventory.style.width = "70vh";
+      container.style.left = "383px";
+
+      if (originalParent && sliderContainer && !originalParent.contains(sliderContainer)) {
+        originalParent.appendChild(sliderContainer);
+      }
+    } else {
+      container.style.left = "383px";
+      settingsButton.style.display = "inline-block";
+      achievementsButton.style.display = "inline-block";
+      statsButton.style.display = "inline-block";
+      inventory.style.width = "60vh";
+      inventory.style.height = "85vh";
+
+      if (originalParent && sliderContainer && !originalParent.contains(sliderContainer)) {
+        originalParent.appendChild(sliderContainer);
+      }
+    }
+  };
+
+  applyLayout();
+  window.addEventListener("resize", applyLayout);
+}
 
 const backgroundDetails = {
   menuDefault: { image: "files/backgrounds/menu.png", audio: null },
@@ -10877,18 +10955,19 @@ function toggleFullscreen() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", (event) => {
-  document
-    .getElementById("deleteAllButton")
-    .addEventListener("click", function () {
-      var confirmDelete = confirm(
-        "Are you sure you want to delete all Titles?"
-      );
-      if (confirmDelete) {
-        deleteAllFromInventory();
-      }
-    });
-});
+function registerDeleteAllButton() {
+  const deleteAllButton = document.getElementById("deleteAllButton");
+  if (!deleteAllButton) {
+    return;
+  }
+
+  deleteAllButton.addEventListener("click", function () {
+    const confirmDelete = confirm("Are you sure you want to delete all Titles?");
+    if (confirmDelete) {
+      deleteAllFromInventory();
+    }
+  });
+}
 
 function startAnimation() {
   const star = document.getElementById("star");
@@ -11535,9 +11614,7 @@ function scheduleAllCooldownButtons() {
   });
 }
 
-scheduleAllCooldownButtons();
-
-document.addEventListener("DOMContentLoaded", () => {
+function registerMenuDragHandlers() {
   const settingsMenu = document.getElementById("settingsMenu");
   const settingsHeader = settingsMenu?.querySelector(".settings-header");
   const settingsBody = settingsMenu?.querySelector(".settings-body");
@@ -11547,7 +11624,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const statsMenu = document.getElementById("statsMenu");
   const statsHeader = statsMenu?.querySelector(".stats-header");
   const statsDragHandle = statsMenu?.querySelector(".stats-menu__drag-handle");
-  const headerStats = statsMenu.querySelector("h3");
+  const headerStats = statsMenu?.querySelector("h3");
   let isDraggingSettings = false;
   let isDraggingAchievements = false;
   let isDraggingStats = false;
@@ -11560,7 +11637,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let offsetXStyle = 0;
   let offsetYStyle = 0;
 
-  if (settingsHeader) {
+  if (settingsHeader && settingsMenu) {
     settingsHeader.addEventListener("mousedown", (event) => {
       if (event.button !== 0 || event.target.closest(".settings-close-btn")) {
         return;
@@ -11595,7 +11672,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (achievementsHeader) {
+  if (achievementsHeader && achievementsMenu) {
     achievementsHeader.addEventListener("mousedown", (event) => {
       if (event.button !== 0 || event.target.closest(".achievements-close-btn")) {
         return;
@@ -11632,7 +11709,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (headerStats) {
+  if (headerStats && statsDragHandle) {
     headerStats.addEventListener("mousedown", (event) => {
       isDraggingStats = true;
       statsDragHandle.classList.add("is-dragging");
@@ -11671,12 +11748,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   document.addEventListener("mousemove", (event) => {
-    if (isDraggingSettings) {
+    if (isDraggingSettings && settingsMenu) {
       settingsMenu.style.left = `${event.clientX - offsetX}px`;
       settingsMenu.style.top = `${event.clientY - offsetY}px`;
     }
 
-    if (isDraggingAchievements) {
+    if (isDraggingAchievements && achievementsMenu) {
       achievementsMenu.style.left = `${event.clientX - offsetXAchievements}px`;
       achievementsMenu.style.top = `${event.clientY - offsetYAchievements}px`;
     }
@@ -11701,11 +11778,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isDraggingStats) {
       isDraggingStats = false;
       statsHeader?.classList.remove("is-dragging");
+      statsDragHandle?.classList.remove("is-dragging");
     }
   });
-});
+}
 
-document.addEventListener("DOMContentLoaded", () => {
+function enhanceInventoryDeleteButtons() {
   document.querySelectorAll(".inventory-delete-btn").forEach((button) => {
     if (button.childElementCount > 0) {
       return;
@@ -11724,99 +11802,133 @@ document.addEventListener("DOMContentLoaded", () => {
     button.appendChild(labelSpan);
     button.classList.add("inventory-delete-btn--overlay");
   });
-});
-
-const settingsButton = document.getElementById("settingsButton");
-const achievementsButton = document.getElementById("achievementsButton");
-const achievementsMenu = document.getElementById("achievementsMenu");
-const closeAchievements = document.getElementById("closeAchievements");
-const statsMenu = document.getElementById("statsMenu");
-const statsButton = document.getElementById("statsButton");
-const closeStats = document.getElementById("closeStats");
-const settingsMenu = document.getElementById("settingsMenu");
-const closeSettings = document.getElementById("closeSettings");
-const audioSlider = document.getElementById("audioSlider");
-const audioSliderValueLabel = document.getElementById("audioSliderValue");
-const resetDataButton = document.getElementById("resetDataButton");
-const autoRollButton = document.getElementById("autoRollButton");
-const rollButton = document.getElementById("rollButton");
-
-settingsButton.addEventListener("click", () => {
-  settingsMenu.style.display = "block";
-});
-
-closeSettings.addEventListener("click", () => {
-  settingsMenu.style.display = "none";
-});
-
-achievementsButton.addEventListener("click", () => {
-  achievementsMenu.style.display = "block";
-  const achievementsBodyElement = achievementsMenu.querySelector(".achievements-body");
-  if (achievementsBodyElement) {
-    achievementsBodyElement.scrollTop = 0;
-  }
-});
-
-closeAchievements.addEventListener("click", () => {
-  achievementsMenu.style.display = "none";
-});
-
-statsButton.addEventListener("click", () => {
-  statsMenu.style.display = "block";
-  statsMenu.style.transform = "translate(-50%, -50%)";
-  statsMenu.style.left = "50%";
-  statsMenu.style.top = "50%";
-});
-
-closeStats.addEventListener("click", () => {
-  statsMenu.style.display = "none";
-});
-
-const muteButton = document.getElementById("muteButton");
-
-const savedVolume = localStorage.getItem("audioVolume");
-if (savedVolume !== null) {
-  audioVolume = parseFloat(savedVolume);
-  previousVolume = audioVolume;
-  audioSlider.value = audioVolume;
-  updateAudioElements(audioVolume);
-} else {
-  updateAudioElements(audioVolume);
 }
-setSliderMutedState(audioVolume === 0);
-updateAudioSliderUi();
 
-audioSlider.addEventListener("input", () => {
-  audioVolume = parseFloat(audioSlider.value);
-  if (audioVolume === 0) {
-    isMuted = true;
-    setSliderMutedState(true);
-  } else {
-    isMuted = false;
-    previousVolume = audioVolume;
-    setSliderMutedState(false);
-  }
-  localStorage.setItem("audioVolume", audioVolume);
-  updateAudioElements(audioVolume);
-  updateAudioSliderUi();
-});
+function registerMenuButtons() {
+  const settingsButton = document.getElementById("settingsButton");
+  const achievementsButton = document.getElementById("achievementsButton");
+  const achievementsMenu = document.getElementById("achievementsMenu");
+  const closeAchievements = document.getElementById("closeAchievements");
+  const statsMenu = document.getElementById("statsMenu");
+  const statsButton = document.getElementById("statsButton");
+  const closeStats = document.getElementById("closeStats");
+  const settingsMenu = document.getElementById("settingsMenu");
+  const closeSettings = document.getElementById("closeSettings");
 
-muteButton.addEventListener("click", () => {
-  isMuted = !isMuted;
-
-  if (isMuted) {
-    previousVolume = audioVolume;
-    audioVolume = 0;
-  } else {
-    audioVolume = previousVolume;
+  if (settingsButton && settingsMenu) {
+    settingsButton.addEventListener("click", () => {
+      settingsMenu.style.display = "block";
+    });
   }
 
-  audioSlider.value = audioVolume;
-  localStorage.setItem("audioVolume", audioVolume);
+  if (closeSettings && settingsMenu) {
+    closeSettings.addEventListener("click", () => {
+      settingsMenu.style.display = "none";
+    });
+  }
+
+  if (achievementsButton && achievementsMenu) {
+    achievementsButton.addEventListener("click", () => {
+      achievementsMenu.style.display = "block";
+      const achievementsBodyElement = achievementsMenu.querySelector(".achievements-body");
+      if (achievementsBodyElement) {
+        achievementsBodyElement.scrollTop = 0;
+      }
+    });
+  }
+
+  if (closeAchievements && achievementsMenu) {
+    closeAchievements.addEventListener("click", () => {
+      achievementsMenu.style.display = "none";
+    });
+  }
+
+  if (statsButton && statsMenu) {
+    statsButton.addEventListener("click", () => {
+      statsMenu.style.display = "block";
+      statsMenu.style.transform = "translate(-50%, -50%)";
+      statsMenu.style.left = "50%";
+      statsMenu.style.top = "50%";
+    });
+  }
+
+  if (closeStats && statsMenu) {
+    closeStats.addEventListener("click", () => {
+      statsMenu.style.display = "none";
+    });
+  }
+}
+
+function setupAudioControls() {
+  audioSliderElement = document.getElementById("audioSlider");
+  audioSliderValueLabelElement = document.getElementById("audioSliderValue");
+  muteButtonElement = document.getElementById("muteButton");
+  const resetDataButton = document.getElementById("resetDataButton");
+
+  const savedVolume = localStorage.getItem("audioVolume");
+  if (savedVolume !== null) {
+    audioVolume = parseFloat(savedVolume);
+    previousVolume = audioVolume;
+  }
+
   updateAudioElements(audioVolume);
-  setSliderMutedState(isMuted);
+
+  if (audioSliderElement) {
+    audioSliderElement.value = audioVolume;
+    audioSliderElement.addEventListener("input", () => {
+      audioVolume = parseFloat(audioSliderElement.value);
+      if (audioVolume === 0) {
+        isMuted = true;
+        setSliderMutedState(true);
+      } else {
+        isMuted = false;
+        previousVolume = audioVolume;
+        setSliderMutedState(false);
+      }
+      localStorage.setItem("audioVolume", audioVolume);
+      updateAudioElements(audioVolume);
+      updateAudioSliderUi();
+    });
+  }
+
+  if (muteButtonElement) {
+    muteButtonElement.addEventListener("click", () => {
+      isMuted = !isMuted;
+
+      if (isMuted) {
+        previousVolume = audioVolume;
+        audioVolume = 0;
+      } else {
+        audioVolume = previousVolume;
+      }
+
+      if (audioSliderElement) {
+        audioSliderElement.value = audioVolume;
+      }
+      localStorage.setItem("audioVolume", audioVolume);
+      updateAudioElements(audioVolume);
+      setSliderMutedState(isMuted);
+      updateAudioSliderUi();
+    });
+  }
+
+  if (resetDataButton) {
+    resetDataButton.addEventListener("click", () => {
+      if (confirm("Are you sure you want to reset all data?")) {
+        console.log("Data reset!");
+        localStorage.clear();
+
+        setTimeout(() => {
+          localStorage.clear();
+          location.reload();
+        }, 100);
+      }
+    });
+  }
+
+  setSliderMutedState(audioVolume === 0);
   updateAudioSliderUi();
-});
+}
 
 function updateAudioElements(volume) {
   const audioElements = document.querySelectorAll("audio");
@@ -11824,22 +11936,22 @@ function updateAudioElements(volume) {
 }
 
 function setSliderMutedState(muted) {
-  if (!audioSlider) {
+  if (!audioSliderElement) {
     return;
   }
 
-  audioSlider.classList.toggle("muted", Boolean(muted));
+  audioSliderElement.classList.toggle("muted", Boolean(muted));
 }
 
 function updateAudioSliderUi() {
-  if (!audioSlider) {
+  if (!audioSliderElement) {
     return;
   }
 
-  const value = Math.max(0, Math.min(1, parseFloat(audioSlider.value) || 0));
+  const value = Math.max(0, Math.min(1, parseFloat(audioSliderElement.value) || 0));
   const percentage = Math.round(value * 100);
-  if (audioSliderValueLabel) {
-    audioSliderValueLabel.textContent = `${percentage}%`;
+  if (audioSliderValueLabelElement) {
+    audioSliderValueLabelElement.textContent = `${percentage}%`;
   }
 
   const startColor = { r: 96, g: 0, b: 126 };
@@ -11849,177 +11961,216 @@ function updateAudioSliderUi() {
   const b = Math.round(startColor.b + (endColor.b - startColor.b) * value);
   const thumbColor = `rgb(${r}, ${g}, ${b})`;
 
-  audioSlider.style.setProperty("--thumb-color", thumbColor);
+  audioSliderElement.style.setProperty("--thumb-color", thumbColor);
 
-  const trackColor = audioSlider.classList.contains("muted")
+  const trackColor = audioSliderElement.classList.contains("muted")
     ? "rgba(128, 96, 186, 0.75)"
     : thumbColor;
 
-  audioSlider.style.background = `linear-gradient(90deg, ${trackColor} ${percentage}%, rgba(255, 255, 255, 0.12) ${percentage}%)`;
+  audioSliderElement.style.background = `linear-gradient(90deg, ${trackColor} ${percentage}%, rgba(255, 255, 255, 0.12) ${percentage}%)`;
 }
 
-resetDataButton.addEventListener("click", () => {
-  if (confirm("Are you sure you want to reset all data?")) {
-    console.log("Data reset!");
-    localStorage.clear();
-    
-    setTimeout(() => {
-      localStorage.clear();
-      location.reload();
-      let playTime = 0;
-    }, 100);
+function initializeAutoRollControls() {
+  autoRollButtonElement = document.getElementById("autoRollButton");
+  if (!autoRollButtonElement) {
+    return;
   }
-});
 
-const savedState = localStorage.getItem("autoRollEnabled");
-if (savedState === "true") {
-  startAutoRoll();
-} else {
-  stopAutoRoll();
-}
-
-autoRollButton.addEventListener("click", () => {
-  if (autoRollInterval) {
-    stopAutoRoll();
-  } else {
+  const savedState = localStorage.getItem("autoRollEnabled");
+  if (savedState === "true") {
     startAutoRoll();
+  } else {
+    stopAutoRoll();
   }
-});
+
+  autoRollButtonElement.addEventListener("click", () => {
+    if (autoRollInterval) {
+      stopAutoRoll();
+    } else {
+      startAutoRoll();
+    }
+  });
+}
 
 function startAutoRoll() {
+  if (!autoRollButtonElement) {
+    return;
+  }
+
   autoRollInterval = setInterval(() => {
-    document.getElementById("rollButton").click();
-  },400);
-  autoRollButton.textContent = "Auto Roll: On";
+    document.getElementById("rollButton")?.click();
+  }, 400);
+  autoRollButtonElement.textContent = "Auto Roll: On";
   console.log("Rolling...");
-  autoRollButton.classList.remove("off");
-  autoRollButton.classList.add("on");
+  autoRollButtonElement.classList.remove("off");
+  autoRollButtonElement.classList.add("on");
   localStorage.setItem("autoRollEnabled", "true");
 }
 
 function stopAutoRoll() {
+  if (!autoRollButtonElement) {
+    return;
+  }
+
   clearInterval(autoRollInterval);
   console.log("Stopped rolling");
   autoRollInterval = null;
-  autoRollButton.textContent = "Auto Roll: Off";
-  autoRollButton.classList.remove("on");
-  autoRollButton.classList.add("off");
+  autoRollButtonElement.textContent = "Auto Roll: Off";
+  autoRollButtonElement.classList.remove("on");
+  autoRollButtonElement.classList.add("off");
   localStorage.setItem("autoRollEnabled", "false");
 }
 
 updateAudioSliderUi();
 
-const heartContainer = document.createElement('div');
-document.body.appendChild(heartContainer);
+function initializeHeartEffect() {
+  if (heartIntervalId) {
+    return;
+  }
 
-function createHeart() {
-    const heart = document.createElement('div');
-    heart.classList.add('heart');
-    heart.textContent = '🌊';
-    heart.style.left = Math.random() * 100 + 'vw';
-    heart.style.top = Math.random() * 100 + 'vh';
-    heart.style.fontSize = Math.random() * 25 + 15 + 'px';
+  if (!heartContainerElement) {
+    heartContainerElement = document.createElement("div");
+    document.body.appendChild(heartContainerElement);
+  }
 
-    heartContainer.appendChild(heart);
+  const createHeart = () => {
+    const heart = document.createElement("div");
+    heart.classList.add("heart");
+    heart.textContent = "🌊";
+    heart.style.left = `${Math.random() * 100}vw`;
+    heart.style.top = `${Math.random() * 100}vh`;
+    heart.style.fontSize = `${Math.random() * 25 + 15}px`;
+
+    heartContainerElement.appendChild(heart);
 
     setTimeout(() => {
-        heart.remove();
+      heart.remove();
     }, 1000);
+  };
+
+  heartIntervalId = setInterval(createHeart, 33);
 }
 
-setInterval(createHeart, 33);
-
-const secretKey = 'ImpeachedGlazer';
-
-document.getElementById('saveButton').addEventListener('click', () => {
-  const data = JSON.stringify(localStorage);
-
-  const encryptedData = CryptoJS.AES.encrypt(data, secretKey).toString();
-
-  const blob = new Blob([encryptedData], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'localStorageData.json';
-  a.click();
-
-  URL.revokeObjectURL(url);
-});
+const secretKey = "ImpeachedGlazer";
 
 function showStatusMessage(message, duration = 2000) {
-  const status = document.getElementById('status');
+  const status = document.getElementById("status");
+  if (!status) {
+    return;
+  }
+
+  status.style.display = "";
   status.textContent = message;
-  status.classList.add('showStatus');
+  status.classList.add("showStatus");
 
   setTimeout(() => {
-      status.classList.remove('showStatus');
-      setTimeout(() => (status.style.display = 'none'), 500);
+    status.classList.remove("showStatus");
+    setTimeout(() => {
+      if (status.isConnected) {
+        status.style.display = "none";
+      }
+    }, 500);
   }, duration);
 }
 
-    let playTime = parseInt(localStorage.getItem('playTime')) || 0;
-    
-    const timerDisplay = document.getElementById('timer');
+function registerDataPersistenceButtons() {
+  const saveButton = document.getElementById("saveButton");
+  const importButton = document.getElementById("importButton");
 
-    function formatTime(seconds) {
-      const hrs = Math.floor(seconds / 3600);
-      const mins = Math.floor((seconds % 3600) / 60);
-      const secs = seconds % 60;
-      return [
-        hrs.toString().padStart(2, '0'),
-        mins.toString().padStart(2, '0'),
-        secs.toString().padStart(2, '0')
-      ].join(':');
-    }
+  if (saveButton) {
+    saveButton.addEventListener("click", () => {
+      const data = JSON.stringify(localStorage);
+      const encryptedData = CryptoJS.AES.encrypt(data, secretKey).toString();
+      const blob = new Blob([encryptedData], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
 
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "localStorageData.json";
+      a.click();
+
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  if (importButton) {
+    importButton.addEventListener("click", () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+
+      input.addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        if (!file) {
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const encryptedData = e.target?.result;
+            if (typeof encryptedData !== "string") {
+              throw new Error("Invalid file contents");
+            }
+
+            const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
+            const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+            const importedData = JSON.parse(decryptedData);
+
+            Object.keys(importedData).forEach((key) => {
+              localStorage.setItem(key, importedData[key]);
+            });
+
+            showStatusMessage("Data imported successfully! Refreshing...", 1500);
+
+            setTimeout(() => {
+              location.reload();
+            }, 1500);
+          } catch (error) {
+            showStatusMessage("Error: Invalid file format.");
+          }
+        };
+
+        reader.readAsText(file);
+      });
+
+      input.click();
+    });
+  }
+}
+
+function initializePlayTimeTracker() {
+  if (playTimeIntervalId) {
+    return;
+  }
+
+  let playTime = parseInt(localStorage.getItem("playTime"), 10) || 0;
+  const timerDisplay = document.getElementById("timer");
+  if (!timerDisplay) {
+    return;
+  }
+
+  const formatTime = (seconds) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return [
+      hrs.toString().padStart(2, "0"),
+      mins.toString().padStart(2, "0"),
+      secs.toString().padStart(2, "0"),
+    ].join(":");
+  };
+
+  timerDisplay.textContent = formatTime(playTime);
+
+  playTimeIntervalId = setInterval(() => {
+    playTime += 1;
     timerDisplay.textContent = formatTime(playTime);
-
-    setInterval(() => {
-      playTime++;
-      timerDisplay.textContent = formatTime(playTime);
-      localStorage.setItem('playTime', playTime);
-      checkAchievements();
-      updateAchievementsList();
-    }, 1000);
-
-document.getElementById('importButton').addEventListener('click', () => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json';
-
-  input.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const encryptedData = e.target.result;
-
-          const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
-          const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
-
-          const importedData = JSON.parse(decryptedData);
-
-          Object.keys(importedData).forEach(key => {
-            localStorage.setItem(key, importedData[key]);
-          });
-
-                  showStatusMessage("Data imported successfully! Refreshing...", 1500);
-
-                  setTimeout(() => {
-                      location.reload();
-                  }, 1500);
-              } catch (error) {
-                  showStatusMessage("Error: Invalid file format.");
-              }
-          };
-          reader.readAsText(file);
-      }
-  });
-
-  input.click();
-});
+    localStorage.setItem("playTime", playTime);
+    checkAchievements();
+    updateAchievementsList();
+  }, 1000);
+}
 
 const rollingHistory = [];
 
@@ -12049,12 +12200,23 @@ function updateRollingHistory(title, rarity) {
     });
 }
 
-document.getElementById("deleteAllUnder100Button")?.addEventListener("click", () => deleteByRarityBucket('under100'));
-document.getElementById("deleteAllUnder1kButton")?.addEventListener("click", () => deleteByRarityBucket('under1k'));
-document.getElementById("deleteAllUnder10kButton")?.addEventListener("click", () => deleteByRarityBucket('under10k'));
-document.getElementById("deleteAllUnder100kButton")?.addEventListener("click", () => deleteByRarityBucket('under100k'));
-document.getElementById("deleteAllUnder1mButton")?.addEventListener("click", () => deleteByRarityBucket('under1m'));
-document.getElementById("deleteAllSpecialButton")?.addEventListener("click", () => deleteByRarityBucket('special'));
+function registerRarityDeletionButtons() {
+  const buttonMappings = [
+    ["deleteAllUnder100Button", "under100"],
+    ["deleteAllUnder1kButton", "under1k"],
+    ["deleteAllUnder10kButton", "under10k"],
+    ["deleteAllUnder100kButton", "under100k"],
+    ["deleteAllUnder1mButton", "under1m"],
+    ["deleteAllSpecialButton", "special"],
+  ];
+
+  buttonMappings.forEach(([id, bucket]) => {
+    const button = document.getElementById(id);
+    if (button) {
+      button.addEventListener("click", () => deleteByRarityBucket(bucket));
+    }
+  });
+}
 
 function getClassForRarity(rarity) {
   const rarityClasses = {
