@@ -4925,7 +4925,6 @@ body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
   @keyframes rngShakeXL { from { transform: translate(0,0) } to { transform: translate(1px,-1px) } }
 }
 
-
 @media (max-width: 480px) {
   .historySection ul {
     max-height: clamp(240px, 60vh, 380px);

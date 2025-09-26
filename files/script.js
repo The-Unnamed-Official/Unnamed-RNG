@@ -53,6 +53,7 @@ let allowForcedAudioPlayback = false;
 let pinnedAudioId = null;
 let pausedEquippedAudioState = null;
 let resumeEquippedAudioAfterCutscene = false;
+let pendingCutsceneRarity = null;
 const rolledRarityBuckets = new Set(storage.get("rolledRarityBuckets", []));
 
 const STOPPABLE_AUDIO_IDS = [
@@ -1130,7 +1131,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
   }
 
   let rarity = rollRarity();
-  pauseEquippedAudioForRarity(rarity);
+  pendingCutsceneRarity = rarity;
 
   const preservedAudioIds = [];
   if (
@@ -1142,10 +1143,15 @@ document.getElementById("rollButton").addEventListener("click", function () {
     preservedAudioIds.push(pausedEquippedAudioState.element.id);
   }
 
+  if (currentAudio && currentAudio.id) {
+    preservedAudioIds.push(currentAudio.id);
+  }
+
   stopAllAudio({
     preservePinned: true,
     preserve: preservedAudioIds,
   });
+  
   let title = selectTitle(rarity);
 
   rollButton.disabled = true;
@@ -9969,6 +9975,8 @@ function displayResult(title, rarity) {
     return;
   }
 
+  pendingCutsceneRarity = null;
+
   const rarityValue = rarity == null ? "" : rarity;
   const rarityText = typeof rarityValue === "string" ? rarityValue : String(rarityValue);
   const [rarityName, oddsRaw] = rarityText.split(" [");
@@ -10471,12 +10479,23 @@ function enableChange() {
   finalizeCutsceneState();
 }
 
+function pauseEquippedAudioForPendingCutscene() {
+  if (!pendingCutsceneRarity) {
+    return;
+  }
+
+  const rarity = pendingCutsceneRarity;
+  pendingCutsceneRarity = null;
+  pauseEquippedAudioForRarity(rarity);
+}
+
 function disableChange() {
   isChangeEnabled = false;
   cutsceneActive = true;
   scheduleCutsceneFailsafe();
   // Hide stack during cutscenes (body backgrounds/gifs will show)
   if (__bgStack) __bgStack.classList.add("is-hidden");
+  pauseEquippedAudioForPendingCutscene();
 }
 
 function renderInventory() {
