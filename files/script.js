@@ -36,7 +36,6 @@ let audioVolume = 1;
 let isMuted = false;
 let previousVolume = audioVolume;
 let refreshTimeout;
-let hasScheduledLoad = false;
 let skipCutscene1K = true;
 let skipCutscene10K = true;
 let skipCutscene100K = true;
@@ -987,6 +986,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       if (typeof mainAudio !== "undefined" && mainAudio && typeof mainAudio.play === "function") {
+        if (mainAudio.preload === "none") {
+          mainAudio.preload = "auto";
+          try {
+            mainAudio.load();
+          } catch (error) {
+            /* no-op */
+          }
+        }
         // Kick off playback without awaiting so UI initialisation continues even if the
         // browser delays or blocks autoplay.
         const playAttempt = mainAudio.play();
@@ -1040,20 +1047,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initializeAfterStart();
   });
 });
-
-function loadContent() {
-  LOADING_SEQUENCE.forEach(({ action }) => action());
-}
-
-function load() {
-  if (document.readyState === "loading" && !hasScheduledLoad) {
-    hasScheduledLoad = true;
-    document.addEventListener("DOMContentLoaded", () => {
-      hasScheduledLoad = false;
-      loadContent();
-    }, { once: true });
-  }
-}
 
 function loadCutsceneSkip() {
   CUTSCENE_SKIP_SETTINGS.forEach(({ key, labelId, label }) => {
@@ -11817,7 +11810,7 @@ function registerMenuButtons() {
 
   if (settingsButton && settingsMenu) {
     settingsButton.addEventListener("click", () => {
-      settingsMenu.style.display = "block";
+      settingsMenu.style.display = "flex";
     });
   }
 
@@ -11829,7 +11822,7 @@ function registerMenuButtons() {
 
   if (achievementsButton && achievementsMenu) {
     achievementsButton.addEventListener("click", () => {
-      achievementsMenu.style.display = "block";
+      achievementsMenu.style.display = "flex";
       const achievementsBodyElement = achievementsMenu.querySelector(".achievements-body");
       if (achievementsBodyElement) {
         achievementsBodyElement.scrollTop = 0;
@@ -12040,7 +12033,6 @@ function initializeHeartEffect() {
     heart.style.left = `${Math.random() * 100}vw`;
     heart.style.top = `${Math.random() * 100}vh`;
     heart.style.fontSize = `${Math.random() * 25 + 15}px`;
-
     heartContainerElement.appendChild(heart);
 
     setTimeout(() => {
