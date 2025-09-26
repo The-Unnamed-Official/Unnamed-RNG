@@ -16,6 +16,9 @@
   --btn-accent-2: #76e4c3;    /* Secondary accent */
   --btn-danger: #ff6b6b;      /* Danger accent */
   --btn-ghost: rgba(255,255,255,.08);
+
+  /* Layout */
+  --layout-max-width: 1120px;
 }
 
 /* Motion safety */
@@ -497,7 +500,7 @@ button:hover::after,
 
   overflow: hidden;
   isolation: isolate;
-  z-index: 20000002; /* keep above surrounding UI */
+  z-index: 100002; /* keep above surrounding UI */
 }
 
 /* Sheen for history panel too */
@@ -539,14 +542,12 @@ button:hover::after,
   display: inline-block;
 }
 
+
 /* History list panel and items */
 #historyList {
   list-style: none;
-  padding: 8px;
+  padding: 0;
   margin: 0;
-  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 12px;
   max-height: 240px;           /* prevent runaway height; scroll if long */
   overflow-y: auto;
 }
@@ -554,13 +555,20 @@ button:hover::after,
 #historyList li {
   font-size: 15px;
   line-height: 1.5;
+  padding: 6px 10px;
   border-radius: 10px;
-  padding: 8px 10px;
-  margin: 6px 4px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+  border: #ffffff25 1px solid;
+  margin-bottom: 10px;
   word-break: break-word;
+  background:
+    linear-gradient(180deg, rgba(0,0,0,0.20), rgba(0,0,0,0.20)),
+    linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+}
+
+#historyList li .history-entry-text {
+  display: inline-block;
+  padding: 0;
+  border-radius: 0;
 }
 
 /* Use the same sheen animation keyframes as the main container */
@@ -596,7 +604,7 @@ body {
 /* Replace the old .container block with this */
 .container {
   position: relative;
-  margin: 33vh auto 0 auto;          /* keep your vertical offset, center horizontally */
+  margin: 25vh auto 0 auto;          /* keep your vertical offset, center horizontally */
   display: inline-block;
   padding: 18px 18px 22px;
   width: min(92vw, 740px);
@@ -751,18 +759,168 @@ body {
   transform: translateX(0%);
 }
 
-/* Result display chip */
+/* Result display panel */
 .container .res {
-  min-height: 36px;
-  padding: 6px 12px;
-  border-radius: 10px;
-  color: #fff;
-  font-weight: 700;
-  letter-spacing: 0.4px;
+  width: 100%;
+  min-height: 110px;
+  padding: 12px 6px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+}
 
-  background: linear-gradient(180deg, rgba(255,255,255,0.16), rgba(255,255,255,0.08));
-  border: 1px solid rgba(255,255,255,0.10);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+.roll-result-card {
+  position: relative;
+  width: min(100%, 440px);
+  padding: 20px 24px 22px;
+  border-radius: 18px;
+  color: #f6f8ff;
+  background: linear-gradient(165deg, rgba(28,32,52,0.88), rgba(16,18,28,0.86));
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 16px 38px rgba(4,9,30,0.45), inset 0 1px 0 rgba(255,255,255,0.12);
+  overflow: hidden;
+  isolation: isolate;
+  opacity: 0;
+  transform: translateY(14px) scale(0.97);
+  transition: opacity 240ms ease, transform 280ms cubic-bezier(.16,.78,.32,1.18);
+  --roll-card-accent: linear-gradient(140deg, rgba(122,162,255,0.7), rgba(134,96,255,0.45));
+}
+
+.roll-result-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 18px;
+  background: var(--roll-card-accent);
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: -2;
+}
+
+.roll-result-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: radial-gradient(120% 140% at 25% 0%, rgba(255,255,255,0.28), transparent 60%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.roll-result-card.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.roll-result-card__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.roll-result-card__rarity {
+  font-size: 0.95rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.roll-result-card__odds {
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(224,230,255,0.68);
+  white-space: nowrap;
+}
+
+.roll-result-card__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.28);
+  color: rgba(245,248,255,0.86);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+.roll-result-card__title {
+  font-size: clamp(1.28rem, 3.2vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.roll-result-card__status {
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(214,224,255,0.74);
+}
+
+.roll-result-card__status--skipped {
+  color: #ffb6c1;
+}
+
+.roll-result-card--skipped {
+  --roll-card-accent: linear-gradient(135deg, rgba(255,120,136,0.48), rgba(255,99,132,0.36));
+  background: linear-gradient(165deg, rgba(44,18,26,0.9), rgba(22,10,16,0.92));
+}
+
+.roll-result-card--skipped .roll-result-card__badge {
+  background: rgba(255,105,132,0.14);
+  border-color: rgba(255,142,164,0.45);
+  color: #ffced9;
+}
+
+.roll-result-card--under100 {
+  --roll-card-accent: linear-gradient(135deg, rgba(116, 197, 255, 0.1), rgba(60,137,255,0.1));
+}
+
+.roll-result-card--under1k {
+  --roll-card-accent: linear-gradient(135deg, rgba(118,255,214,0.1), rgba(65, 255, 91, 0.1));
+}
+
+.roll-result-card--under10k {
+  --roll-card-accent: linear-gradient(135deg, rgba(255,208,140,0.1), rgba(255, 51, 129, 0.1));
+}
+
+.roll-result-card--under100k {
+  --roll-card-accent: linear-gradient(135deg, rgba(200,158,255,0.1), rgba(76, 234, 255, 0.1));
+}
+
+.roll-result-card--under1m {
+  --roll-card-accent: linear-gradient(135deg, rgba(255,144,220,0.1), rgba(255, 234, 45, 0.1));
+}
+
+.roll-result-card--special {
+  --roll-card-accent: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.1));
+}
+
+@media (max-width: 520px) {
+  .roll-result-card {
+    padding: 18px 18px 20px;
+  }
+
+  .roll-result-card__header {
+    gap: 8px;
+  }
+
+  .roll-result-card__badge {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 2px;
+  }
 }
 
 /* Compact screens */
@@ -782,6 +940,9 @@ body {
     transition: none !important;
   }
   .container .rButton {
+    transition: none !important;
+  }
+  .roll-result-card {
     transition: none !important;
   }
 }
@@ -812,7 +973,7 @@ body {
 
   overflow: hidden;
   isolation: isolate;
-  z-index: 9999999;
+  z-index: 99999;
 }
 
 /* Light sheen (subtle) */
@@ -1066,10 +1227,15 @@ body {
     gap: 16px;
     padding: 18px 22px 14px 22px;
     border-bottom: 1px solid rgba(120, 164, 255, 0.16);
-    background: rgba(10, 14, 26, 0.65);
+    background: rgba(10, 14, 26, 0.75);
     backdrop-filter: blur(12px);
     cursor: grab;
     user-select: none;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    flex: 0 0 auto;
+    box-shadow: 0 6px 14px rgba(4, 8, 16, 0.55);
 }
 
 .settings-header .dragTxt {
@@ -1407,6 +1573,18 @@ body {
     color: white;
 }
 
+#autoRollButton.locked {
+    background-color: #3f3f3f;
+    color: #d6d6d6;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+#autoRollButton.locked:hover {
+    transform: none;
+    scale: 1;
+}
+
 #closeSettings {
     background-color: #777;
     color: white;
@@ -1530,6 +1708,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .starShenvii {
@@ -1539,6 +1719,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .cutsceneStarBig {
@@ -1548,6 +1730,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .cutsceneStarSmall {
@@ -1557,6 +1741,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .cutsceneStarEaster {
@@ -1565,6 +1751,8 @@ body {
     left: 40%;
     scale: 0;
     pointer-events: none;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .msfuStar {
@@ -1583,6 +1771,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 @keyframes spin {
@@ -2854,6 +3044,17 @@ body.griCutsceneBgImg {
   transition: background-color 0.15s ease, transform 0.08s ease;
 }
 
+.dropdown-item:disabled,
+.dropdown-item--disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.dropdown-item:disabled:hover,
+.dropdown-item--disabled:hover {
+  background-color: transparent;
+}
+
 .dropdown-item i {
   width: 16px;
   text-align: center;
@@ -2874,6 +3075,14 @@ body.griCutsceneBgImg {
 
 .dropdown-item.danger:hover {
   background-color: #5a2f2f;
+}
+
+.dropdown-item--unequip {
+  color: #ffbca7;
+}
+
+.dropdown-item--unequip:hover {
+  background-color: rgba(255, 160, 122, 0.18);
 }
 
 /* Keep burger icon subtle but touch-friendly */
@@ -2908,6 +3117,33 @@ body.griCutsceneBgImg {
     position: relative;
     transition: transform 0.2s ease;
     overflow: visible;
+}
+
+#inventoryList li.inventory-item--equipped {
+  box-shadow:
+    0 0 0 2px rgba(118, 228, 195, 0.35),
+    0 10px 22px rgba(0, 0, 0, 0.35);
+  position: relative;
+  z-index: 0;
+}
+
+#inventoryList li.inventory-item--equipped::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(22, 86, 72, 0.32), rgba(16, 56, 47, 0.18));
+  pointer-events: none;
+  z-index: 0;
+}
+
+#inventoryList li.inventory-item--equipped > * {
+  position: relative;
+  z-index: 1;
+}
+
+#inventoryList li.inventory-item--equipped .rarity-text {
+  text-shadow: 0 0 8px rgba(118, 228, 195, 0.55);
 }
 
 #inventoryList li:hover {
@@ -3247,7 +3483,7 @@ body.griCutsceneBgImg {
 
 .gameTitle,
 .res {
-    background: #ffffff77;
+    background: #ffffff00;
     border-radius: 10px;
     padding: 0 6px;
 }
@@ -3744,7 +3980,12 @@ body.griCutsceneBgImg {
 
 .under100 {
     color: #e0ffff;
-    background: #6495ed;
+    background: linear-gradient(135deg, #9fc7ff 0%, #d6ecff 50%, #ffffff 100%);
+    background-size: 220% 220%;
+    animation: gradient-shift 6s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .under100T {
@@ -3753,7 +3994,12 @@ body.griCutsceneBgImg {
 
 .eventTitleHalloween {
     color: #ffa500;
-    background: #6495ed;
+    background: linear-gradient(135deg, #ffb347 0%, #ffd166 45%, #ff6b35 100%);
+    background-size: 240% 240%;
+    animation: gradient-shift 5s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .eventTitleXmas {
@@ -3776,7 +4022,12 @@ body.griCutsceneBgImg {
 
 .under1k {
     color: #00ffff;
-    background: #6495ed;
+    background: linear-gradient(135deg, #66ffe7 0%, #45d9ff 50%, #b7fff5 100%);
+    background-size: 220% 220%;
+    animation: gradient-shift 6s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .under1kT {
@@ -3785,7 +4036,12 @@ body.griCutsceneBgImg {
 
 .under10k {
     color: #90ee90;
-    background: #6495ed;
+    background: linear-gradient(135deg, #a9ffb2 0%, #e9ff9a 50%, #fff2b2 100%);
+    background-size: 220% 220%;
+    animation: gradient-shift 6s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .under10kT {
@@ -4114,15 +4370,16 @@ body.griCutsceneBgImg {
 .achievement-itemT,
 .achievement-itemC,
 .achievement-itemE,
-.achievement-itemSum {
+.achievement-itemSum,
+.achievement-itemR {
     position: relative;
     padding: 16px 14px;
     text-align: center;
     border-radius: 12px;
     font-weight: 600;
     font-size: 0.95rem;
-    color: #f3f6ff;
-    background: linear-gradient(155deg, rgba(40, 56, 94, 0.82), rgba(18, 28, 52, 0.88));
+    color: var(--achievement-color, #f3f6ff);
+    background: var(--achievement-background, linear-gradient(155deg, rgba(40, 56, 94, 0.82), rgba(18, 28, 52, 0.88)));
     border: 1px solid rgba(130, 176, 255, 0.22);
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
     cursor: pointer;
@@ -4134,10 +4391,16 @@ body.griCutsceneBgImg {
     word-break: break-word;
 }
 
+.achievement--unlocked {
+    border-color: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+}
+
 .achievement-itemT,
 .achievement-itemC,
 .achievement-itemE,
-.achievement-itemSum {
+.achievement-itemSum,
+.achievement-itemR {
     font-size: 0.9rem;
     padding-left: 12px;
     padding-right: 12px;
@@ -4147,7 +4410,8 @@ body.griCutsceneBgImg {
 .achievement-itemT:hover,
 .achievement-itemC:hover,
 .achievement-itemE:hover,
-.achievement-itemSum:hover {
+.achievement-itemSum:hover,
+.achievement-itemR:hover {
     transform: translateY(-2px);
     background: linear-gradient(155deg, rgba(62, 86, 138, 0.9), rgba(26, 36, 64, 0.95));
     border-color: rgba(167, 205, 255, 0.4);
@@ -4166,15 +4430,21 @@ body.griCutsceneBgImg {
 }
 
 .achievement-itemE:hover::after,
-.achievement-itemSum:hover::after {
+.achievement-itemSum:hover::after,
+.achievement-itemR:hover::after {
     content: "Play in " attr(data-time) " to unlock this achievement";
+}
+
+.achievement-itemR:hover::after {
+    content: "Get " attr(data-rarity) " rarity to unlock this achievement";
 }
 
 .achievement-item:hover::after,
 .achievement-itemT:hover::after,
 .achievement-itemC:hover::after,
 .achievement-itemE:hover::after,
-.achievement-itemSum:hover::after {
+.achievement-itemSum:hover::after,
+.achievement-itemR:hover::after {
     position: absolute;
     bottom: 100%;
     left: 50%;
@@ -4196,7 +4466,8 @@ body.griCutsceneBgImg {
 .achievement-itemT:hover::before,
 .achievement-itemC:hover::before,
 .achievement-itemE:hover::before,
-.achievement-itemSum:hover::before {
+.achievement-itemSum:hover::before,
+.achievement-itemR:hover::before {
     content: "";
     position: absolute;
     bottom: 100%;
@@ -4230,11 +4501,10 @@ body.griCutsceneBgImg {
     width: min(760px, calc(100vw - 32px));
     max-height: min(88vh, 720px);
     padding: 0;
-    display: flex;
     flex-direction: column;
     color: #f1f5ff;
     z-index: 10000000;
-    overflow: auto;
+    overflow: hidden;
     scrollbar-width: thin;
     scrollbar-color: #7aa2ff #181a2c;
 }
@@ -4250,7 +4520,7 @@ body.griCutsceneBgImg {
     border-radius: 18px;
     border: 1px solid rgba(120, 164, 255, 0.24);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
-    overflow: hidden;
+    overflow: auto;
     min-height: 0;
 }
 
@@ -4261,10 +4531,15 @@ body.griCutsceneBgImg {
     gap: 16px;
     padding: 18px 22px 14px 22px;
     border-bottom: 1px solid rgba(120, 164, 255, 0.16);
-    background: rgba(10, 14, 26, 0.65);
+    background: rgba(10, 14, 26, 0.75);
     backdrop-filter: blur(12px);
     cursor: grab;
     user-select: none;
+    position: sticky;
+    top: 0;
+    z-index: 500000;
+    flex: 0 0 auto;
+    box-shadow: 0 6px 14px rgba(4, 8, 16, 0.55);
 }
 
 .achievements-header .dragTxt {
@@ -4705,4 +4980,22 @@ body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
 /* Reduced-motion fallback: tiny/quick */
 @media (prefers-reduced-motion: reduce) {
   @keyframes rngShakeXL { from { transform: translate(0,0) } to { transform: translate(1px,-1px) } }
+}
+
+@media (max-width: 480px) {
+  .historySection ul {
+    max-height: clamp(240px, 60vh, 380px);
+  }
+}
+
+@media (max-width: 420px) {
+  .historySection,
+  .container1,
+  .info2 {
+    padding: clamp(14px, 5vw, 18px);
+  }
+
+  .info2 .creatorUnnamed img {
+    width: clamp(64px, 24vw, 80px);
+  }
 }

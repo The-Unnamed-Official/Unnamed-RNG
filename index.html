@@ -179,6 +179,16 @@
                 </section>
 
                 <section class="achievements-section">
+                    <h4 class="achievements-section__title">Rarity Triumphs</h4>
+                    <div class="achievement-grid">
+                        <div class="achievement-itemR" data-rarity="Grand" data-name="Grand Entrance">Grand Entrance</div>
+                        <div class="achievement-itemR" data-rarity="Special" data-name="One of a Kind">One of a Kind</div>
+                        <div class="achievement-itemR" data-rarity="Mastery" data-name="Mastered the Odds">Mastered the Odds</div>
+                        <div class="achievement-itemR" data-rarity="Supreme" data-name="Supreme Fortune">Supreme Fortune</div>
+                    </div>
+                </section>
+
+                <section class="achievements-section">
                     <h4 class="achievements-section__title">Event Exclusives</h4>
                     <div class="achievements-subsection">
                         <h5 class="achievements-section__subtitle">Spring &amp; Easter</h5>
@@ -327,7 +337,6 @@
                             <button id="deleteAllSpectralGlareButton" class="inventory-delete-btn" type="button" title="Delete All Spectral Glare">Spectral Glare</button>
                             <button id="deleteAllPhantomStrideButton" class="inventory-delete-btn" type="button" title="Delete All Phantom Stride">Phantom Stride</button>
                             <button id="deleteAllContortionsButton" class="inventory-delete-btn" type="button" title="Delete All Contortions">Contortions</button>
-                            <button id="deleteAllIsekaiLofiButton" class="inventory-delete-btn" type="button" title="Delete All Isekai: Lo-fi">Isekai: Lo-fi</button>
                         </div>
                     </section>
 
@@ -348,6 +357,7 @@
                             <button id="deleteAllSilentListenerButton" class="inventory-delete-btn" type="button" title="Delete All Silent Listener">Silent Listener</button>
                             <button id="deleteAllGhostlyEmbraceButton" class="inventory-delete-btn" type="button" title="Delete All Ghostly Embrace">Ghostly Embrace</button>
                             <button id="deleteAllEndlessTwilightButton" class="inventory-delete-btn" type="button" title="Delete All Endless Twilight">Endless Twilight</button>
+                            <button id="deleteAllIsekaiLofiButton" class="inventory-delete-btn" type="button" title="Delete All Isekai: Lo-fi">Isekai: Lo-fi</button>
                             <button id="deleteAllLostSoulButton" class="inventory-delete-btn" type="button" title="Delete All Lost Soul">Lost Soul</button>
                             <button id="deleteAllAbyssalShadeButton" class="inventory-delete-btn" type="button" title="Delete All Abyssal Shade">Abyssal Shade</button>
                             <button id="deleteAllDarkenedSkyButton" class="inventory-delete-btn" type="button" title="Delete All Darkened Sky">Darkened Sky</button>
@@ -466,116 +476,116 @@
         <button class="fullscreen-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
     </div>
 
-    <audio id="click" src="files/sounds_and_music/click.mp3"></audio>
-    <audio id="suspenseAudio" src="files/sounds_and_music/suspence.mp3"></audio>
-    <audio id="geezerSuspenceAudio" src="files/sounds_and_music/geezer_suspence.mp3"></audio>
-    <audio id="polarrSuspenceAudio" src="files/sounds_and_music/polarr_suspence.mp3"></audio>
-    <audio id="scareSuspenceAudio" src="files/sounds_and_music/scare_suspence.mp3"></audio>
-    <audio id="scareSuspenceLofiAudio" src="files/sounds_and_music/scare_suspence_lofi.mp3"></audio>
-    <audio id="bigSuspenceAudio" src="files/sounds_and_music/big_suspence.mp3"></audio>
-    <audio id="hugeSuspenceAudio" src="files/sounds_and_music/onemillionsuspence.mp3"></audio>
-    <audio id="expOpeningAudio" src="files/sounds_and_music/exp_opening.mp3"></audio>
-    <audio id="plabreAudio" src="files/sounds_and_music/plabre.mp3" loop></audio>
-    <audio id="isekailofiAudio" src="files/sounds_and_music/isekailofi.mp3" loop></audio>
-    <audio id="x1staAudio" src="files/sounds_and_music/x1sta.mp3" loop></audio>
-    <audio id="heartAudio" src="files/sounds_and_music/heart.mp3" loop></audio>
-    <audio id="aboAudio" src="files/sounds_and_music/abo.mp3" loop></audio>
-    <audio id="equinoxAudio" src="files/sounds_and_music/equinox.mp3" loop></audio>
-    <audio id="tuonAudio" src="files/sounds_and_music/tuon.mp3" loop></audio>
-    <audio id="msfuAudio" src="files/sounds_and_music/msfu.mp3" loop></audio>
-    <audio id="blindAudio" src="files/sounds_and_music/blind.mp3" loop></audio>
-    <audio id="isekaiAudio" src="files/sounds_and_music/isekai.mp3" loop></audio>
-    <audio id="emerAudio" src="files/sounds_and_music/emergencies.mp3" loop></audio>
-    <audio id="samuraiAudio" src="files/sounds_and_music/samurai.mp3" loop></audio>
-    <audio id="contAudio" src="files/sounds_and_music/contortions.mp3" loop></audio>
-    <audio id="unstoppableAudio" src="files/sounds_and_music/unstoppable.mp3" loop></audio>
-    <audio id="gargantuaAudio" src="files/sounds_and_music/gargantua.mp3" loop></audio>
-    <audio id="spectralAudio" src="files/sounds_and_music/spectral.mp3" loop></audio>
-    <audio id="starfallAudio" src="files/sounds_and_music/starfall.mp3" loop></audio>
-    <audio id="memAudio" src="files/sounds_and_music/memory.mp3" loop></audio>
-    <audio id="oblAudio" src="files/sounds_and_music/oblivion.mp3" loop></audio>
-    <audio id="lubjubAudio" src="files/sounds_and_music/lubjub.mp3" loop></audio>
-    <audio id="shaAudio" src="files/sounds_and_music/sha.mp3" loop></audio>
-    <audio id="phaAudio" src="files/sounds_and_music/phantomstride.mp3" loop></audio>
-    <audio id="frightAudio" src="files/sounds_and_music/fright.mp3" loop></audio>
-    <audio id="unnamedAudio" src="files/sounds_and_music/unnamed.mp3" loop></audio>
-    <audio id="serAudio" src="files/sounds_and_music/seraphwing.mp3" loop></audio>
-    <audio id="arcAudio" src="files/sounds_and_music/arcanepulse.mp3" loop></audio>
-    <audio id="hellAudio" src="files/sounds_and_music/hell.mp3" loop></audio>
-    <audio id="wanspiAudio" src="files/sounds_and_music/wanspi.mp3" loop></audio>
-    <audio id="mysAudio" src="files/sounds_and_music/mys.mp3" loop></audio>
-    <audio id="waveAudio" src="files/sounds_and_music/wave.mp3" loop></audio>
-    <audio id="scorchingAudio" src="files/sounds_and_music/scho.mp3" loop></audio>
-    <audio id="beachAudio" src="files/sounds_and_music/beach.mp3" loop></audio>
-    <audio id="tidalwaveAudio" src="files/sounds_and_music/tidwav.mp3" loop></audio>
-    <audio id="nighAudio" src="files/sounds_and_music/nigh.mp3" loop></audio>
-    <audio id="voiAudio" src="files/sounds_and_music/voi.mp3" loop></audio>
-    <audio id="endAudio" src="files/sounds_and_music/end.mp3" loop></audio>
-    <audio id="shadAudio" src="files/sounds_and_music/shad.mp3" loop></audio>
-    <audio id="froAudio" src="files/sounds_and_music/fro.mp3" loop></audio>
-    <audio id="forgAudio" src="files/sounds_and_music/forg.mp3" loop></audio>
-    <audio id="curartAudio" src="files/sounds_and_music/curart.mp3" loop></audio>
-    <audio id="ghoAudio" src="files/sounds_and_music/gho.mp3" loop></audio>
-    <audio id="abysAudio" src="files/sounds_and_music/abys.mp3" loop></audio>
-    <audio id="twiligAudio" src="files/sounds_and_music/twilig.ogg" loop></audio>
-    <audio id="silAudio" src="files/sounds_and_music/sil.mp3" loop></audio>
-    <audio id="orbAudio" src="files/sounds_and_music/orb.mp3" loop></audio>
-    <audio id="specAudio" src="files/sounds_and_music/spec.mp3" loop></audio>
-    <audio id="ethpulAudio" src="files/sounds_and_music/ethpul.mp3" loop></audio>
-    <audio id="eniAudio" src="files/sounds_and_music/eni.mp3" loop></audio>
-    <audio id="griAudio" src="files/sounds_and_music/gri.mp3" loop></audio>
-    <audio id="celdawAudio" src="files/sounds_and_music/celdaw.mp3" loop></audio>
-    <audio id="fatreAudio" src="files/sounds_and_music/fatre.mp3" loop></audio>
-    <audio id="fearAudio" src="files/sounds_and_music/fear.mp3" loop></audio>
-    <audio id="darAudio" src="files/sounds_and_music/dar.mp3" loop></audio>
-    <audio id="hauAudio" src="files/sounds_and_music/hau.mp3" loop></audio>
-    <audio id="radAudio" src="files/sounds_and_music/rad.mp3" loop></audio>
-    <audio id="lostsAudio" src="files/sounds_and_music/losts.mp3" loop></audio>
-    <audio id="foundsAudio" src="files/sounds_and_music/founds.mp3" loop></audio>
-    <audio id="hauntAudio" src="files/sounds_and_music/haunt.mp3" loop></audio>
-    <audio id="devilAudio" src="files/sounds_and_music/devil.mp3" loop></audio>
-    <audio id="pumpkinAudio" src="files/sounds_and_music/pumpkin.mp3" loop></audio>
-    <audio id="overtureAudio" src="files/sounds_and_music/overture.ogg" loop></audio>
-    <audio id="impeachedAudio" src="files/sounds_and_music/impeached.ogg" loop></audio>
-    <audio id="rngmasterAudio" src="files/sounds_and_music/rngmaster.mp3" loop></audio>
-    <audio id="crazeAudio" src="files/sounds_and_music/firecraze.mp3" loop></audio>
-    <audio id="iriAudio" src="files/sounds_and_music/iri.mp3" loop></audio>
-    <audio id="demsoAudio" src="files/sounds_and_music/demso.mp3" loop></audio>
-    <audio id="fircraAudio" src="files/sounds_and_music/fircra.mp3" loop></audio>
-    <audio id="curAudio" src="files/sounds_and_music/cursed.ogg" loop></audio>
-    <audio id="eonbreakAudio" src="files/sounds_and_music/eonbreak.mp3" loop></audio>
-    <audio id="celAudio" src="files/sounds_and_music/celestialchorus.mpeg" loop></audio>
-    <audio id="silcarAudio" src="files/sounds_and_music/sillycar.mp3" loop></audio>
-    <audio id="ethAudio" src="files/sounds_and_music/ether.mp3" loop></audio>
-    <audio id="gregAudio" src="files/sounds_and_music/greg.mp3" loop></audio>
-    <audio id="mintllieAudio" src="files/sounds_and_music/mintllie.mp3" loop></audio>
-    <audio id="geezerAudio" src="files/sounds_and_music/geezer.m4a" loop></audio>
-    <audio id="polarrAudio" src="files/sounds_and_music/polarr.mp3" loop></audio>
-    <audio id="oppAudio" src="files/sounds_and_music/oppression.mpeg" loop></audio>
-    <audio id="sanclaAudio" src="files/sounds_and_music/sancla.mp3" loop></audio>
-    <audio id="frogarAudio" src="files/sounds_and_music/frogar.mp3" loop></audio>
-    <audio id="reidasAudio" src="files/sounds_and_music/reidas.mp3" loop></audio>
-    <audio id="cancansymAudio" src="files/sounds_and_music/cancansym.mp3" loop></audio>
-    <audio id="ginharAudio" src="files/sounds_and_music/ginhar.mp3" loop></audio>
-    <audio id="jolbelAudio" src="files/sounds_and_music/jolbel.mp3" loop></audio>
-    <audio id="norstaAudio" src="files/sounds_and_music/norsta.mp3" loop></audio>
-    <audio id="silnigAudio" src="files/sounds_and_music/silnig.mp3" loop></audio>
-    <audio id="harvAudio" src="files/sounds_and_music/harv.mp3" loop></audio>
-    <audio id="expAudio" src="files/sounds_and_music/exp.mp3" loop></audio>
-    <audio id="veilAudio" src="files/sounds_and_music/veil.mp3" loop></audio>
-    <audio id="h1diAudio" src="files/sounds_and_music/h1di.mp3" loop></audio>
-    <audio id="blodAudio" src="files/sounds_and_music/blod.mp3" loop></audio>
-    <audio id="shenviiAudio" src="files/sounds_and_music/shenvii.mp3" loop></audio>
-    <audio id="astblaAudio" src="files/sounds_and_music/astbla.mp3" loop></audio>
-    <audio id="astredAudio" src="files/sounds_and_music/astred.mp3" loop></audio>
-    <audio id="qbearAudio" src="files/sounds_and_music/qbear.mp3" loop></audio>
-    <audio id="lightAudio" src="files/sounds_and_music/light.mp3" loop></audio>
-    <audio id="gingerAudio" src="files/sounds_and_music/ginger.mp3" loop></audio>
-    <audio id="esteggAudio" src="files/sounds_and_music/estegg.mp3" loop></audio>
-    <audio id="estbunAudio" src="files/sounds_and_music/estbun.mp3" loop></audio>
-    <!-- <audio id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio> -->
-    <!-- <audio id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio> -->
-    <audio id="mainAudio" src="files/sounds_and_music/mainEvent2.mp3" loop></audio>
+    <audio preload="none" id="click" src="files/sounds_and_music/click.mp3"></audio>
+    <audio preload="none" id="suspenseAudio" src="files/sounds_and_music/suspence.mp3"></audio>
+    <audio preload="none" id="geezerSuspenceAudio" src="files/sounds_and_music/geezer_suspence.mp3"></audio>
+    <audio preload="none" id="polarrSuspenceAudio" src="files/sounds_and_music/polarr_suspence.mp3"></audio>
+    <audio preload="none" id="scareSuspenceAudio" src="files/sounds_and_music/scare_suspence.mp3"></audio>
+    <audio preload="none" id="scareSuspenceLofiAudio" src="files/sounds_and_music/scare_suspence_lofi.mp3"></audio>
+    <audio preload="none" id="bigSuspenceAudio" src="files/sounds_and_music/big_suspence.mp3"></audio>
+    <audio preload="none" id="hugeSuspenceAudio" src="files/sounds_and_music/onemillionsuspence.mp3"></audio>
+    <audio preload="none" id="expOpeningAudio" src="files/sounds_and_music/exp_opening.mp3"></audio>
+    <audio preload="none" id="plabreAudio" src="files/sounds_and_music/plabre.mp3" loop></audio>
+    <audio preload="none" id="isekailofiAudio" src="files/sounds_and_music/isekailofi.mp3" loop></audio>
+    <audio preload="none" id="x1staAudio" src="files/sounds_and_music/x1sta.mp3" loop></audio>
+    <audio preload="none" id="heartAudio" src="files/sounds_and_music/heart.mp3" loop></audio>
+    <audio preload="none" id="aboAudio" src="files/sounds_and_music/abo.mp3" loop></audio>
+    <audio preload="none" id="equinoxAudio" src="files/sounds_and_music/equinox.mp3" loop></audio>
+    <audio preload="none" id="tuonAudio" src="files/sounds_and_music/tuon.mp3" loop></audio>
+    <audio preload="none" id="msfuAudio" src="files/sounds_and_music/msfu.mp3" loop></audio>
+    <audio preload="none" id="blindAudio" src="files/sounds_and_music/blind.mp3" loop></audio>
+    <audio preload="none" id="isekaiAudio" src="files/sounds_and_music/isekai.mp3" loop></audio>
+    <audio preload="none" id="emerAudio" src="files/sounds_and_music/emergencies.mp3" loop></audio>
+    <audio preload="none" id="samuraiAudio" src="files/sounds_and_music/samurai.mp3" loop></audio>
+    <audio preload="none" id="contAudio" src="files/sounds_and_music/contortions.mp3" loop></audio>
+    <audio preload="none" id="unstoppableAudio" src="files/sounds_and_music/unstoppable.mp3" loop></audio>
+    <audio preload="none" id="gargantuaAudio" src="files/sounds_and_music/gargantua.mp3" loop></audio>
+    <audio preload="none" id="spectralAudio" src="files/sounds_and_music/spectral.mp3" loop></audio>
+    <audio preload="none" id="starfallAudio" src="files/sounds_and_music/starfall.mp3" loop></audio>
+    <audio preload="none" id="memAudio" src="files/sounds_and_music/memory.mp3" loop></audio>
+    <audio preload="none" id="oblAudio" src="files/sounds_and_music/oblivion.mp3" loop></audio>
+    <audio preload="none" id="lubjubAudio" src="files/sounds_and_music/lubjub.mp3" loop></audio>
+    <audio preload="none" id="shaAudio" src="files/sounds_and_music/sha.mp3" loop></audio>
+    <audio preload="none" id="phaAudio" src="files/sounds_and_music/phantomstride.mp3" loop></audio>
+    <audio preload="none" id="frightAudio" src="files/sounds_and_music/fright.mp3" loop></audio>
+    <audio preload="none" id="unnamedAudio" src="files/sounds_and_music/unnamed.mp3" loop></audio>
+    <audio preload="none" id="serAudio" src="files/sounds_and_music/seraphwing.mp3" loop></audio>
+    <audio preload="none" id="arcAudio" src="files/sounds_and_music/arcanepulse.mp3" loop></audio>
+    <audio preload="none" id="hellAudio" src="files/sounds_and_music/hell.mp3" loop></audio>
+    <audio preload="none" id="wanspiAudio" src="files/sounds_and_music/wanspi.mp3" loop></audio>
+    <audio preload="none" id="mysAudio" src="files/sounds_and_music/mys.mp3" loop></audio>
+    <audio preload="none" id="waveAudio" src="files/sounds_and_music/wave.mp3" loop></audio>
+    <audio preload="none" id="scorchingAudio" src="files/sounds_and_music/scho.mp3" loop></audio>
+    <audio preload="none" id="beachAudio" src="files/sounds_and_music/beach.mp3" loop></audio>
+    <audio preload="none" id="tidalwaveAudio" src="files/sounds_and_music/tidwav.mp3" loop></audio>
+    <audio preload="none" id="nighAudio" src="files/sounds_and_music/nigh.mp3" loop></audio>
+    <audio preload="none" id="voiAudio" src="files/sounds_and_music/voi.mp3" loop></audio>
+    <audio preload="none" id="endAudio" src="files/sounds_and_music/end.mp3" loop></audio>
+    <audio preload="none" id="shadAudio" src="files/sounds_and_music/shad.mp3" loop></audio>
+    <audio preload="none" id="froAudio" src="files/sounds_and_music/fro.mp3" loop></audio>
+    <audio preload="none" id="forgAudio" src="files/sounds_and_music/forg.mp3" loop></audio>
+    <audio preload="none" id="curartAudio" src="files/sounds_and_music/curart.mp3" loop></audio>
+    <audio preload="none" id="ghoAudio" src="files/sounds_and_music/gho.mp3" loop></audio>
+    <audio preload="none" id="abysAudio" src="files/sounds_and_music/abys.mp3" loop></audio>
+    <audio preload="none" id="twiligAudio" src="files/sounds_and_music/twilig.ogg" loop></audio>
+    <audio preload="none" id="silAudio" src="files/sounds_and_music/sil.mp3" loop></audio>
+    <audio preload="none" id="orbAudio" src="files/sounds_and_music/orb.mp3" loop></audio>
+    <audio preload="none" id="specAudio" src="files/sounds_and_music/spec.mp3" loop></audio>
+    <audio preload="none" id="ethpulAudio" src="files/sounds_and_music/ethpul.mp3" loop></audio>
+    <audio preload="none" id="eniAudio" src="files/sounds_and_music/eni.mp3" loop></audio>
+    <audio preload="none" id="griAudio" src="files/sounds_and_music/gri.mp3" loop></audio>
+    <audio preload="none" id="celdawAudio" src="files/sounds_and_music/celdaw.mp3" loop></audio>
+    <audio preload="none" id="fatreAudio" src="files/sounds_and_music/fatre.mp3" loop></audio>
+    <audio preload="none" id="fearAudio" src="files/sounds_and_music/fear.mp3" loop></audio>
+    <audio preload="none" id="darAudio" src="files/sounds_and_music/dar.mp3" loop></audio>
+    <audio preload="none" id="hauAudio" src="files/sounds_and_music/hau.mp3" loop></audio>
+    <audio preload="none" id="radAudio" src="files/sounds_and_music/rad.mp3" loop></audio>
+    <audio preload="none" id="lostsAudio" src="files/sounds_and_music/losts.mp3" loop></audio>
+    <audio preload="none" id="foundsAudio" src="files/sounds_and_music/founds.mp3" loop></audio>
+    <audio preload="none" id="hauntAudio" src="files/sounds_and_music/haunt.mp3" loop></audio>
+    <audio preload="none" id="devilAudio" src="files/sounds_and_music/devil.mp3" loop></audio>
+    <audio preload="none" id="pumpkinAudio" src="files/sounds_and_music/pumpkin.mp3" loop></audio>
+    <audio preload="none" id="overtureAudio" src="files/sounds_and_music/overture.ogg" loop></audio>
+    <audio preload="none" id="impeachedAudio" src="files/sounds_and_music/impeached.ogg" loop></audio>
+    <audio preload="none" id="rngmasterAudio" src="files/sounds_and_music/rngmaster.mp3" loop></audio>
+    <audio preload="none" id="crazeAudio" src="files/sounds_and_music/firecraze.mp3" loop></audio>
+    <audio preload="none" id="iriAudio" src="files/sounds_and_music/iri.mp3" loop></audio>
+    <audio preload="none" id="demsoAudio" src="files/sounds_and_music/demso.mp3" loop></audio>
+    <audio preload="none" id="fircraAudio" src="files/sounds_and_music/fircra.mp3" loop></audio>
+    <audio preload="none" id="curAudio" src="files/sounds_and_music/cursed.ogg" loop></audio>
+    <audio preload="none" id="eonbreakAudio" src="files/sounds_and_music/eonbreak.mp3" loop></audio>
+    <audio preload="none" id="celAudio" src="files/sounds_and_music/celestialchorus.mpeg" loop></audio>
+    <audio preload="none" id="silcarAudio" src="files/sounds_and_music/sillycar.mp3" loop></audio>
+    <audio preload="none" id="ethAudio" src="files/sounds_and_music/ether.mp3" loop></audio>
+    <audio preload="none" id="gregAudio" src="files/sounds_and_music/greg.mp3" loop></audio>
+    <audio preload="none" id="mintllieAudio" src="files/sounds_and_music/mintllie.mp3" loop></audio>
+    <audio preload="none" id="geezerAudio" src="files/sounds_and_music/geezer.m4a" loop></audio>
+    <audio preload="none" id="polarrAudio" src="files/sounds_and_music/polarr.mp3" loop></audio>
+    <audio preload="none" id="oppAudio" src="files/sounds_and_music/oppression.mpeg" loop></audio>
+    <audio preload="none" id="sanclaAudio" src="files/sounds_and_music/sancla.mp3" loop></audio>
+    <audio preload="none" id="frogarAudio" src="files/sounds_and_music/frogar.mp3" loop></audio>
+    <audio preload="none" id="reidasAudio" src="files/sounds_and_music/reidas.mp3" loop></audio>
+    <audio preload="none" id="cancansymAudio" src="files/sounds_and_music/cancansym.mp3" loop></audio>
+    <audio preload="none" id="ginharAudio" src="files/sounds_and_music/ginhar.mp3" loop></audio>
+    <audio preload="none" id="jolbelAudio" src="files/sounds_and_music/jolbel.mp3" loop></audio>
+    <audio preload="none" id="norstaAudio" src="files/sounds_and_music/norsta.mp3" loop></audio>
+    <audio preload="none" id="silnigAudio" src="files/sounds_and_music/silnig.mp3" loop></audio>
+    <audio preload="none" id="harvAudio" src="files/sounds_and_music/harv.mp3" loop></audio>
+    <audio preload="none" id="expAudio" src="files/sounds_and_music/exp.mp3" loop></audio>
+    <audio preload="none" id="veilAudio" src="files/sounds_and_music/veil.mp3" loop></audio>
+    <audio preload="none" id="h1diAudio" src="files/sounds_and_music/h1di.mp3" loop></audio>
+    <audio preload="none" id="blodAudio" src="files/sounds_and_music/blod.mp3" loop></audio>
+    <audio preload="none" id="shenviiAudio" src="files/sounds_and_music/shenvii.mp3" loop></audio>
+    <audio preload="none" id="astblaAudio" src="files/sounds_and_music/astbla.mp3" loop></audio>
+    <audio preload="none" id="astredAudio" src="files/sounds_and_music/astred.mp3" loop></audio>
+    <audio preload="none" id="qbearAudio" src="files/sounds_and_music/qbear.mp3" loop></audio>
+    <audio preload="none" id="lightAudio" src="files/sounds_and_music/light.mp3" loop></audio>
+    <audio preload="none" id="gingerAudio" src="files/sounds_and_music/ginger.mp3" loop></audio>
+    <audio preload="none" id="esteggAudio" src="files/sounds_and_music/estegg.mp3" loop></audio>
+    <audio preload="none" id="estbunAudio" src="files/sounds_and_music/estbun.mp3" loop></audio>
+    <!-- <audio preload="none" id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio> -->
+    <!-- <audio preload="none" id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio> -->
+    <audio preload="none" id="mainAudio" src="files/sounds_and_music/mainEvent2.mp3" loop></audio>
 
     
     <script src="files/script.js"></script>

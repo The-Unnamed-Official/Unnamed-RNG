@@ -13,6 +13,9 @@ const storage = {
   set(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
   },
+  remove(key) {
+    localStorage.removeItem(key);
+  },
 };
 
 const byId = (id) => document.getElementById(id);
@@ -25,14 +28,15 @@ let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 let rollCount1 = parseInt(localStorage.getItem("rollCount1")) || 0;
 const BASE_COOLDOWN_TIME = 500;
 let cooldownTime = BASE_COOLDOWN_TIME;
+let equippedItem = normalizeEquippedItemRecord(storage.get("equippedItem", null));
 let currentAudio = null;
 let isChangeEnabled = true;
 let autoRollInterval = null;
+const AUTO_ROLL_UNLOCK_ROLLS = 1000;
 let audioVolume = 1;
 let isMuted = false;
 let previousVolume = audioVolume;
 let refreshTimeout;
-let hasScheduledLoad = false;
 let skipCutscene1K = true;
 let skipCutscene10K = true;
 let skipCutscene100K = true;
@@ -42,6 +46,24 @@ let rollDisplayHiddenByUser = false;
 let cutsceneHidRollDisplay = false;
 let cutsceneActive = false;
 let cutsceneFailsafeTimeout = null;
+let lastRollPersisted = true;
+let lastRollAutoDeleted = false;
+let lastRollRarityClass = null;
+let allowForcedAudioPlayback = false;
+let pinnedAudioId = null;
+let pausedEquippedAudioState = null;
+let resumeEquippedAudioAfterCutscene = false;
+let pendingCutsceneRarity = null;
+const rolledRarityBuckets = new Set(storage.get("rolledRarityBuckets", []));
+
+let postStartInitialized = false;
+let audioSliderElement = null;
+let audioSliderValueLabelElement = null;
+let muteButtonElement = null;
+let heartContainerElement = null;
+let heartIntervalId = null;
+let playTimeIntervalId = null;
+let autoRollButtonElement = null;
 
 const STOPPABLE_AUDIO_IDS = [
   "suspenseAudio",
@@ -150,6 +172,31 @@ const STOPPABLE_AUDIO_IDS = [
   "isekailofiAudio"
 ];
 
+const STOPPABLE_AUDIO_SET = new Set(STOPPABLE_AUDIO_IDS);
+
+const RARITY_BUCKET_LABELS = {
+  under100: "Basic",
+  under1k: "Decent",
+  under10k: "Grand",
+  under100k: "Mastery",
+  under1m: "Supreme",
+  special: "Special"
+};
+
+const originalAudioPlay = HTMLMediaElement.prototype.play;
+HTMLMediaElement.prototype.play = function (...args) {
+  if (
+    this instanceof HTMLAudioElement &&
+    STOPPABLE_AUDIO_SET.has(this.id) &&
+    !lastRollPersisted &&
+    !allowForcedAudioPlayback
+  ) {
+    return Promise.resolve();
+  }
+
+  return originalAudioPlay.apply(this, args);
+};
+
 function setRollButtonEnabled(enabled) {
   const button = document.getElementById("rollButton");
   if (button) {
@@ -196,11 +243,13 @@ function finalizeCutsceneState() {
   clearTimeout(cutsceneFailsafeTimeout);
   cutsceneFailsafeTimeout = null;
   cutsceneActive = false;
+  updateEquipToggleButtonsDisabled(false);
   ensureBgStack();
   if (__bgStack) {
     __bgStack.classList.remove("is-hidden");
   }
   restoreRollDisplayAfterCutscene();
+  resumePausedEquippedAudio();
 }
 
 function hideRollDisplayForCutscene(container) {
@@ -382,6 +431,7 @@ const LOADING_SEQUENCE = [
     message: "Polishing titles...",
     action: () => {
       renderInventory();
+      applyEquippedItemOnStartup();
     },
   },
   {
@@ -439,6 +489,32 @@ async function runInitialLoadSequence(onProgress) {
   await wait(180);
 }
 
+function initializeAfterStart() {
+  if (postStartInitialized) {
+    return;
+  }
+
+  postStartInitialized = true;
+
+  registerRollButtonHandler();
+  registerCutsceneToggleButtons();
+  registerDeleteAllButton();
+  registerInterfaceToggleButtons();
+  registerMenuButtons();
+  registerResponsiveHandlers();
+  registerMenuDragHandlers();
+  enhanceInventoryDeleteButtons();
+  setupAudioControls();
+  initializeAutoRollControls();
+  initializeHeartEffect();
+  registerDataPersistenceButtons();
+  initializePlayTimeTracker();
+  registerRarityDeletionButtons();
+  scheduleAllCooldownButtons();
+  updateAchievementsList();
+  processAchievementToastQueue();
+}
+
 const CUTSCENE_SKIP_SETTINGS = [
   { key: "skipCutscene1K", labelId: "1KTxt", label: "Skip Decent Cutscenes" },
   { key: "skipCutscene10K", labelId: "10KTxt", label: "Skip Grand Cutscenes" },
@@ -482,7 +558,11 @@ const ACHIEVEMENTS = [
   { name: "Are you okay?", timeCount: 5259600 },
   { name: "You are a True No Lifer", timeCount: 15778800 },
   { name: "No one's getting this legit", timeCount: 31557600 },
-  { name: "Happy Summer!", timeCount: 0 },
+  { name: "Happy Summer!", timeCount: 1 },
+  { name: "Grand Entrance", rarityBucket: "under10k" },
+  { name: "One of a Kind", rarityBucket: "special" },
+  { name: "Mastered the Odds", rarityBucket: "under100k" },
+  { name: "Supreme Fortune", rarityBucket: "under1m" },
 ];
 
 const COLLECTOR_ACHIEVEMENTS = [
@@ -495,10 +575,11 @@ const COLLECTOR_ACHIEVEMENTS = [
 
 const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-item", unlocked: { backgroundColor: "blue" } },
-  { selector: ".achievement-itemT", unlocked: { backgroundColor: "green" } },
-  { selector: ".achievement-itemC", unlocked: { backgroundColor: "red" } },
-  { selector: ".achievement-itemE", unlocked: { backgroundColor: "yellow", color: "black" } },
-  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "orange", color: "black" } },
+  { selector: ".achievement-itemT", unlocked: { backgroundColor: "#000fff" } },
+  { selector: ".achievement-itemC", unlocked: { backgroundColor: "#ff0000" } },
+  { selector: ".achievement-itemE", unlocked: { backgroundColor: "#fff000", color: "black" } },
+  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "#ff00d9ff" } },
+  { selector: ".achievement-itemR", unlocked: { backgroundColor: "#0033ffff" } },
 ];
 
 const ACHIEVEMENT_TOAST_DURATION = 3400;
@@ -615,8 +696,62 @@ function resetAudioState(audio, id) {
   }
 }
 
-function stopAllAudio() {
+function seekAudioWhenReady(audio, time) {
+  if (!audio || typeof time !== "number" || Number.isNaN(time)) {
+    return;
+  }
+
+  const assignTime = () => {
+    try {
+      if (typeof audio.currentTime === "number" && audio.currentTime !== time) {
+        audio.currentTime = time;
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  if (assignTime()) {
+    return;
+  }
+
+  const handleReady = () => {
+    if (assignTime()) {
+      audio.removeEventListener("loadedmetadata", handleReady);
+      audio.removeEventListener("canplay", handleReady);
+    }
+  };
+
+  audio.addEventListener("loadedmetadata", handleReady);
+  audio.addEventListener("canplay", handleReady);
+}
+
+function stopAllAudio(options = {}) {
+  const preserveIds = new Set();
+
+  if (options) {
+    const { preservePinned = false, preserve = null } = options;
+    if (preservePinned && pinnedAudioId) {
+      preserveIds.add(pinnedAudioId);
+    }
+
+    if (typeof preserve === "string") {
+      preserveIds.add(preserve);
+    } else if (Array.isArray(preserve)) {
+      preserve.forEach((id) => {
+        if (id) {
+          preserveIds.add(id);
+        }
+      });
+    }
+  }
+
   STOPPABLE_AUDIO_IDS.forEach((id) => {
+    if (preserveIds.has(id)) {
+      return;
+    }
+
     const audio = getAudioElement(id);
     if (!audio) {
       return;
@@ -627,7 +762,186 @@ function stopAllAudio() {
     }
 
     resetAudioState(audio, id);
+
+    if (pausedEquippedAudioState && pausedEquippedAudioState.element === audio) {
+      pausedEquippedAudioState = null;
+      resumeEquippedAudioAfterCutscene = false;
+    }
+
+    if (currentAudio === audio) {
+      currentAudio = null;
+      if (pinnedAudioId === id) {
+        pinnedAudioId = null;
+      }
+    }
   });
+}
+
+function pauseEquippedAudioForRarity(rarity) {
+  if (!currentAudio) {
+    resumeEquippedAudioAfterCutscene = false;
+    pausedEquippedAudioState = null;
+    return;
+  }
+
+  const rarityClass = rarity && typeof rarity === "object" ? rarity.class : null;
+  const hasEquippableBackground = Boolean(
+    rarityClass &&
+    typeof backgroundDetails !== "undefined" &&
+    backgroundDetails &&
+    backgroundDetails[rarityClass]
+  );
+
+  const shouldResume = !hasEquippableBackground;
+
+  try {
+    const time = typeof currentAudio.currentTime === "number" ? currentAudio.currentTime : 0;
+    const wasPlaying = !currentAudio.paused;
+    if (wasPlaying) {
+      currentAudio.pause();
+    }
+    pausedEquippedAudioState = {
+      element: currentAudio,
+      time,
+      wasPlaying,
+    };
+  } catch (error) {
+    pausedEquippedAudioState = {
+      element: currentAudio,
+      time: 0,
+      wasPlaying: false,
+    };
+  }
+
+  resumeEquippedAudioAfterCutscene = shouldResume;
+}
+
+function resumePausedEquippedAudio() {
+  if (!resumeEquippedAudioAfterCutscene) {
+    pausedEquippedAudioState = null;
+    return;
+  }
+
+  const state = pausedEquippedAudioState;
+  if (!state || !state.element) {
+    resumeEquippedAudioAfterCutscene = false;
+    pausedEquippedAudioState = null;
+    return;
+  }
+
+  if (currentAudio && currentAudio !== state.element) {
+    resumeEquippedAudioAfterCutscene = false;
+    pausedEquippedAudioState = null;
+    return;
+  }
+
+  const audio = state.element;
+  const time = typeof state.time === "number" && !Number.isNaN(state.time) ? state.time : 0;
+
+  seekAudioWhenReady(audio, time);
+
+  if (state.wasPlaying) {
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.then === "function") {
+      playPromise
+        .then(() => {
+          seekAudioWhenReady(audio, time);
+        })
+        .catch(() => {});
+    } else {
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(() => {});
+      }
+      seekAudioWhenReady(audio, time);
+    }
+  }
+
+  currentAudio = audio;
+  resumeEquippedAudioAfterCutscene = false;
+  pausedEquippedAudioState = null;
+}
+
+function normalizeEquippedItemRecord(raw) {
+  if (!raw || typeof raw !== "object") {
+    return null;
+  }
+
+  const { title, rarityClass } = raw;
+  if (typeof title !== "string" || typeof rarityClass !== "string") {
+    return null;
+  }
+
+  const record = {
+    title,
+    rarityClass,
+  };
+
+  if (typeof raw.rolledAt === "number" && Number.isFinite(raw.rolledAt)) {
+    record.rolledAt = raw.rolledAt;
+  }
+
+  return record;
+}
+
+function equippedRecordsMatch(a, b) {
+  if (!a || !b) {
+    return false;
+  }
+
+  if (a.title !== b.title || a.rarityClass !== b.rarityClass) {
+    return false;
+  }
+
+  if (typeof a.rolledAt === "number" && typeof b.rolledAt === "number") {
+    return a.rolledAt === b.rolledAt;
+  }
+
+  return true;
+}
+
+function isItemCurrentlyEquipped(item) {
+  if (!equippedItem) {
+    return false;
+  }
+
+  const candidate = normalizeEquippedItemRecord(item);
+  if (!candidate) {
+    return false;
+  }
+
+  return equippedRecordsMatch(candidate, equippedItem);
+}
+
+function applyEquippedItemOnStartup() {
+  if (!equippedItem) {
+    return;
+  }
+
+  const match = inventory.find((item) => isItemCurrentlyEquipped(item));
+  if (!match) {
+    equippedItem = null;
+    storage.remove("equippedItem");
+    changeBackground("menuDefault", null, { force: true });
+    return;
+  }
+
+  const normalized = normalizeEquippedItemRecord(match);
+  if (!normalized) {
+    equippedItem = null;
+    storage.remove("equippedItem");
+    changeBackground("menuDefault", null, { force: true });
+    return;
+  }
+
+  equippedItem = normalized;
+  handleEquippedItem(normalized);
+  if (typeof mainAudio !== "undefined" && mainAudio && typeof mainAudio.pause === "function") {
+    try {
+      mainAudio.pause();
+    } catch (error) {
+      /* no-op */
+    }
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -654,14 +968,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       if (typeof mainAudio !== "undefined" && mainAudio && typeof mainAudio.play === "function") {
+        if (mainAudio.preload === "none") {
+          mainAudio.preload = "auto";
+          try {
+            mainAudio.load();
+          } catch (error) {
+            /* no-op */
+          }
+        }
         // Kick off playback without awaiting so UI initialisation continues even if the
         // browser delays or blocks autoplay.
-        const playAttempt = mainAudio.play();
-        if (playAttempt && typeof playAttempt.catch === "function") {
-          playAttempt.catch((error) => {
-            console.warn("Unable to start background audio immediately.", error);
-          });
-        }
+        setTimeout(() => {
+          const playAttempt = mainAudio.play();
+          if (playAttempt && typeof playAttempt.catch === "function") {
+            playAttempt.catch((error) => {
+              console.warn("Unable to start background audio immediately.", error);
+            });
+          }
+        }, 300);
       }
     } catch (error) {
       console.warn("Unable to start background audio immediately.", error);
@@ -703,22 +1027,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (rollButton) {
       rollButton.disabled = false;
     }
+
+    initializeAfterStart();
   });
 });
-
-function loadContent() {
-  LOADING_SEQUENCE.forEach(({ action }) => action());
-}
-
-function load() {
-  if (document.readyState === "loading" && !hasScheduledLoad) {
-    hasScheduledLoad = true;
-    document.addEventListener("DOMContentLoaded", () => {
-      hasScheduledLoad = false;
-      loadContent();
-    }, { once: true });
-  }
-}
 
 function loadCutsceneSkip() {
   CUTSCENE_SKIP_SETTINGS.forEach(({ key, labelId, label }) => {
@@ -778,6 +1090,7 @@ function updateRollCount(increment = 1) {
     rollCount1 += increment + 1;
   }
   updateRollDisplays();
+  updateAutoRollAvailability();
 }
 
 function persistUnlockedAchievements(unlocked) {
@@ -793,8 +1106,11 @@ function unlockAchievement(name, unlocked) {
   showAchievementPopup(name);
 }
 
-function checkAchievements() {
+function checkAchievements(context = {}) {
   const unlocked = new Set(storage.get("unlockedAchievements", []));
+  const rarityBuckets = context && context.rarityBuckets instanceof Set
+    ? context.rarityBuckets
+    : new Set(storage.get("rolledRarityBuckets", []));
 
   ACHIEVEMENTS.forEach((achievement) => {
     if (achievement.count && rollCount >= achievement.count) {
@@ -802,6 +1118,10 @@ function checkAchievements() {
     }
 
     if (achievement.timeCount !== undefined && typeof playTime !== "undefined" && playTime >= achievement.timeCount) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (achievement.rarityBucket && rarityBuckets.has(achievement.rarityBucket)) {
       unlockAchievement(achievement.name, unlocked);
     }
   });
@@ -813,11 +1133,15 @@ function checkAchievements() {
       unlockAchievement(collector.name, unlocked);
     }
   });
+
+  updateAutoRollAvailability();
 }
 
 function showAchievementPopup(name) {
   achievementToastQueue.push(name);
-  processAchievementToastQueue();
+  if (postStartInitialized) {
+    processAchievementToastQueue();
+  }
 }
 
 function updateAchievementsList() {
@@ -828,15 +1152,34 @@ function updateAchievementsList() {
       const achievementName = item.getAttribute("data-name");
       const isUnlocked = achievementName && unlocked.has(achievementName);
 
-      item.style.backgroundColor = isUnlocked ? unlockedStyles.backgroundColor : "gray";
-      item.style.color = isUnlocked && unlockedStyles.color ? unlockedStyles.color : "";
+      const unlockedBackground = unlockedStyles.background || unlockedStyles.backgroundColor;
+      if (isUnlocked && unlockedBackground) {
+        item.style.setProperty("--achievement-background", unlockedBackground);
+        if (unlockedStyles.color) {
+          item.style.setProperty("--achievement-color", unlockedStyles.color);
+        } else {
+          item.style.removeProperty("--achievement-color");
+        }
+        item.classList.add("achievement--unlocked");
+      } else {
+        item.style.setProperty(
+          "--achievement-background",
+          "linear-gradient(155deg, rgba(96, 96, 96, 0.85), rgba(58, 58, 58, 0.9))"
+        );
+        item.style.removeProperty("--achievement-color");
+        item.classList.remove("achievement--unlocked");
+      }
     });
   });
 }
 
-document.addEventListener("DOMContentLoaded", updateAchievementsList);
+function registerRollButtonHandler() {
+  const rollButtonElement = document.getElementById("rollButton");
+  if (!rollButtonElement) {
+    return;
+  }
 
-document.getElementById("rollButton").addEventListener("click", function () {
+  rollButtonElement.addEventListener("click", function () {
   const rollButton = byId("rollButton");
   if (!rollButton) {
     return;
@@ -861,9 +1204,28 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rollCount++;
   }
 
-  stopAllAudio();
-
   let rarity = rollRarity();
+  pendingCutsceneRarity = rarity;
+
+  const preservedAudioIds = [];
+  if (
+    resumeEquippedAudioAfterCutscene &&
+    pausedEquippedAudioState &&
+    pausedEquippedAudioState.element &&
+    pausedEquippedAudioState.element.id
+  ) {
+    preservedAudioIds.push(pausedEquippedAudioState.element.id);
+  }
+
+  if (currentAudio && currentAudio.id) {
+    preservedAudioIds.push(currentAudio.id);
+  }
+
+  stopAllAudio({
+    preservePinned: true,
+    preserve: preservedAudioIds,
+  });
+
   let title = selectTitle(rarity);
 
   rollButton.disabled = true;
@@ -947,14 +1309,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Blodhest [1 in 25,252]" ||
     rarity.type === "Tuon [1 in 50,000]" ||
     rarity.type === "ORB [1 in 55,555/30th]" ||
-    rarity.type === "Heart [1 in ♡♡♡]" ||
     rarity.type === "GD Addict [1 in ###]" ||
     rarity.type === "FireCraze [1 in 4,200/69th]" ||
     rarity.type === "sʜeɴvɪ✞∞ [1 in 77,777/7th]" ||
     rarity.type === "Light [1 in 29,979]" ||
     rarity.type === "X1sta [1 in 230,444]" ||
-    rarity.type === "Easter Egg [1 in 13,333]" ||
-    rarity.type === "Easter Bunny [1 in 133,333]" ||
     rarity.type === "Hellish Fire [1 in 6,666]" ||
     rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]" ||
     rarity.type === "『Equinox』 [1 in 2,500,000]" ||
@@ -4528,7 +4887,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
 
       setTimeout(() => {
         clearInterval(squareInterval);
-      }, 20350); // Stop after 20.35 seconds
+      }, 29500); // Stop after 29.5 seconds to cover the longer cutscene duration
 
       const container = document.getElementById("starContainer");
 
@@ -4569,7 +4928,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
           griAudio.play();
         }, 100);
         enableChange();
-      }, 23800); // Wait for 23.8 seconds
+      }, 32000); // Wait for 32 seconds to allow the full Grim Destiny cutscene
     } else if (rarity.type === "Impeached [1 in 101,010]") {
       if (skipCutscene1M) {
         document.body.className = "blackBg";
@@ -6043,7 +6402,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
             titleCont.style.visibility = "visible";
           }, 100);
           enableChange();
-        }, 27400); // Wait for 27.4 seconds
+        }, 32000); // Wait for 32 seconds to match the extended cutscene
       } else {
         addToInventory(title, rarity.class);
         updateRollingHistory(title, rarity.type);
@@ -8693,7 +9052,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         titleCont.style.visibility = "visible";
         foundsAudio.play();
       }
-    } else if (rarity.type === "Haunted Reality [1 in 5,000]") {
+    } else if (rarity.type === "Haunted Reality [1 in 5,500]") {
       if (skipCutscene10K) {
         document.body.className = "blackBg";
         disableChange();
@@ -8799,7 +9158,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
         ethAudio.play();
         titleCont.style.visibility = "visible";
       }
-    } else if (rarity.type === "Serap's Wing [1 in 1,333]") {
+    } else if (rarity.type === "Seraph's Wing [1 in 1,333]") {
       if (skipCutscene10K) {
         document.body.className = "blackBg";
         disableChange();
@@ -8928,45 +9287,61 @@ document.getElementById("rollButton").addEventListener("click", function () {
   localStorage.setItem("rollCount", rollCount);
   localStorage.setItem("rollCount1", rollCount1);
   load();
-});
+  });
+}
 
-const toggleCutscene1KBtn = document.getElementById("toggleCutscene1K");
-const toggleCutscene1KTxt = document.getElementById("1KTxt");
-toggleCutscene1KBtn.addEventListener("click", function () {
-  skipCutscene1K = !skipCutscene1K;
-  console.log(`Cutscene skip for 1K has been set to ${skipCutscene1K}`);
-  localStorage.setItem('skipCutscene1K', JSON.stringify(skipCutscene1K));
-  toggleCutscene1KTxt.textContent = `Skip Decent Cutscenes ${skipCutscene1K ? "" : "On"}`;
-});
+function registerCutsceneToggleButtons() {
+  const toggleCutscene1KBtn = document.getElementById("toggleCutscene1K");
+  const toggleCutscene1KTxt = document.getElementById("1KTxt");
+  if (toggleCutscene1KBtn && toggleCutscene1KTxt) {
+    toggleCutscene1KBtn.addEventListener("click", function () {
+      skipCutscene1K = !skipCutscene1K;
+      console.log(`Cutscene skip for 1K has been set to ${skipCutscene1K}`);
+      localStorage.setItem("skipCutscene1K", JSON.stringify(skipCutscene1K));
+      toggleCutscene1KTxt.textContent = `Skip Decent Cutscenes ${skipCutscene1K ? "" : "On"}`;
+    });
+  }
 
-const toggleCutscene10KBtn = document.getElementById("toggleCutscene10K");
-const toggleCutscene10KTxt = document.getElementById("10KTxt");
-toggleCutscene10KBtn.addEventListener("click", function () {
-  skipCutscene10K = !skipCutscene10K;
-  console.log(`Cutscene skip for 10K has been set to ${skipCutscene10K}`);
-  localStorage.setItem('skipCutscene10K', JSON.stringify(skipCutscene10K));
-  toggleCutscene10KTxt.textContent = `Skip Grand Cutscenes ${skipCutscene10K ? "" : "On"}`;
-});
+  const toggleCutscene10KBtn = document.getElementById("toggleCutscene10K");
+  const toggleCutscene10KTxt = document.getElementById("10KTxt");
+  if (toggleCutscene10KBtn && toggleCutscene10KTxt) {
+    toggleCutscene10KBtn.addEventListener("click", function () {
+      skipCutscene10K = !skipCutscene10K;
+      console.log(`Cutscene skip for 10K has been set to ${skipCutscene10K}`);
+      localStorage.setItem("skipCutscene10K", JSON.stringify(skipCutscene10K));
+      toggleCutscene10KTxt.textContent = `Skip Grand Cutscenes ${skipCutscene10K ? "" : "On"}`;
+    });
+  }
 
-const toggleCutscene100KBtn = document.getElementById("toggleCutscene100K");
-const toggleCutscene100KTxt = document.getElementById("100KTxt");
-toggleCutscene100KBtn.addEventListener("click", function () {
-  skipCutscene100K = !skipCutscene100K;
-  console.log(`Cutscene skip for 100K has been set to ${skipCutscene100K}`);
-  localStorage.setItem('skipCutscene100K', JSON.stringify(skipCutscene100K));
-  toggleCutscene100KTxt.textContent = `Skip Mastery Cutscenes ${skipCutscene100K ? "" : "On"}`;
-});
+  const toggleCutscene100KBtn = document.getElementById("toggleCutscene100K");
+  const toggleCutscene100KTxt = document.getElementById("100KTxt");
+  if (toggleCutscene100KBtn && toggleCutscene100KTxt) {
+    toggleCutscene100KBtn.addEventListener("click", function () {
+      skipCutscene100K = !skipCutscene100K;
+      console.log(`Cutscene skip for 100K has been set to ${skipCutscene100K}`);
+      localStorage.setItem("skipCutscene100K", JSON.stringify(skipCutscene100K));
+      toggleCutscene100KTxt.textContent = `Skip Mastery Cutscenes ${skipCutscene100K ? "" : "On"}`;
+    });
+  }
 
-const toggleCutscene1MBtn = document.getElementById("toggleCutscene1M");
-const toggleCutscene1MTxt = document.getElementById("1MTxt");
-toggleCutscene1MBtn.addEventListener("click", function () {
-  skipCutscene1M = !skipCutscene1M;
-  console.log(`Cutscene skip for 1M has been set to ${skipCutscene1M}`);
-  localStorage.setItem('skipCutscene1M', JSON.stringify(skipCutscene1M));
-  toggleCutscene1MTxt.textContent = `Skip Supreme Cutscenes ${skipCutscene1M ? "" : "On"}`;
-});
+  const toggleCutscene1MBtn = document.getElementById("toggleCutscene1M");
+  const toggleCutscene1MTxt = document.getElementById("1MTxt");
+  if (toggleCutscene1MBtn && toggleCutscene1MTxt) {
+    toggleCutscene1MBtn.addEventListener("click", function () {
+      skipCutscene1M = !skipCutscene1M;
+      console.log(`Cutscene skip for 1M has been set to ${skipCutscene1M}`);
+      localStorage.setItem("skipCutscene1M", JSON.stringify(skipCutscene1M));
+      toggleCutscene1MTxt.textContent = `Skip Supreme Cutscenes ${skipCutscene1M ? "" : "On"}`;
+    });
+  }
+}
 
 function rollRarity() {
+  lastRollPersisted = true;
+  lastRollAutoDeleted = false;
+  lastRollRarityClass = null;
+  allowForcedAudioPlayback = false;
+
   const rarities = [
     {
       type: "Common [1 in 2.5]",
@@ -9644,25 +10019,18 @@ function selectTitle(rarity) {
   return titles[Math.floor(Math.random() * titles.length)];
 }
 
-function displayResult(title, rarity) {
-  const resultDiv = document.getElementById("result");
-  resultDiv.innerText = `You rolled a ${rarity}
-    Item: ${title}!`;
-}
-
-function changeBackground(rarityClass) {
-  const body = document.body;
-  body.className = "";
-  body.classList.add(rarityClass);
-}
-
 function addToInventory(title, rarityClass) {
+  lastRollRarityClass = rarityClass || null;
   const rolledAt = typeof rollCount === "number"
     ? rollCount
     : parseInt(localStorage.getItem("rollCount")) || 0;
   const autoDeleteSet = getAutoDeleteSet();
   const bucket = normalizeRarityBucket(rarityClass);
+  recordRarityBucketRoll(bucket);
   if (autoDeleteSet.has(bucket)) {
+    lastRollPersisted = false;
+    lastRollAutoDeleted = true;
+    resumeEquippedAudioAfterCutscene = true;
     showStatusMessage(`${title} auto-deleted`, 800);
     return false; // not persisted
   }
@@ -9671,14 +10039,111 @@ function addToInventory(title, rarityClass) {
 
   for (const category in rarityCategories) {
     if (excludedRarities.has(category) && rarityCategories[category].includes(rarityClass)) {
-      return;
+      lastRollPersisted = false;
+      lastRollAutoDeleted = true;
+      resumeEquippedAudioAfterCutscene = true;
+      return false;
     }
   }
 
   inventory.push({ title, rarityClass, rolledAt });
   localStorage.setItem("inventory", JSON.stringify(inventory));
   renderInventory();
+  lastRollPersisted = true;
+  lastRollAutoDeleted = false;
   return true; // persisted
+}
+
+function displayResult(title, rarity) {
+  const resultDiv = document.getElementById("result");
+  if (!resultDiv) {
+    return;
+  }
+
+  pendingCutsceneRarity = null;
+
+  const rarityValue = rarity == null ? "" : rarity;
+  const rarityText = typeof rarityValue === "string" ? rarityValue : String(rarityValue);
+  const [rarityName, oddsRaw] = rarityText.split(" [");
+  const odds = oddsRaw ? oddsRaw.replace(/\]$/, "") : "";
+  const bucket = normalizeRarityBucket(lastRollRarityClass);
+  const bucketClass = bucket ? `roll-result-card--${bucket}` : "";
+  const bucketLabel = bucket ? (RARITY_BUCKET_LABELS[bucket] || bucket) : "";
+  const labelClass = getLabelClassForRarity(lastRollRarityClass, bucket);
+
+  const card = document.createElement("div");
+  card.className = "roll-result-card";
+  if (bucketClass) {
+    card.classList.add(bucketClass);
+  }
+  if (lastRollAutoDeleted) {
+    card.classList.add("roll-result-card--skipped");
+  }
+
+  const header = document.createElement("div");
+  header.className = "roll-result-card__header";
+
+  const rarityLabel = document.createElement("span");
+  rarityLabel.className = "roll-result-card__rarity";
+  if (labelClass) {
+    rarityLabel.classList.add(labelClass);
+  }
+  rarityLabel.textContent = (rarityName || rarityText || "Unknown").trim();
+  header.appendChild(rarityLabel);
+
+  if (odds) {
+    const oddsEl = document.createElement("span");
+    oddsEl.className = "roll-result-card__odds";
+    oddsEl.textContent = odds;
+    header.appendChild(oddsEl);
+  }
+
+  const badge = document.createElement("span");
+  badge.className = "roll-result-card__badge";
+  badge.textContent = lastRollAutoDeleted ? "Skipped" : "New Title";
+  header.appendChild(badge);
+
+  const titleEl = document.createElement("div");
+  titleEl.className = "roll-result-card__title";
+  titleEl.textContent = title || "Unknown";
+
+  const statusEl = document.createElement("div");
+  statusEl.className = "roll-result-card__status";
+  if (lastRollAutoDeleted) {
+    statusEl.textContent = bucketLabel
+      ? `Auto-deleted (${bucketLabel})`
+      : "Auto-deleted";
+    statusEl.classList.add("roll-result-card__status--skipped");
+  } else {
+    statusEl.textContent = "Added to inventory";
+  }
+
+  card.appendChild(header);
+  card.appendChild(titleEl);
+  card.appendChild(statusEl);
+
+  resultDiv.innerHTML = "";
+  resultDiv.appendChild(card);
+
+  resumePausedEquippedAudio();
+
+  requestAnimationFrame(() => {
+    card.classList.add("is-visible");
+  });
+}
+
+function recordRarityBucketRoll(bucket) {
+  if (!bucket) {
+    return;
+  }
+
+  if (rolledRarityBuckets.has(bucket)) {
+    return;
+  }
+
+  rolledRarityBuckets.add(bucket);
+  storage.set("rolledRarityBuckets", Array.from(rolledRarityBuckets));
+  checkAchievements({ rarityBuckets: rolledRarityBuckets });
 }
 
 function getAutoDeleteSet() {
@@ -9780,126 +10245,154 @@ function deleteAllByRarity(rarityClass) {
   renderInventory();
 }
 
-document
-  .getElementById("toggleInventoryBtn")
-  .addEventListener("click", function () {
-    const inventorySection = document.querySelector(".inventory");
-    const isVisible = inventorySection.style.visibility !== "visible";
+function registerInterfaceToggleButtons() {
+  const toggleInventoryBtn = document.getElementById("toggleInventoryBtn");
+  if (toggleInventoryBtn) {
+    toggleInventoryBtn.addEventListener("click", function () {
+      const inventorySection = document.querySelector(".inventory");
+      if (!inventorySection) {
+        return;
+      }
 
-    if (isVisible) {
-      inventorySection.style.visibility = "visible";
-      this.textContent = "Hide Inventory";
-    } else {
-      inventorySection.style.visibility = "hidden";
-      this.textContent = "Show Inventory";
-    }
-  });
+      const isVisible = inventorySection.style.visibility !== "visible";
 
-const toggleUiBtn = document.getElementById("toggleUiBtn");
-const uiSection = document.querySelector(".ui");
-
-toggleUiBtn.addEventListener("click", function (event) {
-  const isVisible = uiSection.style.visibility !== "hidden";
-
-  if (isVisible) {
-    uiSection.style.visibility = "hidden";
-    this.textContent = "Show UI";
-  } else {
-    uiSection.style.visibility = "visible";
-    this.textContent = "Hide UI";
+      if (isVisible) {
+        inventorySection.style.visibility = "visible";
+        this.textContent = "Hide Inventory";
+      } else {
+        inventorySection.style.visibility = "hidden";
+        this.textContent = "Show Inventory";
+      }
+    });
   }
 
-  if (this.textContent === "Show UI") {
-    toggleUiBtn.style.display = "none";
-    event.stopPropagation();
+  const toggleUiBtn = document.getElementById("toggleUiBtn");
+  const uiSection = document.querySelector(".ui");
+
+  if (toggleUiBtn && uiSection) {
+    toggleUiBtn.addEventListener("click", function (event) {
+      const isVisible = uiSection.style.visibility !== "hidden";
+
+      if (isVisible) {
+        uiSection.style.visibility = "hidden";
+        this.textContent = "Show UI";
+      } else {
+        uiSection.style.visibility = "visible";
+        this.textContent = "Hide UI";
+      }
+
+      if (this.textContent === "Show UI") {
+        toggleUiBtn.style.display = "none";
+        event.stopPropagation();
+      }
+    });
+
+    document.addEventListener("click", () => {
+      if (toggleUiBtn.style.display === "none") {
+        toggleUiBtn.style.display = "block";
+      }
+    });
   }
-});
 
-document.addEventListener("click", () => {
-  if (toggleUiBtn.style.display === "none") {
-    toggleUiBtn.style.display = "block";
+  const toggleRollDisplayBtn = document.getElementById("toggleRollDisplayBtn");
+  if (toggleRollDisplayBtn) {
+    toggleRollDisplayBtn.addEventListener("click", function () {
+      const inventorySection = document.querySelector(".container");
+      if (!inventorySection) {
+        return;
+      }
+
+      const isVisible = inventorySection.style.visibility !== "hidden";
+
+      if (isVisible) {
+        inventorySection.style.visibility = "hidden";
+        rollDisplayHiddenByUser = true;
+        this.textContent = "Show Roll & Display";
+      } else {
+        inventorySection.style.visibility = "visible";
+        rollDisplayHiddenByUser = false;
+        cutsceneHidRollDisplay = false;
+        this.textContent = "Hide Roll & Display";
+      }
+    });
   }
-});
 
-document
-  .getElementById("toggleRollDisplayBtn")
-  .addEventListener("click", function () {
-    const inventorySection = document.querySelector(".container");
-    const isVisible = inventorySection.style.visibility !== "hidden";
+  const toggleRollHistoryBtn = document.getElementById("toggleRollHistoryBtn");
+  if (toggleRollHistoryBtn) {
+    toggleRollHistoryBtn.addEventListener("click", function () {
+      const historySection = document.querySelector(".historySection");
+      const container = document.querySelector(".container1");
+      if (!historySection || !container) {
+        return;
+      }
 
-    if (isVisible) {
-      inventorySection.style.visibility = "hidden";
-      rollDisplayHiddenByUser = true;
-      this.textContent = "Show Roll & Display";
-    } else {
-      inventorySection.style.visibility = "visible";
-      rollDisplayHiddenByUser = false;
-      cutsceneHidRollDisplay = false;
-      this.textContent = "Hide Roll & Display";
-    }
-  });
+      const isVisible = historySection.style.visibility !== "hidden";
 
-window.addEventListener("resize", function () {
-  const container = document.querySelector(".container1");
-  const inventory = document.querySelector(".inventory");
-  const SeButton = document.getElementById("settingsButton");
-  const AButton = document.getElementById("achievementsButton");
-  const StButton = document.getElementById("statsButton");
-  const sliderContainer = document.querySelector(".slider-container");
-  const originalParent = document.querySelector(".original-parent");
-
-  if (window.innerWidth < 821) {
-    SeButton.style.display = "none";
-    AButton.style.display = "none";
-    StButton.style.display = "none";
-    container.style.left = "10px";
-    inventory.style.height = "58vh";
-    inventory.style.width = "42vh";
-
-    if (!container.contains(sliderContainer)) {
-      container.appendChild(sliderContainer);
-    }
-  } else if (window.innerWidth > 821 && window.innerHeight > 1400) { 
-    // Fix: Use '&&' instead of '&'
-    inventory.style.width = "70vh";
-    container.style.left = "383px";
-
-    if (originalParent && !originalParent.contains(sliderContainer)) {
-      originalParent.appendChild(sliderContainer);
-    }
-  } else {
-    container.style.left = "383px";
-    SeButton.style.display = "inline-block";
-    AButton.style.display = "inline-block";
-    StButton.style.display = "inline-block";
-    inventory.style.width = "60vh";
-    inventory.style.height = "85vh";
-
-    if (originalParent && !originalParent.contains(sliderContainer)) {
-      originalParent.appendChild(sliderContainer);
-    }
+      if (isVisible) {
+        historySection.style.visibility = "hidden";
+        this.textContent = "Show Roll History";
+        container.style.left = "10px";
+      } else {
+        historySection.style.visibility = "visible";
+        this.textContent = "Hide Roll History";
+        container.style.left = "383px";
+      }
+    });
   }
-});
+}
 
-document
-  .getElementById("toggleRollHistoryBtn")
-  .addEventListener("click", function () {
-    const historySection = document.querySelector(".historySection");
+function registerResponsiveHandlers() {
+  const applyLayout = () => {
     const container = document.querySelector(".container1");
-    const isVisible = historySection.style.visibility !== "hidden";
+    const inventory = document.querySelector(".inventory");
+    const settingsButton = document.getElementById("settingsButton");
+    const achievementsButton = document.getElementById("achievementsButton");
+    const statsButton = document.getElementById("statsButton");
+    const sliderContainer = document.querySelector(".slider-container");
+    const originalParent = document.querySelector(".original-parent");
 
-    if (isVisible) {
-      historySection.style.visibility = "hidden";
-      this.textContent = "Show Roll History";
-      container.style.left = "10px";
-    } else {
-      historySection.style.visibility = "visible";
-      this.textContent = "Hide Roll History";
-      container.style.left = "383px";
+    if (!container || !inventory || !settingsButton || !achievementsButton || !statsButton) {
+      return;
     }
-});
+
+    if (window.innerWidth < 821) {
+      settingsButton.style.display = "none";
+      achievementsButton.style.display = "none";
+      statsButton.style.display = "none";
+      container.style.left = "10px";
+      inventory.style.height = "58vh";
+      inventory.style.width = "42vh";
+
+      if (sliderContainer && !container.contains(sliderContainer)) {
+        container.appendChild(sliderContainer);
+      }
+    } else if (window.innerWidth > 821 && window.innerHeight > 1400) {
+      inventory.style.width = "70vh";
+      container.style.left = "383px";
+
+      if (originalParent && sliderContainer && !originalParent.contains(sliderContainer)) {
+        originalParent.appendChild(sliderContainer);
+      }
+    } else {
+      container.style.left = "383px";
+      settingsButton.style.display = "inline-block";
+      achievementsButton.style.display = "inline-block";
+      statsButton.style.display = "inline-block";
+      inventory.style.width = "60vh";
+      inventory.style.height = "85vh";
+
+      if (originalParent && sliderContainer && !originalParent.contains(sliderContainer)) {
+        originalParent.appendChild(sliderContainer);
+      }
+    }
+  };
+
+  applyLayout();
+  window.addEventListener("resize", applyLayout);
+}
 
 const backgroundDetails = {
+  menuDefault: { image: "files/backgrounds/menu.png", audio: null },
   commonBgImg: { image: "files/backgrounds/common.png", audio: null },
   rareBgImg: { image: "files/backgrounds/rare.png", audio: null },
   epicBgImg: { image: "files/backgrounds/epic.png", audio: null },
@@ -10098,17 +10591,68 @@ function enableChange() {
   finalizeCutsceneState();
 }
 
+function pauseEquippedAudioForPendingCutscene() {
+  if (!pendingCutsceneRarity) {
+    return;
+  }
+
+  const rarity = pendingCutsceneRarity;
+  pendingCutsceneRarity = null;
+  pauseEquippedAudioForRarity(rarity);
+}
+
+function setEquipToggleButtonDisabled(button, disabled) {
+  if (!button) {
+    return;
+  }
+
+  const shouldDisable = Boolean(disabled);
+  if (button.disabled !== shouldDisable) {
+    button.disabled = shouldDisable;
+  }
+
+  button.classList.toggle("dropdown-item--disabled", shouldDisable);
+
+  if (shouldDisable) {
+    button.setAttribute("aria-disabled", "true");
+  } else {
+    button.removeAttribute("aria-disabled");
+  }
+}
+
+function updateEquipToggleButtonsDisabled(disabled) {
+  $all('.dropdown-item[data-action="equip-toggle"]').forEach((button) => {
+    setEquipToggleButtonDisabled(button, disabled);
+  });
+}
+
 function disableChange() {
   isChangeEnabled = false;
   cutsceneActive = true;
   scheduleCutsceneFailsafe();
   // Hide stack during cutscenes (body backgrounds/gifs will show)
   if (__bgStack) __bgStack.classList.add("is-hidden");
+  pauseEquippedAudioForPendingCutscene();
+  updateEquipToggleButtonsDisabled(true);
 }
 
 function renderInventory() {
   const inventoryList = document.getElementById("inventoryList");
   inventoryList.innerHTML = "";
+
+  let newBucketRecorded = false;
+  inventory.forEach((item) => {
+    const bucket = normalizeRarityBucket(item.rarityClass);
+    if (bucket && !rolledRarityBuckets.has(bucket)) {
+      rolledRarityBuckets.add(bucket);
+      newBucketRecorded = true;
+    }
+  });
+
+  if (newBucketRecorded) {
+    storage.set("rolledRarityBuckets", Array.from(rolledRarityBuckets));
+    checkAchievements({ rarityBuckets: rolledRarityBuckets });
+  }
 
   const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
 
@@ -10119,12 +10663,17 @@ function renderInventory() {
   paginatedItems.forEach((item, index) => {
     const absoluteIndex = start + index;
     const listItem = document.createElement("li");
-    listItem.className = item.rarityClass;
+    listItem.className = item.rarityClass || "";
+    listItem.classList.add("inventory-item");
     listItem.dataset.locked = lockedItems[item.title] ? "true" : "false";
     const bucket = normalizeRarityBucket(item.rarityClass);
     if (bucket) {
       listItem.dataset.bucket = bucket;
     }
+
+    const isEquipped = isItemCurrentlyEquipped(item);
+    listItem.dataset.equipped = isEquipped ? "true" : "false";
+    listItem.classList.toggle("inventory-item--equipped", Boolean(isEquipped));
 
     const itemTitle = document.createElement("span");
     itemTitle.className = "rarity-text";
@@ -10168,10 +10717,20 @@ function renderInventory() {
     
     const equipButton = document.createElement("button");
     equipButton.className = "dropdown-item";
-    equipButton.innerHTML = "Equip";
+    equipButton.dataset.action = "equip-toggle";
+    equipButton.textContent = isEquipped ? "Unequip" : "Equip";
+    equipButton.classList.toggle("dropdown-item--unequip", Boolean(isEquipped));
+    setEquipToggleButtonDisabled(equipButton, cutsceneActive);
     equipButton.addEventListener("click", (event) => {
       event.stopPropagation();
-      equipItem(item);
+      if (cutsceneActive) {
+        return;
+      }
+      if (isItemCurrentlyEquipped(item)) {
+        unequipItem();
+      } else {
+        equipItem(item);
+      }
     });
 
     const deleteButton = document.createElement("button");
@@ -10247,14 +10806,73 @@ function deleteFromInventory(absoluteIndex) {
 }
 
 function equipItem(item) {
-  equippedItem = item;
-  console.log(`Equipped item: ${item.title}`);
-  handleEquippedItem(item);
-  mainAudio.pause();
+  if (cutsceneActive) {
+    return;
+  }
+
+  const normalized = normalizeEquippedItemRecord(item);
+  if (!normalized) {
+    return;
+  }
+
+  equippedItem = normalized;
+  storage.set("equippedItem", normalized);
+
+  resumeEquippedAudioAfterCutscene = false;
+  pausedEquippedAudioState = null;
+
+  handleEquippedItem(normalized);
+
+  if (typeof mainAudio !== "undefined" && mainAudio && typeof mainAudio.pause === "function") {
+    try {
+      mainAudio.pause();
+    } catch (error) {
+      /* no-op */
+    }
+  }
+
+  renderInventory();
+}
+
+function unequipItem() {
+  if (cutsceneActive) {
+    return;
+  }
+
+  if (!equippedItem) {
+    return;
+  }
+
+  equippedItem = null;
+  storage.remove("equippedItem");
+
+  resumeEquippedAudioAfterCutscene = false;
+  pausedEquippedAudioState = null;
+
+  if (currentAudio) {
+    try {
+      currentAudio.pause();
+    } catch (error) {
+      /* no-op */
+    }
+    if (currentAudio.id) {
+      resetAudioState(currentAudio, currentAudio.id);
+    }
+  }
+  currentAudio = null;
+  pinnedAudioId = null;
+
+  changeBackground("menuDefault", null, { force: true });
+
+  renderInventory();
 }
 
 function handleEquippedItem(item) {
-  changeBackground(item.rarityClass, item.title);
+  if (!item) {
+    return;
+  }
+
+  changeBackground(item.rarityClass, item.title, { force: true });
 }
 
 function updatePagination() {
@@ -10333,18 +10951,19 @@ function toggleFullscreen() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", (event) => {
-  document
-    .getElementById("deleteAllButton")
-    .addEventListener("click", function () {
-      var confirmDelete = confirm(
-        "Are you sure you want to delete all Titles?"
-      );
-      if (confirmDelete) {
-        deleteAllFromInventory();
-      }
-    });
-});
+function registerDeleteAllButton() {
+  const deleteAllButton = document.getElementById("deleteAllButton");
+  if (!deleteAllButton) {
+    return;
+  }
+
+  deleteAllButton.addEventListener("click", function () {
+    const confirmDelete = confirm("Are you sure you want to delete all Titles?");
+    if (confirmDelete) {
+      deleteAllFromInventory();
+    }
+  });
+}
 
 function startAnimation() {
   const star = document.getElementById("star");
@@ -10991,9 +11610,7 @@ function scheduleAllCooldownButtons() {
   });
 }
 
-scheduleAllCooldownButtons();
-
-document.addEventListener("DOMContentLoaded", () => {
+function registerMenuDragHandlers() {
   const settingsMenu = document.getElementById("settingsMenu");
   const settingsHeader = settingsMenu?.querySelector(".settings-header");
   const settingsBody = settingsMenu?.querySelector(".settings-body");
@@ -11003,7 +11620,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const statsMenu = document.getElementById("statsMenu");
   const statsHeader = statsMenu?.querySelector(".stats-header");
   const statsDragHandle = statsMenu?.querySelector(".stats-menu__drag-handle");
-  const headerStats = statsMenu.querySelector("h3");
+  const headerStats = statsMenu?.querySelector("h3");
   let isDraggingSettings = false;
   let isDraggingAchievements = false;
   let isDraggingStats = false;
@@ -11016,7 +11633,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let offsetXStyle = 0;
   let offsetYStyle = 0;
 
-  if (settingsHeader) {
+  if (settingsHeader && settingsMenu) {
     settingsHeader.addEventListener("mousedown", (event) => {
       if (event.button !== 0 || event.target.closest(".settings-close-btn")) {
         return;
@@ -11051,7 +11668,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (achievementsHeader) {
+  if (achievementsHeader && achievementsMenu) {
     achievementsHeader.addEventListener("mousedown", (event) => {
       if (event.button !== 0 || event.target.closest(".achievements-close-btn")) {
         return;
@@ -11088,7 +11705,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (headerStats) {
+  if (headerStats && statsDragHandle) {
     headerStats.addEventListener("mousedown", (event) => {
       isDraggingStats = true;
       statsDragHandle.classList.add("is-dragging");
@@ -11127,12 +11744,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   document.addEventListener("mousemove", (event) => {
-    if (isDraggingSettings) {
+    if (isDraggingSettings && settingsMenu) {
       settingsMenu.style.left = `${event.clientX - offsetX}px`;
       settingsMenu.style.top = `${event.clientY - offsetY}px`;
     }
 
-    if (isDraggingAchievements) {
+    if (isDraggingAchievements && achievementsMenu) {
       achievementsMenu.style.left = `${event.clientX - offsetXAchievements}px`;
       achievementsMenu.style.top = `${event.clientY - offsetYAchievements}px`;
     }
@@ -11157,11 +11774,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isDraggingStats) {
       isDraggingStats = false;
       statsHeader?.classList.remove("is-dragging");
+      statsDragHandle?.classList.remove("is-dragging");
     }
   });
-});
+}
 
-document.addEventListener("DOMContentLoaded", () => {
+function enhanceInventoryDeleteButtons() {
   document.querySelectorAll(".inventory-delete-btn").forEach((button) => {
     if (button.childElementCount > 0) {
       return;
@@ -11180,99 +11798,133 @@ document.addEventListener("DOMContentLoaded", () => {
     button.appendChild(labelSpan);
     button.classList.add("inventory-delete-btn--overlay");
   });
-});
-
-const settingsButton = document.getElementById("settingsButton");
-const achievementsButton = document.getElementById("achievementsButton");
-const achievementsMenu = document.getElementById("achievementsMenu");
-const closeAchievements = document.getElementById("closeAchievements");
-const statsMenu = document.getElementById("statsMenu");
-const statsButton = document.getElementById("statsButton");
-const closeStats = document.getElementById("closeStats");
-const settingsMenu = document.getElementById("settingsMenu");
-const closeSettings = document.getElementById("closeSettings");
-const audioSlider = document.getElementById("audioSlider");
-const audioSliderValueLabel = document.getElementById("audioSliderValue");
-const resetDataButton = document.getElementById("resetDataButton");
-const autoRollButton = document.getElementById("autoRollButton");
-const rollButton = document.getElementById("rollButton");
-
-settingsButton.addEventListener("click", () => {
-  settingsMenu.style.display = "block";
-});
-
-closeSettings.addEventListener("click", () => {
-  settingsMenu.style.display = "none";
-});
-
-achievementsButton.addEventListener("click", () => {
-  achievementsMenu.style.display = "block";
-  const achievementsBodyElement = achievementsMenu.querySelector(".achievements-body");
-  if (achievementsBodyElement) {
-    achievementsBodyElement.scrollTop = 0;
-  }
-});
-
-closeAchievements.addEventListener("click", () => {
-  achievementsMenu.style.display = "none";
-});
-
-statsButton.addEventListener("click", () => {
-  statsMenu.style.display = "block";
-  statsMenu.style.transform = "translate(-50%, -50%)";
-  statsMenu.style.left = "50%";
-  statsMenu.style.top = "50%";
-});
-
-closeStats.addEventListener("click", () => {
-  statsMenu.style.display = "none";
-});
-
-const muteButton = document.getElementById("muteButton");
-
-const savedVolume = localStorage.getItem("audioVolume");
-if (savedVolume !== null) {
-  audioVolume = parseFloat(savedVolume);
-  previousVolume = audioVolume;
-  audioSlider.value = audioVolume;
-  updateAudioElements(audioVolume);
-} else {
-  updateAudioElements(audioVolume);
 }
-setSliderMutedState(audioVolume === 0);
-updateAudioSliderUi();
 
-audioSlider.addEventListener("input", () => {
-  audioVolume = parseFloat(audioSlider.value);
-  if (audioVolume === 0) {
-    isMuted = true;
-    setSliderMutedState(true);
-  } else {
-    isMuted = false;
-    previousVolume = audioVolume;
-    setSliderMutedState(false);
-  }
-  localStorage.setItem("audioVolume", audioVolume);
-  updateAudioElements(audioVolume);
-  updateAudioSliderUi();
-});
+function registerMenuButtons() {
+  const settingsButton = document.getElementById("settingsButton");
+  const achievementsButton = document.getElementById("achievementsButton");
+  const achievementsMenu = document.getElementById("achievementsMenu");
+  const closeAchievements = document.getElementById("closeAchievements");
+  const statsMenu = document.getElementById("statsMenu");
+  const statsButton = document.getElementById("statsButton");
+  const closeStats = document.getElementById("closeStats");
+  const settingsMenu = document.getElementById("settingsMenu");
+  const closeSettings = document.getElementById("closeSettings");
 
-muteButton.addEventListener("click", () => {
-  isMuted = !isMuted;
-
-  if (isMuted) {
-    previousVolume = audioVolume;
-    audioVolume = 0;
-  } else {
-    audioVolume = previousVolume;
+  if (settingsButton && settingsMenu) {
+    settingsButton.addEventListener("click", () => {
+      settingsMenu.style.display = "flex";
+    });
   }
 
-  audioSlider.value = audioVolume;
-  localStorage.setItem("audioVolume", audioVolume);
+  if (closeSettings && settingsMenu) {
+    closeSettings.addEventListener("click", () => {
+      settingsMenu.style.display = "none";
+    });
+  }
+
+  if (achievementsButton && achievementsMenu) {
+    achievementsButton.addEventListener("click", () => {
+      achievementsMenu.style.display = "flex";
+      const achievementsBodyElement = achievementsMenu.querySelector(".achievements-body");
+      if (achievementsBodyElement) {
+        achievementsBodyElement.scrollTop = 0;
+      }
+    });
+  }
+
+  if (closeAchievements && achievementsMenu) {
+    closeAchievements.addEventListener("click", () => {
+      achievementsMenu.style.display = "none";
+    });
+  }
+
+  if (statsButton && statsMenu) {
+    statsButton.addEventListener("click", () => {
+      statsMenu.style.display = "block";
+      statsMenu.style.transform = "translate(-50%, -50%)";
+      statsMenu.style.left = "50%";
+      statsMenu.style.top = "50%";
+    });
+  }
+
+  if (closeStats && statsMenu) {
+    closeStats.addEventListener("click", () => {
+      statsMenu.style.display = "none";
+    });
+  }
+}
+
+function setupAudioControls() {
+  audioSliderElement = document.getElementById("audioSlider");
+  audioSliderValueLabelElement = document.getElementById("audioSliderValue");
+  muteButtonElement = document.getElementById("muteButton");
+  const resetDataButton = document.getElementById("resetDataButton");
+
+  const savedVolume = localStorage.getItem("audioVolume");
+  if (savedVolume !== null) {
+    audioVolume = parseFloat(savedVolume);
+    previousVolume = audioVolume;
+  }
+
   updateAudioElements(audioVolume);
-  setSliderMutedState(isMuted);
+
+  if (audioSliderElement) {
+    audioSliderElement.value = audioVolume;
+    audioSliderElement.addEventListener("input", () => {
+      audioVolume = parseFloat(audioSliderElement.value);
+      if (audioVolume === 0) {
+        isMuted = true;
+        setSliderMutedState(true);
+      } else {
+        isMuted = false;
+        previousVolume = audioVolume;
+        setSliderMutedState(false);
+      }
+      localStorage.setItem("audioVolume", audioVolume);
+      updateAudioElements(audioVolume);
+      updateAudioSliderUi();
+    });
+  }
+
+  if (muteButtonElement) {
+    muteButtonElement.addEventListener("click", () => {
+      isMuted = !isMuted;
+
+      if (isMuted) {
+        previousVolume = audioVolume;
+        audioVolume = 0;
+      } else {
+        audioVolume = previousVolume;
+      }
+
+      if (audioSliderElement) {
+        audioSliderElement.value = audioVolume;
+      }
+      localStorage.setItem("audioVolume", audioVolume);
+      updateAudioElements(audioVolume);
+      setSliderMutedState(isMuted);
+      updateAudioSliderUi();
+    });
+  }
+
+  if (resetDataButton) {
+    resetDataButton.addEventListener("click", () => {
+      if (confirm("Are you sure you want to reset all data?")) {
+        console.log("Data reset!");
+        localStorage.clear();
+
+        setTimeout(() => {
+          localStorage.clear();
+          location.reload();
+        }, 100);
+      }
+    });
+  }
+
+  setSliderMutedState(audioVolume === 0);
   updateAudioSliderUi();
-});
+}
 
 function updateAudioElements(volume) {
   const audioElements = document.querySelectorAll("audio");
@@ -11280,22 +11932,22 @@ function updateAudioElements(volume) {
 }
 
 function setSliderMutedState(muted) {
-  if (!audioSlider) {
+  if (!audioSliderElement) {
     return;
   }
 
-  audioSlider.classList.toggle("muted", Boolean(muted));
+  audioSliderElement.classList.toggle("muted", Boolean(muted));
 }
 
 function updateAudioSliderUi() {
-  if (!audioSlider) {
+  if (!audioSliderElement) {
     return;
   }
 
-  const value = Math.max(0, Math.min(1, parseFloat(audioSlider.value) || 0));
+  const value = Math.max(0, Math.min(1, parseFloat(audioSliderElement.value) || 0));
   const percentage = Math.round(value * 100);
-  if (audioSliderValueLabel) {
-    audioSliderValueLabel.textContent = `${percentage}%`;
+  if (audioSliderValueLabelElement) {
+    audioSliderValueLabelElement.textContent = `${percentage}%`;
   }
 
   const startColor = { r: 96, g: 0, b: 126 };
@@ -11305,177 +11957,262 @@ function updateAudioSliderUi() {
   const b = Math.round(startColor.b + (endColor.b - startColor.b) * value);
   const thumbColor = `rgb(${r}, ${g}, ${b})`;
 
-  audioSlider.style.setProperty("--thumb-color", thumbColor);
+  audioSliderElement.style.setProperty("--thumb-color", thumbColor);
 
-  const trackColor = audioSlider.classList.contains("muted")
+  const trackColor = audioSliderElement.classList.contains("muted")
     ? "rgba(128, 96, 186, 0.75)"
     : thumbColor;
 
-  audioSlider.style.background = `linear-gradient(90deg, ${trackColor} ${percentage}%, rgba(255, 255, 255, 0.12) ${percentage}%)`;
+  audioSliderElement.style.background = `linear-gradient(90deg, ${trackColor} ${percentage}%, rgba(255, 255, 255, 0.12) ${percentage}%)`;
 }
 
-resetDataButton.addEventListener("click", () => {
-  if (confirm("Are you sure you want to reset all data?")) {
-    console.log("Data reset!");
-    localStorage.clear();
-    
-    setTimeout(() => {
-      localStorage.clear();
-      location.reload();
-      let playTime = 0;
-    }, 100);
+function initializeAutoRollControls() {
+  autoRollButtonElement = document.getElementById("autoRollButton");
+  if (!autoRollButtonElement) {
+    return;
   }
-});
 
-const savedState = localStorage.getItem("autoRollEnabled");
-if (savedState === "true") {
-  startAutoRoll();
-} else {
-  stopAutoRoll();
-}
+  autoRollButtonElement.addEventListener("click", () => {
+    if (!isAutoRollUnlocked()) {
+      return;
+    }
 
-autoRollButton.addEventListener("click", () => {
-  if (autoRollInterval) {
-    stopAutoRoll();
-  } else {
+    if (autoRollInterval) {
+      stopAutoRoll();
+    } else {
+      startAutoRoll();
+    }
+  });
+
+  const savedState = localStorage.getItem("autoRollEnabled");
+  if (savedState === "true" && isAutoRollUnlocked()) {
     startAutoRoll();
+  } else {
+    stopAutoRoll();
   }
-});
+
+  updateAutoRollAvailability();
+}
 
 function startAutoRoll() {
+  if (!autoRollButtonElement || autoRollInterval || !isAutoRollUnlocked()) {
+    return;
+  }
+
   autoRollInterval = setInterval(() => {
-    document.getElementById("rollButton").click();
-  },400);
-  autoRollButton.textContent = "Auto Roll: On";
-  console.log("Rolling...");
-  autoRollButton.classList.remove("off");
-  autoRollButton.classList.add("on");
+    document.getElementById("rollButton")?.click();
+  }, 400);
   localStorage.setItem("autoRollEnabled", "true");
+  updateAutoRollAvailability();
 }
 
 function stopAutoRoll() {
-  clearInterval(autoRollInterval);
-  console.log("Stopped rolling");
-  autoRollInterval = null;
-  autoRollButton.textContent = "Auto Roll: Off";
-  autoRollButton.classList.remove("on");
-  autoRollButton.classList.add("off");
+  if (!autoRollButtonElement) {
+    return;
+  }
+
+  if (autoRollInterval) {
+    clearInterval(autoRollInterval);
+    autoRollInterval = null;
+  }
   localStorage.setItem("autoRollEnabled", "false");
+  updateAutoRollAvailability();
+}
+
+function isAutoRollUnlocked() {
+  return rollCount >= AUTO_ROLL_UNLOCK_ROLLS;
+}
+
+function ensureAutoRollButtonReference() {
+  if (!autoRollButtonElement) {
+    autoRollButtonElement = document.getElementById("autoRollButton");
+  }
+  return autoRollButtonElement;
+}
+
+function updateAutoRollAvailability() {
+  const button = ensureAutoRollButtonReference();
+  if (!button) {
+    return;
+  }
+
+  const unlocked = isAutoRollUnlocked();
+  if (!unlocked) {
+    if (autoRollInterval) {
+      clearInterval(autoRollInterval);
+      autoRollInterval = null;
+    }
+    button.disabled = true;
+    button.classList.add("locked");
+    button.classList.remove("on");
+    button.classList.add("off");
+    button.textContent = `Auto Roll: Locked (${AUTO_ROLL_UNLOCK_ROLLS.toLocaleString()} rolls required)`;
+    localStorage.setItem("autoRollEnabled", "false");
+    return;
+  }
+
+  button.disabled = false;
+  button.classList.remove("locked");
+  if (autoRollInterval) {
+    button.textContent = "Auto Roll: On";
+    button.classList.add("on");
+    button.classList.remove("off");
+  } else {
+    button.textContent = "Auto Roll: Off";
+    button.classList.remove("on");
+    button.classList.add("off");
+  }
 }
 
 updateAudioSliderUi();
 
-const heartContainer = document.createElement('div');
-document.body.appendChild(heartContainer);
+function initializeHeartEffect() {
+  if (heartIntervalId) {
+    return;
+  }
 
-function createHeart() {
-    const heart = document.createElement('div');
-    heart.classList.add('heart');
-    heart.textContent = '🌊';
-    heart.style.left = Math.random() * 100 + 'vw';
-    heart.style.top = Math.random() * 100 + 'vh';
-    heart.style.fontSize = Math.random() * 25 + 15 + 'px';
+  if (!heartContainerElement) {
+    heartContainerElement = document.createElement("div");
+    document.body.appendChild(heartContainerElement);
+  }
 
-    heartContainer.appendChild(heart);
+  const createHeart = () => {
+    const heart = document.createElement("div");
+    heart.classList.add("heart");
+    heart.textContent = "🌊";
+    heart.style.left = `${Math.random() * 100}vw`;
+    heart.style.top = `${Math.random() * 100}vh`;
+    heart.style.fontSize = `${Math.random() * 25 + 15}px`;
+    heartContainerElement.appendChild(heart);
 
     setTimeout(() => {
-        heart.remove();
+      heart.remove();
     }, 1000);
+  };
+
+  heartIntervalId = setInterval(createHeart, 33);
 }
 
-setInterval(createHeart, 33);
-
-const secretKey = 'ImpeachedGlazer';
-
-document.getElementById('saveButton').addEventListener('click', () => {
-  const data = JSON.stringify(localStorage);
-
-  const encryptedData = CryptoJS.AES.encrypt(data, secretKey).toString();
-
-  const blob = new Blob([encryptedData], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'localStorageData.json';
-  a.click();
-
-  URL.revokeObjectURL(url);
-});
+const secretKey = "ImpeachedGlazer";
 
 function showStatusMessage(message, duration = 2000) {
-  const status = document.getElementById('status');
+  const status = document.getElementById("status");
+  if (!status) {
+    return;
+  }
+
+  status.style.display = "";
   status.textContent = message;
-  status.classList.add('showStatus');
+  status.classList.add("showStatus");
 
   setTimeout(() => {
-      status.classList.remove('showStatus');
-      setTimeout(() => (status.style.display = 'none'), 500);
+    status.classList.remove("showStatus");
+    setTimeout(() => {
+      if (status.isConnected) {
+        status.style.display = "none";
+      }
+    }, 500);
   }, duration);
 }
 
-    let playTime = parseInt(localStorage.getItem('playTime')) || 0;
-    
-    const timerDisplay = document.getElementById('timer');
+function registerDataPersistenceButtons() {
+  const saveButton = document.getElementById("saveButton");
+  const importButton = document.getElementById("importButton");
 
-    function formatTime(seconds) {
-      const hrs = Math.floor(seconds / 3600);
-      const mins = Math.floor((seconds % 3600) / 60);
-      const secs = seconds % 60;
-      return [
-        hrs.toString().padStart(2, '0'),
-        mins.toString().padStart(2, '0'),
-        secs.toString().padStart(2, '0')
-      ].join(':');
-    }
+  if (saveButton) {
+    saveButton.addEventListener("click", () => {
+      const data = JSON.stringify(localStorage);
+      const encryptedData = CryptoJS.AES.encrypt(data, secretKey).toString();
+      const blob = new Blob([encryptedData], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
 
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "localStorageData.json";
+      a.click();
+
+      URL.revokeObjectURL(url);
+    });
+  }
+
+  if (importButton) {
+    importButton.addEventListener("click", () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+
+      input.addEventListener("change", (event) => {
+        const file = event.target.files?.[0];
+        if (!file) {
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const encryptedData = e.target?.result;
+            if (typeof encryptedData !== "string") {
+              throw new Error("Invalid file contents");
+            }
+
+            const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
+            const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
+            const importedData = JSON.parse(decryptedData);
+
+            Object.keys(importedData).forEach((key) => {
+              localStorage.setItem(key, importedData[key]);
+            });
+
+            showStatusMessage("Data imported successfully! Refreshing...", 1500);
+
+            setTimeout(() => {
+              location.reload();
+            }, 1500);
+          } catch (error) {
+            showStatusMessage("Error: Invalid file format.");
+          }
+        };
+
+        reader.readAsText(file);
+      });
+
+      input.click();
+    });
+  }
+}
+
+function initializePlayTimeTracker() {
+  if (playTimeIntervalId) {
+    return;
+  }
+
+  let playTime = parseInt(localStorage.getItem("playTime"), 10) || 0;
+  const timerDisplay = document.getElementById("timer");
+  if (!timerDisplay) {
+    return;
+  }
+
+  const formatTime = (seconds) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return [
+      hrs.toString().padStart(2, "0"),
+      mins.toString().padStart(2, "0"),
+      secs.toString().padStart(2, "0"),
+    ].join(":");
+  };
+
+  timerDisplay.textContent = formatTime(playTime);
+
+  playTimeIntervalId = setInterval(() => {
+    playTime += 1;
     timerDisplay.textContent = formatTime(playTime);
-
-    setInterval(() => {
-      playTime++;
-      timerDisplay.textContent = formatTime(playTime);
-      localStorage.setItem('playTime', playTime);
-      checkAchievements();
-      updateAchievementsList();
-    }, 1000);
-
-document.getElementById('importButton').addEventListener('click', () => {
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = '.json';
-
-  input.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const encryptedData = e.target.result;
-
-          const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
-          const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
-
-          const importedData = JSON.parse(decryptedData);
-
-          Object.keys(importedData).forEach(key => {
-            localStorage.setItem(key, importedData[key]);
-          });
-
-                  showStatusMessage("Data imported successfully! Refreshing...", 1500);
-
-                  setTimeout(() => {
-                      location.reload();
-                  }, 1500);
-              } catch (error) {
-                  showStatusMessage("Error: Invalid file format.");
-              }
-          };
-          reader.readAsText(file);
-      }
-  });
-
-  input.click();
-});
+    localStorage.setItem("playTime", playTime);
+    checkAchievements();
+    updateAchievementsList();
+  }, 1000);
+}
 
 const rollingHistory = [];
 
@@ -11491,23 +12228,37 @@ function updateRollingHistory(title, rarity) {
     historyList.innerHTML = '';
     rollingHistory.forEach((roll) => {
         const listItem = document.createElement('li');
-        listItem.textContent = `${roll.rarity} - ${roll.title}`;
+        const entryText = document.createElement('span');
+        entryText.classList.add('history-entry-text');
+        entryText.textContent = `${roll.rarity} - ${roll.title}`;
 
         const rarityClass = getClassForRarity(roll.rarity);
         if (rarityClass) {
-            listItem.classList.add(rarityClass);
+            entryText.classList.add(rarityClass);
         }
 
+        listItem.appendChild(entryText);
         historyList.appendChild(listItem);
     });
 }
 
-document.getElementById("deleteAllUnder100Button")?.addEventListener("click", () => deleteByRarityBucket('under100'));
-document.getElementById("deleteAllUnder1kButton")?.addEventListener("click", () => deleteByRarityBucket('under1k'));
-document.getElementById("deleteAllUnder10kButton")?.addEventListener("click", () => deleteByRarityBucket('under10k'));
-document.getElementById("deleteAllUnder100kButton")?.addEventListener("click", () => deleteByRarityBucket('under100k'));
-document.getElementById("deleteAllUnder1mButton")?.addEventListener("click", () => deleteByRarityBucket('under1m'));
-document.getElementById("deleteAllSpecialButton")?.addEventListener("click", () => deleteByRarityBucket('special'));
+function registerRarityDeletionButtons() {
+  const buttonMappings = [
+    ["deleteAllUnder100Button", "under100"],
+    ["deleteAllUnder1kButton", "under1k"],
+    ["deleteAllUnder10kButton", "under10k"],
+    ["deleteAllUnder100kButton", "under100k"],
+    ["deleteAllUnder1mButton", "under1m"],
+    ["deleteAllSpecialButton", "special"],
+  ];
+
+  buttonMappings.forEach(([id, bucket]) => {
+    const button = document.getElementById(id);
+    if (button) {
+      button.addEventListener("click", () => deleteByRarityBucket(bucket));
+    }
+  });
+}
 
 function getClassForRarity(rarity) {
   const rarityClasses = {
@@ -12272,58 +13023,89 @@ function ensureBgStack() {
   }
 }
 
-function changeBackground(rarityClass, itemTitle) {
-  if (!isChangeEnabled) return;
+function changeBackground(rarityClass, itemTitle, options = {}) {
+  const force = typeof options === "object" && options !== null
+    ? Boolean(options.force)
+    : Boolean(options);
+
+  if (!force && (!isChangeEnabled || !lastRollPersisted)) {
+    return;
+  }
 
   const details = backgroundDetails[rarityClass];
   if (!details) return;
 
-  // Update the body class so existing rarity-based styling keeps working.
-  if (__currentBgClass !== rarityClass) {
-    if (__currentBgClass) {
-      document.body.classList.remove(__currentBgClass);
+  const shouldSkipAudioUpdate = !force && resumeEquippedAudioAfterCutscene && pausedEquippedAudioState && pausedEquippedAudioState.element;
+
+  if (!shouldSkipAudioUpdate) {
+    pinnedAudioId = details.audio || null;
+    resumeEquippedAudioAfterCutscene = false;
+    pausedEquippedAudioState = null;
+  }
+
+  const previousForcedState = allowForcedAudioPlayback;
+  if (force) {
+    allowForcedAudioPlayback = true;
+  }
+
+  try {
+    // Update the body class so existing rarity-based styling keeps working.
+    if (__currentBgClass !== rarityClass) {
+      if (__currentBgClass) {
+        document.body.classList.remove(__currentBgClass);
+      }
+      document.body.classList.add(rarityClass);
+      __currentBgClass = rarityClass;
     }
-    document.body.classList.add(rarityClass);
-    __currentBgClass = rarityClass;
-  }
 
-  // Prepare the stack
-  ensureBgStack();
+    // Prepare the stack
+    ensureBgStack();
 
-  // Determine next layer and set its image
-  const nextLayer = __bgActive === 0 ? __bgLayerB : __bgLayerA;
-  const currLayer = __bgActive === 0 ? __bgLayerA : __bgLayerB;
+    // Determine next layer and set its image
+    const nextLayer = __bgActive === 0 ? __bgLayerB : __bgLayerA;
+    const currLayer = __bgActive === 0 ? __bgLayerA : __bgLayerB;
 
-  // Point to the file URL (string or template is ok)
-  nextLayer.style.backgroundImage = `url(${details.image})`;
+    // Point to the file URL (string or template is ok)
+    nextLayer.style.backgroundImage = `url(${details.image})`;
 
-  const bucket = normalizeRarityBucket(rarityClass);
-  triggerScreenShakeByBucket(bucket);
+    const bucket = normalizeRarityBucket(rarityClass);
+    triggerScreenShakeByBucket(bucket);
 
-  // Trigger the crossfade on the next animation frame to ensure style is applied
-  requestAnimationFrame(() => {
-    // Bring the next one in, send the current one out
-    nextLayer.classList.add("is-active");
-    currLayer.classList.remove("is-active");
-    __bgActive = __bgActive === 0 ? 1 : 0;
-  });
+    // Trigger the crossfade on the next animation frame to ensure style is applied
+    requestAnimationFrame(() => {
+      // Bring the next one in, send the current one out
+      nextLayer.classList.add("is-active");
+      currLayer.classList.remove("is-active");
+      __bgActive = __bgActive === 0 ? 1 : 0;
+    });
 
-  // Maintain your audio behavior
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio.currentTime = 0;
-  }
-  if (details.audio) {
-    const newAudio = document.getElementById(details.audio);
-    if (newAudio) {
-      newAudio.play();
-      currentAudio = newAudio;
+    // Maintain your audio behavior
+    if (!shouldSkipAudioUpdate) {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+      if (details.audio) {
+        const newAudio = document.getElementById(details.audio);
+        if (newAudio) {
+          newAudio.volume = typeof audioVolume === "number" ? audioVolume : 1;
+          const playPromise = newAudio.play();
+          if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(() => {});
+          }
+          currentAudio = newAudio;
+        }
+      } else {
+        currentAudio = null;
+      }
     }
-  } else {
-    currentAudio = null;
-  }
 
-  // Clear direct body background inline style so the stack is the only visual source.
-  // This prevents flicker if some other code set document.body.style.backgroundImage.
-  document.body.style.backgroundImage = "";
+    // Clear direct body background inline style so the stack is the only visual source.
+    // This prevents flicker if some other code set document.body.style.backgroundImage.
+    document.body.style.backgroundImage = "";
+  } finally {
+    if (force) {
+      allowForcedAudioPlayback = previousForcedState;
+    }
+  }
 }
