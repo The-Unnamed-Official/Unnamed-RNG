@@ -32,6 +32,7 @@ let equippedItem = normalizeEquippedItemRecord(storage.get("equippedItem", null)
 let currentAudio = null;
 let isChangeEnabled = true;
 let autoRollInterval = null;
+const AUTO_ROLL_UNLOCK_ROLLS = 1000;
 let audioVolume = 1;
 let isMuted = false;
 let previousVolume = audioVolume;
@@ -1089,6 +1090,7 @@ function updateRollCount(increment = 1) {
     rollCount1 += increment + 1;
   }
   updateRollDisplays();
+  updateAutoRollAvailability();
 }
 
 function persistUnlockedAchievements(unlocked) {
@@ -1131,11 +1133,15 @@ function checkAchievements(context = {}) {
       unlockAchievement(collector.name, unlocked);
     }
   });
+
+  updateAutoRollAvailability();
 }
 
 function showAchievementPopup(name) {
   achievementToastQueue.push(name);
-  processAchievementToastQueue();
+  if (postStartInitialized) {
+    processAchievementToastQueue();
+  }
 }
 
 function updateAchievementsList() {
@@ -1146,8 +1152,23 @@ function updateAchievementsList() {
       const achievementName = item.getAttribute("data-name");
       const isUnlocked = achievementName && unlocked.has(achievementName);
 
-      item.style.backgroundColor = isUnlocked ? unlockedStyles.backgroundColor : "gray";
-      item.style.color = isUnlocked && unlockedStyles.color ? unlockedStyles.color : "";
+      const unlockedBackground = unlockedStyles.background || unlockedStyles.backgroundColor;
+      if (isUnlocked && unlockedBackground) {
+        item.style.setProperty("--achievement-background", unlockedBackground);
+        if (unlockedStyles.color) {
+          item.style.setProperty("--achievement-color", unlockedStyles.color);
+        } else {
+          item.style.removeProperty("--achievement-color");
+        }
+        item.classList.add("achievement--unlocked");
+      } else {
+        item.style.setProperty(
+          "--achievement-background",
+          "linear-gradient(155deg, rgba(96, 96, 96, 0.85), rgba(58, 58, 58, 0.9))"
+        );
+        item.style.removeProperty("--achievement-color");
+        item.classList.remove("achievement--unlocked");
+      }
     });
   });
 }
@@ -11951,35 +11972,38 @@ function initializeAutoRollControls() {
     return;
   }
 
-  const savedState = localStorage.getItem("autoRollEnabled");
-  if (savedState === "true") {
-    startAutoRoll();
-  } else {
-    stopAutoRoll();
-  }
-
   autoRollButtonElement.addEventListener("click", () => {
+    if (!isAutoRollUnlocked()) {
+      return;
+    }
+
     if (autoRollInterval) {
       stopAutoRoll();
     } else {
       startAutoRoll();
     }
   });
+
+  const savedState = localStorage.getItem("autoRollEnabled");
+  if (savedState === "true" && isAutoRollUnlocked()) {
+    startAutoRoll();
+  } else {
+    stopAutoRoll();
+  }
+
+  updateAutoRollAvailability();
 }
 
 function startAutoRoll() {
-  if (!autoRollButtonElement) {
+  if (!autoRollButtonElement || autoRollInterval || !isAutoRollUnlocked()) {
     return;
   }
 
   autoRollInterval = setInterval(() => {
     document.getElementById("rollButton")?.click();
   }, 400);
-  autoRollButtonElement.textContent = "Auto Roll: On";
-  console.log("Rolling...");
-  autoRollButtonElement.classList.remove("off");
-  autoRollButtonElement.classList.add("on");
   localStorage.setItem("autoRollEnabled", "true");
+  updateAutoRollAvailability();
 }
 
 function stopAutoRoll() {
@@ -11987,13 +12011,57 @@ function stopAutoRoll() {
     return;
   }
 
-  clearInterval(autoRollInterval);
-  console.log("Stopped rolling");
-  autoRollInterval = null;
-  autoRollButtonElement.textContent = "Auto Roll: Off";
-  autoRollButtonElement.classList.remove("on");
-  autoRollButtonElement.classList.add("off");
+  if (autoRollInterval) {
+    clearInterval(autoRollInterval);
+    autoRollInterval = null;
+  }
   localStorage.setItem("autoRollEnabled", "false");
+  updateAutoRollAvailability();
+}
+
+function isAutoRollUnlocked() {
+  return rollCount >= AUTO_ROLL_UNLOCK_ROLLS;
+}
+
+function ensureAutoRollButtonReference() {
+  if (!autoRollButtonElement) {
+    autoRollButtonElement = document.getElementById("autoRollButton");
+  }
+  return autoRollButtonElement;
+}
+
+function updateAutoRollAvailability() {
+  const button = ensureAutoRollButtonReference();
+  if (!button) {
+    return;
+  }
+
+  const unlocked = isAutoRollUnlocked();
+  if (!unlocked) {
+    if (autoRollInterval) {
+      clearInterval(autoRollInterval);
+      autoRollInterval = null;
+    }
+    button.disabled = true;
+    button.classList.add("locked");
+    button.classList.remove("on");
+    button.classList.add("off");
+    button.textContent = `Auto Roll: Locked (${AUTO_ROLL_UNLOCK_ROLLS.toLocaleString()} rolls required)`;
+    localStorage.setItem("autoRollEnabled", "false");
+    return;
+  }
+
+  button.disabled = false;
+  button.classList.remove("locked");
+  if (autoRollInterval) {
+    button.textContent = "Auto Roll: On";
+    button.classList.add("on");
+    button.classList.remove("off");
+  } else {
+    button.textContent = "Auto Roll: Off";
+    button.classList.remove("on");
+    button.classList.add("off");
+  }
 }
 
 updateAudioSliderUi();

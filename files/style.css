@@ -1573,6 +1573,18 @@ body {
     color: white;
 }
 
+#autoRollButton.locked {
+    background-color: #3f3f3f;
+    color: #d6d6d6;
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+#autoRollButton.locked:hover {
+    transform: none;
+    scale: 1;
+}
+
 #closeSettings {
     background-color: #777;
     color: white;
@@ -4366,8 +4378,8 @@ body.griCutsceneBgImg {
     border-radius: 12px;
     font-weight: 600;
     font-size: 0.95rem;
-    color: #f3f6ff;
-    background: linear-gradient(155deg, rgba(40, 56, 94, 0.82), rgba(18, 28, 52, 0.88));
+    color: var(--achievement-color, #f3f6ff);
+    background: var(--achievement-background, linear-gradient(155deg, rgba(40, 56, 94, 0.82), rgba(18, 28, 52, 0.88)));
     border: 1px solid rgba(130, 176, 255, 0.22);
     box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
     cursor: pointer;
@@ -4377,6 +4389,11 @@ body.griCutsceneBgImg {
     backdrop-filter: blur(4px);
     text-wrap: balance;
     word-break: break-word;
+}
+
+.achievement--unlocked {
+    border-color: rgba(255, 255, 255, 0.45);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
 }
 
 .achievement-itemT,
