@@ -16,6 +16,9 @@
   --btn-accent-2: #76e4c3;    /* Secondary accent */
   --btn-danger: #ff6b6b;      /* Danger accent */
   --btn-ghost: rgba(255,255,255,.08);
+
+  /* Layout */
+  --layout-max-width: 1120px;
 }
 
 /* Motion safety */
@@ -1688,6 +1691,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .starShenvii {
@@ -1697,6 +1702,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .cutsceneStarBig {
@@ -1706,6 +1713,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .cutsceneStarSmall {
@@ -1715,6 +1724,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .cutsceneStarEaster {
@@ -1723,6 +1734,8 @@ body {
     left: 40%;
     scale: 0;
     pointer-events: none;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 .msfuStar {
@@ -1741,6 +1754,8 @@ body {
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
 }
 
 @keyframes spin {
@@ -3012,6 +3027,17 @@ body.griCutsceneBgImg {
   transition: background-color 0.15s ease, transform 0.08s ease;
 }
 
+.dropdown-item:disabled,
+.dropdown-item--disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.dropdown-item:disabled:hover,
+.dropdown-item--disabled:hover {
+  background-color: transparent;
+}
+
 .dropdown-item i {
   width: 16px;
   text-align: center;
@@ -3032,6 +3058,14 @@ body.griCutsceneBgImg {
 
 .dropdown-item.danger:hover {
   background-color: #5a2f2f;
+}
+
+.dropdown-item--unequip {
+  color: #ffbca7;
+}
+
+.dropdown-item--unequip:hover {
+  background-color: rgba(255, 160, 122, 0.18);
 }
 
 /* Keep burger icon subtle but touch-friendly */
@@ -3066,6 +3100,33 @@ body.griCutsceneBgImg {
     position: relative;
     transition: transform 0.2s ease;
     overflow: visible;
+}
+
+#inventoryList li.inventory-item--equipped {
+  box-shadow:
+    0 0 0 2px rgba(118, 228, 195, 0.35),
+    0 10px 22px rgba(0, 0, 0, 0.35);
+  position: relative;
+  z-index: 0;
+}
+
+#inventoryList li.inventory-item--equipped::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(22, 86, 72, 0.32), rgba(16, 56, 47, 0.18));
+  pointer-events: none;
+  z-index: 0;
+}
+
+#inventoryList li.inventory-item--equipped > * {
+  position: relative;
+  z-index: 1;
+}
+
+#inventoryList li.inventory-item--equipped .rarity-text {
+  text-shadow: 0 0 8px rgba(118, 228, 195, 0.55);
 }
 
 #inventoryList li:hover {
@@ -4292,7 +4353,8 @@ body.griCutsceneBgImg {
 .achievement-itemT,
 .achievement-itemC,
 .achievement-itemE,
-.achievement-itemSum {
+.achievement-itemSum,
+.achievement-itemR {
     position: relative;
     padding: 16px 14px;
     text-align: center;
@@ -4315,7 +4377,8 @@ body.griCutsceneBgImg {
 .achievement-itemT,
 .achievement-itemC,
 .achievement-itemE,
-.achievement-itemSum {
+.achievement-itemSum,
+.achievement-itemR {
     font-size: 0.9rem;
     padding-left: 12px;
     padding-right: 12px;
@@ -4325,7 +4388,8 @@ body.griCutsceneBgImg {
 .achievement-itemT:hover,
 .achievement-itemC:hover,
 .achievement-itemE:hover,
-.achievement-itemSum:hover {
+.achievement-itemSum:hover,
+.achievement-itemR:hover {
     transform: translateY(-2px);
     background: linear-gradient(155deg, rgba(62, 86, 138, 0.9), rgba(26, 36, 64, 0.95));
     border-color: rgba(167, 205, 255, 0.4);
@@ -4344,7 +4408,8 @@ body.griCutsceneBgImg {
 }
 
 .achievement-itemE:hover::after,
-.achievement-itemSum:hover::after {
+.achievement-itemSum:hover::after,
+.achievement-itemR:hover::after {
     content: "Play in " attr(data-time) " to unlock this achievement";
 }
 
@@ -4352,7 +4417,8 @@ body.griCutsceneBgImg {
 .achievement-itemT:hover::after,
 .achievement-itemC:hover::after,
 .achievement-itemE:hover::after,
-.achievement-itemSum:hover::after {
+.achievement-itemSum:hover::after,
+.achievement-itemR:hover::after {
     position: absolute;
     bottom: 100%;
     left: 50%;
@@ -4374,7 +4440,8 @@ body.griCutsceneBgImg {
 .achievement-itemT:hover::before,
 .achievement-itemC:hover::before,
 .achievement-itemE:hover::before,
-.achievement-itemSum:hover::before {
+.achievement-itemSum:hover::before,
+.achievement-itemR:hover::before {
     content: "";
     position: absolute;
     bottom: 100%;
@@ -4883,4 +4950,22 @@ body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
 /* Reduced-motion fallback: tiny/quick */
 @media (prefers-reduced-motion: reduce) {
   @keyframes rngShakeXL { from { transform: translate(0,0) } to { transform: translate(1px,-1px) } }
+}
+
+@media (max-width: 480px) {
+  .historySection ul {
+    max-height: clamp(240px, 60vh, 380px);
+  }
+}
+
+@media (max-width: 420px) {
+  .historySection,
+  .container1,
+  .info2 {
+    padding: clamp(14px, 5vw, 18px);
+  }
+
+  .info2 .creatorUnnamed img {
+    width: clamp(64px, 24vw, 80px);
+  }
 }
