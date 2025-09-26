@@ -539,11 +539,11 @@ const COLLECTOR_ACHIEVEMENTS = [
 
 const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-item", unlocked: { backgroundColor: "blue" } },
-  { selector: ".achievement-itemT", unlocked: { backgroundColor: "green" } },
-  { selector: ".achievement-itemC", unlocked: { backgroundColor: "red" } },
-  { selector: ".achievement-itemE", unlocked: { backgroundColor: "yellow", color: "black" } },
-  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "orange", color: "black" } },
-  { selector: ".achievement-itemR", unlocked: { backgroundColor: "#6d8bff" } },
+  { selector: ".achievement-itemT", unlocked: { backgroundColor: "#000fff" } },
+  { selector: ".achievement-itemC", unlocked: { backgroundColor: "#ff0000" } },
+  { selector: ".achievement-itemE", unlocked: { backgroundColor: "#fff000", color: "black" } },
+  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "#ff00d9ff" } },
+  { selector: ".achievement-itemR", unlocked: { backgroundColor: "#0033ffff" } },
 ];
 
 const ACHIEVEMENT_TOAST_DURATION = 3400;
@@ -1187,7 +1187,7 @@ document.getElementById("rollButton").addEventListener("click", function () {
     preservePinned: true,
     preserve: preservedAudioIds,
   });
-
+  
   let title = selectTitle(rarity);
 
   rollButton.disabled = true;
@@ -1271,14 +1271,11 @@ document.getElementById("rollButton").addEventListener("click", function () {
     rarity.type === "Blodhest [1 in 25,252]" ||
     rarity.type === "Tuon [1 in 50,000]" ||
     rarity.type === "ORB [1 in 55,555/30th]" ||
-    rarity.type === "Heart [1 in ♡♡♡]" ||
     rarity.type === "GD Addict [1 in ###]" ||
     rarity.type === "FireCraze [1 in 4,200/69th]" ||
     rarity.type === "sʜeɴvɪ✞∞ [1 in 77,777/7th]" ||
     rarity.type === "Light [1 in 29,979]" ||
     rarity.type === "X1sta [1 in 230,444]" ||
-    rarity.type === "Easter Egg [1 in 13,333]" ||
-    rarity.type === "Easter Bunny [1 in 133,333]" ||
     rarity.type === "Hellish Fire [1 in 6,666]" ||
     rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]" ||
     rarity.type === "『Equinox』 [1 in 2,500,000]" ||
