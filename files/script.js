@@ -21,7 +21,42 @@ const storage = {
 const byId = (id) => document.getElementById(id);
 const $all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
-let inventory = storage.get("inventory", []);
+const EQUINOX_RARITY_CLASS = "equinoxBgImg";
+let equinoxPulseActive = false;
+let pendingEquinoxPulseState = null;
+
+function isEquinoxRarityClass(value) {
+  return typeof value === "string" && value === EQUINOX_RARITY_CLASS;
+}
+
+function isEquinoxRecord(record) {
+  return Boolean(record && isEquinoxRarityClass(record.rarityClass));
+}
+
+function syncEquinoxPulseOnBody(active) {
+  const body = document.body;
+  if (!body) {
+    pendingEquinoxPulseState = active;
+    return;
+  }
+  body.classList.toggle("equinox-pulse-active", Boolean(active));
+  pendingEquinoxPulseState = null;
+}
+
+function setEquinoxPulseActive(active) {
+  const shouldActivate = Boolean(active);
+  if (shouldActivate === equinoxPulseActive && pendingEquinoxPulseState === null) {
+    if (shouldActivate && document.body && !document.body.classList.contains("equinox-pulse-active")) {
+      document.body.classList.add("equinox-pulse-active");
+    }
+    return;
+  }
+
+  equinoxPulseActive = shouldActivate;
+  syncEquinoxPulseOnBody(shouldActivate);
+}
+
+let inventory = [];
 let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
@@ -63,6 +98,7 @@ let muteButtonElement = null;
 let heartContainerElement = null;
 let heartIntervalId = null;
 let playTimeIntervalId = null;
+let playTimeSeconds = parseInt(localStorage.getItem("playTime"), 10) || 0;
 let autoRollButtonElement = null;
 
 const STOPPABLE_AUDIO_IDS = [
@@ -180,6 +216,7 @@ const RARITY_BUCKET_LABELS = {
   under10k: "Grand",
   under100k: "Mastery",
   under1m: "Supreme",
+  transcendent: "Transcendent",
   special: "Special"
 };
 
@@ -345,14 +382,16 @@ const rarityCategories = {
     "impeachedBgImg",
     "celestialchorusBgImg",
     "x1staBgImg",
-    "silcarBgImg",
-    "gingerBgImg",
-    "h1diBgImg",
-    "equinoxBgImg",
     "gregBgImg",
     "mintllieBgImg",
     "geezerBgGif",
     "polarrBgImg",
+  ],
+  transcendent: [
+    "silcarBgImg",
+    "gingerBgImg",
+    "h1diBgImg",
+    "equinoxBgImg",
   ],
   special: [
     "iriBgImg",
@@ -377,10 +416,10 @@ const RARITY_CLASS_BUCKET_MAP = Object.freeze(
 );
 
 const RARITY_LABEL_CLASS_MAP = {
-  silcarBgImg: "under10ms",
-  gingerBgImg: "under10m",
-  h1diBgImg: "under10m",
-  equinoxBgImg: "under10me",
+  silcarBgImg: "transcendent",
+  gingerBgImg: "transcendent",
+  h1diBgImg: ["transcendent", "h1di-flash"],
+  equinoxBgImg: ["transcendent", "equinox-flash"],
   waveBgImg: "eventS",
   beachBgImg: "eventS",
   tidalwaveBgImg: "eventS",
@@ -416,7 +455,12 @@ const LOADING_SEQUENCE = [
   {
     message: "Obtaining saves...",
     action: () => {
-      inventory = storage.get("inventory", []);
+      const savedInventory = storage.get("inventory", []);
+      const { records: normalizedInventory, mutated } = normalizeInventoryRecords(savedInventory);
+      inventory = normalizedInventory;
+      if (mutated) {
+        storage.set("inventory", normalizedInventory);
+      }
       rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
       rollCount1 = parseInt(localStorage.getItem("rollCount1")) || 0;
     },
@@ -529,40 +573,248 @@ const CUTSCENE_STATE_SETTERS = {
   skipCutscene1M: (value) => { skipCutscene1M = value; },
 };
 
+const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "transcendent", "special"]);
+
+function normalizeInventoryRecord(raw) {
+  if (raw == null) {
+    return { record: null, mutated: raw !== undefined };
+  }
+
+  if (typeof raw === "string") {
+    const title = raw.trim();
+    if (!title) {
+      return { record: null, mutated: true };
+    }
+
+    return {
+      record: {
+        title,
+        rarityClass: "",
+        qualifiesForVault: false,
+      },
+      mutated: true,
+    };
+  }
+
+  if (typeof raw !== "object") {
+    return { record: null, mutated: true };
+  }
+
+  const record = raw;
+  let mutated = false;
+
+  let title = "";
+  if (typeof record.title === "string") {
+    title = record.title.trim();
+    if (title !== record.title) {
+      record.title = title;
+      mutated = true;
+    }
+  } else if (record.title != null) {
+    title = String(record.title).trim();
+    record.title = title;
+    mutated = true;
+  }
+
+  if (!title) {
+    return { record: null, mutated: true };
+  }
+
+  if (typeof record.rarityClass === "string") {
+    const trimmed = record.rarityClass.trim();
+    if (trimmed !== record.rarityClass) {
+      record.rarityClass = trimmed;
+      mutated = true;
+    }
+  } else if (record.rarityClass != null) {
+    record.rarityClass = String(record.rarityClass).trim();
+    mutated = true;
+  } else if (record.rarityClass !== "") {
+    record.rarityClass = "";
+    mutated = true;
+  }
+
+  if (typeof record.rolledAt !== "number" || !Number.isFinite(record.rolledAt)) {
+    if (Object.prototype.hasOwnProperty.call(record, "rolledAt")) {
+      delete record.rolledAt;
+      mutated = true;
+    }
+  }
+
+  const bucket = normalizeRarityBucket(record.rarityClass);
+
+  if (bucket) {
+    if (record.rarityBucket !== bucket) {
+      record.rarityBucket = bucket;
+      mutated = true;
+    }
+  } else if (record.rarityBucket) {
+    delete record.rarityBucket;
+    mutated = true;
+  }
+
+  const qualifies = QUALIFYING_VAULT_BUCKETS.has(bucket);
+  if (record.qualifiesForVault !== qualifies) {
+    record.qualifiesForVault = qualifies;
+    mutated = true;
+  }
+
+  return { record, mutated };
+}
+
+function normalizeInventoryRecords(records) {
+  if (!Array.isArray(records)) {
+    return { records: [], mutated: records != null };
+  }
+
+  const normalized = [];
+  let mutated = false;
+
+  records.forEach((raw) => {
+    const { record, mutated: recordMutated } = normalizeInventoryRecord(raw);
+    if (record) {
+      normalized.push(record);
+    } else {
+      mutated = true;
+    }
+
+    if (recordMutated) {
+      mutated = true;
+    }
+  });
+
+  return { records: normalized, mutated };
+}
+
+function getQualifyingInventoryCount(items = inventory) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return 0;
+  }
+
+  return items.reduce((total, item) => {
+    if (!item || typeof item !== "object") {
+      return total;
+    }
+
+    if (typeof item.qualifiesForVault === "boolean") {
+      return item.qualifiesForVault ? total + 1 : total;
+    }
+
+    const bucket = item.rarityBucket || normalizeRarityBucket(item.rarityClass);
+    if (bucket && bucket !== item.rarityBucket) {
+      item.rarityBucket = bucket;
+    } else if (!bucket && item.rarityBucket) {
+      delete item.rarityBucket;
+    }
+
+    const qualifies = QUALIFYING_VAULT_BUCKETS.has(bucket);
+    item.qualifiesForVault = qualifies;
+    return qualifies ? total + 1 : total;
+  }, 0);
+}
+
 const ACHIEVEMENTS = [
+  // Roll milestones
   { name: "I think I like this", count: 100 },
+  { name: "Finding the Groove", count: 250 },
+  { name: "Hooked Already", count: 500 },
   { name: "This is getting serious", count: 1000 },
+  { name: "Can't Stop Now", count: 2500 },
   { name: "I'm the Roll Master", count: 5000 },
+  { name: "Streak Seeker", count: 7500 },
   { name: "It's over 9000!!", count: 10000 },
+  { name: "Roll Revolution", count: 15000 },
   { name: "When will you stop?", count: 25000 },
   { name: "No Unnamed?", count: 30303 },
+  { name: "Calculated Chaos", count: 40000 },
   { name: "Beyond Luck", count: 50000 },
   { name: "Rolling machine", count: 100000 },
   { name: "Your PC must be burning", count: 250000 },
   { name: "Half a million!1!!1", count: 500000 },
+  { name: "Rolling Virtuoso", count: 750000 },
   { name: "One, Two.. ..One Million!", count: 1000000 },
+  { name: "Millionaire Machine", count: 2000000 },
+  { name: "Triple Threat Spinner", count: 3000000 },
+  { name: "Momentum Master", count: 5000000 },
+  { name: "Lucky Tenacity", count: 7500000 },
   { name: "No H1di?", count: 10000000 },
+  { name: "Breaking Reality", count: 15000000 },
   { name: "Are you really doing this?", count: 25000000 },
+  { name: "Multiversal Roller", count: 30000000 },
   { name: "You have no limits...", count: 50000000 },
+  { name: "Anomaly Hunter", count: 75000000 },
   { name: "WHAT HAVE YOU DONE", count: 100000000 },
+  { name: "Oddity Voyager", count: 150000000 },
+  { name: "Improbability Engine", count: 300000000 },
+  { name: "Beyond Imagination", count: 500000000 },
   { name: "AHHHHHHHHHHH", count: 1000000000 },
+  { name: "Worldshaper", count: 2500000000 },
+  { name: "Entropy Rewriter", count: 5000000000 },
+  { name: "RNG Architect", count: 25000000000 },
+  // Playtime goals
   { name: "Just the beginning", timeCount: 0 },
+  { name: "Just Five More Minutes...", timeCount: 1800 },
   { name: "This doesn't add up", timeCount: 3600 },
   { name: "When does it end...", timeCount: 7200 },
+  { name: "Late Night Grinder", timeCount: 21600 },
   { name: "I swear I'm not addicted...", timeCount: 36000 },
   { name: "Grass? What's that?", timeCount: 86400 },
   { name: "Unnamed's RNG biggest fan", timeCount: 172800 },
+  { name: "Weekday Warrior", timeCount: 432000 },
   { name: "RNG is life!", timeCount: 604800 },
   { name: "I. CAN'T. STOP", timeCount: 1209600 },
   { name: "No Lifer", timeCount: 2629800 },
   { name: "Are you okay?", timeCount: 5259600 },
+  { name: "Seasoned Grinder", timeCount: 9460800 },
   { name: "You are a True No Lifer", timeCount: 15778800 },
   { name: "No one's getting this legit", timeCount: 31557600 },
-  { name: "Happy Summer!", timeCount: 1 },
+  { name: "Two Years Deep", timeCount: 63115200 },
+  { name: "Triennial Tenacity", timeCount: 94672800 },
+  { name: "Four-Year Fixture", timeCount: 126230400 },
+  { name: "Half-Decade Hero", timeCount: 157788000 },
+  { name: "Seven-Year Streak", timeCount: 220903200 },
+  { name: "Decade of Determination", timeCount: 315576000 },
+  { name: "Fifteen-Year Folly", timeCount: 473364000 },
+  { name: "Twenty-Year Timeline", timeCount: 631152000 },
+  { name: "Quarter-Century Quest", timeCount: 788940000 },
+  { name: "Timeless Wanderer", timeCount: 946728000 },
+  // Inventory milestones
+  { name: "Tiny Vault", inventoryCount: 10 },
+  { name: "Growing Gallery", inventoryCount: 25 },
+  { name: "Treasure Trove", inventoryCount: 50 },
+  { name: "Vault Legend", inventoryCount: 100 },
+  // Rarity triumphs
   { name: "Grand Entrance", rarityBucket: "under10k" },
   { name: "One of a Kind", rarityBucket: "special" },
   { name: "Mastered the Odds", rarityBucket: "under100k" },
   { name: "Supreme Fortune", rarityBucket: "under1m" },
+  // Title triumphs
+  { name: "Celestial Alignment", requiredTitle: "『Equinox』 [1 in 25,000,000]" },
+  { name: "Creator?!", requiredTitle: "Unnamed [1 in 30,303]" },
+  { name: "Silly Joyride", requiredTitle: "Silly Car :3 [1 in 1,000,000]" },
+  { name: "Ginger Guardian", requiredTitle: "Ginger [1 in 1,144,141]" },
+  { name: "H1di Hunted", requiredTitle: "H1di [1 in 9,890,089]" },
+  { name: "902.. released.. wilderness..", requiredTitle: "Experiment [1 in 100,000/10th]" },
+  { name: "Abomination Wrangler", requiredTitle: "Abomination [1 in 1,000,000/20th]" },
+  { name: "Veiled Visionary", requiredTitle: "Veil [1 in 50,000/5th]" },
+  { name: "Iridocyclitis Survivor", requiredTitle: "Iridocyclitis Veil [1 in 5,000/50th]" },
+  { name: "Cherry Grove Champion", requiredTitle: "LubbyJubby's Cherry Grove [1 in 5,666]" },
+  { name: "Firestarter", requiredTitle: "FireCraze [1 in 4,200/69th]" },
+  { name: "Orbital Dreamer", requiredTitle: "ORB [1 in 55,555/30th]" },
+  { name: "Gregarious Encounter", requiredTitle: "Greg [1 in 50,000,000]" },
+  { name: "Mint Condition", requiredTitle: "Mintllie [1 in 500,000,000]" },
+  { name: "Geezer Whisperer", requiredTitle: "Geezer [1 in 5,000,000,000]" },
+  { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]" },
+  // Event exclusives
+  { name: "Happy Easter!", requiredEventBucket: "eventE" },
+  { name: "Happy Summer!", requiredEventBucket: "eventS" },
+  { name: "Seasonal Tourist", minEventTitleCount: 1 },
+  { name: "Valentine's Sweetheart", requiredEventBucket: "eventV" },
+  { name: "Festival Firecracker", requiredEventBucket: "eventTitle" },
+  { name: "Spooky Spectator", requiredEventBucket: "eventTitleHalloween" },
+  { name: "Winter Wonderland", requiredEventBucket: "eventTitleXmas" },
+  { name: "Event Explorer", minDistinctEventBuckets: 3 },
+  { name: "Seasonal Archivist", minEventTitleCount: 10 },
 ];
 
 const COLLECTOR_ACHIEVEMENTS = [
@@ -570,16 +822,21 @@ const COLLECTOR_ACHIEVEMENTS = [
   { name: "Achievement Hoarder", count: 10 },
   { name: "Achievement Addict", count: 20 },
   { name: "Achievement God", count: 33 },
-  { name: "T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶", count: 50 },
+  { name: "Ultimate Collector", count: 50 },
+  { name: "Nice...", count: 69 },
+  { name: "Achievement Enthusiast", count: 100 },
 ];
 
 const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-item", unlocked: { backgroundColor: "blue" } },
   { selector: ".achievement-itemT", unlocked: { backgroundColor: "#000fff" } },
   { selector: ".achievement-itemC", unlocked: { backgroundColor: "#ff0000" } },
+  { selector: ".achievement-itemInv", unlocked: { backgroundColor: "#2e8b57" } },
   { selector: ".achievement-itemE", unlocked: { backgroundColor: "#fff000", color: "black" } },
   { selector: ".achievement-itemSum", unlocked: { backgroundColor: "#ff00d9ff" } },
   { selector: ".achievement-itemR", unlocked: { backgroundColor: "#0033ffff" } },
+  { selector: ".achievement-itemTitle", unlocked: { backgroundColor: "#7a3cff" } },
+  { selector: ".achievement-itemEvent", unlocked: { backgroundColor: "#ff8800", color: "black" } },
 ];
 
 const ACHIEVEMENT_TOAST_DURATION = 3400;
@@ -922,6 +1179,7 @@ function applyEquippedItemOnStartup() {
     equippedItem = null;
     storage.remove("equippedItem");
     changeBackground("menuDefault", null, { force: true });
+    setEquinoxPulseActive(false);
     return;
   }
 
@@ -930,6 +1188,7 @@ function applyEquippedItemOnStartup() {
     equippedItem = null;
     storage.remove("equippedItem");
     changeBackground("menuDefault", null, { force: true });
+    setEquinoxPulseActive(false);
     return;
   }
 
@@ -950,6 +1209,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadingScreen = byId("loadingScreen");
   const menuScreen = byId("menuScreen");
   const loadingText = loadingScreen ? loadingScreen.querySelector(".loadTxt") : null;
+
+  if (pendingEquinoxPulseState !== null || equinoxPulseActive) {
+    const desiredState = pendingEquinoxPulseState !== null ? pendingEquinoxPulseState : equinoxPulseActive;
+    syncEquinoxPulseOnBody(desiredState);
+  }
 
   if (rollButton) {
     rollButton.disabled = true;
@@ -1111,17 +1375,106 @@ function checkAchievements(context = {}) {
   const rarityBuckets = context && context.rarityBuckets instanceof Set
     ? context.rarityBuckets
     : new Set(storage.get("rolledRarityBuckets", []));
+  const qualifyingInventoryCount = getQualifyingInventoryCount();
+  const inventoryTitleSet = new Set();
+  const eventBucketCounts = new Map();
+  let totalEventTitleCount = 0;
+
+  if (Array.isArray(inventory)) {
+    inventory.forEach((item) => {
+      if (!item || typeof item !== "object") {
+        return;
+      }
+
+      if (typeof item.title === "string" && item.title) {
+        inventoryTitleSet.add(item.title);
+      }
+
+      const bucket =
+        (typeof item.rarityBucket === "string" && item.rarityBucket) ||
+        normalizeRarityBucket(item.rarityClass);
+
+      if (bucket && bucket.startsWith("event")) {
+        totalEventTitleCount += 1;
+        eventBucketCounts.set(bucket, (eventBucketCounts.get(bucket) || 0) + 1);
+      }
+    });
+  }
+
+  const distinctEventBucketCount = eventBucketCounts.size;
 
   ACHIEVEMENTS.forEach((achievement) => {
     if (achievement.count && rollCount >= achievement.count) {
       unlockAchievement(achievement.name, unlocked);
     }
 
-    if (achievement.timeCount !== undefined && typeof playTime !== "undefined" && playTime >= achievement.timeCount) {
+    if (
+      achievement.timeCount !== undefined &&
+      Number.isFinite(playTimeSeconds) &&
+      playTimeSeconds >= achievement.timeCount
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      achievement.inventoryCount !== undefined &&
+      qualifyingInventoryCount >= achievement.inventoryCount
+    ) {
       unlockAchievement(achievement.name, unlocked);
     }
 
     if (achievement.rarityBucket && rarityBuckets.has(achievement.rarityBucket)) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      achievement.requiredTitle &&
+      inventoryTitleSet.has(achievement.requiredTitle)
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      Array.isArray(achievement.requiredTitles) &&
+      achievement.requiredTitles.every((title) => inventoryTitleSet.has(title))
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      Array.isArray(achievement.anyTitle) &&
+      achievement.anyTitle.some((title) => inventoryTitleSet.has(title))
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      achievement.requiredEventBucket &&
+      eventBucketCounts.has(achievement.requiredEventBucket)
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      Array.isArray(achievement.requiredEventBuckets) &&
+      achievement.requiredEventBuckets.every((bucket) =>
+        eventBucketCounts.has(bucket)
+      )
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      typeof achievement.minDistinctEventBuckets === "number" &&
+      distinctEventBucketCount >= achievement.minDistinctEventBuckets
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      typeof achievement.minEventTitleCount === "number" &&
+      totalEventTitleCount >= achievement.minEventTitleCount
+    ) {
       unlockAchievement(achievement.name, unlocked);
     }
   });
@@ -1316,7 +1669,7 @@ function registerRollButtonHandler() {
     rarity.type === "X1sta [1 in 230,444]" ||
     rarity.type === "Hellish Fire [1 in 6,666]" ||
     rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]" ||
-    rarity.type === "『Equinox』 [1 in 2,500,000]" ||
+    rarity.type === "『Equinox』 [1 in 25,000,000]" ||
     rarity.type === "Ginger [1 in 1,144,141]" ||
     rarity.type === "Wave [1 in 2,555]" ||
     rarity.type === "Scorching [1 in 7,923]" ||
@@ -1402,7 +1755,7 @@ function registerRollButtonHandler() {
       scareSuspenceAudio.play();
     } else if (rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]") {
       scareSuspenceLofiAudio.play();
-    } else if (rarity.type === "『Equinox』 [1 in 2,500,000]") {
+    } else if (rarity.type === "『Equinox』 [1 in 25,000,000]") {
       equinoxAudio.play();
     } else if (rarity.type === "Ginger [1 in 1,144,141]") {
       hugeSuspenceAudio.play();
@@ -4925,7 +5278,6 @@ function registerRollButtonHandler() {
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
-          griAudio.play();
         }, 100);
         enableChange();
       }, 32000); // Wait for 32 seconds to allow the full Grim Destiny cutscene
@@ -6037,7 +6389,7 @@ function registerRollButtonHandler() {
         titleCont.style.visibility = "visible";
         isekaiAudio.play();
       }
-    } else if (rarity.type === "『Equinox』 [1 in 2,500,000]") {
+    } else if (rarity.type === "『Equinox』 [1 in 25,000,000]") {
       disableChange();
 
       setTimeout(() => {
@@ -9365,7 +9717,7 @@ function rollRarity() {
       type: "Legendary [1 in 13]",
       class: "legendaryBgImg",
       chance: 7.5,
-      titles: ["Immortal", "Celestial", "Eternal", "Transcendent", "Supreme", "Bounded", "Omniscient", "Omnipotent", "Ultimate", "Apex"],
+      titles: ["Immortal", "Celestial", "Eternal", "Supreme", "Bounded", "Omniscient", "Omnipotent", "Ultimate", "Apex"],
     },
     {
       type: "Impossible [1 in 20]",
@@ -9665,7 +10017,7 @@ function rollRarity() {
       type: "Ether Shift [1 in 5,540]",
       class: "ethershiftBgImg",
       chance: 0.0180505415,
-      titles: ["Warped", "Dimensional", "Vortex", "Parallel", "Quantum", "Portal", "Transcendent", "Astral", "Temporal", "Rifted"],
+      titles: ["Warped", "Dimensional", "Vortex", "Parallel", "Quantum", "Portal", "Astral", "Temporal", "Rifted"],
     },
     {
       type: "Hellish Fire [1 in 6,666]",
@@ -9818,9 +10170,9 @@ function rollRarity() {
       titles: ["Isekai", "Singing", "Chill", "Calm"]
     },
     {
-      type: "『Equinox』 [1 in 2,500,000]",
+      type: "『Equinox』 [1 in 25,000,000]",
       class: "equinoxBgImg",
-      chance: 0.00014,
+      chance: 0.000004,
       titles: ["LAYERS", "CHROMA", "衡"]
     },
     {
@@ -10046,9 +10398,19 @@ function addToInventory(title, rarityClass) {
     }
   }
 
-  inventory.push({ title, rarityClass, rolledAt });
-  localStorage.setItem("inventory", JSON.stringify(inventory));
+  const { record: newRecord } = normalizeInventoryRecord({ title, rarityClass, rolledAt });
+  if (!newRecord) {
+    return false;
+  }
+
+  inventory.push(newRecord);
+  storage.set("inventory", inventory);
   renderInventory();
+  checkAchievements();
+  updateAchievementsList();
+  if (isEquinoxRarityClass(newRecord.rarityClass)) {
+    setEquinoxPulseActive(true);
+  }
   lastRollPersisted = true;
   lastRollAutoDeleted = false;
   return true; // persisted
@@ -10069,7 +10431,7 @@ function displayResult(title, rarity) {
   const bucket = normalizeRarityBucket(lastRollRarityClass);
   const bucketClass = bucket ? `roll-result-card--${bucket}` : "";
   const bucketLabel = bucket ? (RARITY_BUCKET_LABELS[bucket] || bucket) : "";
-  const labelClass = getLabelClassForRarity(lastRollRarityClass, bucket);
+  const labelClasses = getLabelClassForRarity(lastRollRarityClass, bucket);
 
   const card = document.createElement("div");
   card.className = "roll-result-card";
@@ -10085,8 +10447,8 @@ function displayResult(title, rarity) {
 
   const rarityLabel = document.createElement("span");
   rarityLabel.className = "roll-result-card__rarity";
-  if (labelClass) {
-    rarityLabel.classList.add(labelClass);
+  if (labelClasses.length) {
+    rarityLabel.classList.add(...labelClasses);
   }
   rarityLabel.textContent = (rarityName || rarityText || "Unknown").trim();
   header.appendChild(rarityLabel);
@@ -10158,9 +10520,9 @@ function normalizeRarityBucket(rarityClass) {
   const cls = rarityClass.trim();
 
   const prefixMatches = [
-    { prefix: "under10me", bucket: "under1m" },
-    { prefix: "under10ms", bucket: "under1m" },
-    { prefix: "under10m", bucket: "under1m" },
+    { prefix: "under10me", bucket: "transcendent" },
+    { prefix: "under10ms", bucket: "transcendent" },
+    { prefix: "under10m", bucket: "transcendent" },
     { prefix: "under1m", bucket: "under1m" },
     { prefix: "under100k", bucket: "under100k" },
     { prefix: "under10k", bucket: "under10k" },
@@ -10175,7 +10537,7 @@ function normalizeRarityBucket(rarityClass) {
   }
 
   if (cls === "special") return "special";
-  if (["under100", "under1k", "under10k", "under100k", "under1m", "special"].includes(cls)) {
+  if (["under100", "under1k", "under10k", "under100k", "under1m", "transcendent", "special"].includes(cls)) {
     return cls;
   }
 
@@ -10183,12 +10545,28 @@ function normalizeRarityBucket(rarityClass) {
 }
 
 function getLabelClassForRarity(rarityClass, bucket) {
+  const fallback = bucket ? [bucket] : [];
+
   if (!rarityClass || typeof rarityClass !== "string") {
-    return bucket || "";
+    return fallback;
   }
 
   const cls = rarityClass.trim();
-  return RARITY_LABEL_CLASS_MAP[cls] || bucket || "";
+  const mapped = RARITY_LABEL_CLASS_MAP[cls];
+
+  if (!mapped) {
+    return fallback;
+  }
+
+  if (Array.isArray(mapped)) {
+    return mapped.filter(Boolean);
+  }
+
+  if (typeof mapped === "string" && mapped.trim()) {
+    return mapped.trim().split(/\s+/);
+  }
+
+  return fallback;
 }
 
 function deleteByRarityBucket(bucket) {
@@ -10486,7 +10864,7 @@ const backgroundDetails = {
   frightBgImg: { image: "files/backgrounds/fright.png", audio: "frightAudio" },
   hellBgImg: { image: "files/backgrounds/hell.png", audio: "hellAudio" },
   unnamedBgImg: {
-    image: "files/backgrounds/unnamed.png",
+    image: "files/backgrounds/unnamed.gif",
     audio: "unnamedAudio",
   },
   overtureBgImg: {
@@ -10641,17 +11019,43 @@ function renderInventory() {
   inventoryList.innerHTML = "";
 
   let newBucketRecorded = false;
+  let inventoryUpdated = false;
   inventory.forEach((item) => {
-    const bucket = normalizeRarityBucket(item.rarityClass);
+    if (!item || typeof item !== "object") {
+      return;
+    }
+
+    const bucket = item.rarityBucket || normalizeRarityBucket(item.rarityClass);
+
+    if (bucket && bucket !== item.rarityBucket) {
+      item.rarityBucket = bucket;
+      inventoryUpdated = true;
+    } else if (!bucket && item.rarityBucket) {
+      delete item.rarityBucket;
+      inventoryUpdated = true;
+    }
+
+    const qualifies = QUALIFYING_VAULT_BUCKETS.has(bucket);
+    if (item.qualifiesForVault !== qualifies) {
+      item.qualifiesForVault = qualifies;
+      inventoryUpdated = true;
+    }
+
     if (bucket && !rolledRarityBuckets.has(bucket)) {
       rolledRarityBuckets.add(bucket);
       newBucketRecorded = true;
     }
   });
 
+  if (inventoryUpdated) {
+    storage.set("inventory", inventory);
+  }
+
   if (newBucketRecorded) {
     storage.set("rolledRarityBuckets", Array.from(rolledRarityBuckets));
     checkAchievements({ rarityBuckets: rolledRarityBuckets });
+  } else if (inventoryUpdated) {
+    checkAchievements();
   }
 
   const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
@@ -10678,9 +11082,9 @@ function renderInventory() {
     const itemTitle = document.createElement("span");
     itemTitle.className = "rarity-text";
     itemTitle.textContent = item.title.toUpperCase();
-    const labelClass = getLabelClassForRarity(item.rarityClass, bucket);
-    if (labelClass) {
-      itemTitle.classList.add(labelClass);
+    const labelClasses = getLabelClassForRarity(item.rarityClass, bucket);
+    if (labelClasses.length) {
+      itemTitle.classList.add(...labelClasses);
     }
 
     const rarityText = document.createElement("span");
@@ -10777,6 +11181,7 @@ function renderInventory() {
   });
 
   updatePagination();
+  checkAchievements();
 }
 
 function toggleLock(itemTitle, listItem, lockButton) {
@@ -10843,6 +11248,10 @@ function unequipItem() {
     return;
   }
 
+  if (isEquinoxRecord(equippedItem)) {
+    setEquinoxPulseActive(false);
+  }
+
   equippedItem = null;
   storage.remove("equippedItem");
 
@@ -10869,9 +11278,11 @@ function unequipItem() {
 
 function handleEquippedItem(item) {
   if (!item) {
+    setEquinoxPulseActive(false);
     return;
   }
 
+  setEquinoxPulseActive(isEquinoxRecord(item));
   changeBackground(item.rarityClass, item.title, { force: true });
 }
 
@@ -12066,32 +12477,32 @@ function updateAutoRollAvailability() {
 
 updateAudioSliderUi();
 
-function initializeHeartEffect() {
-  if (heartIntervalId) {
-    return;
-  }
+// function initializeHeartEffect() {
+//   if (heartIntervalId) {
+//     return;
+//   }
 
-  if (!heartContainerElement) {
-    heartContainerElement = document.createElement("div");
-    document.body.appendChild(heartContainerElement);
-  }
+//   if (!heartContainerElement) {
+//     heartContainerElement = document.createElement("div");
+//     document.body.appendChild(heartContainerElement);
+//   }
 
-  const createHeart = () => {
-    const heart = document.createElement("div");
-    heart.classList.add("heart");
-    heart.textContent = "🌊";
-    heart.style.left = `${Math.random() * 100}vw`;
-    heart.style.top = `${Math.random() * 100}vh`;
-    heart.style.fontSize = `${Math.random() * 25 + 15}px`;
-    heartContainerElement.appendChild(heart);
+//   const createHeart = () => {
+//     const heart = document.createElement("div");
+//     heart.classList.add("heart");
+//     heart.textContent = "🌊";
+//     heart.style.left = `${Math.random() * 100}vw`;
+//     heart.style.top = `${Math.random() * 100}vh`;
+//     heart.style.fontSize = `${Math.random() * 25 + 15}px`;
+//     heartContainerElement.appendChild(heart);
 
-    setTimeout(() => {
-      heart.remove();
-    }, 1000);
-  };
+//     setTimeout(() => {
+//       heart.remove();
+//     }, 1000);
+//   };
 
-  heartIntervalId = setInterval(createHeart, 33);
-}
+//   heartIntervalId = setInterval(createHeart, 33);
+// }
 
 const secretKey = "ImpeachedGlazer";
 
@@ -12186,7 +12597,10 @@ function initializePlayTimeTracker() {
     return;
   }
 
-  let playTime = parseInt(localStorage.getItem("playTime"), 10) || 0;
+  const storedPlayTime = parseInt(localStorage.getItem("playTime"), 10);
+  if (!Number.isNaN(storedPlayTime)) {
+    playTimeSeconds = storedPlayTime;
+  }
   const timerDisplay = document.getElementById("timer");
   if (!timerDisplay) {
     return;
@@ -12203,12 +12617,12 @@ function initializePlayTimeTracker() {
     ].join(":");
   };
 
-  timerDisplay.textContent = formatTime(playTime);
+  timerDisplay.textContent = formatTime(playTimeSeconds);
 
   playTimeIntervalId = setInterval(() => {
-    playTime += 1;
-    timerDisplay.textContent = formatTime(playTime);
-    localStorage.setItem("playTime", playTime);
+    playTimeSeconds += 1;
+    timerDisplay.textContent = formatTime(playTimeSeconds);
+    localStorage.setItem("playTime", playTimeSeconds);
     checkAchievements();
     updateAchievementsList();
   }, 1000);
@@ -12249,6 +12663,7 @@ function registerRarityDeletionButtons() {
     ["deleteAllUnder10kButton", "under10k"],
     ["deleteAllUnder100kButton", "under100k"],
     ["deleteAllUnder1mButton", "under1m"],
+    ["deleteAllTranscendentButton", "transcendent"],
     ["deleteAllSpecialButton", "special"],
   ];
 
@@ -12332,8 +12747,8 @@ function getClassForRarity(rarity) {
       'Arcane Pulse [1 in 77,777]': 'under100k',
       'Impeached [1 in 101,010]': 'under1m',
       'Celestial Chorus [1 in 202,020]': 'under1m',
-      'Silly Car :3 [1 in 1,000,000]': 'under10ms',
-      'H1di [1 in 9,890,089]': 'under10m',
+      'Silly Car :3 [1 in 1,000,000]': 'transcendent',
+      'H1di [1 in 9,890,089]': 'transcendent',
       'BlindGT [1 in 2,000,000/15th]': 'special',
       'MSFU [1 in 333/333rd]': 'special',
       'Orb [1 in 55,555/30th]': 'special',
@@ -12348,8 +12763,8 @@ function getClassForRarity(rarity) {
       'Easter Bunny [1 in 133,333]': 'eventE',
       'Easter Egg [1 in 13,333]': 'eventE',
       'Isekai ♫ Lo-Fi [1 in 3,000]': 'under10k',
-      '『Equinox』 [1 in 2,500,000]': 'under10me',
-      'Ginger [1 in 1,144,141]': 'under10m',
+      '『Equinox』 [1 in 25,000,000]': 'transcendent',
+      'Ginger [1 in 1,144,141]': 'transcendent',
       'Wave [1 in 2,555]': 'eventS',
       'Scorching [1 in 7,923]': 'eventS',
       'Beach [1 in 12,555]': 'eventS',
