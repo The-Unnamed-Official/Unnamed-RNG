@@ -63,6 +63,7 @@ let muteButtonElement = null;
 let heartContainerElement = null;
 let heartIntervalId = null;
 let playTimeIntervalId = null;
+let playTimeSeconds = parseInt(localStorage.getItem("playTime"), 10) || 0;
 let autoRollButtonElement = null;
 
 const STOPPABLE_AUDIO_IDS = [
@@ -528,6 +529,19 @@ const CUTSCENE_STATE_SETTERS = {
   skipCutscene100K: (value) => { skipCutscene100K = value; },
   skipCutscene1M: (value) => { skipCutscene1M = value; },
 };
+
+const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "special"]);
+
+function getQualifyingInventoryCount(items = inventory) {
+  if (!Array.isArray(items)) {
+    return 0;
+  }
+
+  return items.reduce((total, item) => {
+    const bucket = normalizeRarityBucket(item?.rarityClass);
+    return QUALIFYING_VAULT_BUCKETS.has(bucket) ? total + 1 : total;
+  }, 0);
+}
 
 const ACHIEVEMENTS = [
   // Roll milestones
@@ -1132,13 +1146,25 @@ function checkAchievements(context = {}) {
   const rarityBuckets = context && context.rarityBuckets instanceof Set
     ? context.rarityBuckets
     : new Set(storage.get("rolledRarityBuckets", []));
+  const qualifyingInventoryCount = getQualifyingInventoryCount();
 
   ACHIEVEMENTS.forEach((achievement) => {
     if (achievement.count && rollCount >= achievement.count) {
       unlockAchievement(achievement.name, unlocked);
     }
 
-    if (achievement.timeCount !== undefined && typeof playTime !== "undefined" && playTime >= achievement.timeCount) {
+    if (
+      achievement.timeCount !== undefined &&
+      Number.isFinite(playTimeSeconds) &&
+      playTimeSeconds >= achievement.timeCount
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      achievement.inventoryCount !== undefined &&
+      qualifyingInventoryCount >= achievement.inventoryCount
+    ) {
       unlockAchievement(achievement.name, unlocked);
     }
 
@@ -12212,7 +12238,10 @@ function initializePlayTimeTracker() {
     return;
   }
 
-  let playTime = parseInt(localStorage.getItem("playTime"), 10) || 0;
+  const storedPlayTime = parseInt(localStorage.getItem("playTime"), 10);
+  if (!Number.isNaN(storedPlayTime)) {
+    playTimeSeconds = storedPlayTime;
+  }
   const timerDisplay = document.getElementById("timer");
   if (!timerDisplay) {
     return;
@@ -12229,12 +12258,12 @@ function initializePlayTimeTracker() {
     ].join(":");
   };
 
-  timerDisplay.textContent = formatTime(playTime);
+  timerDisplay.textContent = formatTime(playTimeSeconds);
 
   playTimeIntervalId = setInterval(() => {
-    playTime += 1;
-    timerDisplay.textContent = formatTime(playTime);
-    localStorage.setItem("playTime", playTime);
+    playTimeSeconds += 1;
+    timerDisplay.textContent = formatTime(playTimeSeconds);
+    localStorage.setItem("playTime", playTimeSeconds);
     checkAchievements();
     updateAchievementsList();
   }, 1000);

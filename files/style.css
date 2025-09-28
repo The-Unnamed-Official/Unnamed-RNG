@@ -4640,6 +4640,12 @@ body.griCutsceneBgImg {
     color: rgba(199, 215, 255, 0.75);
 }
 
+.achievements-section__note {
+    margin: -4px 0 4px;
+    font-size: 0.78rem;
+    color: rgba(199, 215, 255, 0.75);
+}
+
 .achievements-subsection {
     display: flex;
     flex-direction: column;
