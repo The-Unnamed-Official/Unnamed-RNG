@@ -1168,6 +1168,10 @@ function checkAchievements(context = {}) {
       unlockAchievement(achievement.name, unlocked);
     }
 
+    if (achievement.inventoryCount !== undefined && Array.isArray(inventory) && inventory.length >= achievement.inventoryCount) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
     if (achievement.rarityBucket && rarityBuckets.has(achievement.rarityBucket)) {
       unlockAchievement(achievement.name, unlocked);
     }
