@@ -550,7 +550,9 @@ function initializeAfterStart() {
   enhanceInventoryDeleteButtons();
   setupAudioControls();
   initializeAutoRollControls();
-  initializeHeartEffect();
+  if (typeof initializeHeartEffect === "function") {
+    initializeHeartEffect();
+  }
   registerDataPersistenceButtons();
   initializePlayTimeTracker();
   registerRarityDeletionButtons();
@@ -1672,9 +1674,6 @@ function registerRollButtonHandler() {
     rarity.type === "『Equinox』 [1 in 25,000,000]" ||
     rarity.type === "Ginger [1 in 1,144,141]" ||
     rarity.type === "Wave [1 in 2,555]" ||
-    rarity.type === "Scorching [1 in 7,923]" ||
-    rarity.type === "Beach [1 in 12,555]" ||
-    rarity.type === "Tidal Wave [1 in 25,500]" ||
     rarity.type === "Scorching [1 in 7,923]" ||
     rarity.type === "Beach [1 in 12,555]" ||
     rarity.type === "Tidal Wave [1 in 25,500]"
