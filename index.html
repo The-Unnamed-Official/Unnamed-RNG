@@ -388,10 +388,12 @@
             <div class="containerInside">
                 <h1 class="gameTitle">Unnamed's RNG</h1>
 
-                <button class="rButton" id="rollButton" onclick="clickSound()"><i id="roll" class="fa-solid fa-arrows-rotate"></i></button>
-
-                
                 <div class="res" id="result"></div>
+
+                <button class="rButton" id="rollButton" type="button" onclick="clickSound()">
+                    <span class="rollButton__label">Roll</span>
+                    <span class="rollButton-progress" aria-hidden="true"></span>
+                </button>
             </div>
         </div>
 

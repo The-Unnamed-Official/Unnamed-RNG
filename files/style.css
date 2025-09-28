@@ -875,14 +875,13 @@ body {
 .container {
   position: fixed;
   left: 50%;
-  bottom: 36px;
+  bottom: clamp(24px, 5vh, 48px);
   transform: translateX(-50%);
   margin: 0;
-  margin-left: 180px;
-  display: inline-block;
-  padding: 18px 18px 22px;
-  width: min(80vw, 560px);
-  border-radius: 16px;
+  display: block;
+  padding: clamp(18px, 3.2vh, 26px) clamp(20px, 4vw, 30px) clamp(22px, 4vh, 32px);
+  width: clamp(320px, 40vw, 560px);
+  border-radius: 18px;
 
   /* Layered glass look with your background image subtly present */
   background:
@@ -948,89 +947,94 @@ body {
 .container .containerInside {
   position: relative;
   z-index: 1;                         /* above pseudo-elements */
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
   align-items: center;
-  gap: 14px;
-  padding: 6px 8px 2px;
+  gap: clamp(16px, 3vh, 26px);
+  padding: clamp(4px, 1vh, 8px) 0 0;
 }
 
 /* Title: crisp and subtle */
 .container .gameTitle {
   margin: 0;
-  padding: 6px 10px;
-  border-radius: 10px;
+  padding: clamp(4px, 1vh, 8px) clamp(10px, 2.8vw, 16px);
+  border-radius: 12px;
   font-size: clamp(20px, 3.2vw, 28px);
   font-weight: 800;
   color: #ffffff;
   letter-spacing: 0.6px;
-
   background: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
   border: 1px solid rgba(255,255,255,0.10);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
-/* Roll button: bold, tactile, and glowing on hover */
-.container .rButton {
+/* Roll button: wide pill with progress indicator */
+#rollButton {
   position: relative;
-  display: inline-grid;
-  place-items: center;
-  width: clamp(72px, 10vw, 92px);
-  height: clamp(72px, 10vw, 92px);
-  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: clamp(56px, 8vh, 68px);
+  padding: clamp(14px, 2.8vh, 18px) clamp(22px, 5vw, 32px);
   border: 0;
+  border-radius: 999px;
   cursor: pointer;
-
-  color: #fff;
-  background: radial-gradient(circle at 50% 30%, #7aa4ff 0%, #4169e1 60%, #2b4bb3 100%);
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(116,195,255,0.92), rgba(78,137,255,0.95));
+  color: #04121f;
+  font-size: clamp(20px, 2.4vw, 26px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   box-shadow:
-    0 10px 24px rgba(65,105,225,0.45),
-    inset 0 2px 8px rgba(255,255,255,0.25);
+    0 18px 36px rgba(64,120,255,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.45);
   transition:
     transform 180ms ease,
     box-shadow 220ms ease,
-    filter 220ms ease;
-  will-change: transform, box-shadow, filter;
+    filter 220ms ease,
+    background 220ms ease;
+}
+
+#rollButton .rollButton__label {
+  position: relative;
   z-index: 1;
 }
 
-.container .rButton:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 14px 28px rgba(65,105,225,0.55),
-    inset 0 2px 8px rgba(255,255,255,0.28);
-  filter: saturate(1.1);
-}
-
-.container .rButton:active {
-  transform: translateY(0);
-}
-
-/* Rolling icon slightly larger by default */
-.container .rButton i#roll {
-  font-size: clamp(14px, 2.1vw, 18px);
-  transform: translateY(1px); /* tiny nudge for visual centering */
-}
-
-/* Sheen across the roll button on hover */
-.container .rButton::after {
-  content: "";
+#rollButton .rollButton-progress {
   position: absolute;
   inset: 0;
-  border-radius: 50%;
-  background:
-    radial-gradient(60% 60% at 50% 10%, rgba(255,255,255,0.22), transparent 60%),
-    linear-gradient(110deg, transparent 45%, rgba(255,255,255,0.35) 50%, transparent 55%);
-  mix-blend-mode: screen;
+  background: linear-gradient(90deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08));
+  transform: translateX(-100%);
+  transition: transform 200ms linear;
   opacity: 0;
-  transform: translateX(-30%);
-  transition: opacity 180ms ease, transform 280ms ease;
   pointer-events: none;
 }
 
-.container .rButton:hover::after {
+#rollButton.is-cooling .rollButton-progress {
   opacity: 1;
-  transform: translateX(0%);
+}
+
+#rollButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: saturate(1.08);
+  box-shadow:
+    0 22px 40px rgba(64,120,255,0.42),
+    inset 0 1px 0 rgba(255,255,255,0.48);
+}
+
+#rollButton:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+#rollButton:disabled {
+  cursor: not-allowed;
+  filter: saturate(0.85);
+  box-shadow:
+    0 12px 26px rgba(20,36,72,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.32);
 }
 
 /* Result display panel */
@@ -1771,12 +1775,6 @@ body {
     box-shadow: 0 0 0 4px rgba(128, 96, 186, 0.2);
 }
 
-#rollButton.disabled {
-    pointer-events: none;
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
 .statsBtns {
     width: 100%;
     display: inline-flex;
@@ -2227,33 +2225,7 @@ body {
     left: 33px;
 }
 
-#roll {
-    scale: 300%;
-}
-
-.rButton:hover {
-    background: #4169e1;
-    transform: scale(1.1);
-}
-
-.rButton:active {
-    background: #2e4a9c;
-}
-
-.rButton:disabled {
-    background-color: #3a465c;
-    cursor: not-allowed;
-    animation: rollSpin 0.5s ease;
-}
-
-@keyframes rollSpin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
+/* Legacy roll button overrides removed in favour of pill design */
 
 #result {
     margin-top: 20px;

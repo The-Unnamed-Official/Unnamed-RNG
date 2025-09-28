@@ -94,6 +94,166 @@ let pendingCutsceneRarity = null;
 let pendingAutoEquipRecord = null;
 const rolledRarityBuckets = new Set(storage.get("rolledRarityBuckets", []));
 
+const MIN_ROLL_BUTTON_PROGRESS_DURATION = 320;
+const CUTSCENE_PROGRESS_DURATION_FALLBACK = 5000;
+const rollCooldownDurationMap = new Map();
+let rollButtonDisableTimestamp = null;
+let rollButtonCooldownContext = "default";
+let rollButtonProgressArmed = false;
+
+function recordRollCooldownDuration(context, duration) {
+  if (typeof duration !== "number" || !Number.isFinite(duration) || duration <= 0) {
+    return;
+  }
+
+  const key = context || "default";
+  const normalized = Math.max(duration, MIN_ROLL_BUTTON_PROGRESS_DURATION);
+  rollCooldownDurationMap.set(key, normalized);
+
+  if (key === "default") {
+    rollCooldownDurationMap.set("buffed", normalized);
+  }
+}
+
+function determineRollCooldownContext() {
+  if (pendingCutsceneRarity && pendingCutsceneRarity.type) {
+    return `cutscene:${pendingCutsceneRarity.type}`;
+  }
+
+  if (cutsceneActive) {
+    return "cutscene:active";
+  }
+
+  if (cooldownBuffActive && cooldownTime < BASE_COOLDOWN_TIME) {
+    return "buffed";
+  }
+
+  return "default";
+}
+
+function getRollCooldownDurationEstimate(context) {
+  const stored = rollCooldownDurationMap.get(context);
+  if (typeof stored === "number" && Number.isFinite(stored) && stored > 0) {
+    return stored;
+  }
+
+  let fallback = cooldownTime;
+  if (context.startsWith("cutscene:")) {
+    fallback = Math.max(fallback, CUTSCENE_PROGRESS_DURATION_FALLBACK);
+  }
+
+  if (typeof fallback !== "number" || !Number.isFinite(fallback) || fallback <= 0) {
+    const defaultStored = rollCooldownDurationMap.get("default");
+    fallback = typeof defaultStored === "number" && Number.isFinite(defaultStored) && defaultStored > 0
+      ? defaultStored
+      : BASE_COOLDOWN_TIME;
+  }
+
+  return Math.max(fallback, MIN_ROLL_BUTTON_PROGRESS_DURATION);
+}
+
+function startRollButtonCooldownAnimation(button, duration) {
+  if (!button) {
+    return;
+  }
+
+  const progress = button.querySelector(".rollButton-progress");
+  if (!progress) {
+    return;
+  }
+
+  button.classList.add("is-cooling");
+  progress.style.transition = "none";
+  progress.style.transform = "translateX(0)";
+  progress.offsetWidth; // reflow to restart transition
+  progress.style.transition = `transform ${Math.max(duration, MIN_ROLL_BUTTON_PROGRESS_DURATION)}ms linear`;
+  progress.style.transform = "translateX(-100%)";
+}
+
+function stopRollButtonCooldownAnimation(button) {
+  if (!button) {
+    return;
+  }
+
+  const progress = button.querySelector(".rollButton-progress");
+  if (!progress) {
+    return;
+  }
+
+  button.classList.remove("is-cooling");
+  progress.style.transition = "none";
+  progress.style.transform = "translateX(-100%)";
+  progress.offsetWidth;
+  progress.style.transition = "";
+}
+
+function handleRollButtonDisabled(button) {
+  if (!button || !rollButtonProgressArmed) {
+    return;
+  }
+
+  rollButtonCooldownContext = determineRollCooldownContext();
+  rollButtonDisableTimestamp = performance.now();
+
+  const estimate = getRollCooldownDurationEstimate(rollButtonCooldownContext);
+  startRollButtonCooldownAnimation(button, estimate);
+}
+
+function handleRollButtonEnabled(button) {
+  if (!button) {
+    return;
+  }
+
+  if (!rollButtonProgressArmed) {
+    rollButtonProgressArmed = true;
+  }
+
+  if (rollButtonDisableTimestamp !== null) {
+    const elapsed = performance.now() - rollButtonDisableTimestamp;
+    if (elapsed > 0 && Number.isFinite(elapsed)) {
+      recordRollCooldownDuration(rollButtonCooldownContext, elapsed);
+    }
+  }
+
+  rollButtonDisableTimestamp = null;
+  rollButtonCooldownContext = "default";
+  stopRollButtonCooldownAnimation(button);
+}
+
+function setupRollButtonProgress(button) {
+  if (!button || button.dataset.rollProgressAttached === "true") {
+    return;
+  }
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.type !== "attributes" || mutation.attributeName !== "disabled") {
+        continue;
+      }
+
+      if (button.disabled) {
+        handleRollButtonDisabled(button);
+      } else {
+        handleRollButtonEnabled(button);
+      }
+    }
+  });
+
+  observer.observe(button, { attributes: true, attributeFilter: ["disabled"] });
+
+  if (!button.disabled) {
+    rollButtonProgressArmed = true;
+    stopRollButtonCooldownAnimation(button);
+  } else {
+    rollButtonProgressArmed = false;
+    stopRollButtonCooldownAnimation(button);
+  }
+
+  button.dataset.rollProgressAttached = "true";
+}
+
+recordRollCooldownDuration("default", cooldownTime);
+
 let postStartInitialized = false;
 let audioSliderElement = null;
 let audioSliderValueLabelElement = null;
@@ -1279,7 +1439,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (rollButton) {
-    rollButton.disabled = true;
+    setRollButtonEnabled(false);
+    setupRollButtonProgress(rollButton);
   }
 
   if (!startButton) {
@@ -1352,7 +1513,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (rollButton) {
-      rollButton.disabled = false;
+      setRollButtonEnabled(true);
     }
 
     initializeAfterStart();
@@ -1642,10 +1803,10 @@ function registerRollButtonHandler() {
   }
 
   rollButtonElement.addEventListener("click", function () {
-  const rollButton = byId("rollButton");
-  if (!rollButton) {
-    return;
-  }
+    const rollButton = byId("rollButton");
+    if (!rollButton) {
+      return;
+    }
 
   const rollDisplay = document.querySelector(".container");
   if (rollDisplay && !rollDisplayHiddenByUser && rollDisplay.style.visibility === "hidden") {
@@ -1690,7 +1851,7 @@ function registerRollButtonHandler() {
 
   let title = selectTitle(rarity);
 
-  rollButton.disabled = true;
+  setRollButtonEnabled(false);
 
   const rollCountDisplay = byId("rollCountDisplay");
   if (rollCountDisplay) {
@@ -1989,7 +2150,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -2253,7 +2414,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -2354,7 +2515,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -2368,7 +2529,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -2441,7 +2602,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -2572,7 +2733,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -2586,7 +2747,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -2715,7 +2876,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -2729,7 +2890,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -2857,7 +3018,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -2871,7 +3032,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -2999,7 +3160,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -3013,7 +3174,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -3116,7 +3277,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -3246,7 +3407,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -3260,7 +3421,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -3389,7 +3550,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -3403,7 +3564,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -3547,7 +3708,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -3561,7 +3722,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -3705,7 +3866,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -3719,7 +3880,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -3863,7 +4024,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -3877,7 +4038,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -4005,7 +4166,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -4135,7 +4296,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -4266,7 +4427,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -4280,7 +4441,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -4409,7 +4570,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -4423,7 +4584,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -4552,7 +4713,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -4566,7 +4727,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -4694,7 +4855,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -4825,7 +4986,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -4839,7 +5000,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -4966,7 +5127,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -4980,7 +5141,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -5104,7 +5265,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -5118,7 +5279,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -5242,7 +5403,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -5256,7 +5417,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -5328,7 +5489,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -5342,7 +5503,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -5414,7 +5575,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -5428,7 +5589,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -5520,7 +5681,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -5695,7 +5856,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -5927,7 +6088,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -6001,7 +6162,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6015,7 +6176,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6085,7 +6246,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -6130,7 +6291,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6142,7 +6303,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6153,7 +6314,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6227,7 +6388,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -6357,7 +6518,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -6486,7 +6647,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -6552,7 +6713,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -6674,7 +6835,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6688,7 +6849,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6759,7 +6920,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -6809,7 +6970,7 @@ function registerRollButtonHandler() {
             addToInventory(title, rarity.class);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6821,7 +6982,7 @@ function registerRollButtonHandler() {
         addToInventory(title, rarity.class);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6884,7 +7045,7 @@ function registerRollButtonHandler() {
           addToInventory(title, rarity.class);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           msfuAudio.play();
           titleCont.style.visibility = "visible";
@@ -6943,7 +7104,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6957,7 +7118,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7015,7 +7176,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7029,7 +7190,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7134,7 +7295,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7148,7 +7309,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7191,7 +7352,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7205,7 +7366,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7217,7 +7378,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7285,7 +7446,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -7353,7 +7514,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7367,7 +7528,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7410,7 +7571,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7424,7 +7585,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7467,7 +7628,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7481,7 +7642,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7524,7 +7685,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7538,7 +7699,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7581,7 +7742,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7593,7 +7754,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7650,7 +7811,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7664,7 +7825,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7810,7 +7971,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7824,7 +7985,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7948,7 +8109,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7962,7 +8123,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -8086,7 +8247,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -8100,7 +8261,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -8223,7 +8384,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -8348,7 +8509,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -8473,7 +8634,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -8598,7 +8759,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -8701,7 +8862,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -8715,7 +8876,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -8861,7 +9022,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -8875,7 +9036,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -8893,7 +9054,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           geezerAudio.play();
@@ -8963,7 +9124,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -9008,7 +9169,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             unstoppableAudio.play();
           }, 100);
@@ -9020,7 +9181,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         unstoppableAudio.play();
       }
@@ -9061,7 +9222,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             wanspiAudio.play();
           }, 100);
@@ -9073,7 +9234,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         wanspiAudio.play();
       }
@@ -9114,7 +9275,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             spectralAudio.play();
           }, 100);
@@ -9126,7 +9287,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         spectralAudio.play();
       }
@@ -9167,7 +9328,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             starfallAudio.play();
           }, 100);
@@ -9179,7 +9340,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         starfallAudio.play();
       }
@@ -9220,7 +9381,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             curartAudio.play();
           }, 100);
@@ -9232,7 +9393,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         curartAudio.play();
       }
@@ -9273,7 +9434,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             forgAudio.play();
           }, 100);
@@ -9285,7 +9446,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         forgAudio.play();
       }
@@ -9326,7 +9487,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             forgAudio.play();
           }, 100);
@@ -9338,7 +9499,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         forgAudio.play();
       }
@@ -9379,7 +9540,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             mysAudio.play();
           }, 100);
@@ -9391,7 +9552,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         mysAudio.play();
       }
@@ -9432,7 +9593,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             froAudio.play();
           }, 100);
@@ -9444,7 +9605,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         froAudio.play();
       }
@@ -9486,7 +9647,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             shadAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -9498,7 +9659,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         shadAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -9540,7 +9701,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             nighAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -9552,7 +9713,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         nighAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -9593,7 +9754,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             voiAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -9605,7 +9766,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         voiAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -9646,7 +9807,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             silAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -9658,7 +9819,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         silAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -9699,7 +9860,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             ghoAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -9711,7 +9872,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         ghoAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -9752,7 +9913,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             endAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -9764,7 +9925,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         endAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -9805,7 +9966,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             abysAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -9817,7 +9978,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         abysAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -9857,7 +10018,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             darAudio.play();
           }, 100);
@@ -9869,7 +10030,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         froAudio.play();
       }
@@ -9909,7 +10070,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             twiligAudio.play();
           }, 100);
@@ -9921,7 +10082,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         froAudio.play();
       }
@@ -9961,7 +10122,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             ethpulAudio.play();
           }, 100);
@@ -9973,7 +10134,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         froAudio.play();
       }
@@ -10013,7 +10174,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             eniAudio.play();
           }, 100);
@@ -10025,7 +10186,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         eniAudio.play();
       }
@@ -10065,7 +10226,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             fearAudio.play();
           }, 100);
@@ -10077,7 +10238,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         fearAudio.play();
       }
@@ -10117,7 +10278,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             hauAudio.play();
           }, 100);
@@ -10129,7 +10290,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         hauntAudio.play();
       }
@@ -10169,7 +10330,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             lostsAudio.play();
           }, 100);
@@ -10181,7 +10342,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         lostsAudio.play();
       }
@@ -10221,7 +10382,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             foundsAudio.play();
           }, 100);
@@ -10233,7 +10394,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         foundsAudio.play();
       }
@@ -10274,7 +10435,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             hauntAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -10286,7 +10447,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         hauntAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -10327,7 +10488,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             ethAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -10339,7 +10500,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         ethAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -10380,7 +10541,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             serAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -10392,7 +10553,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         serAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -10452,7 +10613,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -10466,7 +10627,7 @@ function registerRollButtonHandler() {
     rollCount++;
     rollCount1++;
     setTimeout(() => {
-      rollButton.disabled = false;
+      setRollButtonEnabled(true);
     }, cooldownTime);
   }
   localStorage.setItem("rollCount", rollCount);
@@ -12825,6 +12986,7 @@ function spawnCooldownButton(config) {
 
     cooldownBuffActive = true;
     cooldownTime = config.reduceTo;
+    recordRollCooldownDuration("buffed", cooldownTime);
 
     showCooldownEffect(config.effectSeconds);
 
@@ -12839,6 +13001,7 @@ function spawnCooldownButton(config) {
 
     setTimeout(() => {
       cooldownTime = BASE_COOLDOWN_TIME;
+      recordRollCooldownDuration("default", cooldownTime);
       cooldownBuffActive = false;
       scheduleAllCooldownButtons();
     }, config.resetDelay);
