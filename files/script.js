@@ -788,6 +788,8 @@ const COLLECTOR_ACHIEVEMENTS = [
   { name: "Achievement Addict", count: 20 },
   { name: "Achievement God", count: 33 },
   { name: "Ultimate Collector", count: 50 },
+  { name: "Nice...", count: 69 },
+  { name: "Achievement Enthusiast", count: 100 },
 ];
 
 const ACHIEVEMENT_GROUP_STYLES = [
