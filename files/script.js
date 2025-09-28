@@ -5278,7 +5278,6 @@ function registerRollButtonHandler() {
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
-          griAudio.play();
         }, 100);
         enableChange();
       }, 32000); // Wait for 32 seconds to allow the full Grim Destiny cutscene
