@@ -3416,6 +3416,19 @@ body.griCutsceneBgImg {
   --inventory-text-gradient-animation: inventory-text-pan 6s ease-in-out infinite;
 }
 
+.inventory-group--transcendent {
+  --group-bg-a: rgba(18, 56, 78, 0.74);
+  --group-bg-b: rgba(8, 24, 46, 0.92);
+  --group-border: rgba(104, 224, 255, 0.35);
+}
+
+.inventory-group--transcendent .inventory-delete-btn--overlay {
+  --inventory-text-gradient: linear-gradient(135deg, #12d9ff, #00ffc8, #2c6fff);
+  --inventory-text-gradient-hover: linear-gradient(135deg, #3de5ff, #33ffd8, #4b88ff);
+  --inventory-text-gradient-size: 240% 240%;
+  --inventory-text-gradient-animation: transcendent-shift 6s ease-in-out infinite;
+}
+
 #deleteAllPumpkinButton.inventory-delete-btn--overlay {
   --inventory-text-gradient: linear-gradient(135deg, #ff9c3b, #ffd9a3, #8f8f93);
   --inventory-text-gradient-hover: linear-gradient(135deg, #ffb76a, #ffe6c4, #b7b7bb);
@@ -4119,6 +4132,15 @@ body.griCutsceneBgImg {
     color: transparent;
 }
 
+.transcendent {
+    background: linear-gradient(120deg, #12d9ff, #00ffc8, #2c6fff);
+    background-size: 250%;
+    animation: transcendent-shift 5s ease-in-out infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
 .eventV {
     background: radial-gradient(#ff0000, #f5a7ff);
     background-size: 300%;
@@ -4167,6 +4189,18 @@ body.griCutsceneBgImg {
     }
     100% {
         background-position: 0% 80%;
+    }
+}
+
+@keyframes transcendent-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
     }
 }
 
@@ -4369,6 +4403,7 @@ body.griCutsceneBgImg {
 .achievement-item,
 .achievement-itemT,
 .achievement-itemC,
+.achievement-itemInv,
 .achievement-itemE,
 .achievement-itemSum,
 .achievement-itemR {
@@ -4398,6 +4433,7 @@ body.griCutsceneBgImg {
 
 .achievement-itemT,
 .achievement-itemC,
+.achievement-itemInv,
 .achievement-itemE,
 .achievement-itemSum,
 .achievement-itemR {
@@ -4409,6 +4445,7 @@ body.griCutsceneBgImg {
 .achievement-item:hover,
 .achievement-itemT:hover,
 .achievement-itemC:hover,
+.achievement-itemInv:hover,
 .achievement-itemE:hover,
 .achievement-itemSum:hover,
 .achievement-itemR:hover {
@@ -4429,6 +4466,10 @@ body.griCutsceneBgImg {
     content: "Collect " attr(data-achievement) " achievements to unlock this achievement";
 }
 
+.achievement-itemInv:hover::after {
+    content: "Store " attr(data-items) " items to unlock this achievement";
+}
+
 .achievement-itemE:hover::after,
 .achievement-itemSum:hover::after,
 .achievement-itemR:hover::after {
@@ -4442,6 +4483,7 @@ body.griCutsceneBgImg {
 .achievement-item:hover::after,
 .achievement-itemT:hover::after,
 .achievement-itemC:hover::after,
+.achievement-itemInv:hover::after,
 .achievement-itemE:hover::after,
 .achievement-itemSum:hover::after,
 .achievement-itemR:hover::after {
@@ -4465,6 +4507,7 @@ body.griCutsceneBgImg {
 .achievement-item:hover::before,
 .achievement-itemT:hover::before,
 .achievement-itemC:hover::before,
+.achievement-itemInv:hover::before,
 .achievement-itemE:hover::before,
 .achievement-itemSum:hover::before,
 .achievement-itemR:hover::before {
@@ -4628,6 +4671,12 @@ body.griCutsceneBgImg {
     font-size: 0.78rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    color: rgba(199, 215, 255, 0.75);
+}
+
+.achievements-section__note {
+    margin: -4px 0 4px;
+    font-size: 0.78rem;
     color: rgba(199, 215, 255, 0.75);
 }
 
