@@ -443,44 +443,18 @@ body.equinox-pulse-active :is(
   box-shadow: 0 14px 34px rgba(60, 201, 255, .46), inset 0 1px 0 rgba(255,255,255,.3);
 }
 
-/* Rarity filter buttons */
+/* Rarity filter accents */
 .rarity-button {
-  border-radius: var(--btn-radius);
-  padding: 8px 12px;
-  font-weight: 600;
-  letter-spacing: .02em;
-  background: linear-gradient(180deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.04) 100%);
-  border: 1px solid rgba(255,255,255,.12);
-  color: #eef3ff;
-  transition: background var(--btn-transition), transform var(--btn-transition), box-shadow var(--btn-transition), border-color var(--btn-transition);
-}
-.rarity-button:hover {
-  transform: translateY(-1px);
-  background: linear-gradient(180deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.08) 100%);
-  box-shadow: 0 8px 18px rgba(0,0,0,.22);
-  border-color: rgba(255,255,255,.2);
-}
-.rarity-button.active,
-.rarity-button.is-active {
-  /* Active state pops and gets an accent ring */
-  background: linear-gradient(180deg, rgba(122,162,255,.24) 0%, rgba(122,162,255,.10) 100%);
-  border-color: color-mix(in oklab, #7aa2ff 45%, #ffffff 15%);
-  box-shadow: 0 10px 24px rgba(122,162,255,.28), 0 0 0 2px color-mix(in oklab, #7aa2ff 40%, transparent);
+  --chip-accent: rgba(122, 162, 255, 0.6);
 }
 
-/* Optional: different accent by data-rarity */
-.rarity-button[data-rarity="under100"].active { --btn-accent: #a7f3d0; }
-.rarity-button[data-rarity="under1k"].active  { --btn-accent: #93c5fd; }
-.rarity-button[data-rarity="under10k"].active { --btn-accent: #c4b5fd; }
-.rarity-button[data-rarity="under100k"].active{ --btn-accent: #fde68a; }
-.rarity-button[data-rarity="under1m"].active  { --btn-accent: #fda4af; }
-.rarity-button[data-rarity="special"].active  { --btn-accent: #f0abfc; }
-.rarity-button.active {
-  outline: none;
-  box-shadow:
-    0 10px 24px color-mix(in oklab, var(--btn-accent, #7aa2ff) 28%, transparent),
-    0 0 0 2px color-mix(in oklab, var(--btn-accent, #7aa2ff) 40%, transparent);
-}
+.rarity-button[data-rarity="under100"] { --chip-accent: #34d399; }
+.rarity-button[data-rarity="under1k"]   { --chip-accent: #60a5fa; }
+.rarity-button[data-rarity="under10k"]  { --chip-accent: #c4b5fd; }
+.rarity-button[data-rarity="under100k"] { --chip-accent: #facc15; }
+.rarity-button[data-rarity="under1m"]   { --chip-accent: #fb7185; }
+.rarity-button[data-rarity="transcendent"] { --chip-accent: #5ae9ff; }
+.rarity-button[data-rarity="special"]   { --chip-accent: #f0abfc; }
 
 /* Dropdown actions look like compact buttons */
 .dropdown-menu .dropdown-item,
@@ -657,7 +631,9 @@ body.equinox-pulse-active :is(
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
     width: auto;
     z-index: 100010;
     opacity: 0.33;
@@ -707,6 +683,22 @@ body.equinox-pulse-active :is(
     color: rgba(180, 200, 255, 0.8);
     font-size: 14px;
     letter-spacing: 0.05em;
+}
+
+.version__title {
+    margin: 0;
+    padding: 6px 18px;
+    border-radius: 16px;
+    font-size: clamp(1.25rem, 2.8vw, 1.8rem);
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #f6f9ff;
+    background: linear-gradient(160deg, rgba(36, 88, 255, 0.55), rgba(24, 188, 255, 0.35));
+    border: 1px solid rgba(168, 208, 255, 0.35);
+    box-shadow:
+        0 12px 26px rgba(8, 18, 40, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .heart {
@@ -1048,17 +1040,17 @@ body {
 /* Result display panel */
 .container .res {
   width: 100%;
-  min-height: 110px;
-  padding: 12px 6px 16px;
+  min-height: 96px;
+  padding: 8px 6px 12px;
   display: flex;
   justify-content: center;
-  align-items: stretch;
+  align-items: center;
 }
 
 .roll-result-card {
   position: relative;
   width: min(100%, 440px);
-  padding: 20px 24px 22px;
+  padding: 18px 22px 20px;
   border-radius: 18px;
   color: #f6f8ff;
   background: linear-gradient(165deg, rgba(28,32,52,0.88), rgba(16,18,28,0.86));
@@ -1686,21 +1678,67 @@ body {
 }
 
 .settings-chip-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    width: 100%;
+    justify-items: stretch;
 }
 
 .settings-chip-group > button {
-    border-radius: 999px;
-    padding: 8px 14px;
-    font-size: 0.85rem;
-    background: rgba(36, 48, 78, 0.7);
-    border: 1px solid rgba(130, 176, 255, 0.28);
+    --chip-accent: rgba(122, 162, 255, 0.6);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 16px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-align: center;
+    color: #e8efff;
+    background: rgba(10, 18, 36, 0.35);
+    border: 1px solid rgba(130, 176, 255, 0.2);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.settings-chip-group > button::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(140deg, color-mix(in oklab, var(--chip-accent) 24%, transparent), rgba(255, 255, 255, 0));
+    opacity: 0.55;
+    transition: opacity 0.2s ease;
+}
+
+.settings-chip-group > button span {
+    position: relative;
+    z-index: 1;
 }
 
 .settings-chip-group > button:hover {
-    background: rgba(60, 90, 146, 0.8);
+    transform: translateY(-1px);
+    border-color: color-mix(in oklab, var(--chip-accent) 40%, transparent);
+}
+
+.settings-chip-group > button:hover::before {
+    opacity: 0.75;
+}
+
+.settings-chip-group > button.active {
+    border-color: color-mix(in oklab, var(--chip-accent) 55%, rgba(255, 255, 255, 0.16));
+    box-shadow:
+        0 10px 24px color-mix(in oklab, var(--chip-accent) 28%, transparent),
+        0 0 0 1px color-mix(in oklab, var(--chip-accent) 32%, transparent);
+}
+
+.settings-chip-group > button.active::before {
+    opacity: 0.85;
 }
 
 .settings-audio {
@@ -3176,51 +3214,14 @@ body.flashing {
     scale: 1.1;
 }
 
-#rarityChecklist {
-    display: flex;
-    gap: 10px;
-    background: #222;
-    padding: 10px;
-    border-radius: 8px;
-    align-items: center;
-    margin: 10px;
-    margin-bottom: 5px;
+#rarityChecklist,
+#rarityChecklistC {
+    margin: 6px 0 0;
+    padding: 0;
 }
 
 #rarityChecklistC {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    background: #222;
-    justify-content: center;
-    padding: 10px;
-    border-radius: 8px;
-    align-items: center;
-    margin: 10px;
-    margin-bottom: 5px;
-}
-  
-.rarity-button {
-    background: #444;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
-}
-  
-.rarity-button.active {
-    background: #93c58c;
-    transform: scale(1.1);
-}
-
-.rarity-button.active:hover {
-    background: #3d753b;
-}
-  
-.rarity-button:hover {
-    background: #555;
+    justify-items: stretch;
 }
 
 .inventory {
@@ -3798,12 +3799,6 @@ body.flashing {
     left: 30px;
 }
 
-.gameTitle,
-.res {
-    background: #ffffff00;
-    border-radius: 10px;
-    padding: 0 6px;
-}
 
 .fullscreen-btn {
     position: fixed;
@@ -5251,25 +5246,15 @@ body.flashing {
 }
 
 .cutsceneSkipBtb {
-    border-radius: 999px;
-    padding: 8px 14px;
-    font-size: 0.85rem;
-    background: rgba(36, 48, 78, 0.7);
-    border: 1px solid rgba(130, 176, 255, 0.28);
+    --chip-accent: rgba(122, 162, 255, 0.6);
     color: #f4f7ff;
-    cursor: pointer;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
-.cutsceneSkipBtb:hover {
-    background: rgba(60, 90, 146, 0.8);
-    border-color: rgba(167, 205, 255, 0.4);
-    transform: translateY(-1px);
-}
-
-.cutsceneSkipBtb:active {
-    transform: translateY(0);
-}
+.cutsceneSkipBtb[data-tier="decent"] { --chip-accent: #60a5fa; }
+.cutsceneSkipBtb[data-tier="grand"] { --chip-accent: #86efac; }
+.cutsceneSkipBtb[data-tier="mastery"] { --chip-accent: #facc15; }
+.cutsceneSkipBtb[data-tier="supreme"] { --chip-accent: #fb7185; }
+.cutsceneSkipBtb[data-tier="transcendent"] { --chip-accent: #5ae9ff; }
 
 #statsMenu {
     position: fixed;
