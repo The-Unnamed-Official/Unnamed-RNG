@@ -21,6 +21,41 @@ const storage = {
 const byId = (id) => document.getElementById(id);
 const $all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
+const EQUINOX_RARITY_CLASS = "equinoxBgImg";
+let equinoxPulseActive = false;
+let pendingEquinoxPulseState = null;
+
+function isEquinoxRarityClass(value) {
+  return typeof value === "string" && value === EQUINOX_RARITY_CLASS;
+}
+
+function isEquinoxRecord(record) {
+  return Boolean(record && isEquinoxRarityClass(record.rarityClass));
+}
+
+function syncEquinoxPulseOnBody(active) {
+  const body = document.body;
+  if (!body) {
+    pendingEquinoxPulseState = active;
+    return;
+  }
+  body.classList.toggle("equinox-pulse-active", Boolean(active));
+  pendingEquinoxPulseState = null;
+}
+
+function setEquinoxPulseActive(active) {
+  const shouldActivate = Boolean(active);
+  if (shouldActivate === equinoxPulseActive && pendingEquinoxPulseState === null) {
+    if (shouldActivate && document.body && !document.body.classList.contains("equinox-pulse-active")) {
+      document.body.classList.add("equinox-pulse-active");
+    }
+    return;
+  }
+
+  equinoxPulseActive = shouldActivate;
+  syncEquinoxPulseOnBody(shouldActivate);
+}
+
 let inventory = [];
 let currentPage = 1;
 const itemsPerPage = 10;
@@ -1144,6 +1179,7 @@ function applyEquippedItemOnStartup() {
     equippedItem = null;
     storage.remove("equippedItem");
     changeBackground("menuDefault", null, { force: true });
+    setEquinoxPulseActive(false);
     return;
   }
 
@@ -1152,6 +1188,7 @@ function applyEquippedItemOnStartup() {
     equippedItem = null;
     storage.remove("equippedItem");
     changeBackground("menuDefault", null, { force: true });
+    setEquinoxPulseActive(false);
     return;
   }
 
@@ -1172,6 +1209,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadingScreen = byId("loadingScreen");
   const menuScreen = byId("menuScreen");
   const loadingText = loadingScreen ? loadingScreen.querySelector(".loadTxt") : null;
+
+  if (pendingEquinoxPulseState !== null || equinoxPulseActive) {
+    const desiredState = pendingEquinoxPulseState !== null ? pendingEquinoxPulseState : equinoxPulseActive;
+    syncEquinoxPulseOnBody(desiredState);
+  }
 
   if (rollButton) {
     rollButton.disabled = true;
@@ -10367,6 +10409,9 @@ function addToInventory(title, rarityClass) {
   renderInventory();
   checkAchievements();
   updateAchievementsList();
+  if (isEquinoxRarityClass(newRecord.rarityClass)) {
+    setEquinoxPulseActive(true);
+  }
   lastRollPersisted = true;
   lastRollAutoDeleted = false;
   return true; // persisted
@@ -11204,6 +11249,10 @@ function unequipItem() {
     return;
   }
 
+  if (isEquinoxRecord(equippedItem)) {
+    setEquinoxPulseActive(false);
+  }
+
   equippedItem = null;
   storage.remove("equippedItem");
 
@@ -11230,9 +11279,11 @@ function unequipItem() {
 
 function handleEquippedItem(item) {
   if (!item) {
+    setEquinoxPulseActive(false);
     return;
   }
 
+  setEquinoxPulseActive(isEquinoxRecord(item));
   changeBackground(item.rarityClass, item.title, { force: true });
 }
 
