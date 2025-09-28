@@ -2410,7 +2410,7 @@ body {
 }
 
 .unnamedBgImg {
-    background: url(backgrounds/unnamed.png);
+    background: url(backgrounds/unnamed.gif);
     background-size: cover;
     object-fit: contain;
 }

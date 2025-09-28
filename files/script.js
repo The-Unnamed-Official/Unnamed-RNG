@@ -10865,7 +10865,7 @@ const backgroundDetails = {
   frightBgImg: { image: "files/backgrounds/fright.png", audio: "frightAudio" },
   hellBgImg: { image: "files/backgrounds/hell.png", audio: "hellAudio" },
   unnamedBgImg: {
-    image: "files/backgrounds/unnamed.png",
+    image: "files/backgrounds/unnamed.gif",
     audio: "unnamedAudio",
   },
   overtureBgImg: {
