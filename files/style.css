@@ -660,7 +660,15 @@ body.equinox-pulse-active :is(
     justify-content: center;
     width: auto;
     z-index: 100010;
-    pointer-events: none;
+    opacity: 0.33;
+    transition: all 0.33s ease-in-out;
+    transform: translateX(-50%) scale(0.67);
+    cursor: help;
+}
+
+.version:hover {
+    opacity: 1;
+    transform: translateX(-50%) scale(1);
 }
 
 .vNumber {
