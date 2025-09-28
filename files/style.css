@@ -4369,6 +4369,7 @@ body.griCutsceneBgImg {
 .achievement-item,
 .achievement-itemT,
 .achievement-itemC,
+.achievement-itemInv,
 .achievement-itemE,
 .achievement-itemSum,
 .achievement-itemR {
@@ -4398,6 +4399,7 @@ body.griCutsceneBgImg {
 
 .achievement-itemT,
 .achievement-itemC,
+.achievement-itemInv,
 .achievement-itemE,
 .achievement-itemSum,
 .achievement-itemR {
@@ -4409,6 +4411,7 @@ body.griCutsceneBgImg {
 .achievement-item:hover,
 .achievement-itemT:hover,
 .achievement-itemC:hover,
+.achievement-itemInv:hover,
 .achievement-itemE:hover,
 .achievement-itemSum:hover,
 .achievement-itemR:hover {
@@ -4429,6 +4432,10 @@ body.griCutsceneBgImg {
     content: "Collect " attr(data-achievement) " achievements to unlock this achievement";
 }
 
+.achievement-itemInv:hover::after {
+    content: "Store " attr(data-items) " items to unlock this achievement";
+}
+
 .achievement-itemE:hover::after,
 .achievement-itemSum:hover::after,
 .achievement-itemR:hover::after {
@@ -4442,6 +4449,7 @@ body.griCutsceneBgImg {
 .achievement-item:hover::after,
 .achievement-itemT:hover::after,
 .achievement-itemC:hover::after,
+.achievement-itemInv:hover::after,
 .achievement-itemE:hover::after,
 .achievement-itemSum:hover::after,
 .achievement-itemR:hover::after {
@@ -4465,6 +4473,7 @@ body.griCutsceneBgImg {
 .achievement-item:hover::before,
 .achievement-itemT:hover::before,
 .achievement-itemC:hover::before,
+.achievement-itemInv:hover::before,
 .achievement-itemE:hover::before,
 .achievement-itemSum:hover::before,
 .achievement-itemR:hover::before {
@@ -4628,6 +4637,12 @@ body.griCutsceneBgImg {
     font-size: 0.78rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    color: rgba(199, 215, 255, 0.75);
+}
+
+.achievements-section__note {
+    margin: -4px 0 4px;
+    font-size: 0.78rem;
     color: rgba(199, 215, 255, 0.75);
 }
 

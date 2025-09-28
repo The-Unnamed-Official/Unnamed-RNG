@@ -63,6 +63,7 @@ let muteButtonElement = null;
 let heartContainerElement = null;
 let heartIntervalId = null;
 let playTimeIntervalId = null;
+let playTimeSeconds = parseInt(localStorage.getItem("playTime"), 10) || 0;
 let autoRollButtonElement = null;
 
 const STOPPABLE_AUDIO_IDS = [
@@ -529,36 +530,69 @@ const CUTSCENE_STATE_SETTERS = {
   skipCutscene1M: (value) => { skipCutscene1M = value; },
 };
 
+const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "special"]);
+
+function getQualifyingInventoryCount(items = inventory) {
+  if (!Array.isArray(items)) {
+    return 0;
+  }
+
+  return items.reduce((total, item) => {
+    const bucket = normalizeRarityBucket(item?.rarityClass);
+    return QUALIFYING_VAULT_BUCKETS.has(bucket) ? total + 1 : total;
+  }, 0);
+}
+
 const ACHIEVEMENTS = [
+  // Roll milestones
   { name: "I think I like this", count: 100 },
+  { name: "Finding the Groove", count: 250 },
+  { name: "Hooked Already", count: 500 },
   { name: "This is getting serious", count: 1000 },
+  { name: "Can't Stop Now", count: 2500 },
   { name: "I'm the Roll Master", count: 5000 },
+  { name: "Streak Seeker", count: 7500 },
   { name: "It's over 9000!!", count: 10000 },
+  { name: "Roll Revolution", count: 15000 },
   { name: "When will you stop?", count: 25000 },
   { name: "No Unnamed?", count: 30303 },
+  { name: "Calculated Chaos", count: 40000 },
   { name: "Beyond Luck", count: 50000 },
   { name: "Rolling machine", count: 100000 },
   { name: "Your PC must be burning", count: 250000 },
   { name: "Half a million!1!!1", count: 500000 },
+  { name: "Rolling Virtuoso", count: 750000 },
   { name: "One, Two.. ..One Million!", count: 1000000 },
+  { name: "Millionaire Machine", count: 2000000 },
   { name: "No H1di?", count: 10000000 },
   { name: "Are you really doing this?", count: 25000000 },
   { name: "You have no limits...", count: 50000000 },
   { name: "WHAT HAVE YOU DONE", count: 100000000 },
   { name: "AHHHHHHHHHHH", count: 1000000000 },
+  // Playtime goals
   { name: "Just the beginning", timeCount: 0 },
+  { name: "Just Five More Minutes...", timeCount: 1800 },
   { name: "This doesn't add up", timeCount: 3600 },
   { name: "When does it end...", timeCount: 7200 },
+  { name: "Late Night Grinder", timeCount: 21600 },
   { name: "I swear I'm not addicted...", timeCount: 36000 },
   { name: "Grass? What's that?", timeCount: 86400 },
   { name: "Unnamed's RNG biggest fan", timeCount: 172800 },
+  { name: "Weekday Warrior", timeCount: 432000 },
   { name: "RNG is life!", timeCount: 604800 },
   { name: "I. CAN'T. STOP", timeCount: 1209600 },
   { name: "No Lifer", timeCount: 2629800 },
   { name: "Are you okay?", timeCount: 5259600 },
+  { name: "Seasoned Grinder", timeCount: 9460800 },
   { name: "You are a True No Lifer", timeCount: 15778800 },
   { name: "No one's getting this legit", timeCount: 31557600 },
   { name: "Happy Summer!", timeCount: 1 },
+  // Inventory milestones
+  { name: "Tiny Vault", inventoryCount: 10 },
+  { name: "Growing Gallery", inventoryCount: 25 },
+  { name: "Treasure Trove", inventoryCount: 50 },
+  { name: "Vault Legend", inventoryCount: 100 },
+  // Rarity triumphs
   { name: "Grand Entrance", rarityBucket: "under10k" },
   { name: "One of a Kind", rarityBucket: "special" },
   { name: "Mastered the Odds", rarityBucket: "under100k" },
@@ -570,13 +604,14 @@ const COLLECTOR_ACHIEVEMENTS = [
   { name: "Achievement Hoarder", count: 10 },
   { name: "Achievement Addict", count: 20 },
   { name: "Achievement God", count: 33 },
-  { name: "T̶h̶e̶ ̶U̶l̶t̶i̶m̶a̶t̶e̶ ̶C̶o̶l̶l̶e̶c̶t̶o̶r̶", count: 50 },
+  { name: "Ultimate Collector", count: 50 },
 ];
 
 const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-item", unlocked: { backgroundColor: "blue" } },
   { selector: ".achievement-itemT", unlocked: { backgroundColor: "#000fff" } },
   { selector: ".achievement-itemC", unlocked: { backgroundColor: "#ff0000" } },
+  { selector: ".achievement-itemInv", unlocked: { backgroundColor: "#2e8b57" } },
   { selector: ".achievement-itemE", unlocked: { backgroundColor: "#fff000", color: "black" } },
   { selector: ".achievement-itemSum", unlocked: { backgroundColor: "#ff00d9ff" } },
   { selector: ".achievement-itemR", unlocked: { backgroundColor: "#0033ffff" } },
@@ -1111,13 +1146,25 @@ function checkAchievements(context = {}) {
   const rarityBuckets = context && context.rarityBuckets instanceof Set
     ? context.rarityBuckets
     : new Set(storage.get("rolledRarityBuckets", []));
+  const qualifyingInventoryCount = getQualifyingInventoryCount();
 
   ACHIEVEMENTS.forEach((achievement) => {
     if (achievement.count && rollCount >= achievement.count) {
       unlockAchievement(achievement.name, unlocked);
     }
 
-    if (achievement.timeCount !== undefined && typeof playTime !== "undefined" && playTime >= achievement.timeCount) {
+    if (
+      achievement.timeCount !== undefined &&
+      Number.isFinite(playTimeSeconds) &&
+      playTimeSeconds >= achievement.timeCount
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      achievement.inventoryCount !== undefined &&
+      qualifyingInventoryCount >= achievement.inventoryCount
+    ) {
       unlockAchievement(achievement.name, unlocked);
     }
 
@@ -10777,6 +10824,7 @@ function renderInventory() {
   });
 
   updatePagination();
+  checkAchievements();
 }
 
 function toggleLock(itemTitle, listItem, lockButton) {
@@ -12186,7 +12234,10 @@ function initializePlayTimeTracker() {
     return;
   }
 
-  let playTime = parseInt(localStorage.getItem("playTime"), 10) || 0;
+  const storedPlayTime = parseInt(localStorage.getItem("playTime"), 10);
+  if (!Number.isNaN(storedPlayTime)) {
+    playTimeSeconds = storedPlayTime;
+  }
   const timerDisplay = document.getElementById("timer");
   if (!timerDisplay) {
     return;
@@ -12203,12 +12254,12 @@ function initializePlayTimeTracker() {
     ].join(":");
   };
 
-  timerDisplay.textContent = formatTime(playTime);
+  timerDisplay.textContent = formatTime(playTimeSeconds);
 
   playTimeIntervalId = setInterval(() => {
-    playTime += 1;
-    timerDisplay.textContent = formatTime(playTime);
-    localStorage.setItem("playTime", playTime);
+    playTimeSeconds += 1;
+    timerDisplay.textContent = formatTime(playTimeSeconds);
+    localStorage.setItem("playTime", playTimeSeconds);
     checkAchievements();
     updateAchievementsList();
   }, 1000);
