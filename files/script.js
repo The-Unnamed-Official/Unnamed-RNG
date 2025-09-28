@@ -1498,7 +1498,7 @@ function registerRollButtonHandler() {
     rarity.type === "X1sta [1 in 230,444]" ||
     rarity.type === "Hellish Fire [1 in 6,666]" ||
     rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]" ||
-    rarity.type === "『Equinox』 [1 in 2,500,000]" ||
+    rarity.type === "『Equinox』 [1 in 25,000,000]" ||
     rarity.type === "Ginger [1 in 1,144,141]" ||
     rarity.type === "Wave [1 in 2,555]" ||
     rarity.type === "Scorching [1 in 7,923]" ||
@@ -1584,7 +1584,7 @@ function registerRollButtonHandler() {
       scareSuspenceAudio.play();
     } else if (rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]") {
       scareSuspenceLofiAudio.play();
-    } else if (rarity.type === "『Equinox』 [1 in 2,500,000]") {
+    } else if (rarity.type === "『Equinox』 [1 in 25,000,000]") {
       equinoxAudio.play();
     } else if (rarity.type === "Ginger [1 in 1,144,141]") {
       hugeSuspenceAudio.play();
@@ -6219,7 +6219,7 @@ function registerRollButtonHandler() {
         titleCont.style.visibility = "visible";
         isekaiAudio.play();
       }
-    } else if (rarity.type === "『Equinox』 [1 in 2,500,000]") {
+    } else if (rarity.type === "『Equinox』 [1 in 25,000,000]") {
       disableChange();
 
       setTimeout(() => {
@@ -9547,7 +9547,7 @@ function rollRarity() {
       type: "Legendary [1 in 13]",
       class: "legendaryBgImg",
       chance: 7.5,
-      titles: ["Immortal", "Celestial", "Eternal", "Transcendent", "Supreme", "Bounded", "Omniscient", "Omnipotent", "Ultimate", "Apex"],
+      titles: ["Immortal", "Celestial", "Eternal", "Supreme", "Bounded", "Omniscient", "Omnipotent", "Ultimate", "Apex"],
     },
     {
       type: "Impossible [1 in 20]",
@@ -9847,7 +9847,7 @@ function rollRarity() {
       type: "Ether Shift [1 in 5,540]",
       class: "ethershiftBgImg",
       chance: 0.0180505415,
-      titles: ["Warped", "Dimensional", "Vortex", "Parallel", "Quantum", "Portal", "Transcendent", "Astral", "Temporal", "Rifted"],
+      titles: ["Warped", "Dimensional", "Vortex", "Parallel", "Quantum", "Portal", "Astral", "Temporal", "Rifted"],
     },
     {
       type: "Hellish Fire [1 in 6,666]",
@@ -10000,9 +10000,9 @@ function rollRarity() {
       titles: ["Isekai", "Singing", "Chill", "Calm"]
     },
     {
-      type: "『Equinox』 [1 in 2,500,000]",
+      type: "『Equinox』 [1 in 25,000,000]",
       class: "equinoxBgImg",
-      chance: 0.00014,
+      chance: 0.000004,
       titles: ["LAYERS", "CHROMA", "衡"]
     },
     {
@@ -12568,7 +12568,7 @@ function getClassForRarity(rarity) {
       'Easter Bunny [1 in 133,333]': 'eventE',
       'Easter Egg [1 in 13,333]': 'eventE',
       'Isekai ♫ Lo-Fi [1 in 3,000]': 'under10k',
-      '『Equinox』 [1 in 2,500,000]': 'transcendent',
+      '『Equinox』 [1 in 25,000,000]': 'transcendent',
       'Ginger [1 in 1,144,141]': 'transcendent',
       'Wave [1 in 2,555]': 'eventS',
       'Scorching [1 in 7,923]': 'eventS',
