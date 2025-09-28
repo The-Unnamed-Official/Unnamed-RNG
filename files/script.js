@@ -699,11 +699,23 @@ const ACHIEVEMENTS = [
   { name: "Rolling Virtuoso", count: 750000 },
   { name: "One, Two.. ..One Million!", count: 1000000 },
   { name: "Millionaire Machine", count: 2000000 },
+  { name: "Triple Threat Spinner", count: 3000000 },
+  { name: "Momentum Master", count: 5000000 },
+  { name: "Lucky Tenacity", count: 7500000 },
   { name: "No H1di?", count: 10000000 },
+  { name: "Breaking Reality", count: 15000000 },
   { name: "Are you really doing this?", count: 25000000 },
+  { name: "Multiversal Roller", count: 30000000 },
   { name: "You have no limits...", count: 50000000 },
+  { name: "Anomaly Hunter", count: 75000000 },
   { name: "WHAT HAVE YOU DONE", count: 100000000 },
+  { name: "Oddity Voyager", count: 150000000 },
+  { name: "Improbability Engine", count: 300000000 },
+  { name: "Beyond Imagination", count: 500000000 },
   { name: "AHHHHHHHHHHH", count: 1000000000 },
+  { name: "Worldshaper", count: 2500000000 },
+  { name: "Entropy Rewriter", count: 5000000000 },
+  { name: "RNG Architect", count: 25000000000 },
   // Playtime goals
   { name: "Just the beginning", timeCount: 0 },
   { name: "Just Five More Minutes...", timeCount: 1800 },
@@ -721,7 +733,16 @@ const ACHIEVEMENTS = [
   { name: "Seasoned Grinder", timeCount: 9460800 },
   { name: "You are a True No Lifer", timeCount: 15778800 },
   { name: "No one's getting this legit", timeCount: 31557600 },
-  { name: "Happy Summer!", timeCount: 1 },
+  { name: "Two Years Deep", timeCount: 63115200 },
+  { name: "Triennial Tenacity", timeCount: 94672800 },
+  { name: "Four-Year Fixture", timeCount: 126230400 },
+  { name: "Half-Decade Hero", timeCount: 157788000 },
+  { name: "Seven-Year Streak", timeCount: 220903200 },
+  { name: "Decade of Determination", timeCount: 315576000 },
+  { name: "Fifteen-Year Folly", timeCount: 473364000 },
+  { name: "Twenty-Year Timeline", timeCount: 631152000 },
+  { name: "Quarter-Century Quest", timeCount: 788940000 },
+  { name: "Timeless Wanderer", timeCount: 946728000 },
   // Inventory milestones
   { name: "Tiny Vault", inventoryCount: 10 },
   { name: "Growing Gallery", inventoryCount: 25 },
@@ -732,6 +753,33 @@ const ACHIEVEMENTS = [
   { name: "One of a Kind", rarityBucket: "special" },
   { name: "Mastered the Odds", rarityBucket: "under100k" },
   { name: "Supreme Fortune", rarityBucket: "under1m" },
+  // Title triumphs
+  { name: "Celestial Alignment", requiredTitle: "『Equinox』 [1 in 25,000,000]" },
+  { name: "Creator?!", requiredTitle: "Unnamed [1 in 30,303]" },
+  { name: "Silly Joyride", requiredTitle: "Silly Car :3 [1 in 1,000,000]" },
+  { name: "Ginger Guardian", requiredTitle: "Ginger [1 in 1,144,141]" },
+  { name: "H1di Hunted", requiredTitle: "H1di [1 in 9,890,089]" },
+  { name: "902.. released.. wilderness..", requiredTitle: "Experiment [1 in 100,000/10th]" },
+  { name: "Abomination Wrangler", requiredTitle: "Abomination [1 in 1,000,000/20th]" },
+  { name: "Veiled Visionary", requiredTitle: "Veil [1 in 50,000/5th]" },
+  { name: "Iridocyclitis Survivor", requiredTitle: "Iridocyclitis Veil [1 in 5,000/50th]" },
+  { name: "Cherry Grove Champion", requiredTitle: "LubbyJubby's Cherry Grove [1 in 5,666]" },
+  { name: "Firestarter", requiredTitle: "FireCraze [1 in 4,200/69th]" },
+  { name: "Orbital Dreamer", requiredTitle: "ORB [1 in 55,555/30th]" },
+  { name: "Gregarious Encounter", requiredTitle: "Greg [1 in 50,000,000]" },
+  { name: "Mint Condition", requiredTitle: "Mintllie [1 in 500,000,000]" },
+  { name: "Geezer Whisperer", requiredTitle: "Geezer [1 in 5,000,000,000]" },
+  { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]" },
+  // Event exclusives
+  { name: "Happy Easter!", requiredEventBucket: "eventE" },
+  { name: "Happy Summer!", requiredEventBucket: "eventS" },
+  { name: "Seasonal Tourist", minEventTitleCount: 1 },
+  { name: "Valentine's Sweetheart", requiredEventBucket: "eventV" },
+  { name: "Festival Firecracker", requiredEventBucket: "eventTitle" },
+  { name: "Spooky Spectator", requiredEventBucket: "eventTitleHalloween" },
+  { name: "Winter Wonderland", requiredEventBucket: "eventTitleXmas" },
+  { name: "Event Explorer", minDistinctEventBuckets: 3 },
+  { name: "Seasonal Archivist", minEventTitleCount: 10 },
 ];
 
 const COLLECTOR_ACHIEVEMENTS = [
@@ -750,6 +798,8 @@ const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-itemE", unlocked: { backgroundColor: "#fff000", color: "black" } },
   { selector: ".achievement-itemSum", unlocked: { backgroundColor: "#ff00d9ff" } },
   { selector: ".achievement-itemR", unlocked: { backgroundColor: "#0033ffff" } },
+  { selector: ".achievement-itemTitle", unlocked: { backgroundColor: "#7a3cff" } },
+  { selector: ".achievement-itemEvent", unlocked: { backgroundColor: "#ff8800", color: "black" } },
 ];
 
 const ACHIEVEMENT_TOAST_DURATION = 3400;
@@ -1282,6 +1332,32 @@ function checkAchievements(context = {}) {
     ? context.rarityBuckets
     : new Set(storage.get("rolledRarityBuckets", []));
   const qualifyingInventoryCount = getQualifyingInventoryCount();
+  const inventoryTitleSet = new Set();
+  const eventBucketCounts = new Map();
+  let totalEventTitleCount = 0;
+
+  if (Array.isArray(inventory)) {
+    inventory.forEach((item) => {
+      if (!item || typeof item !== "object") {
+        return;
+      }
+
+      if (typeof item.title === "string" && item.title) {
+        inventoryTitleSet.add(item.title);
+      }
+
+      const bucket =
+        (typeof item.rarityBucket === "string" && item.rarityBucket) ||
+        normalizeRarityBucket(item.rarityClass);
+
+      if (bucket && bucket.startsWith("event")) {
+        totalEventTitleCount += 1;
+        eventBucketCounts.set(bucket, (eventBucketCounts.get(bucket) || 0) + 1);
+      }
+    });
+  }
+
+  const distinctEventBucketCount = eventBucketCounts.size;
 
   ACHIEVEMENTS.forEach((achievement) => {
     if (achievement.count && rollCount >= achievement.count) {
@@ -1304,6 +1380,57 @@ function checkAchievements(context = {}) {
     }
 
     if (achievement.rarityBucket && rarityBuckets.has(achievement.rarityBucket)) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      achievement.requiredTitle &&
+      inventoryTitleSet.has(achievement.requiredTitle)
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      Array.isArray(achievement.requiredTitles) &&
+      achievement.requiredTitles.every((title) => inventoryTitleSet.has(title))
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      Array.isArray(achievement.anyTitle) &&
+      achievement.anyTitle.some((title) => inventoryTitleSet.has(title))
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      achievement.requiredEventBucket &&
+      eventBucketCounts.has(achievement.requiredEventBucket)
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      Array.isArray(achievement.requiredEventBuckets) &&
+      achievement.requiredEventBuckets.every((bucket) =>
+        eventBucketCounts.has(bucket)
+      )
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      typeof achievement.minDistinctEventBuckets === "number" &&
+      distinctEventBucketCount >= achievement.minDistinctEventBuckets
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      typeof achievement.minEventTitleCount === "number" &&
+      totalEventTitleCount >= achievement.minEventTitleCount
+    ) {
       unlockAchievement(achievement.name, unlocked);
     }
   });
