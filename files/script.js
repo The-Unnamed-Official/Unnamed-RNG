@@ -550,7 +550,9 @@ function initializeAfterStart() {
   enhanceInventoryDeleteButtons();
   setupAudioControls();
   initializeAutoRollControls();
-  initializeHeartEffect();
+  if (typeof initializeHeartEffect === "function") {
+    initializeHeartEffect();
+  }
   registerDataPersistenceButtons();
   initializePlayTimeTracker();
   registerRarityDeletionButtons();
