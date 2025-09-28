@@ -3416,6 +3416,19 @@ body.griCutsceneBgImg {
   --inventory-text-gradient-animation: inventory-text-pan 6s ease-in-out infinite;
 }
 
+.inventory-group--transcendent {
+  --group-bg-a: rgba(18, 56, 78, 0.74);
+  --group-bg-b: rgba(8, 24, 46, 0.92);
+  --group-border: rgba(104, 224, 255, 0.35);
+}
+
+.inventory-group--transcendent .inventory-delete-btn--overlay {
+  --inventory-text-gradient: linear-gradient(135deg, #12d9ff, #00ffc8, #2c6fff);
+  --inventory-text-gradient-hover: linear-gradient(135deg, #3de5ff, #33ffd8, #4b88ff);
+  --inventory-text-gradient-size: 240% 240%;
+  --inventory-text-gradient-animation: transcendent-shift 6s ease-in-out infinite;
+}
+
 #deleteAllPumpkinButton.inventory-delete-btn--overlay {
   --inventory-text-gradient: linear-gradient(135deg, #ff9c3b, #ffd9a3, #8f8f93);
   --inventory-text-gradient-hover: linear-gradient(135deg, #ffb76a, #ffe6c4, #b7b7bb);
@@ -4119,6 +4132,15 @@ body.griCutsceneBgImg {
     color: transparent;
 }
 
+.transcendent {
+    background: linear-gradient(120deg, #12d9ff, #00ffc8, #2c6fff);
+    background-size: 250%;
+    animation: transcendent-shift 5s ease-in-out infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
 .eventV {
     background: radial-gradient(#ff0000, #f5a7ff);
     background-size: 300%;
@@ -4167,6 +4189,18 @@ body.griCutsceneBgImg {
     }
     100% {
         background-position: 0% 80%;
+    }
+}
+
+@keyframes transcendent-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
     }
 }
 

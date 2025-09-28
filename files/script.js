@@ -21,7 +21,7 @@ const storage = {
 const byId = (id) => document.getElementById(id);
 const $all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
-let inventory = storage.get("inventory", []);
+let inventory = [];
 let currentPage = 1;
 const itemsPerPage = 10;
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
@@ -181,6 +181,7 @@ const RARITY_BUCKET_LABELS = {
   under10k: "Grand",
   under100k: "Mastery",
   under1m: "Supreme",
+  transcendent: "Transcendent",
   special: "Special"
 };
 
@@ -346,14 +347,16 @@ const rarityCategories = {
     "impeachedBgImg",
     "celestialchorusBgImg",
     "x1staBgImg",
-    "silcarBgImg",
-    "gingerBgImg",
-    "h1diBgImg",
-    "equinoxBgImg",
     "gregBgImg",
     "mintllieBgImg",
     "geezerBgGif",
     "polarrBgImg",
+  ],
+  transcendent: [
+    "silcarBgImg",
+    "gingerBgImg",
+    "h1diBgImg",
+    "equinoxBgImg",
   ],
   special: [
     "iriBgImg",
@@ -378,10 +381,10 @@ const RARITY_CLASS_BUCKET_MAP = Object.freeze(
 );
 
 const RARITY_LABEL_CLASS_MAP = {
-  silcarBgImg: "under10ms",
-  gingerBgImg: "under10m",
-  h1diBgImg: "under10m",
-  equinoxBgImg: "under10me",
+  silcarBgImg: "transcendent",
+  gingerBgImg: "transcendent",
+  h1diBgImg: "transcendent",
+  equinoxBgImg: "transcendent",
   waveBgImg: "eventS",
   beachBgImg: "eventS",
   tidalwaveBgImg: "eventS",
@@ -417,7 +420,12 @@ const LOADING_SEQUENCE = [
   {
     message: "Obtaining saves...",
     action: () => {
-      inventory = storage.get("inventory", []);
+      const savedInventory = storage.get("inventory", []);
+      const { records: normalizedInventory, mutated } = normalizeInventoryRecords(savedInventory);
+      inventory = normalizedInventory;
+      if (mutated) {
+        storage.set("inventory", normalizedInventory);
+      }
       rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
       rollCount1 = parseInt(localStorage.getItem("rollCount1")) || 0;
     },
@@ -530,16 +538,143 @@ const CUTSCENE_STATE_SETTERS = {
   skipCutscene1M: (value) => { skipCutscene1M = value; },
 };
 
-const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "special"]);
+const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "transcendent", "special"]);
+
+function normalizeInventoryRecord(raw) {
+  if (raw == null) {
+    return { record: null, mutated: raw !== undefined };
+  }
+
+  if (typeof raw === "string") {
+    const title = raw.trim();
+    if (!title) {
+      return { record: null, mutated: true };
+    }
+
+    return {
+      record: {
+        title,
+        rarityClass: "",
+        qualifiesForVault: false,
+      },
+      mutated: true,
+    };
+  }
+
+  if (typeof raw !== "object") {
+    return { record: null, mutated: true };
+  }
+
+  const record = raw;
+  let mutated = false;
+
+  let title = "";
+  if (typeof record.title === "string") {
+    title = record.title.trim();
+    if (title !== record.title) {
+      record.title = title;
+      mutated = true;
+    }
+  } else if (record.title != null) {
+    title = String(record.title).trim();
+    record.title = title;
+    mutated = true;
+  }
+
+  if (!title) {
+    return { record: null, mutated: true };
+  }
+
+  if (typeof record.rarityClass === "string") {
+    const trimmed = record.rarityClass.trim();
+    if (trimmed !== record.rarityClass) {
+      record.rarityClass = trimmed;
+      mutated = true;
+    }
+  } else if (record.rarityClass != null) {
+    record.rarityClass = String(record.rarityClass).trim();
+    mutated = true;
+  } else if (record.rarityClass !== "") {
+    record.rarityClass = "";
+    mutated = true;
+  }
+
+  if (typeof record.rolledAt !== "number" || !Number.isFinite(record.rolledAt)) {
+    if (Object.prototype.hasOwnProperty.call(record, "rolledAt")) {
+      delete record.rolledAt;
+      mutated = true;
+    }
+  }
+
+  const bucket = normalizeRarityBucket(record.rarityClass);
+
+  if (bucket) {
+    if (record.rarityBucket !== bucket) {
+      record.rarityBucket = bucket;
+      mutated = true;
+    }
+  } else if (record.rarityBucket) {
+    delete record.rarityBucket;
+    mutated = true;
+  }
+
+  const qualifies = QUALIFYING_VAULT_BUCKETS.has(bucket);
+  if (record.qualifiesForVault !== qualifies) {
+    record.qualifiesForVault = qualifies;
+    mutated = true;
+  }
+
+  return { record, mutated };
+}
+
+function normalizeInventoryRecords(records) {
+  if (!Array.isArray(records)) {
+    return { records: [], mutated: records != null };
+  }
+
+  const normalized = [];
+  let mutated = false;
+
+  records.forEach((raw) => {
+    const { record, mutated: recordMutated } = normalizeInventoryRecord(raw);
+    if (record) {
+      normalized.push(record);
+    } else {
+      mutated = true;
+    }
+
+    if (recordMutated) {
+      mutated = true;
+    }
+  });
+
+  return { records: normalized, mutated };
+}
 
 function getQualifyingInventoryCount(items = inventory) {
-  if (!Array.isArray(items)) {
+  if (!Array.isArray(items) || items.length === 0) {
     return 0;
   }
 
   return items.reduce((total, item) => {
-    const bucket = normalizeRarityBucket(item?.rarityClass);
-    return QUALIFYING_VAULT_BUCKETS.has(bucket) ? total + 1 : total;
+    if (!item || typeof item !== "object") {
+      return total;
+    }
+
+    if (typeof item.qualifiesForVault === "boolean") {
+      return item.qualifiesForVault ? total + 1 : total;
+    }
+
+    const bucket = item.rarityBucket || normalizeRarityBucket(item.rarityClass);
+    if (bucket && bucket !== item.rarityBucket) {
+      item.rarityBucket = bucket;
+    } else if (!bucket && item.rarityBucket) {
+      delete item.rarityBucket;
+    }
+
+    const qualifies = QUALIFYING_VAULT_BUCKETS.has(bucket);
+    item.qualifiesForVault = qualifies;
+    return qualifies ? total + 1 : total;
   }, 0);
 }
 
@@ -1165,10 +1300,6 @@ function checkAchievements(context = {}) {
       achievement.inventoryCount !== undefined &&
       qualifyingInventoryCount >= achievement.inventoryCount
     ) {
-      unlockAchievement(achievement.name, unlocked);
-    }
-
-    if (achievement.inventoryCount !== undefined && Array.isArray(inventory) && inventory.length >= achievement.inventoryCount) {
       unlockAchievement(achievement.name, unlocked);
     }
 
@@ -10097,9 +10228,16 @@ function addToInventory(title, rarityClass) {
     }
   }
 
-  inventory.push({ title, rarityClass, rolledAt });
-  localStorage.setItem("inventory", JSON.stringify(inventory));
+  const { record: newRecord } = normalizeInventoryRecord({ title, rarityClass, rolledAt });
+  if (!newRecord) {
+    return false;
+  }
+
+  inventory.push(newRecord);
+  storage.set("inventory", inventory);
   renderInventory();
+  checkAchievements();
+  updateAchievementsList();
   lastRollPersisted = true;
   lastRollAutoDeleted = false;
   return true; // persisted
@@ -10209,9 +10347,9 @@ function normalizeRarityBucket(rarityClass) {
   const cls = rarityClass.trim();
 
   const prefixMatches = [
-    { prefix: "under10me", bucket: "under1m" },
-    { prefix: "under10ms", bucket: "under1m" },
-    { prefix: "under10m", bucket: "under1m" },
+    { prefix: "under10me", bucket: "transcendent" },
+    { prefix: "under10ms", bucket: "transcendent" },
+    { prefix: "under10m", bucket: "transcendent" },
     { prefix: "under1m", bucket: "under1m" },
     { prefix: "under100k", bucket: "under100k" },
     { prefix: "under10k", bucket: "under10k" },
@@ -10226,7 +10364,7 @@ function normalizeRarityBucket(rarityClass) {
   }
 
   if (cls === "special") return "special";
-  if (["under100", "under1k", "under10k", "under100k", "under1m", "special"].includes(cls)) {
+  if (["under100", "under1k", "under10k", "under100k", "under1m", "transcendent", "special"].includes(cls)) {
     return cls;
   }
 
@@ -10692,17 +10830,43 @@ function renderInventory() {
   inventoryList.innerHTML = "";
 
   let newBucketRecorded = false;
+  let inventoryUpdated = false;
   inventory.forEach((item) => {
-    const bucket = normalizeRarityBucket(item.rarityClass);
+    if (!item || typeof item !== "object") {
+      return;
+    }
+
+    const bucket = item.rarityBucket || normalizeRarityBucket(item.rarityClass);
+
+    if (bucket && bucket !== item.rarityBucket) {
+      item.rarityBucket = bucket;
+      inventoryUpdated = true;
+    } else if (!bucket && item.rarityBucket) {
+      delete item.rarityBucket;
+      inventoryUpdated = true;
+    }
+
+    const qualifies = QUALIFYING_VAULT_BUCKETS.has(bucket);
+    if (item.qualifiesForVault !== qualifies) {
+      item.qualifiesForVault = qualifies;
+      inventoryUpdated = true;
+    }
+
     if (bucket && !rolledRarityBuckets.has(bucket)) {
       rolledRarityBuckets.add(bucket);
       newBucketRecorded = true;
     }
   });
 
+  if (inventoryUpdated) {
+    storage.set("inventory", inventory);
+  }
+
   if (newBucketRecorded) {
     storage.set("rolledRarityBuckets", Array.from(rolledRarityBuckets));
     checkAchievements({ rarityBuckets: rolledRarityBuckets });
+  } else if (inventoryUpdated) {
+    checkAchievements();
   }
 
   const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
@@ -12304,6 +12468,7 @@ function registerRarityDeletionButtons() {
     ["deleteAllUnder10kButton", "under10k"],
     ["deleteAllUnder100kButton", "under100k"],
     ["deleteAllUnder1mButton", "under1m"],
+    ["deleteAllTranscendentButton", "transcendent"],
     ["deleteAllSpecialButton", "special"],
   ];
 
@@ -12387,8 +12552,8 @@ function getClassForRarity(rarity) {
       'Arcane Pulse [1 in 77,777]': 'under100k',
       'Impeached [1 in 101,010]': 'under1m',
       'Celestial Chorus [1 in 202,020]': 'under1m',
-      'Silly Car :3 [1 in 1,000,000]': 'under10ms',
-      'H1di [1 in 9,890,089]': 'under10m',
+      'Silly Car :3 [1 in 1,000,000]': 'transcendent',
+      'H1di [1 in 9,890,089]': 'transcendent',
       'BlindGT [1 in 2,000,000/15th]': 'special',
       'MSFU [1 in 333/333rd]': 'special',
       'Orb [1 in 55,555/30th]': 'special',
@@ -12403,8 +12568,8 @@ function getClassForRarity(rarity) {
       'Easter Bunny [1 in 133,333]': 'eventE',
       'Easter Egg [1 in 13,333]': 'eventE',
       'Isekai ♫ Lo-Fi [1 in 3,000]': 'under10k',
-      '『Equinox』 [1 in 2,500,000]': 'under10me',
-      'Ginger [1 in 1,144,141]': 'under10m',
+      '『Equinox』 [1 in 2,500,000]': 'transcendent',
+      'Ginger [1 in 1,144,141]': 'transcendent',
       'Wave [1 in 2,555]': 'eventS',
       'Scorching [1 in 7,923]': 'eventS',
       'Beach [1 in 12,555]': 'eventS',
