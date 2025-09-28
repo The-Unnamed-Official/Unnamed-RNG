@@ -512,7 +512,6 @@ function initializeAfterStart() {
   registerMenuButtons();
   registerResponsiveHandlers();
   registerMenuDragHandlers();
-  setupAchievementTooltips();
   enhanceInventoryDeleteButtons();
   setupAudioControls();
   initializeAutoRollControls();
@@ -10821,7 +10820,7 @@ const backgroundDetails = {
   frightBgImg: { image: "files/backgrounds/fright.png", audio: "frightAudio" },
   hellBgImg: { image: "files/backgrounds/hell.png", audio: "hellAudio" },
   unnamedBgImg: {
-    image: "files/backgrounds/unnamed.png",
+    image: "files/backgrounds/unnamed.gif",
     audio: "unnamedAudio",
   },
   overtureBgImg: {
@@ -12139,158 +12138,6 @@ function registerMenuDragHandlers() {
       statsDragHandle?.classList.remove("is-dragging");
     }
   });
-}
-
-function setupAchievementTooltips() {
-  const achievementsMenu = document.getElementById("achievementsMenu");
-  if (!achievementsMenu) {
-    return;
-  }
-
-  const tooltipTargets = achievementsMenu.querySelectorAll(
-    ".achievement-item, .achievement-itemT, .achievement-itemC, .achievement-itemInv, .achievement-itemE, .achievement-itemSum, .achievement-itemR, .achievement-itemTitle, .achievement-itemEvent"
-  );
-
-  if (!tooltipTargets.length) {
-    return;
-  }
-
-  let tooltip = document.body.querySelector(".achievement-tooltip");
-  if (!tooltip) {
-    tooltip = document.createElement("div");
-    tooltip.className = "achievement-tooltip";
-    tooltip.setAttribute("role", "tooltip");
-    tooltip.hidden = true;
-    document.body.appendChild(tooltip);
-  }
-
-  let activeTarget = null;
-
-  const getTooltipMessage = (element) => {
-    const dataset = element.dataset;
-    if (!dataset) {
-      return "";
-    }
-
-    if (dataset.event) {
-      return dataset.event;
-    }
-
-    if (dataset.title) {
-      return `Obtain ${dataset.title} to unlock this achievement`;
-    }
-
-    if (dataset.rarity) {
-      return `Get ${dataset.rarity} rarity to unlock this achievement`;
-    }
-
-    if (dataset.items) {
-      return `Store ${dataset.items} items to unlock this achievement`;
-    }
-
-    if (dataset.achievement) {
-      return `Collect ${dataset.achievement} achievements to unlock this achievement`;
-    }
-
-    if (dataset.time) {
-      return `Play ${dataset.time} to unlock this achievement`;
-    }
-
-    if (dataset.roll) {
-      return `Roll ${dataset.roll} rolls to unlock this achievement`;
-    }
-
-    return "";
-  };
-
-  const positionTooltip = (element) => {
-    if (!element || tooltip.hidden) {
-      return;
-    }
-
-    const targetRect = element.getBoundingClientRect();
-    const tooltipRect = tooltip.getBoundingClientRect();
-    const viewportPadding = 16;
-    const halfWidth = tooltipRect.width / 2;
-    const maxLeft = window.innerWidth - viewportPadding - halfWidth;
-    const minLeft = viewportPadding + halfWidth;
-    let left = targetRect.left + targetRect.width / 2;
-    if (left < minLeft) {
-      left = minLeft;
-    } else if (left > maxLeft) {
-      left = maxLeft;
-    }
-
-    const top = targetRect.top - 8;
-
-    tooltip.style.left = `${Math.round(left)}px`;
-    tooltip.style.top = `${Math.round(top)}px`;
-  };
-
-  const hideTooltip = () => {
-    if (tooltip.hidden) {
-      return;
-    }
-
-    tooltip.classList.remove("is-visible");
-    tooltip.hidden = true;
-    tooltip.textContent = "";
-    activeTarget = null;
-  };
-
-  const showTooltip = (element) => {
-    const message = getTooltipMessage(element);
-    if (!message) {
-      hideTooltip();
-      return;
-    }
-
-    activeTarget = element;
-    tooltip.textContent = message;
-    tooltip.hidden = false;
-    positionTooltip(element);
-    tooltip.classList.add("is-visible");
-  };
-
-  const repositionActiveTooltip = () => {
-    if (activeTarget && !tooltip.hidden) {
-      positionTooltip(activeTarget);
-    }
-  };
-
-  tooltipTargets.forEach((target) => {
-    target.addEventListener("pointerenter", () => {
-      showTooltip(target);
-    });
-
-    target.addEventListener("pointermove", () => {
-      if (activeTarget === target) {
-        repositionActiveTooltip();
-      }
-    });
-
-    target.addEventListener("pointerleave", hideTooltip);
-    target.addEventListener("pointercancel", hideTooltip);
-    target.addEventListener("focus", () => {
-      showTooltip(target);
-    });
-    target.addEventListener("blur", hideTooltip);
-  });
-
-  const achievementsBody = achievementsMenu.querySelector(".achievements-body");
-  achievementsBody?.addEventListener("scroll", hideTooltip, { passive: true });
-
-  const closeButton = document.getElementById("closeAchievements");
-  closeButton?.addEventListener("click", hideTooltip);
-
-  achievementsMenu.addEventListener("pointerleave", (event) => {
-    if (!achievementsMenu.contains(event.relatedTarget)) {
-      hideTooltip();
-    }
-  });
-
-  window.addEventListener("resize", repositionActiveTooltip);
-  window.addEventListener("scroll", repositionActiveTooltip, true);
 }
 
 function enhanceInventoryDeleteButtons() {
