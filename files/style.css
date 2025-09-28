@@ -4143,11 +4143,12 @@ body.griCutsceneBgImg {
 
 .equinox-flash {
     background: linear-gradient(90deg, #000000 0%, #ffffff 50%, #000000 100%);
-    background-size: 220% 100%;
-    animation: equinox-flash 0.9s steps(2) infinite;
+    background-size: 240% 100%;
+    animation: equinox-flash 0.3s ease-in-out infinite;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    opacity: 0.35;
 }
 
 .h1di-flash {
@@ -4225,9 +4226,15 @@ body.griCutsceneBgImg {
 @keyframes equinox-flash {
     0% {
         background-position: 0% 50%;
+        opacity: 0.35;
+    }
+    50% {
+        background-position: 100% 50%;
+        opacity: 1;
     }
     100% {
-        background-position: 100% 50%;
+        background-position: 0% 50%;
+        opacity: 0.35;
     }
 }
 
