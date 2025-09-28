@@ -4440,7 +4440,9 @@ body.griCutsceneBgImg {
 .achievement-itemInv,
 .achievement-itemE,
 .achievement-itemSum,
-.achievement-itemR {
+.achievement-itemR,
+.achievement-itemTitle,
+.achievement-itemEvent {
     position: relative;
     padding: 16px 14px;
     text-align: center;
@@ -4470,7 +4472,9 @@ body.griCutsceneBgImg {
 .achievement-itemInv,
 .achievement-itemE,
 .achievement-itemSum,
-.achievement-itemR {
+.achievement-itemR,
+.achievement-itemTitle,
+.achievement-itemEvent {
     font-size: 0.9rem;
     padding-left: 12px;
     padding-right: 12px;
@@ -4482,7 +4486,9 @@ body.griCutsceneBgImg {
 .achievement-itemInv:hover,
 .achievement-itemE:hover,
 .achievement-itemSum:hover,
-.achievement-itemR:hover {
+.achievement-itemR:hover,
+.achievement-itemTitle:hover,
+.achievement-itemEvent:hover {
     transform: translateY(-2px);
     background: linear-gradient(155deg, rgba(62, 86, 138, 0.9), rgba(26, 36, 64, 0.95));
     border-color: rgba(167, 205, 255, 0.4);
@@ -4514,13 +4520,23 @@ body.griCutsceneBgImg {
     content: "Get " attr(data-rarity) " rarity to unlock this achievement";
 }
 
+.achievement-itemTitle:hover::after {
+    content: "Obtain " attr(data-title) " to unlock this achievement";
+}
+
+.achievement-itemEvent:hover::after {
+    content: attr(data-event);
+}
+
 .achievement-item:hover::after,
 .achievement-itemT:hover::after,
 .achievement-itemC:hover::after,
 .achievement-itemInv:hover::after,
 .achievement-itemE:hover::after,
 .achievement-itemSum:hover::after,
-.achievement-itemR:hover::after {
+.achievement-itemR:hover::after,
+.achievement-itemTitle:hover::after,
+.achievement-itemEvent:hover::after {
     position: absolute;
     bottom: 100%;
     left: 50%;
@@ -4544,7 +4560,9 @@ body.griCutsceneBgImg {
 .achievement-itemInv:hover::before,
 .achievement-itemE:hover::before,
 .achievement-itemSum:hover::before,
-.achievement-itemR:hover::before {
+.achievement-itemR:hover::before,
+.achievement-itemTitle:hover::before,
+.achievement-itemEvent:hover::before {
     content: "";
     position: absolute;
     bottom: 100%;
@@ -4581,7 +4599,7 @@ body.griCutsceneBgImg {
     flex-direction: column;
     color: #f1f5ff;
     z-index: 10000000;
-    overflow: hidden;
+    overflow: visible;
     scrollbar-width: thin;
     scrollbar-color: #7aa2ff #181a2c;
 }
@@ -4597,7 +4615,7 @@ body.griCutsceneBgImg {
     border-radius: 18px;
     border: 1px solid rgba(120, 164, 255, 0.24);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
-    overflow: auto;
+    overflow: visible;
     min-height: 0;
 }
 
@@ -4655,6 +4673,7 @@ body.griCutsceneBgImg {
 .achievements-body {
     flex: 1;
     overflow-y: auto;
+    overflow-x: visible;
     padding: 20px 24px 28px 24px;
     display: flex;
     flex-direction: column;
