@@ -76,6 +76,7 @@ let skipCutscene1K = true;
 let skipCutscene10K = true;
 let skipCutscene100K = true;
 let skipCutscene1M = true;
+let skipCutsceneTranscendent = true;
 let cooldownBuffActive = cooldownTime < BASE_COOLDOWN_TIME;
 let rollDisplayHiddenByUser = false;
 let cutsceneHidRollDisplay = false;
@@ -89,6 +90,7 @@ let pinnedAudioId = null;
 let pausedEquippedAudioState = null;
 let resumeEquippedAudioAfterCutscene = false;
 let pendingCutsceneRarity = null;
+let pendingAutoEquipRecord = null;
 const rolledRarityBuckets = new Set(storage.get("rolledRarityBuckets", []));
 
 let postStartInitialized = false;
@@ -224,6 +226,13 @@ const RARITY_BUCKET_LABELS = {
   transcendent: "Transcendent",
   special: "Special"
 };
+
+// Update this set with the active event buckets (e.g., 'eventTitle') when seasonal events are running.
+const ACTIVE_EVENT_BUCKETS = new Set([]);
+
+function isEventBucketActive(bucket) {
+  return typeof bucket === "string" && ACTIVE_EVENT_BUCKETS.has(bucket);
+}
 
 const originalAudioPlay = HTMLMediaElement.prototype.play;
 HTMLMediaElement.prototype.play = function (...args) {
@@ -843,6 +852,33 @@ const ACHIEVEMENTS = [
   { name: "Seasonal Archivist", minEventTitleCount: 10 },
 ];
 
+const ACHIEVEMENT_DATA_BY_NAME = new Map(
+  ACHIEVEMENTS.map((achievement) => [achievement.name, achievement])
+);
+
+function isAchievementCurrentlyAvailable(achievement) {
+  if (!achievement) {
+    return true;
+  }
+
+  if (achievement.requiredEventBucket) {
+    return isEventBucketActive(achievement.requiredEventBucket);
+  }
+
+  if (Array.isArray(achievement.requiredEventBuckets)) {
+    return achievement.requiredEventBuckets.every((bucket) => isEventBucketActive(bucket));
+  }
+
+  if (
+    typeof achievement.minDistinctEventBuckets === "number" ||
+    typeof achievement.minEventTitleCount === "number"
+  ) {
+    return ACTIVE_EVENT_BUCKETS.size > 0;
+  }
+
+  return true;
+}
+
 const COLLECTOR_ACHIEVEMENTS = [
   { name: "Achievement Collector", count: 5 },
   { name: "Achievement Hoarder", count: 10 },
@@ -1403,8 +1439,8 @@ function checkAchievements(context = {}) {
     : new Set(storage.get("rolledRarityBuckets", []));
   const qualifyingInventoryCount = getQualifyingInventoryCount();
   const inventoryTitleSet = new Set();
-  const eventBucketCounts = new Map();
-  let totalEventTitleCount = 0;
+  const activeEventBucketCounts = new Map();
+  let totalActiveEventTitleCount = 0;
 
   if (Array.isArray(inventory)) {
     inventory.forEach((item) => {
@@ -1421,13 +1457,18 @@ function checkAchievements(context = {}) {
         normalizeRarityBucket(item.rarityClass);
 
       if (bucket && bucket.startsWith("event")) {
-        totalEventTitleCount += 1;
-        eventBucketCounts.set(bucket, (eventBucketCounts.get(bucket) || 0) + 1);
+        if (isEventBucketActive(bucket)) {
+          totalActiveEventTitleCount += 1;
+          activeEventBucketCounts.set(
+            bucket,
+            (activeEventBucketCounts.get(bucket) || 0) + 1
+          );
+        }
       }
     });
   }
 
-  const distinctEventBucketCount = eventBucketCounts.size;
+  const distinctActiveEventBucketCount = activeEventBucketCounts.size;
 
   ACHIEVEMENTS.forEach((achievement) => {
     if (achievement.count && rollCount >= achievement.count) {
@@ -1476,7 +1517,7 @@ function checkAchievements(context = {}) {
 
     if (
       achievement.requiredEventBucket &&
-      eventBucketCounts.has(achievement.requiredEventBucket)
+      activeEventBucketCounts.has(achievement.requiredEventBucket)
     ) {
       unlockAchievement(achievement.name, unlocked);
     }
@@ -1484,7 +1525,7 @@ function checkAchievements(context = {}) {
     if (
       Array.isArray(achievement.requiredEventBuckets) &&
       achievement.requiredEventBuckets.every((bucket) =>
-        eventBucketCounts.has(bucket)
+        activeEventBucketCounts.has(bucket)
       )
     ) {
       unlockAchievement(achievement.name, unlocked);
@@ -1492,14 +1533,14 @@ function checkAchievements(context = {}) {
 
     if (
       typeof achievement.minDistinctEventBuckets === "number" &&
-      distinctEventBucketCount >= achievement.minDistinctEventBuckets
+      distinctActiveEventBucketCount >= achievement.minDistinctEventBuckets
     ) {
       unlockAchievement(achievement.name, unlocked);
     }
 
     if (
       typeof achievement.minEventTitleCount === "number" &&
-      totalEventTitleCount >= achievement.minEventTitleCount
+      totalActiveEventTitleCount >= achievement.minEventTitleCount
     ) {
       unlockAchievement(achievement.name, unlocked);
     }
@@ -1549,6 +1590,47 @@ function updateAchievementsList() {
         item.classList.remove("achievement--unlocked");
       }
     });
+  });
+
+  $all("[data-name]").forEach((item) => {
+    const achievementName = item.getAttribute("data-name");
+    const achievement = ACHIEVEMENT_DATA_BY_NAME.get(achievementName);
+    const isUnlocked = achievementName && unlocked.has(achievementName);
+    const isActive = isAchievementCurrentlyAvailable(achievement);
+    const isEventAchievement = Boolean(
+      achievement && (
+        achievement.requiredEventBucket ||
+        (Array.isArray(achievement.requiredEventBuckets) && achievement.requiredEventBuckets.length) ||
+        typeof achievement.minDistinctEventBuckets === "number" ||
+        typeof achievement.minEventTitleCount === "number"
+      )
+    );
+
+    if (isEventAchievement) {
+      if (!item.dataset.eventHint) {
+        const baseHint = item.getAttribute("data-event");
+        if (baseHint) {
+          item.dataset.eventHint = baseHint;
+        }
+      }
+
+      if (!isUnlocked && !isActive) {
+        item.classList.add("achievement--inactive");
+        item.setAttribute("data-availability", "inactive");
+        if (item.dataset.eventHint) {
+          item.setAttribute("data-event", `${item.dataset.eventHint} (Currently unavailable)`);
+        }
+      } else {
+        item.classList.remove("achievement--inactive");
+        item.removeAttribute("data-availability");
+        if (item.dataset.eventHint) {
+          item.setAttribute("data-event", item.dataset.eventHint);
+        }
+      }
+    } else {
+      item.classList.remove("achievement--inactive");
+      item.removeAttribute("data-availability");
+    }
   });
 }
 
@@ -1892,7 +1974,26 @@ function registerRollButtonHandler() {
     } else if (rarity.type === "MSFU [1 in 333/333rd]") {
       msfuAudio.play();
     } else if (rarity.type == "Silly Car :3 [1 in 1,000,000]") {
-      silcarAudio.play();
+      if (!skipCutsceneTranscendent) {
+        if (typeof silcarAudio?.pause === "function") {
+          try {
+            silcarAudio.pause();
+            silcarAudio.currentTime = 0;
+          } catch (error) {
+            /* no-op */
+          }
+        }
+        silcarAudio.play();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+      } else {
+        silcarAudio.play();
       setTimeout(function () {
         document.body.className = "blackBg";
       }, 100);
@@ -2004,6 +2105,7 @@ function registerRollButtonHandler() {
       setTimeout(function () {
         document.body.className = "blackBg";
       }, 3700);
+      }
     } else if (rarity.type === "Mintllie [1 in 500,000,000]") {
       suspenseAudio.play();
       let warningPopup = document.getElementById("warningPopup");
@@ -6045,9 +6147,19 @@ function registerRollButtonHandler() {
         titleCont.style.visibility = "visible";
       }
     } else if (rarity.type === "H1di [1 in 9,890,089]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation06();
+      if (!skipCutsceneTranscendent) {
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+      } else {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation06();
 
       const container1 = document.getElementById("squareContainer");
 
@@ -6121,6 +6233,7 @@ function registerRollButtonHandler() {
         }, 100);
         enableChange();
       }, 14000); // Wait for 14 seconds
+      }
     } else if (rarity.type === "ORB [1 in 55,555/30th]") {
       document.body.className = "blackBg";
       disableChange();
@@ -7098,7 +7211,17 @@ function registerRollButtonHandler() {
         isekaiAudio.play();
       }
     } else if (rarity.type === "『Equinox』 [1 in 25,000,000]") {
-      disableChange();
+      if (!skipCutsceneTranscendent) {
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+      } else {
+        disableChange();
 
       setTimeout(() => {
         document.body.style.backgroundImage = "url('files/backgrounds/equinox_cutscene.gif')";
@@ -7143,13 +7266,13 @@ function registerRollButtonHandler() {
       createStars("white", 500);
       createStars("black", 500);
 
-      const squareInterval = setInterval(() => {
-        createCircles("white");
-        createCircles("black");
-      }, 50); 
+      const circleInterval = setInterval(() => {
+        createCircle("white");
+        createCircle("black");
+      }, 50);
 
       setTimeout(() => {
-        clearInterval(squareInterval);
+        clearInterval(circleInterval);
       }, 10500);
 
       setTimeout(() => {
@@ -7168,6 +7291,7 @@ function registerRollButtonHandler() {
         }, 100);
         enableChange();
       }, 10500); // Wait for 10.5 seconds
+      }
     } else if (rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]") {
       if (skipCutscene10K) {
         document.body.className = "blackBg";
@@ -7706,7 +7830,7 @@ function registerRollButtonHandler() {
         unnamedAudio.play();
       }
     } else if (rarity.type === "Ginger [1 in 1,144,141]") {
-      if (skipCutscene1M) {
+      if (skipCutsceneTranscendent) {
         document.body.className = "blackBg";
         console.log("Rolled Ginger");
         disableChange();
@@ -10394,6 +10518,17 @@ function registerCutsceneToggleButtons() {
       toggleCutscene1MTxt.textContent = `Skip Supreme Cutscenes ${skipCutscene1M ? "" : "On"}`;
     });
   }
+
+  const toggleCutsceneTranscendentBtn = document.getElementById("toggleCutsceneTranscendent");
+  const toggleCutsceneTranscendentTxt = document.getElementById("transcendentTxt");
+  if (toggleCutsceneTranscendentBtn && toggleCutsceneTranscendentTxt) {
+    toggleCutsceneTranscendentBtn.addEventListener("click", function () {
+      skipCutsceneTranscendent = !skipCutsceneTranscendent;
+      console.log(`Cutscene skip for Transcendent has been set to ${skipCutsceneTranscendent}`);
+      localStorage.setItem("skipCutsceneTranscendent", JSON.stringify(skipCutsceneTranscendent));
+      toggleCutsceneTranscendentTxt.textContent = `Skip Transcendent Cutscenes ${skipCutsceneTranscendent ? "" : "On"}`;
+    });
+  }
 }
 
 function rollRarity() {
@@ -11044,6 +11179,7 @@ function addToInventory(title, rarityClass) {
   const rolledAt = typeof rollCount === "number"
     ? rollCount
     : parseInt(localStorage.getItem("rollCount")) || 0;
+  pendingAutoEquipRecord = null;
   const autoDeleteSet = getAutoDeleteSet();
   const bucket = normalizeRarityBucket(rarityClass);
   recordRarityBucketRoll(bucket);
@@ -11073,6 +11209,7 @@ function addToInventory(title, rarityClass) {
 
   inventory.push(newRecord);
   storage.set("inventory", inventory);
+  pendingAutoEquipRecord = newRecord;
   renderInventory();
   checkAchievements();
   updateAchievementsList();
@@ -11082,6 +11219,31 @@ function addToInventory(title, rarityClass) {
   lastRollPersisted = true;
   lastRollAutoDeleted = false;
   return true; // persisted
+}
+
+function applyPendingAutoEquip() {
+  if (!pendingAutoEquipRecord) {
+    return;
+  }
+
+  const normalized = normalizeEquippedItemRecord(pendingAutoEquipRecord);
+  pendingAutoEquipRecord = null;
+
+  if (!normalized) {
+    return;
+  }
+
+  if (isItemCurrentlyEquipped(normalized)) {
+    return;
+  }
+
+  resumeEquippedAudioAfterCutscene = false;
+  pausedEquippedAudioState = null;
+
+  equippedItem = normalized;
+  storage.set("equippedItem", normalized);
+  setEquinoxPulseActive(isEquinoxRecord(normalized));
+  renderInventory();
 }
 
 function displayResult(title, rarity) {
@@ -11887,6 +12049,8 @@ function equipItem(item) {
   if (cutsceneActive) {
     return;
   }
+
+  pendingAutoEquipRecord = null;
 
   const normalized = normalizeEquippedItemRecord(item);
   if (!normalized) {
@@ -14244,6 +14408,11 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
   } finally {
     if (force) {
       allowForcedAudioPlayback = previousForcedState;
+    }
+    if (!force) {
+      applyPendingAutoEquip();
+    } else {
+      pendingAutoEquipRecord = null;
     }
   }
 }
