@@ -4440,7 +4440,9 @@ body.griCutsceneBgImg {
 .achievement-itemInv,
 .achievement-itemE,
 .achievement-itemSum,
-.achievement-itemR {
+.achievement-itemR,
+.achievement-itemTitle,
+.achievement-itemEvent {
     position: relative;
     padding: 16px 14px;
     text-align: center;
@@ -4470,7 +4472,9 @@ body.griCutsceneBgImg {
 .achievement-itemInv,
 .achievement-itemE,
 .achievement-itemSum,
-.achievement-itemR {
+.achievement-itemR,
+.achievement-itemTitle,
+.achievement-itemEvent {
     font-size: 0.9rem;
     padding-left: 12px;
     padding-right: 12px;
@@ -4482,36 +4486,12 @@ body.griCutsceneBgImg {
 .achievement-itemInv:hover,
 .achievement-itemE:hover,
 .achievement-itemSum:hover,
-.achievement-itemR:hover {
+.achievement-itemR:hover,
+.achievement-itemTitle:hover,
+.achievement-itemEvent:hover {
     transform: translateY(-2px);
     background: linear-gradient(155deg, rgba(62, 86, 138, 0.9), rgba(26, 36, 64, 0.95));
     border-color: rgba(167, 205, 255, 0.4);
-}
-
-.achievement-item:hover::after {
-    content: "Roll " attr(data-roll) " rolls to unlock this achievement";
-}
-
-.achievement-itemT:hover::after {
-    content: "Play " attr(data-time) " to unlock this achievement";
-}
-
-.achievement-itemC:hover::after {
-    content: "Collect " attr(data-achievement) " achievements to unlock this achievement";
-}
-
-.achievement-itemInv:hover::after {
-    content: "Store " attr(data-items) " items to unlock this achievement";
-}
-
-.achievement-itemE:hover::after,
-.achievement-itemSum:hover::after,
-.achievement-itemR:hover::after {
-    content: "Play in " attr(data-time) " to unlock this achievement";
-}
-
-.achievement-itemR:hover::after {
-    content: "Get " attr(data-rarity) " rarity to unlock this achievement";
 }
 
 .achievement-item:hover::after,
@@ -4520,11 +4500,26 @@ body.griCutsceneBgImg {
 .achievement-itemInv:hover::after,
 .achievement-itemE:hover::after,
 .achievement-itemSum:hover::after,
-.achievement-itemR:hover::after {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
+.achievement-itemR:hover::after,
+.achievement-itemTitle:hover::after,
+.achievement-itemEvent:hover::after,
+.achievement-item:hover::before,
+.achievement-itemT:hover::before,
+.achievement-itemC:hover::before,
+.achievement-itemInv:hover::before,
+.achievement-itemE:hover::before,
+.achievement-itemSum:hover::before,
+.achievement-itemR:hover::before,
+.achievement-itemTitle:hover::before,
+.achievement-itemEvent:hover::before {
+    content: none;
+}
+
+.achievement-tooltip {
+    position: fixed;
+    top: 0;
+    left: 0;
+    transform: translate(-50%, calc(-100% - 12px));
     background: rgba(6, 10, 22, 0.94);
     color: #f4f7ff;
     padding: 10px 12px;
@@ -4532,28 +4527,19 @@ body.griCutsceneBgImg {
     border: 1px solid rgba(130, 176, 255, 0.35);
     white-space: nowrap;
     pointer-events: none;
-    margin-bottom: 8px;
     font-size: 0.78rem;
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
-    z-index: 5;
+    z-index: 10000050;
+    opacity: 0;
+    transition: opacity 120ms ease;
 }
 
-.achievement-item:hover::before,
-.achievement-itemT:hover::before,
-.achievement-itemC:hover::before,
-.achievement-itemInv:hover::before,
-.achievement-itemE:hover::before,
-.achievement-itemSum:hover::before,
-.achievement-itemR:hover::before {
-    content: "";
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translate(-50%, -3px);
-    border-width: 6px;
-    border-style: solid;
-    border-color: transparent transparent rgba(6, 10, 22, 0.94) transparent;
-    z-index: 4;
+.achievement-tooltip.is-visible {
+    opacity: 1;
+}
+
+.achievement-tooltip[hidden] {
+    display: none !important;
 }
 
 #achievementsMenu::-webkit-scrollbar {
@@ -4581,7 +4567,7 @@ body.griCutsceneBgImg {
     flex-direction: column;
     color: #f1f5ff;
     z-index: 10000000;
-    overflow: hidden;
+    overflow: visible;
     scrollbar-width: thin;
     scrollbar-color: #7aa2ff #181a2c;
 }
@@ -4597,7 +4583,7 @@ body.griCutsceneBgImg {
     border-radius: 18px;
     border: 1px solid rgba(120, 164, 255, 0.24);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
-    overflow: auto;
+    overflow: visible;
     min-height: 0;
 }
 
@@ -4655,6 +4641,7 @@ body.griCutsceneBgImg {
 .achievements-body {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 20px 24px 28px 24px;
     display: flex;
     flex-direction: column;

@@ -512,6 +512,7 @@ function initializeAfterStart() {
   registerMenuButtons();
   registerResponsiveHandlers();
   registerMenuDragHandlers();
+  setupAchievementTooltips();
   enhanceInventoryDeleteButtons();
   setupAudioControls();
   initializeAutoRollControls();
@@ -699,11 +700,23 @@ const ACHIEVEMENTS = [
   { name: "Rolling Virtuoso", count: 750000 },
   { name: "One, Two.. ..One Million!", count: 1000000 },
   { name: "Millionaire Machine", count: 2000000 },
+  { name: "Triple Threat Spinner", count: 3000000 },
+  { name: "Momentum Master", count: 5000000 },
+  { name: "Lucky Tenacity", count: 7500000 },
   { name: "No H1di?", count: 10000000 },
+  { name: "Breaking Reality", count: 15000000 },
   { name: "Are you really doing this?", count: 25000000 },
+  { name: "Multiversal Roller", count: 30000000 },
   { name: "You have no limits...", count: 50000000 },
+  { name: "Anomaly Hunter", count: 75000000 },
   { name: "WHAT HAVE YOU DONE", count: 100000000 },
+  { name: "Oddity Voyager", count: 150000000 },
+  { name: "Improbability Engine", count: 300000000 },
+  { name: "Beyond Imagination", count: 500000000 },
   { name: "AHHHHHHHHHHH", count: 1000000000 },
+  { name: "Worldshaper", count: 2500000000 },
+  { name: "Entropy Rewriter", count: 5000000000 },
+  { name: "RNG Architect", count: 25000000000 },
   // Playtime goals
   { name: "Just the beginning", timeCount: 0 },
   { name: "Just Five More Minutes...", timeCount: 1800 },
@@ -721,7 +734,16 @@ const ACHIEVEMENTS = [
   { name: "Seasoned Grinder", timeCount: 9460800 },
   { name: "You are a True No Lifer", timeCount: 15778800 },
   { name: "No one's getting this legit", timeCount: 31557600 },
-  { name: "Happy Summer!", timeCount: 1 },
+  { name: "Two Years Deep", timeCount: 63115200 },
+  { name: "Triennial Tenacity", timeCount: 94672800 },
+  { name: "Four-Year Fixture", timeCount: 126230400 },
+  { name: "Half-Decade Hero", timeCount: 157788000 },
+  { name: "Seven-Year Streak", timeCount: 220903200 },
+  { name: "Decade of Determination", timeCount: 315576000 },
+  { name: "Fifteen-Year Folly", timeCount: 473364000 },
+  { name: "Twenty-Year Timeline", timeCount: 631152000 },
+  { name: "Quarter-Century Quest", timeCount: 788940000 },
+  { name: "Timeless Wanderer", timeCount: 946728000 },
   // Inventory milestones
   { name: "Tiny Vault", inventoryCount: 10 },
   { name: "Growing Gallery", inventoryCount: 25 },
@@ -732,6 +754,33 @@ const ACHIEVEMENTS = [
   { name: "One of a Kind", rarityBucket: "special" },
   { name: "Mastered the Odds", rarityBucket: "under100k" },
   { name: "Supreme Fortune", rarityBucket: "under1m" },
+  // Title triumphs
+  { name: "Celestial Alignment", requiredTitle: "『Equinox』 [1 in 25,000,000]" },
+  { name: "Creator?!", requiredTitle: "Unnamed [1 in 30,303]" },
+  { name: "Silly Joyride", requiredTitle: "Silly Car :3 [1 in 1,000,000]" },
+  { name: "Ginger Guardian", requiredTitle: "Ginger [1 in 1,144,141]" },
+  { name: "H1di Hunted", requiredTitle: "H1di [1 in 9,890,089]" },
+  { name: "902.. released.. wilderness..", requiredTitle: "Experiment [1 in 100,000/10th]" },
+  { name: "Abomination Wrangler", requiredTitle: "Abomination [1 in 1,000,000/20th]" },
+  { name: "Veiled Visionary", requiredTitle: "Veil [1 in 50,000/5th]" },
+  { name: "Iridocyclitis Survivor", requiredTitle: "Iridocyclitis Veil [1 in 5,000/50th]" },
+  { name: "Cherry Grove Champion", requiredTitle: "LubbyJubby's Cherry Grove [1 in 5,666]" },
+  { name: "Firestarter", requiredTitle: "FireCraze [1 in 4,200/69th]" },
+  { name: "Orbital Dreamer", requiredTitle: "ORB [1 in 55,555/30th]" },
+  { name: "Gregarious Encounter", requiredTitle: "Greg [1 in 50,000,000]" },
+  { name: "Mint Condition", requiredTitle: "Mintllie [1 in 500,000,000]" },
+  { name: "Geezer Whisperer", requiredTitle: "Geezer [1 in 5,000,000,000]" },
+  { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]" },
+  // Event exclusives
+  { name: "Happy Easter!", requiredEventBucket: "eventE" },
+  { name: "Happy Summer!", requiredEventBucket: "eventS" },
+  { name: "Seasonal Tourist", minEventTitleCount: 1 },
+  { name: "Valentine's Sweetheart", requiredEventBucket: "eventV" },
+  { name: "Festival Firecracker", requiredEventBucket: "eventTitle" },
+  { name: "Spooky Spectator", requiredEventBucket: "eventTitleHalloween" },
+  { name: "Winter Wonderland", requiredEventBucket: "eventTitleXmas" },
+  { name: "Event Explorer", minDistinctEventBuckets: 3 },
+  { name: "Seasonal Archivist", minEventTitleCount: 10 },
 ];
 
 const COLLECTOR_ACHIEVEMENTS = [
@@ -750,6 +799,8 @@ const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-itemE", unlocked: { backgroundColor: "#fff000", color: "black" } },
   { selector: ".achievement-itemSum", unlocked: { backgroundColor: "#ff00d9ff" } },
   { selector: ".achievement-itemR", unlocked: { backgroundColor: "#0033ffff" } },
+  { selector: ".achievement-itemTitle", unlocked: { backgroundColor: "#7a3cff" } },
+  { selector: ".achievement-itemEvent", unlocked: { backgroundColor: "#ff8800", color: "black" } },
 ];
 
 const ACHIEVEMENT_TOAST_DURATION = 3400;
@@ -1282,6 +1333,32 @@ function checkAchievements(context = {}) {
     ? context.rarityBuckets
     : new Set(storage.get("rolledRarityBuckets", []));
   const qualifyingInventoryCount = getQualifyingInventoryCount();
+  const inventoryTitleSet = new Set();
+  const eventBucketCounts = new Map();
+  let totalEventTitleCount = 0;
+
+  if (Array.isArray(inventory)) {
+    inventory.forEach((item) => {
+      if (!item || typeof item !== "object") {
+        return;
+      }
+
+      if (typeof item.title === "string" && item.title) {
+        inventoryTitleSet.add(item.title);
+      }
+
+      const bucket =
+        (typeof item.rarityBucket === "string" && item.rarityBucket) ||
+        normalizeRarityBucket(item.rarityClass);
+
+      if (bucket && bucket.startsWith("event")) {
+        totalEventTitleCount += 1;
+        eventBucketCounts.set(bucket, (eventBucketCounts.get(bucket) || 0) + 1);
+      }
+    });
+  }
+
+  const distinctEventBucketCount = eventBucketCounts.size;
 
   ACHIEVEMENTS.forEach((achievement) => {
     if (achievement.count && rollCount >= achievement.count) {
@@ -1304,6 +1381,57 @@ function checkAchievements(context = {}) {
     }
 
     if (achievement.rarityBucket && rarityBuckets.has(achievement.rarityBucket)) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      achievement.requiredTitle &&
+      inventoryTitleSet.has(achievement.requiredTitle)
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      Array.isArray(achievement.requiredTitles) &&
+      achievement.requiredTitles.every((title) => inventoryTitleSet.has(title))
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      Array.isArray(achievement.anyTitle) &&
+      achievement.anyTitle.some((title) => inventoryTitleSet.has(title))
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      achievement.requiredEventBucket &&
+      eventBucketCounts.has(achievement.requiredEventBucket)
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      Array.isArray(achievement.requiredEventBuckets) &&
+      achievement.requiredEventBuckets.every((bucket) =>
+        eventBucketCounts.has(bucket)
+      )
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      typeof achievement.minDistinctEventBuckets === "number" &&
+      distinctEventBucketCount >= achievement.minDistinctEventBuckets
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      typeof achievement.minEventTitleCount === "number" &&
+      totalEventTitleCount >= achievement.minEventTitleCount
+    ) {
       unlockAchievement(achievement.name, unlocked);
     }
   });
@@ -12009,6 +12137,158 @@ function registerMenuDragHandlers() {
       statsDragHandle?.classList.remove("is-dragging");
     }
   });
+}
+
+function setupAchievementTooltips() {
+  const achievementsMenu = document.getElementById("achievementsMenu");
+  if (!achievementsMenu) {
+    return;
+  }
+
+  const tooltipTargets = achievementsMenu.querySelectorAll(
+    ".achievement-item, .achievement-itemT, .achievement-itemC, .achievement-itemInv, .achievement-itemE, .achievement-itemSum, .achievement-itemR, .achievement-itemTitle, .achievement-itemEvent"
+  );
+
+  if (!tooltipTargets.length) {
+    return;
+  }
+
+  let tooltip = document.body.querySelector(".achievement-tooltip");
+  if (!tooltip) {
+    tooltip = document.createElement("div");
+    tooltip.className = "achievement-tooltip";
+    tooltip.setAttribute("role", "tooltip");
+    tooltip.hidden = true;
+    document.body.appendChild(tooltip);
+  }
+
+  let activeTarget = null;
+
+  const getTooltipMessage = (element) => {
+    const dataset = element.dataset;
+    if (!dataset) {
+      return "";
+    }
+
+    if (dataset.event) {
+      return dataset.event;
+    }
+
+    if (dataset.title) {
+      return `Obtain ${dataset.title} to unlock this achievement`;
+    }
+
+    if (dataset.rarity) {
+      return `Get ${dataset.rarity} rarity to unlock this achievement`;
+    }
+
+    if (dataset.items) {
+      return `Store ${dataset.items} items to unlock this achievement`;
+    }
+
+    if (dataset.achievement) {
+      return `Collect ${dataset.achievement} achievements to unlock this achievement`;
+    }
+
+    if (dataset.time) {
+      return `Play ${dataset.time} to unlock this achievement`;
+    }
+
+    if (dataset.roll) {
+      return `Roll ${dataset.roll} rolls to unlock this achievement`;
+    }
+
+    return "";
+  };
+
+  const positionTooltip = (element) => {
+    if (!element || tooltip.hidden) {
+      return;
+    }
+
+    const targetRect = element.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const viewportPadding = 16;
+    const halfWidth = tooltipRect.width / 2;
+    const maxLeft = window.innerWidth - viewportPadding - halfWidth;
+    const minLeft = viewportPadding + halfWidth;
+    let left = targetRect.left + targetRect.width / 2;
+    if (left < minLeft) {
+      left = minLeft;
+    } else if (left > maxLeft) {
+      left = maxLeft;
+    }
+
+    const top = targetRect.top - 8;
+
+    tooltip.style.left = `${Math.round(left)}px`;
+    tooltip.style.top = `${Math.round(top)}px`;
+  };
+
+  const hideTooltip = () => {
+    if (tooltip.hidden) {
+      return;
+    }
+
+    tooltip.classList.remove("is-visible");
+    tooltip.hidden = true;
+    tooltip.textContent = "";
+    activeTarget = null;
+  };
+
+  const showTooltip = (element) => {
+    const message = getTooltipMessage(element);
+    if (!message) {
+      hideTooltip();
+      return;
+    }
+
+    activeTarget = element;
+    tooltip.textContent = message;
+    tooltip.hidden = false;
+    positionTooltip(element);
+    tooltip.classList.add("is-visible");
+  };
+
+  const repositionActiveTooltip = () => {
+    if (activeTarget && !tooltip.hidden) {
+      positionTooltip(activeTarget);
+    }
+  };
+
+  tooltipTargets.forEach((target) => {
+    target.addEventListener("pointerenter", () => {
+      showTooltip(target);
+    });
+
+    target.addEventListener("pointermove", () => {
+      if (activeTarget === target) {
+        repositionActiveTooltip();
+      }
+    });
+
+    target.addEventListener("pointerleave", hideTooltip);
+    target.addEventListener("pointercancel", hideTooltip);
+    target.addEventListener("focus", () => {
+      showTooltip(target);
+    });
+    target.addEventListener("blur", hideTooltip);
+  });
+
+  const achievementsBody = achievementsMenu.querySelector(".achievements-body");
+  achievementsBody?.addEventListener("scroll", hideTooltip, { passive: true });
+
+  const closeButton = document.getElementById("closeAchievements");
+  closeButton?.addEventListener("click", hideTooltip);
+
+  achievementsMenu.addEventListener("pointerleave", (event) => {
+    if (!achievementsMenu.contains(event.relatedTarget)) {
+      hideTooltip();
+    }
+  });
+
+  window.addEventListener("resize", repositionActiveTooltip);
+  window.addEventListener("scroll", repositionActiveTooltip, true);
 }
 
 function enhanceInventoryDeleteButtons() {
