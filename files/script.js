@@ -12298,32 +12298,32 @@ function updateAutoRollAvailability() {
 
 updateAudioSliderUi();
 
-function initializeHeartEffect() {
-  if (heartIntervalId) {
-    return;
-  }
+// function initializeHeartEffect() {
+//   if (heartIntervalId) {
+//     return;
+//   }
 
-  if (!heartContainerElement) {
-    heartContainerElement = document.createElement("div");
-    document.body.appendChild(heartContainerElement);
-  }
+//   if (!heartContainerElement) {
+//     heartContainerElement = document.createElement("div");
+//     document.body.appendChild(heartContainerElement);
+//   }
 
-  const createHeart = () => {
-    const heart = document.createElement("div");
-    heart.classList.add("heart");
-    heart.textContent = "🌊";
-    heart.style.left = `${Math.random() * 100}vw`;
-    heart.style.top = `${Math.random() * 100}vh`;
-    heart.style.fontSize = `${Math.random() * 25 + 15}px`;
-    heartContainerElement.appendChild(heart);
+//   const createHeart = () => {
+//     const heart = document.createElement("div");
+//     heart.classList.add("heart");
+//     heart.textContent = "🌊";
+//     heart.style.left = `${Math.random() * 100}vw`;
+//     heart.style.top = `${Math.random() * 100}vh`;
+//     heart.style.fontSize = `${Math.random() * 25 + 15}px`;
+//     heartContainerElement.appendChild(heart);
 
-    setTimeout(() => {
-      heart.remove();
-    }, 1000);
-  };
+//     setTimeout(() => {
+//       heart.remove();
+//     }, 1000);
+//   };
 
-  heartIntervalId = setInterval(createHeart, 33);
-}
+//   heartIntervalId = setInterval(createHeart, 33);
+// }
 
 const secretKey = "ImpeachedGlazer";
 
