@@ -186,88 +186,101 @@ button:hover::after,
 /* Equinox pulse global celebration */
 body.equinox-pulse-active {
   position: relative;
-  animation: equinoxBodyPulse 1.6s ease-in-out infinite;
+  animation: equinoxBodyPulse 2.2s ease-in-out infinite;
 }
 
-body.equinox-pulse-active::before {
-  content: "";
-  position: fixed;
-  inset: -12%;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.35) 0%, rgba(150,120,255,0.45) 38%, rgba(0,0,0,0) 70%),
-    radial-gradient(circle at 20% 25%, rgba(0,255,255,0.4) 0%, rgba(0,0,0,0) 55%),
-    radial-gradient(circle at 80% 75%, rgba(255,120,255,0.35) 0%, rgba(0,0,0,0) 60%);
-  mix-blend-mode: screen;
-  opacity: .45;
-  transform-origin: center;
-  animation: equinoxBodyAura 1.6s ease-in-out infinite;
-  z-index: 5;
-}
-
+body.equinox-pulse-active::before,
 body.equinox-pulse-active::after {
   content: "";
   position: fixed;
-  inset: -18%;
+  inset: -14%;
   pointer-events: none;
-  background: conic-gradient(from 0deg, rgba(120,255,255,0.15), rgba(160,120,255,0.35), rgba(255,120,255,0.15), rgba(120,255,255,0.15));
+  border-radius: 50%;
   mix-blend-mode: screen;
-  opacity: .3;
-  filter: blur(12px);
-  animation: equinoxBodyAura 2.4s ease-in-out infinite reverse;
+  opacity: .18;
   z-index: 4;
+  animation: equinoxBodyAura 3.6s ease-in-out infinite;
+}
+
+body.equinox-pulse-active::before {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.25) 0%, rgba(150,120,255,0.3) 45%, rgba(0,0,0,0) 78%),
+    radial-gradient(circle at 15% 25%, rgba(0,255,255,0.22) 0%, rgba(0,0,0,0) 58%),
+    radial-gradient(circle at 82% 70%, rgba(255,120,255,0.24) 0%, rgba(0,0,0,0) 65%);
+}
+
+body.equinox-pulse-active::after {
+  inset: -18%;
+  background: conic-gradient(from 0deg, rgba(120,255,255,0.1), rgba(160,120,255,0.22), rgba(255,120,255,0.12), rgba(120,255,255,0.1));
+  filter: blur(18px);
+  opacity: .12;
+  animation-direction: reverse;
 }
 
 @keyframes equinoxBodyPulse {
-  0% {
+  0%, 100% {
     filter: brightness(1) saturate(1);
   }
-  35% {
-    filter: brightness(1.18) saturate(1.22);
+  45% {
+    filter: brightness(1.06) saturate(1.05);
   }
-  60% {
-    filter: brightness(1.32) saturate(1.35);
-  }
-  100% {
-    filter: brightness(1.12) saturate(1.15);
+  72% {
+    filter: brightness(1.1) saturate(1.08);
   }
 }
 
 @keyframes equinoxBodyAura {
   0% {
-    opacity: .25;
-    transform: scale(1);
-    filter: hue-rotate(0deg);
+    opacity: .14;
+    scale: 1;
   }
-  40% {
-    opacity: .75;
-    transform: scale(1.05);
-    filter: hue-rotate(28deg);
+  35% {
+    opacity: .26;
+    scale: 1.05;
   }
-  65% {
-    opacity: .85;
-    transform: scale(1.1);
-    filter: hue-rotate(-18deg);
+  62% {
+    opacity: .22;
+    scale: 1.08;
   }
   100% {
-    opacity: .3;
-    transform: scale(1);
-    filter: hue-rotate(0deg);
+    opacity: .14;
+    scale: 1;
   }
 }
 
 @keyframes equinoxUIPulse {
-  0% {
-    filter: brightness(1) saturate(1) drop-shadow(0 0 0 rgba(130, 105, 255, 0)) drop-shadow(0 0 0 rgba(0, 255, 255, 0));
+  0%, 100% {
+    scale: 1;
+    translate: 0 0;
+    filter: brightness(1) saturate(1);
+    box-shadow: 0 0 0 rgba(140, 120, 255, 0.24);
   }
   32% {
-    filter: brightness(1.35) saturate(1.4) drop-shadow(0 0 22px rgba(130, 105, 255, 0.85)) drop-shadow(0 0 38px rgba(0, 255, 255, 0.55));
+    scale: 1.07;
+    translate: 0 -3px;
+    filter: brightness(1.06) saturate(1.05);
+    box-shadow: 0 14px 28px rgba(80, 60, 160, 0.28);
   }
-  55% {
-    filter: brightness(1.5) saturate(1.55) drop-shadow(0 0 32px rgba(255, 120, 255, 0.7)) drop-shadow(0 0 62px rgba(134, 196, 255, 0.6));
+  64% {
+    scale: 0.97;
+    translate: 0 2px;
+    filter: brightness(1.03) saturate(1.02);
+    box-shadow: 0 6px 16px rgba(60, 40, 140, 0.24);
   }
-  100% {
-    filter: brightness(1.18) saturate(1.22) drop-shadow(0 0 20px rgba(130, 105, 255, 0.72)) drop-shadow(0 0 40px rgba(0, 255, 255, 0.5));
+}
+
+@keyframes equinoxUIPulseFallback {
+  0%, 100% {
+    filter: brightness(1) saturate(1);
+    box-shadow: 0 0 0 rgba(140, 120, 255, 0.2);
+  }
+  35% {
+    filter: brightness(1.06) saturate(1.05);
+    box-shadow: 0 12px 24px rgba(80, 60, 160, 0.24);
+  }
+  70% {
+    filter: brightness(1.03) saturate(1.02);
+    box-shadow: 0 6px 14px rgba(60, 40, 140, 0.2);
   }
 }
 
@@ -280,8 +293,23 @@ body.equinox-pulse-active :is(
     .cutsceneSkipBtb,
     .settings-chip-group button
   ) {
-  animation: equinoxUIPulse 1.2s ease-in-out infinite;
-  will-change: filter;
+  animation: equinoxUIPulse 1.45s ease-in-out infinite;
+  transform-origin: center;
+  will-change: scale, translate, filter, box-shadow;
+}
+
+@supports not (scale: 1) {
+  body.equinox-pulse-active :is(
+      button,
+      .settings-btn,
+      .inventory-delete-btn,
+      .inventory-group__clear,
+      .rarity-button,
+      .cutsceneSkipBtb,
+      .settings-chip-group button
+    ) {
+    animation: equinoxUIPulseFallback 1.45s ease-in-out infinite;
+  }
 }
 
 body.equinox-pulse-active :is(
@@ -332,8 +360,62 @@ body.equinox-pulse-active :is(
     .dropdown-menu,
     .dropdown-menu *
   ) {
-  animation: equinoxUIPulse 1.35s ease-in-out infinite;
-  will-change: filter;
+  animation: equinoxUIPulse 1.6s ease-in-out infinite;
+  transform-origin: center;
+  will-change: scale, translate, filter, box-shadow;
+}
+
+@supports not (scale: 1) {
+  body.equinox-pulse-active :is(
+      #result,
+      .roll-result-card,
+      .roll-result-card__header,
+      .roll-result-card__title,
+      .roll-result-card__status,
+      .roll-result-card__badge,
+      #rollingHistory,
+      #rollingHistory *,
+      .stats-menu,
+      .stats-panel,
+      .stats-panel *,
+      .stat-card,
+      .achievements-menu,
+      .achievements-panel,
+      .achievements-panel *,
+      .achievement-item,
+      .achievement-itemT,
+      .settings-menu,
+      .settings-panel,
+      .settings-panel *,
+      .settings-section,
+      .settings-section__title,
+      .settings-grid,
+      .settings-audio,
+      .settings-audio__controls,
+      .settings-audio__slider,
+      .inventory,
+      .inventory-actions,
+      .inventory-group,
+      .inventory-group__header,
+      .inventory-group__title,
+      #inventoryList,
+      #inventoryList li,
+      .inventory-item,
+      .rollsCount,
+      .container,
+      .container1,
+      .topBar,
+      .topBar *,
+      .version,
+      .version *,
+      .rButton,
+      #rollBtn,
+      #roll-button,
+      .dropdown-menu,
+      .dropdown-menu *
+    ) {
+    animation: equinoxUIPulseFallback 1.6s ease-in-out infinite;
+  }
 }
 
 /* Utility: set ripple origin via JS if desired
