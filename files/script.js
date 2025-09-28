@@ -205,7 +205,12 @@ const STOPPABLE_AUDIO_IDS = [
   "qbearAudio",
   "estbunAudio",
   "esteggAudio",
-  "isekailofiAudio"
+  "isekailofiAudio",
+  "hypernovaAudio",
+  "astraldAudio",
+  "nebulaAudio",
+  "glitchedAudio",
+  "mastermindAudio",
 ];
 
 const STOPPABLE_AUDIO_SET = new Set(STOPPABLE_AUDIO_IDS);
@@ -287,6 +292,16 @@ function finalizeCutsceneState() {
   }
   restoreRollDisplayAfterCutscene();
   resumePausedEquippedAudio();
+}
+
+function restartClass(el, cls) {
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+}
+
+function startFlash() {
+  restartClass(document.body, 'flashing');
 }
 
 function hideRollDisplayForCutscene(container) {
@@ -377,6 +392,8 @@ const rarityCategories = {
     "qbearBgImg",
     "lightBgImg",
     "blodBgImg",
+    "nebulaBgImg",
+    "hypernovaBgImg",
   ],
   under1m: [
     "impeachedBgImg",
@@ -386,6 +403,8 @@ const rarityCategories = {
     "mintllieBgImg",
     "geezerBgGif",
     "polarrBgImg",
+    "astraldBgImg",
+    "mastermindBgImg",
   ],
   transcendent: [
     "silcarBgImg",
@@ -403,6 +422,7 @@ const rarityCategories = {
     "orbBgImg",
     "crazeBgImg",
     "shenviiBgImg",
+    "glitchedBgImg",
   ],
 };
 
@@ -566,6 +586,7 @@ const CUTSCENE_SKIP_SETTINGS = [
   { key: "skipCutscene10K", labelId: "10KTxt", label: "Skip Grand Cutscenes" },
   { key: "skipCutscene100K", labelId: "100KTxt", label: "Skip Mastery Cutscenes" },
   { key: "skipCutscene1M", labelId: "1MTxt", label: "Skip Supreme Cutscenes" },
+  { key: "skipCutsceneTranscendent", labelId: "transcendentTxt", label: "Skip Transcendent Cutscenes" },
 ];
 
 const CUTSCENE_STATE_SETTERS = {
@@ -573,6 +594,7 @@ const CUTSCENE_STATE_SETTERS = {
   skipCutscene10K: (value) => { skipCutscene10K = value; },
   skipCutscene100K: (value) => { skipCutscene100K = value; },
   skipCutscene1M: (value) => { skipCutscene1M = value; },
+  skipCutsceneTranscendent: (value) => { skipCutsceneTranscendent = value; },
 };
 
 const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "transcendent", "special"]);
@@ -790,6 +812,7 @@ const ACHIEVEMENTS = [
   { name: "One of a Kind", rarityBucket: "special" },
   { name: "Mastered the Odds", rarityBucket: "under100k" },
   { name: "Supreme Fortune", rarityBucket: "under1m" },
+  { name: "Transcendent Conqueror", rarityBucket: "transcendent" },
   // Title triumphs
   { name: "Celestial Alignment", requiredTitle: "『Equinox』 [1 in 25,000,000]" },
   { name: "Creator?!", requiredTitle: "Unnamed [1 in 30,303]" },
@@ -803,6 +826,7 @@ const ACHIEVEMENTS = [
   { name: "Cherry Grove Champion", requiredTitle: "LubbyJubby's Cherry Grove [1 in 5,666]" },
   { name: "Firestarter", requiredTitle: "FireCraze [1 in 4,200/69th]" },
   { name: "Orbital Dreamer", requiredTitle: "ORB [1 in 55,555/30th]" },
+  { name: "Glitched Reality", requiredTitle: "Gl1tch3d [1 in 12,404/40,404th]" },
   { name: "Gregarious Encounter", requiredTitle: "Greg [1 in 50,000,000]" },
   { name: "Mint Condition", requiredTitle: "Mintllie [1 in 500,000,000]" },
   { name: "Geezer Whisperer", requiredTitle: "Geezer [1 in 5,000,000,000]" },
@@ -831,14 +855,14 @@ const COLLECTOR_ACHIEVEMENTS = [
 
 const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-item", unlocked: { backgroundColor: "blue" } },
-  { selector: ".achievement-itemT", unlocked: { backgroundColor: "#000fff" } },
-  { selector: ".achievement-itemC", unlocked: { backgroundColor: "#ff0000" } },
-  { selector: ".achievement-itemInv", unlocked: { backgroundColor: "#2e8b57" } },
-  { selector: ".achievement-itemE", unlocked: { backgroundColor: "#fff000", color: "black" } },
-  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "#ff00d9ff" } },
-  { selector: ".achievement-itemR", unlocked: { backgroundColor: "#0033ffff" } },
-  { selector: ".achievement-itemTitle", unlocked: { backgroundColor: "#7a3cff" } },
-  { selector: ".achievement-itemEvent", unlocked: { backgroundColor: "#ff8800", color: "black" } },
+  { selector: ".achievement-itemT", unlocked: { backgroundColor: "#0011ff9a" } },
+  { selector: ".achievement-itemC", unlocked: { backgroundColor: "#ff00f281" } },
+  { selector: ".achievement-itemInv", unlocked: { backgroundColor: "#2e8b5670" } },
+  { selector: ".achievement-itemE", unlocked: { backgroundColor: "#ffee008a", color: "black" } },
+  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "#ff00158e" } },
+  { selector: ".achievement-itemR", unlocked: { backgroundColor: "#0033ffa1" } },
+  { selector: ".achievement-itemTitle", unlocked: { backgroundColor: "#765cafa2" } },
+  { selector: ".achievement-itemEvent", unlocked: { backgroundColor: "#ffee00b7", color: "black" } },
 ];
 
 const ACHIEVEMENT_TOAST_DURATION = 3400;
@@ -1673,10 +1697,11 @@ function registerRollButtonHandler() {
     rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]" ||
     rarity.type === "『Equinox』 [1 in 25,000,000]" ||
     rarity.type === "Ginger [1 in 1,144,141]" ||
-    rarity.type === "Wave [1 in 2,555]" ||
-    rarity.type === "Scorching [1 in 7,923]" ||
-    rarity.type === "Beach [1 in 12,555]" ||
-    rarity.type === "Tidal Wave [1 in 25,500]"
+    rarity.type === "Astrald [1 in 100,000]" ||
+    rarity.type === "Hypernova [1 in 40,000]" ||
+    rarity.type === "Nebula [1 in 62,500]" ||
+    rarity.type === "Mastermind [1 in 110,010]" ||
+    rarity.type === "Gl1tch3d [1 in 12,404/40,404th]"
   ) {
     const resultContainer = byId("result");
     if (resultContainer) {
@@ -1690,6 +1715,8 @@ function registerRollButtonHandler() {
 
     if (rarity.type === "Fright [1 in 1,075]") {
       frightAudio.play();
+    } else if (rarity.type === "Gl1tch3d [1 in 12,404/40,404th]") {
+      glitchedAudio.play();
     } else if (rarity.type === "Gargantua [1 in 143]") {
       gargantuaAudio.play();
     } else if (rarity.type === "Heart [1 in ♡♡♡]") {
@@ -1769,6 +1796,14 @@ function registerRollButtonHandler() {
     } else if (rarity.type === "Arcane Pulse [1 in 77,777]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "HARV [1 in 33,333]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Astrald [1 in 100,000]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Hypernova [1 in 40,000]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Nebula [1 in 62,500]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Mastermind [1 in 110,010]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Tuon [1 in 50,000]") {
       hugeSuspenceAudio.play();
@@ -2311,6 +2346,680 @@ function registerRollButtonHandler() {
         }, 100);
         enableChange();
       }, 20550); // Wait for 20.55 seconds
+    } else if (rarity.type === "Hypernova [1 in 40,000]") {
+      if (skipCutscene100K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-yellow";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "orange-star",
+            "dark-red-star",
+            "black-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "◈";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            hypernovaAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        hypernovaAudio.play();
+      }
+    } else if (rarity.type === "Nebula [1 in 62,500]") {
+      if (skipCutscene100K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "blue-star",
+            "dark-blue-star",
+            "black-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "◈";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            nebulaAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        nebulaAudio.play();
+      }
+    } else if (rarity.type === "Astrald [1 in 100,000]") {
+      if (skipCutscene1M) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "purple-star",
+            "blue-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "<*>";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            astraldAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        astraldAudio.play();
+      }
+    } else if (rarity.type === "Mastermind [1 in 110,010]") {
+      if (skipCutscene1M) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-white";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "white-star",
+            "black-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "-X-";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            rollButton.disabled = false;
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            mastermindAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        rollButton.disabled = false;
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        mastermindAudio.play();
+      }
+    } else if (rarity.type === "Gl1tch3d [1 in 12,404/40,404th]") {
+      disableChange();
+      startAnimationA2()
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+      const container2 = document.getElementById("starContainer");
+      const container3 = document.getElementById("starContainer");
+
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-white";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      const squareInterval = setInterval(() => {
+        createSquare();
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 4550); // Stop after 4.55 seconds
+    
+      for (let i = 0; i < 404; i++) {
+        const star = document.createElement("span");
+        const star2 = document.createElement("span2");
+        const star3 = document.createElement("span3");
+    
+        const starClass = [
+          "glitch-green-star",
+        ];
+        const starClass2 = [
+          "glitch-blue-star",
+        ];
+        const starClass3 = [
+          "glitch-red-star",
+        ];
+        star.className = starClass[Math.floor(Math.random() * starClass.length)];
+        star2.className = starClass2[Math.floor(Math.random() * starClass2.length)];
+        star3.className = starClass3[Math.floor(Math.random() * starClass3.length)];
+
+        star.innerHTML = "#";
+        star.style.left = Math.random() * 100 + "vw";
+
+        star2.innerHTML = "$";
+        star2.style.left = Math.random() * 100 + "vw";
+
+        star3.innerHTML = "@";
+        star3.style.left = Math.random() * 100 + "vw";
+    
+        const randomX = (Math.random() - 0.25) * 10 + "vw";
+        star.style.setProperty("--randomX", randomX);
+        star2.style.setProperty("--randomX", randomX);
+        star3.style.setProperty("--randomX", randomX);
+    
+        const randomRotation = (Math.random() - 0.5) * 7200 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+        star2.style.setProperty("--randomRotation", randomRotation);
+        star3.style.setProperty("--randomRotation", randomRotation);
+    
+        star.style.animationDelay = i * 0.01 + "s";
+        star2.style.animationDelay = i * 0.01 + "s";
+        star3.style.animationDelay = i * 0.01 + "s";
+    
+        container.appendChild(star);
+        container2.appendChild(star2);
+        container3.appendChild(star3);
+
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+        star2.addEventListener("animationend", () => {
+          star2.remove();
+        });
+        star3.addEventListener("animationend", () => {
+          star3.remove();
+        });
+      }
+      startFlash();
+      document.body.classList.add('flashing');
+    
+      setTimeout(() => {
+        document.body.classList.remove('flashing');
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
+          changeBackground(rarity.class);
+          rollButton.disabled = false;
+          rollCount++;
+          rollCount1++;
+          titleCont.style.visibility = "visible";
+        }, 100);
+        enableChange();
+      }, 5450); // Wait for 5.45 seconds
     } else if (rarity.type === "HARV [1 in 33,333]") {
       if (skipCutscene100K) {
         document.body.className = "blackBg";
@@ -9887,12 +10596,6 @@ function rollRarity() {
       titles: ["Enigmatic Dream"],
     },
     {
-      type: "Grim Destiny [1 in 8,500]",
-      class: "griBgImg",
-      chance: 0.012,
-      titles: ["Grim Destiny"],
-    },
-    {
       type: "Ginger [1 in 1,144,141]",
       class: "gingerBgImg",
       chance: 0.00008740181,
@@ -9999,12 +10702,6 @@ function rollRarity() {
       class: "contBgImg",
       chance: 0.1001001001,
       titles: ["Flexibility", "Twisting", "Bending: Acrobatics", "Agility: Gymnastics", "Elasticity", "Contorting: Movability", "Bending", "Stretching", "Agility", "Contorting"],
-    },
-    {
-      type: "Fright [1 in 1,075]",
-      class: "frightBgImg",
-      chance: 0.093,
-      titles: ["Twilight: Iridescent Memory", "Glitch", "Arcane: Dark", "Exotic: Apex", "Ethereal", "Stormal: Hurricane", "Matrix", "Arcane: Legacy", "Starscourge", "Sailor: Flying Dutchman"],
     },
     {
       type: "Seraph's Wing [1 in 1,333]",
@@ -10115,12 +10812,6 @@ function rollRarity() {
       titles: ["H1di"],
     },
     {
-      type: "Rad [1 in 6,969]",
-      class: "radBgImg",
-      chance: 0.01434926101,
-      titles: ["Rad", "Furry", ":3"],
-    },
-    {
       type: "Blodhest [1 in 25,252]",
       class: "blodBgImg",
       chance: 0.00396008236,
@@ -10175,30 +10866,37 @@ function rollRarity() {
       titles: ["LAYERS", "CHROMA", "衡"]
     },
     {
-      type: "Wave [1 in 2,555]",
-      class: "waveBgImg",
-      chance: 0.03913894324,
-      titles: ["Water", "H2O", "Ocean"]
+      type: "Astrald [1 in 100,000]",
+      class: "astraldBgImg",
+      chance: 0.001,
+      titles: ["Astral", "Dream", "Cosmic"]
     },
     {
-      type: "Scorching [1 in 7,923]",
-      class: "scorchingBgImg",
-      chance: 0.01262148176,
-      titles: ["Burning", "Warm", "Sweatty", "Fire", "Heat"]
+      type: "Hypernova [1 in 40,000]",
+      class: "hypernovaBgImg",
+      chance: 0.0025,
+      titles: ["Supernova", "Stellar", "Celestial"]
     },
     {
-      type: "Beach [1 in 12,555]",
-      class: "beachBgImg",
-      chance: 0.0079649542,
-      titles: ["Dusty", "Sandy", "Tropical"]
+      type: "Nebula [1 in 62,500]",
+      class: "nebulaBgImg",
+      chance: 0.0016,
+      titles: ["Nebula", "Cosmic Cloud", "Stellar Nursery"]
     },
     {
-      type: "Tidal Wave [1 in 25,500]",
-      class: "tidalwaveBgImg",
-      chance: 0.00392156862,
-      titles: ["Du da du dum du, da du dum du", "Tsunami", "Surf"]
+      type: "Mastermind [1 in 110,010]",
+      class: "mastermindBgImg",
+      chance: 0.00090900827,
+      titles: ["Mastermind", "Strategist", "Tactician"]
     }
   ];
+
+  const glitchedRarity = {
+    type: "Gl1tch3d [1 in 12,404/40,404th]",
+    class: "glitchedBgImg",
+    chance: 0.0000806,
+    titles: ["Gl1tch3d", "Glitch", "Corrupted"]
+  };
 
   const abominationRarity = {
     type: "Abomination [1 in 1,000,000/20th]",
@@ -10210,21 +10908,21 @@ function rollRarity() {
   const iridocyclitisVeilRarity = {
     type: "Iridocyclitis Veil [1 in 5,000/50th]",
     class: "iriBgImg",
-    chance: 0.02,
+    chance: 0.0002,
     titles: ["Cyclithe", "Veilborne", "Hemovail", "Abomination: 902"],
   };
 
   const ShenviiRarity = {
     type: "sʜeɴvɪ✞∞ [1 in 77,777/7th]",
     class: "shenviiBgImg",
-    chance: 0.000055,
+    chance: 0.00001286,
     titles: ["Cat", "Unforgettable", "Pookie", "Orb: 902", "Infinity"],
   };
 
   const orbRarity = {
     type: "ORB [1 in 55,555/30th]",
     class: "orbBgImg",
-    chance: 0.00019,
+    chance: 0.000018,
     titles: ["Energy", "Iris: 902", "Power"],
   }
 
@@ -10240,89 +10938,60 @@ function rollRarity() {
   const veilRarity = {
     type: "Veil [1 in 50,000/5th]",
     class: "veilBgImg",
-    chance: 0.0002,
+    chance: 0.00002,
     titles: ["Fight", "Peace", "MSFU: 902"],
   };
 
   const blindRarity = {
     type: "BlindGT [1 in 2,000,000/15th]",
     class: "blindBgImg",
-    chance: 0.000005,
+    chance: 0.0000005,
     titles: ["Moderator", "Moderator: 902"],
   };
 
   const msfuRarity = {
     type: "MSFU [1 in 333/333rd]",
     class: "msfuBgImg",
-    chance: 0.3003003003,
+    chance: 0.003003,
     titles: ["Metal", "Universe", "Veil: 902"],
   };
 
   const fireCrazeRarity = {
     type: "FireCraze [1 in 4,200/69th]",
     class: "crazeBgImg",
-    chance: 0.001,
+    chance: 0.000238,
     titles: ["Fire", "Craze", "Iridocyclitis: 902"],
   };
 
-  let randomNum = Math.random() * 110;
-  let cumulativeChance = 0.004;
+  const specials = [
+    { gate: 40404, data: glitchedRarity },
+    { gate: 333,   data: msfuRarity },
+    { gate: 69,    data: fireCrazeRarity },
+    { gate: 50,    data: iridocyclitisVeilRarity },
+    { gate: 30,    data: orbRarity },
+    { gate: 20,    data: abominationRarity },
+    { gate: 15,    data: blindRarity },
+    { gate: 10,    data: experimentRarity },
+    { gate: 7,     data: ShenviiRarity },
+    { gate: 5,     data: veilRarity },
+  ];
 
-  if (rollCount % 333 === 0) {
-    cumulativeChance += msfuRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return msfuRarity;
-    }
-  } else if (rollCount % 69 === 0) {
-    cumulativeChance += fireCrazeRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return fireCrazeRarity;
-    }
-  } else if (rollCount % 50 === 0) {
-    cumulativeChance += iridocyclitisVeilRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return iridocyclitisVeilRarity;
-    }
-  } else if (rollCount % 30 === 0) {
-    cumulativeChance += orbRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return orbRarity;
-    }
-  } else if (rollCount % 20 === 0) {
-    cumulativeChance += abominationRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return abominationRarity;
-    }
-  } else if (rollCount % 10 === 0) {
-    cumulativeChance += experimentRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return experimentRarity;
-    }
-  } else if (rollCount % 15 === 0) {
-    cumulativeChance += blindRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return blindRarity;
-    }
-  } else if (rollCount % 7 === 0) {
-    cumulativeChance += ShenviiRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return ShenviiRarity;
-    }
-  } else if (rollCount % 5 === 0) {
-    cumulativeChance += veilRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return veilRarity;
-    }
-  } else {
-    for (let rarity of rarities) {
-      cumulativeChance += rarity.chance;
-      if (randomNum <= cumulativeChance) {
-        return rarity;
-      }
+  for (const { gate, data } of specials) {
+    if (rollCount % gate === 0 && Math.random() < data.chance) {
+      return data;
     }
   }
-  
-  return rarities[0];  
+
+  const total = rarities.reduce((sum, r) => sum + r.chance, 0);
+  let pick = Math.random() * total;
+
+  for (const r of rarities) {
+    if ((pick -= r.chance) <= 0) {
+      return r;
+    }
+  }
+
+  return rarities[rarities.length - 1];
 };
 
 function clickSound() {
@@ -10908,6 +11577,11 @@ const backgroundDetails = {
   ethershiftBgImg: { image: "files/backgrounds/ether.png", audio: "ethAudio" },
   msfuBgImg: { image: "files/backgrounds/msfu.png", audio: "msfuAudio" },
   oppBgImg: { image: "files/backgrounds/oppression.jpg", audio: "oppAudio" },
+  glitchedBgImg: { image: "files/backgrounds/glitched.gif", audio: "glitchedAudio" },
+  astraldBgImg: { image: "files/backgrounds/astrald.gif", audio: "astraldAudio" },
+  hypernovaBgImg: { image: "files/backgrounds/hypernova.gif", audio: "hypernovaAudio" },
+  mastermindBgImg: { image: "files/backgrounds/mastermind.gif", audio: "mastermindAudio" },
+  nebulaBgImg: { image: "files/backgrounds/nebula.gif", audio: "nebulaAudio" },
   norstaBgImg: { image: "files/backgrounds/norsta.png", audio: "norstaAudio" },
   sanclaBgImg: { image: "files/backgrounds/sancla.png", audio: "sanclaAudio" },
   silnigBgImg: { image: "files/backgrounds/silnig.png", audio: "silnigAudio" },
@@ -11465,6 +12139,35 @@ function startAnimationA1() {
     heart.classList.remove("heart_show");
     heart.classList.remove("heartbeat");
   }, 20450);
+}
+
+function startAnimationA2() {
+  const heart = document.getElementById("heart");
+
+  setTimeout(() => {
+    heart.classList.add("heartbeat");
+    heart.classList.remove("hide1");
+  }, 100);
+
+  setTimeout(() => {
+    heart.classList.add("scale-up11")
+  }, 1900);
+
+  setTimeout(() => {
+    heart.classList.add("scale-up12")
+  }, 2500);
+
+  setTimeout(() => {
+    heart.classList.add("scale-up-and-vanish");
+  }, 4100);
+
+  setTimeout(() => {
+    heart.classList.add("hide1");
+    heart.classList.add("cutsceneHeart");
+    heart.classList.remove("scale-up-and-vanish");
+    heart.classList.remove("heart_show");
+    heart.classList.remove("heartbeat");
+  }, 5450);
 }
 
 function startAnimation3() {
@@ -12767,7 +13470,12 @@ function getClassForRarity(rarity) {
       'Wave [1 in 2,555]': 'eventS',
       'Scorching [1 in 7,923]': 'eventS',
       'Beach [1 in 12,555]': 'eventS',
-      'Tidal Wave [1 in 25,500]': 'eventS'
+      'Tidal Wave [1 in 25,500]': 'eventS',
+      'Hypernova [1 in 40,000]': 'under100k',
+      'Astrald [1 in 100,000]': 'under1m',
+      'Nebula [1 in 62,500]': 'under100k',
+      'Gl1tch3d [1 in 12,404/40,404th]': 'special',
+      'Mastermind [110,010]': 'under1m'
   };
 
   return rarityClasses[rarity] || null;
@@ -13072,6 +13780,8 @@ document
       "astblaBgImg",
       "qbearImgBg",
       "lightImgBg",
+      "hypernovaBgImg",
+      "nebulaBgImg"
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
@@ -13187,6 +13897,18 @@ document
 document
   .getElementById("deleteAllX1staButton")
   .addEventListener("click", () => deleteAllByRarity("x1staBgImg"));
+document
+  .getElementById("deleteAllAstraldButton")
+  .addEventListener("click", () => deleteAllByRarity("astraldBgImg"));
+document
+  .getElementById("deleteAllMastermindButton")
+  .addEventListener("click", () => deleteAllByRarity("mastermindBgImg"));
+document
+  .getElementById("deleteAllHypernovaButton")
+  .addEventListener("click", () => deleteAllByRarity("hypernovaBgImg"));
+document
+  .getElementById("deleteAllNebulaButton")
+  .addEventListener("click", () => deleteAllByRarity("nebulaBgImg"));
 
 
 document
@@ -13197,6 +13919,8 @@ document
       "impeachedBgImg",
       "celestialchorusBgImg",
       "x1staBgImg",
+      "astraldBgImg",
+      "mastermindBgImg"
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
@@ -13214,7 +13938,7 @@ document
       "msfuBgImg",
       "orbBgImg",
       'crazeBgImg',
-      'shenviiBgImg'
+      'shenviiBgImg',
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });

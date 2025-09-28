@@ -2859,6 +2859,36 @@ body {
     background-size: cover;
 }
 
+.astraldBgImg {
+    background: url(backgrounds/astrald.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.glitchedBgImg {
+    background: url(backgrounds/glitched.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.hypernovaBgImg {
+    background: url(backgrounds/hypernova.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.mastermindBgImg {
+    background: url(backgrounds/mastermind.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.nebulaBgImg {
+    background: url(backgrounds/nebula.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
@@ -2869,12 +2899,32 @@ body.griCutsceneBgImg {
     background: #000000 !important;
 }
 
-.blackBg1 {
-    background: #000000;
+body.blackBg {
+    background: #000000 !important;
 }
 
 .whiteFlash {
     background: #ffffff !important;
+}
+
+body.whiteFlash {
+    background: #ffffff !important;
+}
+
+@keyframes flashBg {
+  0%   { background:#000; }
+  25%  { background:#7c0000; }
+  50%  { background:#007c06; }
+  75%  { background:#00007c; }
+  100% { background:#000; }
+}
+
+body.flashing {
+  animation: flashBg 80ms steps(1, end) infinite; /* ~12.5 flips/sec */
+}
+
+.blackBg1 {
+    background: #000000;
 }
 
 .redBg {
@@ -3813,6 +3863,30 @@ body.griCutsceneBgImg {
     color: green;
     opacity: 1;
     animation: levitate 3s ease-out forwards, fade 3s ease-out forwards;
+}
+
+.glitch-green-star {
+    position: absolute;
+    font-size: 33px;
+    color: green;
+    opacity: 1;
+    animation: levitate 1s ease-out forwards, fade 1s ease-out forwards;
+}
+
+.glitch-blue-star {
+    position: absolute;
+    font-size: 33px;
+    color: blue;
+    opacity: 1;
+    animation: levitate 1s ease-out forwards, fade 1s ease-out forwards;
+}
+
+.glitch-red-star {
+    position: absolute;
+    font-size: 33px;
+    color: red;
+    opacity: 1;
+    animation: levitate 1s ease-out forwards, fade 1s ease-out forwards;
 }
 
 .black-star {

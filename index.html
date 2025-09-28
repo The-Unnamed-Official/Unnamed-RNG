@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Unnamed's RNG - End of Summer</title>
+    <title>Unnamed's RNG - 1.2.5</title>
     <script src="https://kit.fontawesome.com/fe85db6219.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="files/style.css">
@@ -16,9 +16,10 @@
     <link rel="icon" type="image/png" sizes="500x500" href="/Unnamed-RNG/files/images/favicon-500.png">
 </head>
 <body>
+  <div id="flashLayer" aria-hidden="true"></div>
 
     <div class="version">
-        <a class="vNumber">Version: 1.2.1 <p class="vNumberDetailed">(1.2.1_updEND_OF_SUMMER)</p></a>
+        <a class="vNumber">Version: 1.2.5 <p class="vNumberDetailed">(1.2.5_upd)</p></a>
     </div>
 
     <canvas id="fireworksCanvas"></canvas>
@@ -232,6 +233,7 @@
                         <div class="achievement-itemR" data-rarity="Special" data-name="One of a Kind">One of a Kind</div>
                         <div class="achievement-itemR" data-rarity="Mastery" data-name="Mastered the Odds">Mastered the Odds</div>
                         <div class="achievement-itemR" data-rarity="Supreme" data-name="Supreme Fortune">Supreme Fortune</div>
+                        <div class="achievement-itemR" data-rarity="Transcendent" data-name="Transcendent Triumph">Transcendent Triumph</div>
                     </div>
                 </section>
 
@@ -250,6 +252,7 @@
                         <div class="achievement-itemTitle" data-title="LubbyJubby's Cherry Grove [1 in 5,666]" data-name="Cherry Grove Champion">Cherry Grove Champion</div>
                         <div class="achievement-itemTitle" data-title="FireCraze [1 in 4,200/69th]" data-name="Firestarter">Firestarter</div>
                         <div class="achievement-itemTitle" data-title="ORB [1 in 55,555/30th]" data-name="Orbital Dreamer">Orbital Dreamer</div>
+                        <div class="achievement-itemTitle" data-title="Gl1tch3d [1 in 12,404/40,404th]" data-name="Glitched Reality">Glitched Reality</div>
                         <div class="achievement-itemTitle" data-title="Greg [1 in 50,000,000]" data-name="Gregarious Encounter">Gregarious Encounter</div>
                         <div class="achievement-itemTitle" data-title="Mintllie [1 in 500,000,000]" data-name="Mint Condition">Mint Condition</div>
                         <div class="achievement-itemTitle" data-title="Geezer [1 in 5,000,000,000]" data-name="Geezer Whisperer">Geezer Whisperer</div>
@@ -533,13 +536,15 @@
                             <button id="deleteAllCelestialDawnButton" class="inventory-delete-btn" type="button" title="Delete All Celestial Dawn">Celestial Dawn</button>
                             <button id="deleteAllFatesRequiemButton" class="inventory-delete-btn" type="button" title="Delete All Fate's Requiem">Fate's Requiem</button>
                             <button id="deleteAllEonbreakButton" class="inventory-delete-btn" type="button" title="Delete All Eonbreak">Eonbreak</button>
+                            <button id="deleteAllBlodhestButton" class="inventory-delete-btn" type="button" title="Delete All Blodhest">Blodhest</button>
                             <button id="deleteAllOvertureButton" class="inventory-delete-btn" type="button" title="Delete All Overture">Overture</button>
                             <button id="deleteAllLightButton" class="inventory-delete-btn" type="button" title="Delete All Light">Light</button>
                             <button id="deleteAllUnnamedButton" class="inventory-delete-btn" type="button" title="Delete All Unnamed">Unnamed</button>
-                            <button id="deleteAllQbearButton" class="inventory-delete-btn" type="button" title="Delete All Qbear">Qbear</button>
-                            <button id="deleteAllBlodhestButton" class="inventory-delete-btn" type="button" title="Delete All Blodhest">Blodhest</button>
                             <button id="deleteAllHarvButton" class="inventory-delete-btn" type="button" title="Delete All HARV">HARV</button>
+                            <button id="deleteAllQbearButton" class="inventory-delete-btn" type="button" title="Delete All Qbear">Qbear</button>
+                            <button id="deleteAllHypernovaButton" class="inventory-delete-btn" type="button" title="Delete All Hypernova">Hypernova</button>
                             <button id="deleteAllTuonButton" class="inventory-delete-btn" type="button" title="Delete All Tuon">Tuon</button>
+                            <button id="deleteAllNebulaButton" class="inventory-delete-btn" type="button" title="Delete All Nebula">Nebula</button>
                             <button id="deleteAllDevilsHeartButton" class="inventory-delete-btn" type="button" title="Delete All Devil's Heart">Devil's Heart</button>
                             <button id="deleteAllArcanePulseButton" class="inventory-delete-btn" type="button" title="Delete All Arcane Pulse">Arcane Pulse</button>
                         </div>
@@ -551,7 +556,9 @@
                             <button id="deleteAllUnder1mButton" class="inventory-group__clear" type="button">Clear Supreme</button>
                         </div>
                         <div class="inventory-group__grid">
+                            <button id="deleteAllAstraldButton" class="inventory-delete-btn" type="button" title="Delete All Astrald">Astrald</button>
                             <button id="deleteAllImpeachedButton" class="inventory-delete-btn" type="button" title="Delete All Impeached">Impeached</button>
+                            <button id="deleteAllMastermindButton" class="inventory-delete-btn" type="button" title="Delete All Mastermind">Mastermind</button>
                             <button id="deleteAllCelestialChorusButton" class="inventory-delete-btn" type="button" title="Delete All Celestial Chorus">Celestial Chorus</button>
                             <button id="deleteAllX1staButton" class="inventory-delete-btn" type="button" title="Delete All X1sta">X1sta</button>
                         </div>
@@ -594,7 +601,12 @@
     <audio preload="none" id="scareSuspenceLofiAudio" src="files/sounds_and_music/scare_suspence_lofi.mp3"></audio>
     <audio preload="none" id="bigSuspenceAudio" src="files/sounds_and_music/big_suspence.mp3"></audio>
     <audio preload="none" id="hugeSuspenceAudio" src="files/sounds_and_music/onemillionsuspence.mp3"></audio>
-    <audio preload="none" id="expOpeningAudio" src="files/sounds_and_music/exp_opening.mp3"></audio>
+    <audio preload="none" id="hypernovaAudio" src="files/sounds_and_music/hypernova.mp3" loop></audio>
+    <audio preload="none" id="astraldAudio" src="files/sounds_and_music/astrald.mp3" loop></audio>
+    <audio preload="none" id="nebulaAudio" src="files/sounds_and_music/nebula.mp3" loop></audio>
+    <audio preload="none" id="glitchedAudio" src="files/sounds_and_music/glitched.mp3" loop></audio>
+    <audio preload="none" id="mastermindAudio" src="files/sounds_and_music/mastermind.mp3" loop></audio>
+    <audio preload="none" id="expOpeningAudio" src="files/sounds_and_music/exp_opening.mp3" loop></audio>
     <audio preload="none" id="plabreAudio" src="files/sounds_and_music/plabre.mp3" loop></audio>
     <audio preload="none" id="isekailofiAudio" src="files/sounds_and_music/isekailofi.mp3" loop></audio>
     <audio preload="none" id="x1staAudio" src="files/sounds_and_music/x1sta.mp3" loop></audio>
