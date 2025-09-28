@@ -4599,7 +4599,7 @@ body.griCutsceneBgImg {
     flex-direction: column;
     color: #f1f5ff;
     z-index: 10000000;
-    overflow: hidden;
+    overflow: visible;
     scrollbar-width: thin;
     scrollbar-color: #7aa2ff #181a2c;
 }
@@ -4615,7 +4615,7 @@ body.griCutsceneBgImg {
     border-radius: 18px;
     border: 1px solid rgba(120, 164, 255, 0.24);
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
-    overflow: auto;
+    overflow: visible;
     min-height: 0;
 }
 
@@ -4673,6 +4673,7 @@ body.griCutsceneBgImg {
 .achievements-body {
     flex: 1;
     overflow-y: auto;
+    overflow-x: visible;
     padding: 20px 24px 28px 24px;
     display: flex;
     flex-direction: column;
