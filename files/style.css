@@ -4776,6 +4776,34 @@ body.flashing {
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
 }
 
+.achievement--inactive {
+    opacity: 0.55;
+    filter: grayscale(0.35);
+}
+
+.achievement-itemEvent[data-availability="inactive"] {
+    cursor: not-allowed;
+}
+
+.achievement-itemEvent[data-availability="inactive"]::before {
+    content: "Out of Season";
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(12, 18, 32, 0.7);
+    border: 1px solid rgba(130, 176, 255, 0.35);
+    padding: 2px 10px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+}
+
+.achievement-itemEvent[data-availability="inactive"]:hover {
+    transform: none;
+}
+
 .achievement-itemT,
 .achievement-itemC,
 .achievement-itemInv,
@@ -5171,18 +5199,24 @@ body.flashing {
 }
 
 .cutsceneSkipBtb {
-    background: #444;
-    color: white;
-    border: none;
-    margin: 0 5px 0 5px;
-    padding: 8px 15px;
-    border-radius: 5px;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    background: rgba(36, 48, 78, 0.7);
+    border: 1px solid rgba(130, 176, 255, 0.28);
+    color: #f4f7ff;
     cursor: pointer;
-    transition: background 0.3s, transform 0.2s;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
-  
+
 .cutsceneSkipBtb:hover {
-    background: #555;
+    background: rgba(60, 90, 146, 0.8);
+    border-color: rgba(167, 205, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.cutsceneSkipBtb:active {
+    transform: translateY(0);
 }
 
 #statsMenu {
