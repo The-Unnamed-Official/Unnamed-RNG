@@ -1674,9 +1674,6 @@ function registerRollButtonHandler() {
     rarity.type === "Wave [1 in 2,555]" ||
     rarity.type === "Scorching [1 in 7,923]" ||
     rarity.type === "Beach [1 in 12,555]" ||
-    rarity.type === "Tidal Wave [1 in 25,500]" ||
-    rarity.type === "Scorching [1 in 7,923]" ||
-    rarity.type === "Beach [1 in 12,555]" ||
     rarity.type === "Tidal Wave [1 in 25,500]"
   ) {
     const resultContainer = byId("result");
