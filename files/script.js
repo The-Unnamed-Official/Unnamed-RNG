@@ -383,8 +383,8 @@ const RARITY_CLASS_BUCKET_MAP = Object.freeze(
 const RARITY_LABEL_CLASS_MAP = {
   silcarBgImg: "transcendent",
   gingerBgImg: "transcendent",
-  h1diBgImg: "transcendent",
-  equinoxBgImg: "transcendent",
+  h1diBgImg: ["transcendent", "h1di-flash"],
+  equinoxBgImg: ["transcendent", "equinox-flash"],
   waveBgImg: "eventS",
   beachBgImg: "eventS",
   tidalwaveBgImg: "eventS",
@@ -10258,7 +10258,7 @@ function displayResult(title, rarity) {
   const bucket = normalizeRarityBucket(lastRollRarityClass);
   const bucketClass = bucket ? `roll-result-card--${bucket}` : "";
   const bucketLabel = bucket ? (RARITY_BUCKET_LABELS[bucket] || bucket) : "";
-  const labelClass = getLabelClassForRarity(lastRollRarityClass, bucket);
+  const labelClasses = getLabelClassForRarity(lastRollRarityClass, bucket);
 
   const card = document.createElement("div");
   card.className = "roll-result-card";
@@ -10274,8 +10274,8 @@ function displayResult(title, rarity) {
 
   const rarityLabel = document.createElement("span");
   rarityLabel.className = "roll-result-card__rarity";
-  if (labelClass) {
-    rarityLabel.classList.add(labelClass);
+  if (labelClasses.length) {
+    rarityLabel.classList.add(...labelClasses);
   }
   rarityLabel.textContent = (rarityName || rarityText || "Unknown").trim();
   header.appendChild(rarityLabel);
@@ -10372,12 +10372,28 @@ function normalizeRarityBucket(rarityClass) {
 }
 
 function getLabelClassForRarity(rarityClass, bucket) {
+  const fallback = bucket ? [bucket] : [];
+
   if (!rarityClass || typeof rarityClass !== "string") {
-    return bucket || "";
+    return fallback;
   }
 
   const cls = rarityClass.trim();
-  return RARITY_LABEL_CLASS_MAP[cls] || bucket || "";
+  const mapped = RARITY_LABEL_CLASS_MAP[cls];
+
+  if (!mapped) {
+    return fallback;
+  }
+
+  if (Array.isArray(mapped)) {
+    return mapped.filter(Boolean);
+  }
+
+  if (typeof mapped === "string" && mapped.trim()) {
+    return mapped.trim().split(/\s+/);
+  }
+
+  return fallback;
 }
 
 function deleteByRarityBucket(bucket) {
@@ -10893,9 +10909,9 @@ function renderInventory() {
     const itemTitle = document.createElement("span");
     itemTitle.className = "rarity-text";
     itemTitle.textContent = item.title.toUpperCase();
-    const labelClass = getLabelClassForRarity(item.rarityClass, bucket);
-    if (labelClass) {
-      itemTitle.classList.add(labelClass);
+    const labelClasses = getLabelClassForRarity(item.rarityClass, bucket);
+    if (labelClasses.length) {
+      itemTitle.classList.add(...labelClasses);
     }
 
     const rarityText = document.createElement("span");
