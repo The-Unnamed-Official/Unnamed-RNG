@@ -82,6 +82,7 @@ let rollDisplayHiddenByUser = false;
 let cutsceneHidRollDisplay = false;
 let cutsceneActive = false;
 let cutsceneFailsafeTimeout = null;
+const CUTSCENE_FAILSAFE_DURATION_MS = 40000;
 let lastRollPersisted = true;
 let lastRollAutoDeleted = false;
 let lastRollRarityClass = null;
@@ -287,7 +288,7 @@ function scheduleCutsceneFailsafe() {
     isChangeEnabled = true;
     finalizeCutsceneState();
     setRollButtonEnabled(true);
-  }, 15000);
+  }, CUTSCENE_FAILSAFE_DURATION_MS);
 }
 
 function finalizeCutsceneState() {
@@ -12854,16 +12855,8 @@ function showCooldownEffect(duration) {
 
   const countdownDisplay = document.createElement("div");
   countdownDisplay.id = "countdownDisplay";
-  countdownDisplay.style.position = "fixed";
-  countdownDisplay.style.bottom = "20px";
-  countdownDisplay.style.right = "20px";
-  countdownDisplay.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
-  countdownDisplay.style.color = "white";
-  countdownDisplay.style.padding = "10px";
-  countdownDisplay.style.borderRadius = "5px";
-  countdownDisplay.style.zIndex = "100000";
-
-  countdownDisplay.innerText = `Roll-Cooldown Effect: ${duration}s`;
+  countdownDisplay.className = "roll-cooldown-display";
+  countdownDisplay.textContent = `Roll-Cooldown Effect: ${duration}s`;
   document.body.appendChild(countdownDisplay);
 
   let timeLeft = duration - 1;
@@ -12876,7 +12869,7 @@ function showCooldownEffect(duration) {
       return;
     }
 
-    countdownDisplay.innerText = `Roll-Cooldown Effect: ${timeLeft}s`;
+    countdownDisplay.textContent = `Roll-Cooldown Effect: ${timeLeft}s`;
     timeLeft--;
   }, 1000);
 }
