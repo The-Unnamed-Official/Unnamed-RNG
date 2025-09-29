@@ -636,15 +636,6 @@ body.equinox-pulse-active :is(
     gap: 10px;
     width: auto;
     z-index: 100010;
-    opacity: 0.33;
-    transition: all 0.33s ease-in-out;
-    transform: translateX(-50%) scale(0.67);
-    cursor: help;
-}
-
-.version:hover {
-    opacity: 1;
-    transform: translateX(-50%) scale(1);
 }
 
 .vNumber {
@@ -665,6 +656,13 @@ body.equinox-pulse-active :is(
         0 10px 24px rgba(0, 0, 0, 0.35),
         inset 0 1px 0 rgba(255, 255, 255, 0.18);
     backdrop-filter: blur(8px);
+    opacity: 0.33;
+    transition: all 0.33s ease-in-out;
+    cursor: help;
+}
+
+.vNumber:hover {
+    opacity: 1;
 }
 
 .vNumberLabel {
