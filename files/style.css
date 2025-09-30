@@ -5012,23 +5012,11 @@ body.flashing {
 
 .achievement-itemEvent[data-availability="inactive"] {
     cursor: not-allowed;
-    padding-top: 32px;
+    padding-top: 16px;
 }
 
 .achievement-itemEvent[data-availability="inactive"]::before {
-    content: "Out of Season";
-    position: absolute;
-    top: 8px;
-    right: 12px;
-    font-size: 0.65rem;
-    font-weight: 700;
-    color: rgba(255, 255, 255, 0.85);
-    background: rgba(12, 18, 32, 0.7);
-    border: 1px solid rgba(130, 176, 255, 0.35);
-    padding: 2px 10px;
-    border-radius: 999px;
-    letter-spacing: 0.02em;
-    pointer-events: none;
+    content: none;
 }
 
 .achievement-itemEvent[data-availability="inactive"]:hover {
@@ -5109,9 +5097,9 @@ body.flashing {
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(6, 10, 22, 0.94);
+    background: rgba(8, 12, 26, 0.98);
     color: #f4f7ff;
-    padding: 10px 12px;
+    padding: 12px 14px;
     border-radius: 8px;
     border: 1px solid rgba(130, 176, 255, 0.35);
     white-space: nowrap;
@@ -5120,11 +5108,12 @@ body.flashing {
     font-size: 0.78rem;
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
     z-index: 5;
+    line-height: 1.4;
 }
 
 .achievement-itemEvent:hover::after {
     white-space: normal;
-    max-width: min(240px, calc(100vw - 48px));
+    max-width: min(320px, calc(100vw - 48px));
     text-align: center;
 }
 
@@ -5149,7 +5138,7 @@ body.flashing {
     transform: translate(-50%, -3px);
     border-width: 6px;
     border-style: solid;
-    border-color: transparent transparent rgba(6, 10, 22, 0.94) transparent;
+    border-color: transparent transparent rgba(8, 12, 26, 0.98) transparent;
     z-index: 4;
 }
 
