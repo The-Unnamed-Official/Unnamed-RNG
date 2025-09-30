@@ -70,6 +70,7 @@ let autoRollInterval = null;
 const AUTO_ROLL_UNLOCK_ROLLS = 1000;
 let audioVolume = 1;
 let rollAudioVolume = 1;
+let cutsceneAudioVolume = 1;
 let titleAudioVolume = 1;
 let menuAudioVolume = 1;
 let isMuted = false;
@@ -281,6 +282,8 @@ let audioSliderElement = null;
 let audioSliderValueLabelElement = null;
 let rollAudioSliderElement = null;
 let rollAudioSliderValueLabelElement = null;
+let cutsceneAudioSliderElement = null;
+let cutsceneAudioSliderValueLabelElement = null;
 let titleAudioSliderElement = null;
 let titleAudioSliderValueLabelElement = null;
 let menuAudioSliderElement = null;
@@ -474,6 +477,11 @@ const STOPPABLE_AUDIO_IDS = [
 ];
 
 const STOPPABLE_AUDIO_SET = new Set(STOPPABLE_AUDIO_IDS);
+const CUTSCENE_AUDIO_IDS = STOPPABLE_AUDIO_IDS.filter(
+  (id) => !ROLL_AUDIO_IDS.has(id) && !MENU_AUDIO_IDS.has(id)
+);
+const CUTSCENE_AUDIO_SET = new Set(CUTSCENE_AUDIO_IDS);
+const CUTSCENE_AUDIO_PLAYBACK_DELAY_MS = 100;
 
 const RARITY_BUCKET_LABELS = {
   under100: "Basic",
@@ -494,13 +502,47 @@ function isEventBucketActive(bucket) {
 
 const originalAudioPlay = HTMLMediaElement.prototype.play;
 HTMLMediaElement.prototype.play = function (...args) {
-  if (
-    this instanceof HTMLAudioElement &&
-    STOPPABLE_AUDIO_SET.has(this.id) &&
-    !lastRollPersisted &&
-    !allowForcedAudioPlayback
-  ) {
-    return Promise.resolve();
+  if (this instanceof HTMLAudioElement) {
+    if (
+      STOPPABLE_AUDIO_SET.has(this.id) &&
+      !lastRollPersisted &&
+      !allowForcedAudioPlayback
+    ) {
+      return Promise.resolve();
+    }
+
+    if (
+      CUTSCENE_AUDIO_SET.has(this.id) &&
+      (cutsceneActive || pendingCutsceneRarity) &&
+      !allowForcedAudioPlayback
+    ) {
+      try {
+        if (typeof this.pause === "function") {
+          this.pause();
+        }
+      } catch (error) {
+        /* no-op */
+      }
+
+      if (this.id) {
+        resetAudioState(this, this.id);
+      }
+
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          try {
+            const result = originalAudioPlay.apply(this, args);
+            if (result && typeof result.then === "function") {
+              result.then(resolve).catch(reject);
+            } else {
+              resolve(result);
+            }
+          } catch (error) {
+            reject(error);
+          }
+        }, CUTSCENE_AUDIO_PLAYBACK_DELAY_MS);
+      });
+    }
   }
 
   return originalAudioPlay.apply(this, args);
@@ -553,6 +595,7 @@ function finalizeCutsceneState() {
   cutsceneFailsafeTimeout = null;
   cutsceneActive = false;
   updateEquipToggleButtonsDisabled(false);
+  updateInventoryDeleteButtonsDisabled(false);
   ensureBgStack();
   if (__bgStack) {
     __bgStack.classList.remove("is-hidden");
@@ -12097,6 +12140,31 @@ function updateEquipToggleButtonsDisabled(disabled) {
   });
 }
 
+function setInventoryDeleteButtonDisabled(button, disabled) {
+  if (!button) {
+    return;
+  }
+
+  const shouldDisable = Boolean(disabled);
+  if (button.disabled !== shouldDisable) {
+    button.disabled = shouldDisable;
+  }
+
+  button.classList.toggle("dropdown-item--disabled", shouldDisable);
+
+  if (shouldDisable) {
+    button.setAttribute("aria-disabled", "true");
+  } else {
+    button.removeAttribute("aria-disabled");
+  }
+}
+
+function updateInventoryDeleteButtonsDisabled(disabled) {
+  $all('.dropdown-item[data-action="delete"]').forEach((button) => {
+    setInventoryDeleteButtonDisabled(button, disabled);
+  });
+}
+
 function disableChange() {
   isChangeEnabled = false;
   cutsceneActive = true;
@@ -12105,6 +12173,7 @@ function disableChange() {
   if (__bgStack) __bgStack.classList.add("is-hidden");
   pauseEquippedAudioForPendingCutscene();
   updateEquipToggleButtonsDisabled(true);
+  updateInventoryDeleteButtonsDisabled(true);
 }
 
 function renderInventory() {
@@ -12231,9 +12300,15 @@ function renderInventory() {
     });
 
     const deleteButton = document.createElement("button");
+    deleteButton.className = "dropdown-item danger";
+    deleteButton.dataset.action = "delete";
     deleteButton.textContent = "Delete";
+    setInventoryDeleteButtonDisabled(deleteButton, cutsceneActive);
     deleteButton.addEventListener("click", (event) => {
       event.stopPropagation();
+      if (cutsceneActive) {
+        return;
+      }
       if (listItem.dataset.locked !== "true") {
         deleteFromInventory(absoluteIndex);
       }
@@ -13537,6 +13612,10 @@ function getAudioCategory(id) {
     return "roll";
   }
 
+  if (CUTSCENE_AUDIO_SET.has(id)) {
+    return "cutscene";
+  }
+
   if (MENU_AUDIO_IDS.has(id)) {
     return "menu";
   }
@@ -13548,6 +13627,8 @@ function getCategoryVolume(category) {
   switch (category) {
     case "roll":
       return rollAudioVolume;
+    case "cutscene":
+      return cutsceneAudioVolume;
     case "menu":
       return menuAudioVolume;
     case "title":
@@ -13576,6 +13657,11 @@ function initializeAudioVolumeStateFromStorage() {
     rollAudioVolume = clampVolume(savedRollVolume, rollAudioVolume);
   }
 
+  const savedCutsceneVolume = localStorage.getItem("cutsceneAudioVolume");
+  if (savedCutsceneVolume !== null) {
+    cutsceneAudioVolume = clampVolume(savedCutsceneVolume, cutsceneAudioVolume);
+  }
+
   const savedTitleVolume = localStorage.getItem("titleAudioVolume");
   if (savedTitleVolume !== null) {
     titleAudioVolume = clampVolume(savedTitleVolume, titleAudioVolume);
@@ -13600,6 +13686,8 @@ function setupAudioControls() {
   audioSliderValueLabelElement = document.getElementById("audioSliderValue");
   rollAudioSliderElement = document.getElementById("rollAudioSlider");
   rollAudioSliderValueLabelElement = document.getElementById("rollAudioSliderValue");
+  cutsceneAudioSliderElement = document.getElementById("cutsceneAudioSlider");
+  cutsceneAudioSliderValueLabelElement = document.getElementById("cutsceneAudioSliderValue");
   titleAudioSliderElement = document.getElementById("titleAudioSlider");
   titleAudioSliderValueLabelElement = document.getElementById("titleAudioSliderValue");
   menuAudioSliderElement = document.getElementById("menuAudioSlider");
@@ -13649,6 +13737,18 @@ function setupAudioControls() {
     }
     return rollAudioVolume;
   });
+
+  attachCategorySliderHandler(
+    cutsceneAudioSliderElement,
+    cutsceneAudioSliderValueLabelElement,
+    "cutsceneAudioVolume",
+    (action, value) => {
+      if (action === "set") {
+        cutsceneAudioVolume = value;
+      }
+      return cutsceneAudioVolume;
+    }
+  );
 
   attachCategorySliderHandler(titleAudioSliderElement, titleAudioSliderValueLabelElement, "titleAudioVolume", (action, value) => {
     if (action === "set") {
