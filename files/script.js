@@ -902,11 +902,36 @@ function initializeAfterStart() {
 }
 
 const CUTSCENE_SKIP_SETTINGS = [
-  { key: "skipCutscene1K", labelId: "1KTxt", label: "Skip Decent Cutscenes" },
-  { key: "skipCutscene10K", labelId: "10KTxt", label: "Skip Grand Cutscenes" },
-  { key: "skipCutscene100K", labelId: "100KTxt", label: "Skip Mastery Cutscenes" },
-  { key: "skipCutscene1M", labelId: "1MTxt", label: "Skip Supreme Cutscenes" },
-  { key: "skipCutsceneTranscendent", labelId: "transcendentTxt", label: "Skip Transcendent Cutscenes" },
+  {
+    key: "skipCutscene1K",
+    labelId: "1KTxt",
+    label: "Skip Decent Cutscenes",
+    buttonId: "toggleCutscene1K",
+  },
+  {
+    key: "skipCutscene10K",
+    labelId: "10KTxt",
+    label: "Skip Grand Cutscenes",
+    buttonId: "toggleCutscene10K",
+  },
+  {
+    key: "skipCutscene100K",
+    labelId: "100KTxt",
+    label: "Skip Mastery Cutscenes",
+    buttonId: "toggleCutscene100K",
+  },
+  {
+    key: "skipCutscene1M",
+    labelId: "1MTxt",
+    label: "Skip Supreme Cutscenes",
+    buttonId: "toggleCutscene1M",
+  },
+  {
+    key: "skipCutsceneTranscendent",
+    labelId: "transcendentTxt",
+    label: "Skip Transcendent Cutscenes",
+    buttonId: "toggleCutsceneTranscendent",
+  },
 ];
 
 const CUTSCENE_STATE_SETTERS = {
@@ -916,6 +941,26 @@ const CUTSCENE_STATE_SETTERS = {
   skipCutscene1M: (value) => { skipCutscene1M = value; },
   skipCutsceneTranscendent: (value) => { skipCutsceneTranscendent = value; },
 };
+
+const CUTSCENE_STATE_GETTERS = {
+  skipCutscene1K: () => skipCutscene1K,
+  skipCutscene10K: () => skipCutscene10K,
+  skipCutscene100K: () => skipCutscene100K,
+  skipCutscene1M: () => skipCutscene1M,
+  skipCutsceneTranscendent: () => skipCutsceneTranscendent,
+};
+
+function updateCutsceneSkipDisplay({ labelId, label, buttonId }, isSkipping) {
+  const labelElement = byId(labelId);
+  if (labelElement) {
+    labelElement.textContent = `${label} ${isSkipping ? "On" : "Off"}`;
+  }
+
+  const buttonElement = byId(buttonId);
+  if (buttonElement) {
+    buttonElement.classList.toggle("active", Boolean(isSkipping));
+  }
+}
 
 const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "transcendent", "special"]);
 
@@ -1674,7 +1719,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function loadCutsceneSkip() {
-  CUTSCENE_SKIP_SETTINGS.forEach(({ key, labelId, label }) => {
+  CUTSCENE_SKIP_SETTINGS.forEach((config) => {
+    const { key } = config;
     const storedValue = storage.get(key);
     const resolvedValue = typeof storedValue === "boolean" ? storedValue : true;
 
@@ -1687,10 +1733,7 @@ function loadCutsceneSkip() {
       assignState(resolvedValue);
     }
 
-    const labelElement = byId(labelId);
-    if (labelElement) {
-      labelElement.textContent = `${label} ${resolvedValue ? "" : "On"}`;
-    }
+    updateCutsceneSkipDisplay(config, resolvedValue);
   });
 }
 
@@ -10788,60 +10831,26 @@ function registerRollButtonHandler() {
 }
 
 function registerCutsceneToggleButtons() {
-  const toggleCutscene1KBtn = document.getElementById("toggleCutscene1K");
-  const toggleCutscene1KTxt = document.getElementById("1KTxt");
-  if (toggleCutscene1KBtn && toggleCutscene1KTxt) {
-    toggleCutscene1KBtn.addEventListener("click", function () {
-      skipCutscene1K = !skipCutscene1K;
-      console.log(`Cutscene skip for 1K has been set to ${skipCutscene1K}`);
-      localStorage.setItem("skipCutscene1K", JSON.stringify(skipCutscene1K));
-      toggleCutscene1KTxt.textContent = `Skip Decent Cutscenes ${skipCutscene1K ? "" : "On"}`;
-    });
-  }
+  CUTSCENE_SKIP_SETTINGS.forEach((config) => {
+    const { key, buttonId } = config;
+    const buttonElement = byId(buttonId);
+    const assignState = CUTSCENE_STATE_SETTERS[key];
+    const readState = CUTSCENE_STATE_GETTERS[key];
 
-  const toggleCutscene10KBtn = document.getElementById("toggleCutscene10K");
-  const toggleCutscene10KTxt = document.getElementById("10KTxt");
-  if (toggleCutscene10KBtn && toggleCutscene10KTxt) {
-    toggleCutscene10KBtn.addEventListener("click", function () {
-      skipCutscene10K = !skipCutscene10K;
-      console.log(`Cutscene skip for 10K has been set to ${skipCutscene10K}`);
-      localStorage.setItem("skipCutscene10K", JSON.stringify(skipCutscene10K));
-      toggleCutscene10KTxt.textContent = `Skip Grand Cutscenes ${skipCutscene10K ? "" : "On"}`;
-    });
-  }
+    if (!buttonElement || typeof assignState !== "function" || typeof readState !== "function") {
+      return;
+    }
 
-  const toggleCutscene100KBtn = document.getElementById("toggleCutscene100K");
-  const toggleCutscene100KTxt = document.getElementById("100KTxt");
-  if (toggleCutscene100KBtn && toggleCutscene100KTxt) {
-    toggleCutscene100KBtn.addEventListener("click", function () {
-      skipCutscene100K = !skipCutscene100K;
-      console.log(`Cutscene skip for 100K has been set to ${skipCutscene100K}`);
-      localStorage.setItem("skipCutscene100K", JSON.stringify(skipCutscene100K));
-      toggleCutscene100KTxt.textContent = `Skip Mastery Cutscenes ${skipCutscene100K ? "" : "On"}`;
-    });
-  }
+    updateCutsceneSkipDisplay(config, readState());
 
-  const toggleCutscene1MBtn = document.getElementById("toggleCutscene1M");
-  const toggleCutscene1MTxt = document.getElementById("1MTxt");
-  if (toggleCutscene1MBtn && toggleCutscene1MTxt) {
-    toggleCutscene1MBtn.addEventListener("click", function () {
-      skipCutscene1M = !skipCutscene1M;
-      console.log(`Cutscene skip for 1M has been set to ${skipCutscene1M}`);
-      localStorage.setItem("skipCutscene1M", JSON.stringify(skipCutscene1M));
-      toggleCutscene1MTxt.textContent = `Skip Supreme Cutscenes ${skipCutscene1M ? "" : "On"}`;
+    buttonElement.addEventListener("click", () => {
+      const nextValue = !Boolean(readState());
+      assignState(nextValue);
+      storage.set(key, nextValue);
+      console.log(`Cutscene skip for ${config.label} has been set to ${nextValue}`);
+      updateCutsceneSkipDisplay(config, nextValue);
     });
-  }
-
-  const toggleCutsceneTranscendentBtn = document.getElementById("toggleCutsceneTranscendent");
-  const toggleCutsceneTranscendentTxt = document.getElementById("transcendentTxt");
-  if (toggleCutsceneTranscendentBtn && toggleCutsceneTranscendentTxt) {
-    toggleCutsceneTranscendentBtn.addEventListener("click", function () {
-      skipCutsceneTranscendent = !skipCutsceneTranscendent;
-      console.log(`Cutscene skip for Transcendent has been set to ${skipCutsceneTranscendent}`);
-      localStorage.setItem("skipCutsceneTranscendent", JSON.stringify(skipCutsceneTranscendent));
-      toggleCutsceneTranscendentTxt.textContent = `Skip Transcendent Cutscenes ${skipCutsceneTranscendent ? "" : "On"}`;
-    });
-  }
+  });
 }
 
 function rollRarity() {
@@ -11453,6 +11462,25 @@ function clickSound() {
 let copyToastTimeout;
 let profileDropdownOutsideHandler = null;
 
+function positionCopyToast() {
+  const toast = document.getElementById("copyToast");
+  const trigger = document.querySelector(".creator-card");
+
+  if (!toast || !trigger) {
+    return;
+  }
+
+  let offset = trigger.offsetHeight + 12;
+  const dropdown = document.getElementById("profileDropdown");
+
+  if (dropdown && dropdown.classList.contains("profile-dropdown--visible")) {
+    offset = trigger.offsetHeight + 14 + dropdown.offsetHeight + 12;
+  }
+
+  toast.style.top = `${offset}px`;
+  toast.style.bottom = "auto";
+}
+
 function fallbackCopyToClipboard(inputElement) {
   inputElement.hidden = false;
   inputElement.select();
@@ -11468,9 +11496,14 @@ function showCopyToast(message) {
     return;
   }
 
+  positionCopyToast();
   toast.textContent = message;
   toast.classList.add("copy-toast--visible");
   toast.setAttribute("aria-hidden", "false");
+
+  requestAnimationFrame(() => {
+    positionCopyToast();
+  });
 
   if (copyToastTimeout) {
     clearTimeout(copyToastTimeout);
@@ -11498,18 +11531,8 @@ function showPopupCopyTxt(event) {
     fallbackCopyToClipboard(copyText);
   }
 
+  openProfileDropdown();
   showCopyToast(`Copied ${value} to clipboard`);
-
-  const dropdown = document.getElementById("profileDropdown");
-  if (!dropdown) {
-    return;
-  }
-
-  if (dropdown.classList.contains("profile-dropdown--visible")) {
-    closeProfileDropdown();
-  } else {
-    openProfileDropdown();
-  }
 }
 
 function openProfileDropdown() {
@@ -11552,6 +11575,13 @@ function closeProfileDropdown() {
 
   if (trigger) {
     trigger.setAttribute("aria-expanded", "false");
+  }
+
+  const toast = document.getElementById("copyToast");
+  if (toast && toast.classList.contains("copy-toast--visible")) {
+    requestAnimationFrame(() => {
+      positionCopyToast();
+    });
   }
 
   if (profileDropdownOutsideHandler) {
@@ -14923,14 +14953,6 @@ document.querySelectorAll(".rarity-button").forEach(button => {
     saveToggledStates();
   });
 });
-
-document.querySelectorAll(".cutsceneSkipBtb").forEach(button => {
-  button.addEventListener("click", () => {
-    button.classList.toggle("active");
-    saveToggledStates();
-  });
-});
-
 
 const canvas = document.getElementById('fireworksCanvas');
 const ctx = canvas.getContext('2d');
