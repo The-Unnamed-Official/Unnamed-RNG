@@ -11451,6 +11451,7 @@ function clickSound() {
 }
 
 let copyToastTimeout;
+let profileDropdownOutsideHandler = null;
 
 function fallbackCopyToClipboard(inputElement) {
   inputElement.hidden = false;
@@ -11481,7 +11482,11 @@ function showCopyToast(message) {
   }, 2200);
 }
 
-function showPopupCopyTxt() {
+function showPopupCopyTxt(event) {
+  if (event) {
+    event.stopPropagation();
+  }
+
   const copyText = document.getElementById("unnamedUser");
   const value = copyText.value;
 
@@ -11495,29 +11500,81 @@ function showPopupCopyTxt() {
 
   showCopyToast(`Copied ${value} to clipboard`);
 
-  document.getElementById("profileModal").style.display = "block";
+  const dropdown = document.getElementById("profileDropdown");
+  if (!dropdown) {
+    return;
+  }
+
+  if (dropdown.classList.contains("profile-dropdown--visible")) {
+    closeProfileDropdown();
+  } else {
+    openProfileDropdown();
+  }
 }
 
-function closePopup() {
-  document.getElementById("profileModal").style.display = "none";
+function openProfileDropdown() {
+  const dropdown = document.getElementById("profileDropdown");
+  const trigger = document.querySelector(".creator-card");
+
+  if (!dropdown || !trigger) {
+    return;
+  }
+
+  dropdown.classList.add("profile-dropdown--visible");
+  dropdown.setAttribute("aria-hidden", "false");
+  trigger.setAttribute("aria-expanded", "true");
+
+  if (profileDropdownOutsideHandler) {
+    document.removeEventListener("click", profileDropdownOutsideHandler);
+  }
+
+  profileDropdownOutsideHandler = (event) => {
+    if (!dropdown.contains(event.target) && !trigger.contains(event.target)) {
+      closeProfileDropdown();
+    }
+  };
+
+  setTimeout(() => {
+    document.addEventListener("click", profileDropdownOutsideHandler);
+  }, 0);
+}
+
+function closeProfileDropdown() {
+  const dropdown = document.getElementById("profileDropdown");
+  const trigger = document.querySelector(".creator-card");
+
+  if (!dropdown) {
+    return;
+  }
+
+  dropdown.classList.remove("profile-dropdown--visible");
+  dropdown.setAttribute("aria-hidden", "true");
+
+  if (trigger) {
+    trigger.setAttribute("aria-expanded", "false");
+  }
+
+  if (profileDropdownOutsideHandler) {
+    document.removeEventListener("click", profileDropdownOutsideHandler);
+    profileDropdownOutsideHandler = null;
+  }
 }
 
 function openDiscord() {
   window.open("https://discord.gg/m6k7Jagm3v", "_blank");
-  closePopup();
+  closeProfileDropdown();
 }
 
 function openGithub() {
   window.open("https://github.com/The-Unnamed-Official/Unnamed-RNG/tree/published", "_blank");
-  closePopup();
+  closeProfileDropdown();
 }
 
-window.onclick = function(event) {
-  var modal = document.getElementById("profileModal");
-  if (event.target === modal) {
-    modal.style.display = "none";
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeProfileDropdown();
   }
-}
+});
 
 function selectTitle(rarity) {
   const titles = rarity.titles;

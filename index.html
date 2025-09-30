@@ -397,7 +397,7 @@
 
         <div class="info2">
             <input type="text" value="not.unnamed" id="unnamedUser" hidden>
-            <button class="creator-card" type="button" onclick="showPopupCopyTxt()">
+            <button class="creator-card" type="button" onclick="showPopupCopyTxt(event)" aria-haspopup="menu" aria-expanded="false">
                 <span class="creator-card__glow" aria-hidden="true"></span>
                 <span class="creator-card__avatar">
                     <img src="files/images/unnamed_pfp.gif" alt="Profile picture for Unnamed" loading="lazy">
@@ -409,15 +409,13 @@
                 </span>
             </button>
             <div id="copyToast" class="copy-toast" role="status" aria-live="polite" aria-hidden="true"></div>
-        </div>
-
-        <div id="profileModal" class="modal">
-            <div class="modal-content">
-              <h2>Select an Option</h2>
-              <button class="modal-button discord-btn" onclick="openDiscord()">Open Discord <i class="fa-brands fa-discord"></i></button>
-              <button class="modal-button github-btn" onclick="openGithub()">Open GitHub <i class="fa-brands fa-github"></i></button>
-              <br><br>
-              <button class="modal-button cancel-btn" onclick="closePopup()">Cancel</button>
+            <div id="profileDropdown" class="profile-dropdown" role="menu" aria-hidden="true">
+                <button class="profile-dropdown__button discord-btn" type="button" onclick="openDiscord()">
+                    Join Discord <i class="fa-brands fa-discord" aria-hidden="true"></i>
+                </button>
+                <button class="profile-dropdown__button github-btn" type="button" onclick="openGithub()">
+                    View GitHub <i class="fa-brands fa-github" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
 

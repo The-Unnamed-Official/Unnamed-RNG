@@ -3162,7 +3162,7 @@ body.flashing {
 
 .copy-toast {
     position: absolute;
-    top: calc(100% + 10px);
+    bottom: calc(100% + 12px);
     right: 0;
     padding: 8px 14px;
     border-radius: 12px;
@@ -3172,10 +3172,11 @@ body.flashing {
     box-shadow: 0 10px 24px rgba(4, 6, 18, 0.5);
     border: 1px solid rgba(138, 176, 255, 0.25);
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(8px);
     transition: opacity 0.2s ease, transform 0.2s ease;
     pointer-events: none;
     white-space: nowrap;
+    z-index: 2;
 }
 
 .copy-toast.copy-toast--visible {
@@ -3314,70 +3315,100 @@ body.flashing {
     }
 }
 
-.modal {
-    display: none;
-    position: fixed;
-    color: #fff;
-    z-index: 1;
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 14px);
     left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px solid rgba(138, 176, 255, 0.24);
+    background: linear-gradient(135deg, rgba(26, 42, 86, 0.95), rgba(15, 22, 46, 0.92));
+    box-shadow: 0 18px 32px rgba(8, 12, 28, 0.55);
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    min-width: 220px;
+    z-index: 1;
+}
+
+.profile-dropdown::before {
+    content: "";
+    position: absolute;
     top: 0;
+    left: 24px;
+    width: 18px;
+    height: 12px;
+    transform: translateY(-100%);
+    background: linear-gradient(135deg, rgba(26, 42, 86, 0.95), rgba(15, 22, 46, 0.92));
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    filter: drop-shadow(0 10px 18px rgba(8, 12, 28, 0.45));
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.profile-dropdown--visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.profile-dropdown--visible::before {
+    opacity: 1;
+}
+
+.profile-dropdown__button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: #00000000;
-    backdrop-filter: blur(3px);
-    z-index: 9789978448;
-}
-
-.modal-content {
-    background: #00000000;
-    margin: 15% auto;
-    padding: 20px;
-    width: 300px;
-    text-align: center;
-    border-radius: 8px;
-}
-
-.modal-button {
-    margin: 5px;
-    padding: 10px 15px;
-    font-size: 16px;
+    padding: 12px 16px;
     border: none;
-    border-radius: 5px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #ffffff;
     cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 
-.discord-btn {
-    background-color: #7289DA;
-    color: white;
-    transition: background-color 0.2s ease, scale 0.2s ease;
+.profile-dropdown__button i {
+    font-size: 1.05rem;
 }
 
-.discord-btn:hover {
-    background-color: #657ac4;
-    scale: 1.1;
+.profile-dropdown__button:hover,
+.profile-dropdown__button:focus-visible {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 24px rgba(12, 18, 38, 0.45);
 }
 
-.github-btn {
-    background-color: #333;
-    color: white;
-    transition: background-color 0.2s ease, scale 0.2s ease;
+.profile-dropdown__button:focus-visible {
+    outline: 2px solid rgba(120, 176, 255, 0.6);
+    outline-offset: 2px;
 }
 
-.github-btn:hover {
-    background-color: #2c2c2c;
-    scale: 1.1;
+.profile-dropdown__button.discord-btn {
+    background: linear-gradient(135deg, #7289da, #5865f2);
 }
 
-.cancel-btn {
-    background-color: #442929;
-    color: #fff;
-    transition: background-color 0.2s ease, scale 0.2s ease;
+.profile-dropdown__button.discord-btn:hover,
+.profile-dropdown__button.discord-btn:focus-visible {
+    filter: brightness(1.08);
 }
 
-.cancel-btn:hover {
-    background-color: #3d2121;
-    scale: 1.1;
+.profile-dropdown__button.github-btn {
+    background: linear-gradient(135deg, #333333, #1f1f1f);
+}
+
+.profile-dropdown__button.github-btn:hover,
+.profile-dropdown__button.github-btn:focus-visible {
+    filter: brightness(1.1);
 }
 
 #autoRollButton {
