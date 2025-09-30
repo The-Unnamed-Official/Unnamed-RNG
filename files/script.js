@@ -11525,7 +11525,6 @@ function addToInventory(title, rarityClass) {
     lastRollPersisted = false;
     lastRollAutoDeleted = true;
     resumeEquippedAudioAfterCutscene = true;
-    showStatusMessage(`${title} auto-deleted`, 800);
     return false; // not persisted
   }
 
