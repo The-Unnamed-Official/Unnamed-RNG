@@ -11438,13 +11438,50 @@ function clickSound() {
   document.getElementById("rollButton").addEventListener("click", clickSound);
 }
 
-function showPopupCopyTxt() {
-  var copyText = document.getElementById("unnamedUser");
-  copyText.hidden = false;
-  copyText.select();
+let copyToastTimeout;
+
+function fallbackCopyToClipboard(inputElement) {
+  inputElement.hidden = false;
+  inputElement.select();
+  inputElement.setSelectionRange(0, inputElement.value.length);
   document.execCommand("copy");
-  copyText.hidden = true;
-  alert("Copied selected discord user: " + copyText.value);
+  inputElement.hidden = true;
+  inputElement.blur();
+}
+
+function showCopyToast(message) {
+  const toast = document.getElementById("copyToast");
+  if (!toast) {
+    return;
+  }
+
+  toast.textContent = message;
+  toast.classList.add("copy-toast--visible");
+  toast.setAttribute("aria-hidden", "false");
+
+  if (copyToastTimeout) {
+    clearTimeout(copyToastTimeout);
+  }
+
+  copyToastTimeout = setTimeout(() => {
+    toast.classList.remove("copy-toast--visible");
+    toast.setAttribute("aria-hidden", "true");
+  }, 2200);
+}
+
+function showPopupCopyTxt() {
+  const copyText = document.getElementById("unnamedUser");
+  const value = copyText.value;
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(value).catch(() => {
+      fallbackCopyToClipboard(copyText);
+    });
+  } else {
+    fallbackCopyToClipboard(copyText);
+  }
+
+  showCopyToast(`Copied ${value} to clipboard`);
 
   document.getElementById("profileModal").style.display = "block";
 }

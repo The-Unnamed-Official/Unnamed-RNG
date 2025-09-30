@@ -1824,6 +1824,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.45);
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     cursor: pointer;
+    margin-top: calc((var(--slider-track-size) - var(--slider-thumb-size)) / 2);
 }
 
 .settings-audio__slider input[type="range"]::-moz-range-track {
@@ -1843,6 +1844,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.45);
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     cursor: pointer;
+    transform: translateY(calc((var(--slider-track-size) - var(--slider-thumb-size)) / 2));
 }
 
 .settings-audio__slider input[type="range"]:hover::-webkit-slider-thumb,
@@ -3156,6 +3158,29 @@ body.flashing {
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
+}
+
+.copy-toast {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    padding: 8px 14px;
+    border-radius: 12px;
+    background: rgba(12, 16, 32, 0.92);
+    color: #f4f7ff;
+    font-size: 0.85rem;
+    box-shadow: 0 10px 24px rgba(4, 6, 18, 0.5);
+    border: 1px solid rgba(138, 176, 255, 0.25);
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
+.copy-toast.copy-toast--visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 .creator-card__glow {
