@@ -13754,7 +13754,8 @@ function updateSliderUi(sliderElement, valueLabelElement) {
     ? "rgba(128, 96, 186, 0.75)"
     : thumbColor;
 
-  sliderElement.style.background = `linear-gradient(90deg, ${trackColor} ${percentage}%, rgba(255, 255, 255, 0.12) ${percentage}%)`;
+  sliderElement.style.setProperty("--slider-fill-color", trackColor);
+  sliderElement.style.setProperty("--slider-progress", `${percentage}%`);
 }
 
 function initializeAutoRollControls() {
