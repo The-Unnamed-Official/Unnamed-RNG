@@ -975,7 +975,7 @@ body {
   align-items: center;
   justify-content: center;
   justify-self: center;
-  width: min(100%, 360px);
+  width: min(100%, 666px);
   min-height: clamp(56px, 8vh, 68px);
   padding: clamp(14px, 2.8vh, 18px) clamp(22px, 5vw, 32px);
   border: 0;
