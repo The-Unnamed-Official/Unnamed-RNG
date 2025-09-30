@@ -1107,6 +1107,57 @@ function getQualifyingInventoryCount(items = inventory) {
   }, 0);
 }
 
+function createEmptyAchievementStats() {
+  return {
+    qualifyingInventoryCount: 0,
+    inventoryTitleSet: new Set(),
+    eventBucketCounts: new Map(),
+    totalEventTitleCount: 0,
+    distinctEventBucketCount: 0,
+  };
+}
+
+let latestAchievementStats = createEmptyAchievementStats();
+
+function computeAchievementStats(items = inventory) {
+  const qualifyingInventoryCount = getQualifyingInventoryCount(items);
+  const inventoryTitleSet = new Set();
+  const eventBucketCounts = new Map();
+  let totalEventTitleCount = 0;
+
+  if (Array.isArray(items)) {
+    items.forEach((item) => {
+      if (!item || typeof item !== "object") {
+        return;
+      }
+
+      if (typeof item.title === "string" && item.title) {
+        inventoryTitleSet.add(item.title);
+      }
+
+      const bucket =
+        (typeof item.rarityBucket === "string" && item.rarityBucket) ||
+        normalizeRarityBucket(item.rarityClass);
+
+      if (bucket && bucket.startsWith("event")) {
+        totalEventTitleCount += 1;
+        eventBucketCounts.set(bucket, (eventBucketCounts.get(bucket) || 0) + 1);
+      }
+    });
+  }
+
+  const stats = {
+    qualifyingInventoryCount,
+    inventoryTitleSet,
+    eventBucketCounts,
+    totalEventTitleCount,
+    distinctEventBucketCount: eventBucketCounts.size,
+  };
+
+  latestAchievementStats = stats;
+  return stats;
+}
+
 const ACHIEVEMENTS = [
   // Roll milestones
   { name: "I think I like this", count: 100 },
@@ -1217,8 +1268,50 @@ const ACHIEVEMENT_DATA_BY_NAME = new Map(
   ACHIEVEMENTS.map((achievement) => [achievement.name, achievement])
 );
 
-function isAchievementCurrentlyAvailable(achievement) {
+function hasEventAchievementProgress(achievement, stats = latestAchievementStats) {
+  if (!achievement || !stats) {
+    return false;
+  }
+
+  const { eventBucketCounts, distinctEventBucketCount, totalEventTitleCount } = stats;
+
+  if (achievement.requiredEventBucket) {
+    return eventBucketCounts.has(achievement.requiredEventBucket);
+  }
+
+  if (Array.isArray(achievement.requiredEventBuckets) && achievement.requiredEventBuckets.length) {
+    if (achievement.requiredEventBuckets.every((bucket) => eventBucketCounts.has(bucket))) {
+      return true;
+    }
+
+    return achievement.requiredEventBuckets.some((bucket) => eventBucketCounts.has(bucket));
+  }
+
+  if (typeof achievement.minDistinctEventBuckets === "number") {
+    if (distinctEventBucketCount >= achievement.minDistinctEventBuckets) {
+      return true;
+    }
+
+    return distinctEventBucketCount > 0;
+  }
+
+  if (typeof achievement.minEventTitleCount === "number") {
+    if (totalEventTitleCount >= achievement.minEventTitleCount) {
+      return true;
+    }
+
+    return totalEventTitleCount > 0;
+  }
+
+  return false;
+}
+
+function isAchievementCurrentlyAvailable(achievement, stats = latestAchievementStats) {
   if (!achievement) {
+    return true;
+  }
+
+  if (hasEventAchievementProgress(achievement, stats)) {
     return true;
   }
 
@@ -1800,36 +1893,13 @@ function checkAchievements(context = {}) {
   const rarityBuckets = context && context.rarityBuckets instanceof Set
     ? context.rarityBuckets
     : new Set(storage.get("rolledRarityBuckets", []));
-  const qualifyingInventoryCount = getQualifyingInventoryCount();
-  const inventoryTitleSet = new Set();
-  const eventBucketCounts = new Map();
-  let totalEventTitleCount = 0;
-
-  if (Array.isArray(inventory)) {
-    inventory.forEach((item) => {
-      if (!item || typeof item !== "object") {
-        return;
-      }
-
-      if (typeof item.title === "string" && item.title) {
-        inventoryTitleSet.add(item.title);
-      }
-
-      const bucket =
-        (typeof item.rarityBucket === "string" && item.rarityBucket) ||
-        normalizeRarityBucket(item.rarityClass);
-
-      if (bucket && bucket.startsWith("event")) {
-        totalEventTitleCount += 1;
-        eventBucketCounts.set(
-          bucket,
-          (eventBucketCounts.get(bucket) || 0) + 1
-        );
-      }
-    });
-  }
-
-  const distinctEventBucketCount = eventBucketCounts.size;
+  const {
+    qualifyingInventoryCount,
+    inventoryTitleSet,
+    eventBucketCounts,
+    totalEventTitleCount,
+    distinctEventBucketCount,
+  } = computeAchievementStats();
 
   ACHIEVEMENTS.forEach((achievement) => {
     if (achievement.count && rollCount >= achievement.count) {
@@ -1927,6 +1997,7 @@ function showAchievementPopup(name) {
 
 function updateAchievementsList() {
   const unlocked = new Set(storage.get("unlockedAchievements", []));
+  const stats = computeAchievementStats();
 
   ACHIEVEMENT_GROUP_STYLES.forEach(({ selector, unlocked: unlockedStyles }) => {
     $all(selector).forEach((item) => {
@@ -1957,7 +2028,8 @@ function updateAchievementsList() {
     const achievementName = item.getAttribute("data-name");
     const achievement = ACHIEVEMENT_DATA_BY_NAME.get(achievementName);
     const isUnlocked = achievementName && unlocked.has(achievementName);
-    const isActive = isAchievementCurrentlyAvailable(achievement);
+    const isActive = isAchievementCurrentlyAvailable(achievement, stats);
+    const hasProgress = hasEventAchievementProgress(achievement, stats);
     const isEventAchievement = Boolean(
       achievement && (
         achievement.requiredEventBucket ||
@@ -1975,7 +2047,7 @@ function updateAchievementsList() {
         }
       }
 
-      if (!isUnlocked && !isActive) {
+      if (!isUnlocked && !isActive && !hasProgress) {
         item.classList.add("achievement--inactive");
         item.setAttribute("data-availability", "inactive");
         if (item.dataset.eventHint) {
@@ -11809,6 +11881,30 @@ function normalizeRarityBucket(rarityClass) {
   if (cls === "special") return "special";
   if (["under100", "under1k", "under10k", "under100k", "under1m", "transcendent", "special"].includes(cls)) {
     return cls;
+  }
+
+  const labelEntry = RARITY_LABEL_CLASS_MAP[cls];
+  if (labelEntry) {
+    const labels = Array.isArray(labelEntry) ? labelEntry : [labelEntry];
+    for (const label of labels) {
+      if (typeof label !== "string") {
+        continue;
+      }
+
+      const normalizedLabel = label.trim();
+      if (!normalizedLabel) {
+        continue;
+      }
+
+      if (
+        normalizedLabel.startsWith("event") ||
+        normalizedLabel === "transcendent" ||
+        normalizedLabel === "special" ||
+        normalizedLabel.startsWith("under")
+      ) {
+        return normalizedLabel;
+      }
+    }
   }
 
   return RARITY_CLASS_BUCKET_MAP[cls] || "";
