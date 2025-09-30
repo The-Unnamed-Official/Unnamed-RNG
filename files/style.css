@@ -5143,8 +5143,10 @@ body.flashing {
 }
 
 .achievement-itemEvent:hover::after {
+    display: block;
     white-space: normal;
-    max-width: min(320px, calc(100vw - 48px));
+    width: max-content;
+    max-width: min(360px, calc(100vw - 48px));
     text-align: center;
 }
 
