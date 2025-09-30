@@ -82,7 +82,9 @@ let rollDisplayHiddenByUser = false;
 let cutsceneHidRollDisplay = false;
 let cutsceneActive = false;
 let cutsceneFailsafeTimeout = null;
-const CUTSCENE_FAILSAFE_DURATION_MS = 40000;
+// Keep the safeguard comfortably longer than any scripted cutscene
+// so extended sequences aren't aborted before their own cleanup runs.
+const CUTSCENE_FAILSAFE_DURATION_MS = 120000;
 let lastRollPersisted = true;
 let lastRollAutoDeleted = false;
 let lastRollRarityClass = null;
