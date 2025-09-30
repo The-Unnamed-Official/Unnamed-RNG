@@ -481,6 +481,15 @@ const CUTSCENE_AUDIO_IDS = STOPPABLE_AUDIO_IDS.filter(
   (id) => !ROLL_AUDIO_IDS.has(id) && !MENU_AUDIO_IDS.has(id)
 );
 const CUTSCENE_AUDIO_SET = new Set(CUTSCENE_AUDIO_IDS);
+const CUTSCENE_VOLUME_AUDIO_IDS = new Set([
+  "geezerSuspenceAudio",
+  "polarrSuspenceAudio",
+  "scareSuspenceAudio",
+  "scareSuspenceLofiAudio",
+  "bigSuspenceAudio",
+  "hugeSuspenceAudio",
+  "expOpeningAudio",
+]);
 const CUTSCENE_AUDIO_PLAYBACK_DELAY_MS = 100;
 
 const RARITY_BUCKET_LABELS = {
@@ -13649,7 +13658,7 @@ function getAudioCategory(id) {
     return "roll";
   }
 
-  if (CUTSCENE_AUDIO_SET.has(id)) {
+  if (CUTSCENE_VOLUME_AUDIO_IDS.has(id)) {
     return "cutscene";
   }
 
