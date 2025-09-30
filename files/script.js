@@ -69,6 +69,9 @@ let isChangeEnabled = true;
 let autoRollInterval = null;
 const AUTO_ROLL_UNLOCK_ROLLS = 1000;
 let audioVolume = 1;
+let rollAudioVolume = 1;
+let titleAudioVolume = 1;
+let menuAudioVolume = 1;
 let isMuted = false;
 let previousVolume = audioVolume;
 let refreshTimeout;
@@ -95,6 +98,19 @@ let resumeEquippedAudioAfterCutscene = false;
 let pendingCutsceneRarity = null;
 let pendingAutoEquipRecord = null;
 const rolledRarityBuckets = new Set(storage.get("rolledRarityBuckets", []));
+
+const ROLL_AUDIO_IDS = new Set([
+  "click",
+  "suspenseAudio",
+  "geezerSuspenceAudio",
+  "polarrSuspenceAudio",
+  "scareSuspenceAudio",
+  "scareSuspenceLofiAudio",
+  "bigSuspenceAudio",
+  "hugeSuspenceAudio",
+]);
+
+const MENU_AUDIO_IDS = new Set(["mainAudio"]);
 
 const MIN_ROLL_BUTTON_PROGRESS_DURATION = 320;
 const CUTSCENE_PROGRESS_DURATION_FALLBACK = 5000;
@@ -259,6 +275,12 @@ recordRollCooldownDuration("default", cooldownTime);
 let postStartInitialized = false;
 let audioSliderElement = null;
 let audioSliderValueLabelElement = null;
+let rollAudioSliderElement = null;
+let rollAudioSliderValueLabelElement = null;
+let titleAudioSliderElement = null;
+let titleAudioSliderValueLabelElement = null;
+let menuAudioSliderElement = null;
+let menuAudioSliderValueLabelElement = null;
 let muteButtonElement = null;
 let heartContainerElement = null;
 let heartIntervalId = null;
@@ -12267,8 +12289,18 @@ function toggleLock(itemTitle, listItem, lockButton) {
 function deleteFromInventory(absoluteIndex) {
   const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
   const item = inventory[absoluteIndex];
+  if (!item) {
+    return;
+  }
+
   delete lockedItems[item.title];
   localStorage.setItem("lockedItems", JSON.stringify(lockedItems));
+
+  const wasEquipped = isItemCurrentlyEquipped(item);
+
+  if (wasEquipped) {
+    unequipItem({ force: true, skipRender: true });
+  }
 
   inventory.splice(absoluteIndex, 1);
   renderInventory();
@@ -12307,8 +12339,10 @@ function equipItem(item) {
   renderInventory();
 }
 
-function unequipItem() {
-  if (cutsceneActive) {
+function unequipItem(options = {}) {
+  const { force = false, skipRender = false } = options;
+
+  if (cutsceneActive && !force) {
     return;
   }
 
@@ -12341,7 +12375,9 @@ function unequipItem() {
 
   changeBackground("menuDefault", null, { force: true });
 
-  renderInventory();
+  if (!skipRender) {
+    renderInventory();
+  }
 }
 
 function handleEquippedItem(item) {
@@ -13357,24 +13393,104 @@ function registerMenuButtons() {
   }
 }
 
-function setupAudioControls() {
-  audioSliderElement = document.getElementById("audioSlider");
-  audioSliderValueLabelElement = document.getElementById("audioSliderValue");
-  muteButtonElement = document.getElementById("muteButton");
-  const resetDataButton = document.getElementById("resetDataButton");
-
-  const savedVolume = localStorage.getItem("audioVolume");
-  if (savedVolume !== null) {
-    audioVolume = parseFloat(savedVolume);
-    previousVolume = audioVolume;
+function clampVolume(value, fallback = 1) {
+  const number = typeof value === "number" ? value : parseFloat(value);
+  if (!Number.isFinite(number)) {
+    return fallback;
   }
 
-  updateAudioElements(audioVolume);
+  if (number < 0) {
+    return 0;
+  }
+  if (number > 1) {
+    return 1;
+  }
+  return number;
+}
+
+function getAudioCategory(id) {
+  if (typeof id !== "string" || !id) {
+    return "title";
+  }
+
+  if (ROLL_AUDIO_IDS.has(id)) {
+    return "roll";
+  }
+
+  if (MENU_AUDIO_IDS.has(id)) {
+    return "menu";
+  }
+
+  return "title";
+}
+
+function getCategoryVolume(category) {
+  switch (category) {
+    case "roll":
+      return rollAudioVolume;
+    case "menu":
+      return menuAudioVolume;
+    case "title":
+    default:
+      return titleAudioVolume;
+  }
+}
+
+function getEffectiveVolumeForAudioId(id) {
+  const masterVolume = clampVolume(audioVolume, 1);
+  const categoryVolume = clampVolume(getCategoryVolume(getAudioCategory(id)), 1);
+  return clampVolume(masterVolume * categoryVolume, 0);
+}
+
+function initializeAudioVolumeStateFromStorage() {
+  const savedVolume = localStorage.getItem("audioVolume");
+  if (savedVolume !== null) {
+    audioVolume = clampVolume(savedVolume, audioVolume);
+    if (audioVolume > 0) {
+      previousVolume = audioVolume;
+    }
+  }
+
+  const savedRollVolume = localStorage.getItem("rollAudioVolume");
+  if (savedRollVolume !== null) {
+    rollAudioVolume = clampVolume(savedRollVolume, rollAudioVolume);
+  }
+
+  const savedTitleVolume = localStorage.getItem("titleAudioVolume");
+  if (savedTitleVolume !== null) {
+    titleAudioVolume = clampVolume(savedTitleVolume, titleAudioVolume);
+  }
+
+  const savedMenuVolume = localStorage.getItem("menuAudioVolume");
+  if (savedMenuVolume !== null) {
+    menuAudioVolume = clampVolume(savedMenuVolume, menuAudioVolume);
+  }
+
+  isMuted = audioVolume === 0;
+
+  updateAudioElements();
+}
+
+initializeAudioVolumeStateFromStorage();
+
+function setupAudioControls() {
+  initializeAudioVolumeStateFromStorage();
+
+  audioSliderElement = document.getElementById("audioSlider");
+  audioSliderValueLabelElement = document.getElementById("audioSliderValue");
+  rollAudioSliderElement = document.getElementById("rollAudioSlider");
+  rollAudioSliderValueLabelElement = document.getElementById("rollAudioSliderValue");
+  titleAudioSliderElement = document.getElementById("titleAudioSlider");
+  titleAudioSliderValueLabelElement = document.getElementById("titleAudioSliderValue");
+  menuAudioSliderElement = document.getElementById("menuAudioSlider");
+  menuAudioSliderValueLabelElement = document.getElementById("menuAudioSliderValue");
+  muteButtonElement = document.getElementById("muteButton");
+  const resetDataButton = document.getElementById("resetDataButton");
 
   if (audioSliderElement) {
     audioSliderElement.value = audioVolume;
     audioSliderElement.addEventListener("input", () => {
-      audioVolume = parseFloat(audioSliderElement.value);
+      audioVolume = clampVolume(audioSliderElement.value, audioVolume);
       if (audioVolume === 0) {
         isMuted = true;
         setSliderMutedState(true);
@@ -13384,27 +13500,70 @@ function setupAudioControls() {
         setSliderMutedState(false);
       }
       localStorage.setItem("audioVolume", audioVolume);
-      updateAudioElements(audioVolume);
+      updateAudioElements();
       updateAudioSliderUi();
     });
+    updateAudioSliderUi();
   }
+
+  const attachCategorySliderHandler = (sliderElement, valueLabelElement, storageKey, onUpdate) => {
+    if (!sliderElement) {
+      return;
+    }
+
+    sliderElement.value = clampVolume(onUpdate("get"), 1);
+    updateSliderUi(sliderElement, valueLabelElement);
+
+    sliderElement.addEventListener("input", () => {
+      const value = clampVolume(sliderElement.value, onUpdate("get"));
+      onUpdate("set", value);
+      localStorage.setItem(storageKey, value);
+      updateAudioElements();
+      updateSliderUi(sliderElement, valueLabelElement);
+    });
+  };
+
+  attachCategorySliderHandler(rollAudioSliderElement, rollAudioSliderValueLabelElement, "rollAudioVolume", (action, value) => {
+    if (action === "set") {
+      rollAudioVolume = value;
+    }
+    return rollAudioVolume;
+  });
+
+  attachCategorySliderHandler(titleAudioSliderElement, titleAudioSliderValueLabelElement, "titleAudioVolume", (action, value) => {
+    if (action === "set") {
+      titleAudioVolume = value;
+    }
+    return titleAudioVolume;
+  });
+
+  attachCategorySliderHandler(menuAudioSliderElement, menuAudioSliderValueLabelElement, "menuAudioVolume", (action, value) => {
+    if (action === "set") {
+      menuAudioVolume = value;
+    }
+    return menuAudioVolume;
+  });
 
   if (muteButtonElement) {
     muteButtonElement.addEventListener("click", () => {
       isMuted = !isMuted;
 
       if (isMuted) {
-        previousVolume = audioVolume;
+        if (audioVolume > 0) {
+          previousVolume = audioVolume;
+        }
         audioVolume = 0;
       } else {
-        audioVolume = previousVolume;
+        audioVolume = previousVolume > 0 ? previousVolume : 1;
       }
+
+      audioVolume = clampVolume(audioVolume, 1);
 
       if (audioSliderElement) {
         audioSliderElement.value = audioVolume;
       }
       localStorage.setItem("audioVolume", audioVolume);
-      updateAudioElements(audioVolume);
+      updateAudioElements();
       setSliderMutedState(isMuted);
       updateAudioSliderUi();
     });
@@ -13429,12 +13588,14 @@ function setupAudioControls() {
   }
 
   setSliderMutedState(audioVolume === 0);
-  updateAudioSliderUi();
 }
 
-function updateAudioElements(volume) {
+function updateAudioElements() {
   const audioElements = document.querySelectorAll("audio");
-  audioElements.forEach((audio) => (audio.volume = volume));
+  audioElements.forEach((audio) => {
+    const id = typeof audio.id === "string" ? audio.id : "";
+    audio.volume = getEffectiveVolumeForAudioId(id);
+  });
 }
 
 function setSliderMutedState(muted) {
@@ -13446,14 +13607,18 @@ function setSliderMutedState(muted) {
 }
 
 function updateAudioSliderUi() {
-  if (!audioSliderElement) {
+  updateSliderUi(audioSliderElement, audioSliderValueLabelElement);
+}
+
+function updateSliderUi(sliderElement, valueLabelElement) {
+  if (!sliderElement) {
     return;
   }
 
-  const value = Math.max(0, Math.min(1, parseFloat(audioSliderElement.value) || 0));
+  const value = clampVolume(sliderElement.value, 0);
   const percentage = Math.round(value * 100);
-  if (audioSliderValueLabelElement) {
-    audioSliderValueLabelElement.textContent = `${percentage}%`;
+  if (valueLabelElement) {
+    valueLabelElement.textContent = `${percentage}%`;
   }
 
   const startColor = { r: 96, g: 0, b: 126 };
@@ -13463,13 +13628,13 @@ function updateAudioSliderUi() {
   const b = Math.round(startColor.b + (endColor.b - startColor.b) * value);
   const thumbColor = `rgb(${r}, ${g}, ${b})`;
 
-  audioSliderElement.style.setProperty("--thumb-color", thumbColor);
+  sliderElement.style.setProperty("--thumb-color", thumbColor);
 
-  const trackColor = audioSliderElement.classList.contains("muted")
+  const trackColor = sliderElement.classList.contains("muted")
     ? "rgba(128, 96, 186, 0.75)"
     : thumbColor;
 
-  audioSliderElement.style.background = `linear-gradient(90deg, ${trackColor} ${percentage}%, rgba(255, 255, 255, 0.12) ${percentage}%)`;
+  sliderElement.style.background = `linear-gradient(90deg, ${trackColor} ${percentage}%, rgba(255, 255, 255, 0.12) ${percentage}%)`;
 }
 
 function initializeAutoRollControls() {
@@ -14630,7 +14795,7 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
       if (details.audio) {
         const newAudio = document.getElementById(details.audio);
         if (newAudio) {
-          newAudio.volume = typeof audioVolume === "number" ? audioVolume : 1;
+          newAudio.volume = getEffectiveVolumeForAudioId(details.audio);
           const playPromise = newAudio.play();
           if (playPromise && typeof playPromise.catch === "function") {
             playPromise.catch(() => {});
