@@ -11552,6 +11552,10 @@ function openProfileDropdown() {
   }
 
   profileDropdownOutsideHandler = (event) => {
+    if (!event.isTrusted) {
+      return;
+    }
+
     if (!dropdown.contains(event.target) && !trigger.contains(event.target)) {
       closeProfileDropdown();
     }
@@ -11592,19 +11596,11 @@ function closeProfileDropdown() {
 
 function openDiscord() {
   window.open("https://discord.gg/m6k7Jagm3v", "_blank");
-  closeProfileDropdown();
 }
 
 function openGithub() {
   window.open("https://github.com/The-Unnamed-Official/Unnamed-RNG/tree/published", "_blank");
-  closeProfileDropdown();
 }
-
-document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") {
-    closeProfileDropdown();
-  }
-});
 
 function selectTitle(rarity) {
   const titles = rarity.titles;
