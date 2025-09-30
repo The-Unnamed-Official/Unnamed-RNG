@@ -950,7 +950,12 @@ const CUTSCENE_STATE_GETTERS = {
   skipCutsceneTranscendent: () => skipCutsceneTranscendent,
 };
 
-function updateCutsceneSkipDisplay({ labelId, label, buttonId }, isSkipping) {
+function updateCutsceneSkipDisplay(
+  { labelId, label, buttonId },
+  cutsceneEnabled
+) {
+  const isSkipping = !cutsceneEnabled;
+
   const labelElement = byId(labelId);
   if (labelElement) {
     labelElement.textContent = `${label} ${isSkipping ? "On" : "Off"}`;
@@ -958,7 +963,7 @@ function updateCutsceneSkipDisplay({ labelId, label, buttonId }, isSkipping) {
 
   const buttonElement = byId(buttonId);
   if (buttonElement) {
-    buttonElement.classList.toggle("active", Boolean(isSkipping));
+    buttonElement.classList.toggle("active", isSkipping);
   }
 }
 
@@ -10847,7 +10852,10 @@ function registerCutsceneToggleButtons() {
       const nextValue = !Boolean(readState());
       assignState(nextValue);
       storage.set(key, nextValue);
-      console.log(`Cutscene skip for ${config.label} has been set to ${nextValue}`);
+      const isSkipping = !nextValue;
+      console.log(
+        `Cutscene skip for ${config.label} is now ${isSkipping ? "On" : "Off"}`
+      );
       updateCutsceneSkipDisplay(config, nextValue);
     });
   });
