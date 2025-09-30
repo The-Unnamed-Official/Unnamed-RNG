@@ -4830,12 +4830,13 @@ body.flashing {
 
 .achievement-itemEvent[data-availability="inactive"] {
     cursor: not-allowed;
+    padding-top: 32px;
 }
 
 .achievement-itemEvent[data-availability="inactive"]::before {
     content: "Out of Season";
     position: absolute;
-    top: 10px;
+    top: 8px;
     right: 12px;
     font-size: 0.65rem;
     font-weight: 700;
@@ -4845,6 +4846,7 @@ body.flashing {
     padding: 2px 10px;
     border-radius: 999px;
     letter-spacing: 0.02em;
+    pointer-events: none;
 }
 
 .achievement-itemEvent[data-availability="inactive"]:hover {
@@ -4936,6 +4938,17 @@ body.flashing {
     font-size: 0.78rem;
     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
     z-index: 5;
+}
+
+.achievement-itemEvent:hover::after {
+    white-space: normal;
+    max-width: min(240px, calc(100vw - 48px));
+    text-align: center;
+}
+
+.achievement-itemEvent[data-event=""]::after,
+.achievement-itemEvent[data-event=""]::before {
+    content: none;
 }
 
 .achievement-item:hover::before,

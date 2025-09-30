@@ -1672,8 +1672,8 @@ function checkAchievements(context = {}) {
     : new Set(storage.get("rolledRarityBuckets", []));
   const qualifyingInventoryCount = getQualifyingInventoryCount();
   const inventoryTitleSet = new Set();
-  const activeEventBucketCounts = new Map();
-  let totalActiveEventTitleCount = 0;
+  const eventBucketCounts = new Map();
+  let totalEventTitleCount = 0;
 
   if (Array.isArray(inventory)) {
     inventory.forEach((item) => {
@@ -1690,18 +1690,16 @@ function checkAchievements(context = {}) {
         normalizeRarityBucket(item.rarityClass);
 
       if (bucket && bucket.startsWith("event")) {
-        if (isEventBucketActive(bucket)) {
-          totalActiveEventTitleCount += 1;
-          activeEventBucketCounts.set(
-            bucket,
-            (activeEventBucketCounts.get(bucket) || 0) + 1
-          );
-        }
+        totalEventTitleCount += 1;
+        eventBucketCounts.set(
+          bucket,
+          (eventBucketCounts.get(bucket) || 0) + 1
+        );
       }
     });
   }
 
-  const distinctActiveEventBucketCount = activeEventBucketCounts.size;
+  const distinctEventBucketCount = eventBucketCounts.size;
 
   ACHIEVEMENTS.forEach((achievement) => {
     if (achievement.count && rollCount >= achievement.count) {
@@ -1750,7 +1748,7 @@ function checkAchievements(context = {}) {
 
     if (
       achievement.requiredEventBucket &&
-      activeEventBucketCounts.has(achievement.requiredEventBucket)
+      eventBucketCounts.has(achievement.requiredEventBucket)
     ) {
       unlockAchievement(achievement.name, unlocked);
     }
@@ -1758,7 +1756,7 @@ function checkAchievements(context = {}) {
     if (
       Array.isArray(achievement.requiredEventBuckets) &&
       achievement.requiredEventBuckets.every((bucket) =>
-        activeEventBucketCounts.has(bucket)
+        eventBucketCounts.has(bucket)
       )
     ) {
       unlockAchievement(achievement.name, unlocked);
@@ -1766,14 +1764,14 @@ function checkAchievements(context = {}) {
 
     if (
       typeof achievement.minDistinctEventBuckets === "number" &&
-      distinctActiveEventBucketCount >= achievement.minDistinctEventBuckets
+      distinctEventBucketCount >= achievement.minDistinctEventBuckets
     ) {
       unlockAchievement(achievement.name, unlocked);
     }
 
     if (
       typeof achievement.minEventTitleCount === "number" &&
-      totalActiveEventTitleCount >= achievement.minEventTitleCount
+      totalEventTitleCount >= achievement.minEventTitleCount
     ) {
       unlockAchievement(achievement.name, unlocked);
     }
