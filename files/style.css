@@ -3218,7 +3218,7 @@ body.flashing {
 
 .creator-card:hover .creator-card__avatar::before,
 .creator-card:focus-visible .creator-card__avatar::before {
-    background-image: url("images/unnamed_pfp_deco_active.gif");
+    background-image: url("images/unnamed_pfp_deco_active.png");
     opacity: 1;
     transform: scale(1.02);
 }
