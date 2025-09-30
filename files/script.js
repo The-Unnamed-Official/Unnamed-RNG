@@ -11552,6 +11552,10 @@ function openProfileDropdown() {
   }
 
   profileDropdownOutsideHandler = (event) => {
+    if (!event.isTrusted) {
+      return;
+    }
+
     if (!dropdown.contains(event.target) && !trigger.contains(event.target)) {
       closeProfileDropdown();
     }
