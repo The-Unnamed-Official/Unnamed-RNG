@@ -387,19 +387,18 @@
         </div>
 
         <div class="info2">
-            <div class="creator">
-                <h3 class="cu1">Game created by:</h3>
-
-                <br>
-
-                <h2 class="cu">𝐔𝐧𝐧𝐚𝐦𝐞𝐝 𝚁𝙽𝙶</h2>
-
-                <div class="creatorUnnamed">
-                    <input type="text" value="not.unnamed" id="unnamedUser" hidden>
-                    <img class="unnamed" id="profile" src="files/images/unnamed_pfp.gif" width="80px">
-                    <div class="unnamedDeco" onclick="showPopupCopyTxt()"></div>
-                </div>
-            </div>
+            <input type="text" value="not.unnamed" id="unnamedUser" hidden>
+            <button class="creator-card" type="button" onclick="showPopupCopyTxt()">
+                <span class="creator-card__glow" aria-hidden="true"></span>
+                <span class="creator-card__avatar">
+                    <img src="files/images/unnamed_pfp.gif" alt="Profile picture for Unnamed" loading="lazy">
+                </span>
+                <span class="creator-card__meta">
+                    <span class="creator-card__label">Game created by</span>
+                    <span class="creator-card__title">Unnamed RNG</span>
+                    <span class="creator-card__handle">@not.unnamed</span>
+                </span>
+            </button>
         </div>
 
         <div id="profileModal" class="modal">
