@@ -264,6 +264,75 @@ let heartContainerElement = null;
 let heartIntervalId = null;
 let playTimeIntervalId = null;
 let playTimeSeconds = parseInt(localStorage.getItem("playTime"), 10) || 0;
+
+function normalizePlayTime(value) {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isFinite(parsed) && parsed >= 0) {
+    return parsed;
+  }
+  return 0;
+}
+
+function formatPlayTimeDisplay(seconds) {
+  const normalized = normalizePlayTime(seconds);
+  const hrs = Math.floor(normalized / 3600);
+  const mins = Math.floor((normalized % 3600) / 60);
+  const secs = normalized % 60;
+
+  return [
+    hrs.toString().padStart(2, "0"),
+    mins.toString().padStart(2, "0"),
+    secs.toString().padStart(2, "0"),
+  ].join(":");
+}
+
+function updatePlayTimeDisplay(seconds) {
+  const timerDisplay = document.getElementById("timer");
+  if (!timerDisplay) {
+    return;
+  }
+
+  timerDisplay.textContent = formatPlayTimeDisplay(seconds);
+}
+
+function stopPlayTimeTracker() {
+  if (!playTimeIntervalId) {
+    return;
+  }
+
+  clearInterval(playTimeIntervalId);
+  playTimeIntervalId = null;
+}
+
+function setPlayTimeSeconds(seconds, { persist = true, updateDisplay = true } = {}) {
+  const normalized = normalizePlayTime(seconds);
+  playTimeSeconds = normalized;
+
+  if (persist) {
+    localStorage.setItem("playTime", normalized);
+  }
+
+  if (updateDisplay) {
+    updatePlayTimeDisplay(normalized);
+  }
+
+  return normalized;
+}
+
+function collectLocalStorageSnapshot() {
+  const snapshot = {};
+
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (!key) {
+      continue;
+    }
+
+    snapshot[key] = localStorage.getItem(key);
+  }
+
+  return snapshot;
+}
 let autoRollButtonElement = null;
 
 const STOPPABLE_AUDIO_IDS = [
@@ -13347,7 +13416,11 @@ function setupAudioControls() {
     resetDataButton.addEventListener("click", () => {
       if (confirm("Are you sure you want to reset all data?")) {
         console.log("Data reset!");
+        stopPlayTimeTracker();
         localStorage.clear();
+        setPlayTimeSeconds(0, { persist: false });
+        checkAchievements();
+        updateAchievementsList();
 
         setTimeout(() => {
           localStorage.clear();
@@ -13556,7 +13629,7 @@ function registerDataPersistenceButtons() {
 
   if (saveButton) {
     saveButton.addEventListener("click", () => {
-      const data = JSON.stringify(localStorage);
+      const data = JSON.stringify(collectLocalStorageSnapshot());
       const encryptedData = CryptoJS.AES.encrypt(data, secretKey).toString();
       const blob = new Blob([encryptedData], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -13593,10 +13666,36 @@ function registerDataPersistenceButtons() {
             const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
             const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
             const importedData = JSON.parse(decryptedData);
+            if (!importedData || typeof importedData !== "object") {
+              throw new Error("Invalid file format.");
+            }
 
-            Object.keys(importedData).forEach((key) => {
-              localStorage.setItem(key, importedData[key]);
+            stopPlayTimeTracker();
+
+            localStorage.clear();
+
+            let importedPlayTime = null;
+
+            Object.entries(importedData).forEach(([key, value]) => {
+              if (typeof key !== "string") {
+                return;
+              }
+
+              const stringValue = typeof value === "string" ? value : String(value);
+              localStorage.setItem(key, stringValue);
+
+              if (key === "playTime") {
+                importedPlayTime = stringValue;
+              }
             });
+
+            if (importedPlayTime !== null) {
+              setPlayTimeSeconds(importedPlayTime);
+            } else {
+              setPlayTimeSeconds(0, { persist: false });
+            }
+
+            initializePlayTimeTracker();
 
             showStatusMessage("Data imported successfully! Refreshing...", 1500);
 
@@ -13621,32 +13720,17 @@ function initializePlayTimeTracker() {
     return;
   }
 
-  const storedPlayTime = parseInt(localStorage.getItem("playTime"), 10);
-  if (!Number.isNaN(storedPlayTime)) {
-    playTimeSeconds = storedPlayTime;
-  }
   const timerDisplay = document.getElementById("timer");
   if (!timerDisplay) {
     return;
   }
 
-  const formatTime = (seconds) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return [
-      hrs.toString().padStart(2, "0"),
-      mins.toString().padStart(2, "0"),
-      secs.toString().padStart(2, "0"),
-    ].join(":");
-  };
-
-  timerDisplay.textContent = formatTime(playTimeSeconds);
+  setPlayTimeSeconds(localStorage.getItem("playTime"), { persist: false });
+  checkAchievements();
+  updateAchievementsList();
 
   playTimeIntervalId = setInterval(() => {
-    playTimeSeconds += 1;
-    timerDisplay.textContent = formatTime(playTimeSeconds);
-    localStorage.setItem("playTime", playTimeSeconds);
+    setPlayTimeSeconds(playTimeSeconds + 1);
     checkAchievements();
     updateAchievementsList();
   }, 1000);
