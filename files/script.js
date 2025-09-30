@@ -81,6 +81,10 @@ let skipCutscene100K = true;
 let skipCutscene1M = true;
 let skipCutsceneTranscendent = true;
 let cooldownBuffActive = cooldownTime < BASE_COOLDOWN_TIME;
+const COOLDOWN_BUFF_REDUCE_TO_KEY = "cooldownBuffReduceTo";
+const COOLDOWN_BUFF_EXPIRES_AT_KEY = "cooldownBuffExpiresAt";
+let cooldownBuffTimeoutId = null;
+let cooldownEffectIntervalId = null;
 let rollDisplayHiddenByUser = false;
 let cutsceneHidRollDisplay = false;
 let cutsceneActive = false;
@@ -839,6 +843,7 @@ function initializeAfterStart() {
   registerDataPersistenceButtons();
   initializePlayTimeTracker();
   registerRarityDeletionButtons();
+  initializeCooldownBuffState();
   scheduleAllCooldownButtons();
   updateAchievementsList();
   processAchievementToastQueue();
@@ -13089,11 +13094,7 @@ function spawnCooldownButton(config) {
       return;
     }
 
-    cooldownBuffActive = true;
-    cooldownTime = config.reduceTo;
-    recordRollCooldownDuration("buffed", cooldownTime);
-
-    showCooldownEffect(config.effectSeconds);
+    activateCooldownBuff(config.reduceTo, config.effectSeconds, config.resetDelay);
 
     button.innerText = "Cooldown Reduced!";
     button.disabled = true;
@@ -13103,43 +13104,162 @@ function spawnCooldownButton(config) {
         document.body.removeChild(button);
       }
     }, 1000);
-
-    setTimeout(() => {
-      cooldownTime = BASE_COOLDOWN_TIME;
-      recordRollCooldownDuration("default", cooldownTime);
-      cooldownBuffActive = false;
-      scheduleAllCooldownButtons();
-    }, config.resetDelay);
   });
 
   document.body.appendChild(button);
 }
 
-function showCooldownEffect(duration) {
+function clearCooldownEffectDisplay() {
+  if (cooldownEffectIntervalId) {
+    clearInterval(cooldownEffectIntervalId);
+    cooldownEffectIntervalId = null;
+  }
+
   const existingDisplay = document.getElementById("countdownDisplay");
-  if (existingDisplay) {
+  if (existingDisplay && existingDisplay.isConnected) {
     existingDisplay.remove();
+  }
+}
+
+function showCooldownEffect(duration, { expiresAt } = {}) {
+  clearCooldownEffectDisplay();
+
+  const normalizedDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
+  const targetExpiresAt = Number.isFinite(expiresAt)
+    ? expiresAt
+    : Date.now() + normalizedDuration * 1000;
+
+  if (!Number.isFinite(targetExpiresAt) || targetExpiresAt <= Date.now()) {
+    return;
   }
 
   const countdownDisplay = document.createElement("div");
   countdownDisplay.id = "countdownDisplay";
   countdownDisplay.className = "roll-cooldown-display";
-  countdownDisplay.textContent = `Roll-Cooldown Effect: ${duration}s`;
   document.body.appendChild(countdownDisplay);
 
-  let timeLeft = duration - 1;
-  const interval = setInterval(() => {
-    if (timeLeft < 0) {
-      clearInterval(interval);
-      if (countdownDisplay.isConnected) {
-        document.body.removeChild(countdownDisplay);
-      }
+  const updateCountdown = () => {
+    const millisecondsLeft = targetExpiresAt - Date.now();
+    if (millisecondsLeft <= 0) {
+      clearCooldownEffectDisplay();
       return;
     }
 
-    countdownDisplay.textContent = `Roll-Cooldown Effect: ${timeLeft}s`;
-    timeLeft--;
-  }, 1000);
+    const secondsLeft = Math.max(0, Math.ceil(millisecondsLeft / 1000));
+    countdownDisplay.textContent = `Roll-Cooldown Effect: ${secondsLeft}s`;
+  };
+
+  updateCountdown();
+  cooldownEffectIntervalId = setInterval(updateCountdown, 1000);
+}
+
+function persistCooldownBuffState(reduceTo, expiresAt) {
+  if (!Number.isFinite(reduceTo) || !Number.isFinite(expiresAt)) {
+    return;
+  }
+
+  localStorage.setItem(COOLDOWN_BUFF_REDUCE_TO_KEY, String(reduceTo));
+  localStorage.setItem(COOLDOWN_BUFF_EXPIRES_AT_KEY, String(expiresAt));
+}
+
+function clearPersistedCooldownBuffState() {
+  localStorage.removeItem(COOLDOWN_BUFF_REDUCE_TO_KEY);
+  localStorage.removeItem(COOLDOWN_BUFF_EXPIRES_AT_KEY);
+}
+
+function endCooldownBuff() {
+  clearPersistedCooldownBuffState();
+  clearCooldownEffectDisplay();
+
+  if (cooldownBuffTimeoutId) {
+    clearTimeout(cooldownBuffTimeoutId);
+    cooldownBuffTimeoutId = null;
+  }
+
+  cooldownTime = BASE_COOLDOWN_TIME;
+  recordRollCooldownDuration("default", cooldownTime);
+  cooldownBuffActive = false;
+  scheduleAllCooldownButtons();
+}
+
+function scheduleCooldownBuffExpiration(expiresAt) {
+  if (cooldownBuffTimeoutId) {
+    clearTimeout(cooldownBuffTimeoutId);
+    cooldownBuffTimeoutId = null;
+  }
+
+  if (!Number.isFinite(expiresAt)) {
+    return;
+  }
+
+  const remainingMs = expiresAt - Date.now();
+  if (remainingMs <= 0) {
+    endCooldownBuff();
+    return;
+  }
+
+  cooldownBuffTimeoutId = setTimeout(() => {
+    cooldownBuffTimeoutId = null;
+    endCooldownBuff();
+  }, remainingMs);
+}
+
+function activateCooldownBuff(reduceTo, effectSeconds, resetDelay) {
+  if (!Number.isFinite(reduceTo) || reduceTo <= 0) {
+    return;
+  }
+
+  const durationMs = Number.isFinite(resetDelay) && resetDelay > 0
+    ? resetDelay
+    : (Number.isFinite(effectSeconds) && effectSeconds > 0 ? effectSeconds * 1000 : 0);
+
+  if (!Number.isFinite(durationMs) || durationMs <= 0) {
+    return;
+  }
+
+  const expiresAt = Date.now() + durationMs;
+
+  cooldownBuffActive = true;
+  cooldownTime = reduceTo;
+  recordRollCooldownDuration("buffed", cooldownTime);
+
+  persistCooldownBuffState(reduceTo, expiresAt);
+
+  const secondsForDisplay = Number.isFinite(effectSeconds) && effectSeconds > 0
+    ? effectSeconds
+    : Math.ceil(durationMs / 1000);
+
+  showCooldownEffect(secondsForDisplay, { expiresAt });
+  scheduleCooldownBuffExpiration(expiresAt);
+}
+
+function initializeCooldownBuffState() {
+  const storedReduceTo = Number.parseInt(localStorage.getItem(COOLDOWN_BUFF_REDUCE_TO_KEY), 10);
+  const storedExpiresAt = Number.parseInt(localStorage.getItem(COOLDOWN_BUFF_EXPIRES_AT_KEY), 10);
+
+  if (!Number.isFinite(storedReduceTo) || storedReduceTo <= 0) {
+    clearPersistedCooldownBuffState();
+    return;
+  }
+
+  if (!Number.isFinite(storedExpiresAt)) {
+    clearPersistedCooldownBuffState();
+    return;
+  }
+
+  const remainingMs = storedExpiresAt - Date.now();
+  if (remainingMs <= 0) {
+    endCooldownBuff();
+    return;
+  }
+
+  cooldownBuffActive = true;
+  cooldownTime = storedReduceTo;
+  recordRollCooldownDuration("buffed", cooldownTime);
+
+  const secondsForDisplay = Math.ceil(remainingMs / 1000);
+  showCooldownEffect(secondsForDisplay, { expiresAt: storedExpiresAt });
+  scheduleCooldownBuffExpiration(storedExpiresAt);
 }
 
 function scheduleAllCooldownButtons() {
