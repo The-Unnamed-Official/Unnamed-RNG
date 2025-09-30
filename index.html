@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Unnamed's RNG - End of Summer</title>
+    <title>Unnamed's RNG - 1.2.5</title>
     <script src="https://kit.fontawesome.com/fe85db6219.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="files/style.css">
@@ -16,9 +16,15 @@
     <link rel="icon" type="image/png" sizes="500x500" href="/Unnamed-RNG/files/images/favicon-500.png">
 </head>
 <body>
+  <div id="flashLayer" aria-hidden="true"></div>
 
-    <div class="version">
-        <a class="vNumber">Version: 1.2.1 <p class="vNumberDetailed">(1.2.1_updEND_OF_SUMMER)</p></a>
+    <div class="version" role="status" aria-live="polite">
+        <div class="vNumber">
+            <span class="vNumberLabel">Version</span>
+            <span class="vNumberValue">1.2.5</span>
+            <span class="vNumberDetailed">(1.2.5_upd)</span>
+        </div>
+        <h1 class="gameTitle version__title">Unnamed's RNG</h1>
     </div>
 
     <canvas id="fireworksCanvas"></canvas>
@@ -53,6 +59,33 @@
                                 <button id="muteButton" class="settings-btn settings-btn--ghost" type="button">Mute</button>
                             </div>
                         </div>
+                        <div class="settings-audio">
+                            <label class="settings-audio__label" for="rollAudioSlider">Rolling Sound Volume</label>
+                            <div class="settings-audio__controls">
+                                <div class="settings-audio__slider">
+                                    <input type="range" id="rollAudioSlider" min="0" max="1" step="0.01" value="1">
+                                    <span id="rollAudioSliderValue" class="settings-audio__value">100%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="settings-audio">
+                            <label class="settings-audio__label" for="titleAudioSlider">Title Music Volume</label>
+                            <div class="settings-audio__controls">
+                                <div class="settings-audio__slider">
+                                    <input type="range" id="titleAudioSlider" min="0" max="1" step="0.01" value="1">
+                                    <span id="titleAudioSliderValue" class="settings-audio__value">100%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="settings-audio">
+                            <label class="settings-audio__label" for="menuAudioSlider">Main Menu Music Volume</label>
+                            <div class="settings-audio__controls">
+                                <div class="settings-audio__slider">
+                                    <input type="range" id="menuAudioSlider" min="0" max="1" step="0.01" value="1">
+                                    <span id="menuAudioSliderValue" class="settings-audio__value">100%</span>
+                                </div>
+                            </div>
+                        </div>
                     </section>
 
                     <section class="settings-section">
@@ -76,10 +109,11 @@
                     <section class="settings-section">
                         <h4 class="settings-section__title">Cutscene Skip</h4>
                         <div id="rarityChecklistC" class="settings-chip-group">
-                            <button id="toggleCutscene1K" class="cutsceneSkipBtb" type="button"><span id="1KTxt" class="under1kT">Skip Decent Cutscenes</span></button>
-                            <button id="toggleCutscene10K" class="cutsceneSkipBtb" type="button"><span id="10KTxt" class="under10kT">Skip Grand Cutscenes</span></button>
-                            <button id="toggleCutscene100K" class="cutsceneSkipBtb" type="button"><span id="100KTxt" class="under100k">Skip Mastery Cutscenes</span></button>
-                            <button id="toggleCutscene1M" class="cutsceneSkipBtb" type="button"><span id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</span></button>
+                            <button id="toggleCutscene1K" class="cutsceneSkipBtb" data-tier="decent" type="button"><span id="1KTxt" class="under1kT">Skip Decent Cutscenes</span></button>
+                            <button id="toggleCutscene10K" class="cutsceneSkipBtb" data-tier="grand" type="button"><span id="10KTxt" class="under10kT">Skip Grand Cutscenes</span></button>
+                            <button id="toggleCutscene100K" class="cutsceneSkipBtb" data-tier="mastery" type="button"><span id="100KTxt" class="under100k">Skip Mastery Cutscenes</span></button>
+                            <button id="toggleCutscene1M" class="cutsceneSkipBtb" data-tier="supreme" type="button"><span id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</span></button>
+                            <button id="toggleCutsceneTranscendent" class="cutsceneSkipBtb" data-tier="transcendent" type="button"><span id="transcendentTxt" class="transcendent">Skip Transcendent Cutscenes</span></button>
                         </div>
                     </section>
                 </div>
@@ -92,6 +126,7 @@
                         <button class="rarity-button" data-rarity="under10k" type="button"><span class="under10kT">Grand</span></button>
                         <button class="rarity-button" data-rarity="under100k" type="button"><span class="under100k">Mastery</span></button>
                         <button class="rarity-button" data-rarity="under1m" type="button"><span class="under1mBtn">Supreme</span></button>
+                        <button class="rarity-button" data-rarity="transcendent" type="button"><span class="transcendent">Transcendent</span></button>
                         <button class="rarity-button" data-rarity="special" type="button"><span class="special">Special</span></button>
                     </div>
                 </section>
@@ -232,6 +267,7 @@
                         <div class="achievement-itemR" data-rarity="Special" data-name="One of a Kind">One of a Kind</div>
                         <div class="achievement-itemR" data-rarity="Mastery" data-name="Mastered the Odds">Mastered the Odds</div>
                         <div class="achievement-itemR" data-rarity="Supreme" data-name="Supreme Fortune">Supreme Fortune</div>
+                        <div class="achievement-itemR" data-rarity="Transcendent" data-name="Transcendent Triumph">Transcendent Triumph</div>
                     </div>
                 </section>
 
@@ -250,6 +286,7 @@
                         <div class="achievement-itemTitle" data-title="LubbyJubby's Cherry Grove [1 in 5,666]" data-name="Cherry Grove Champion">Cherry Grove Champion</div>
                         <div class="achievement-itemTitle" data-title="FireCraze [1 in 4,200/69th]" data-name="Firestarter">Firestarter</div>
                         <div class="achievement-itemTitle" data-title="ORB [1 in 55,555/30th]" data-name="Orbital Dreamer">Orbital Dreamer</div>
+                        <div class="achievement-itemTitle" data-title="Gl1tch3d [1 in 12,404/40,404th]" data-name="Glitched Reality">Glitched Reality</div>
                         <div class="achievement-itemTitle" data-title="Greg [1 in 50,000,000]" data-name="Gregarious Encounter">Gregarious Encounter</div>
                         <div class="achievement-itemTitle" data-title="Mintllie [1 in 500,000,000]" data-name="Mint Condition">Mint Condition</div>
                         <div class="achievement-itemTitle" data-title="Geezer [1 in 5,000,000,000]" data-name="Geezer Whisperer">Geezer Whisperer</div>
@@ -350,39 +387,37 @@
         </div>
 
         <div class="info2">
-            <div class="creator">
-                <h3 class="cu1">Game created by:</h3>
-
-                <br>
-
-                <h2 class="cu">𝐔𝐧𝐧𝐚𝐦𝐞𝐝 𝚁𝙽𝙶</h2>
-
-                <div class="creatorUnnamed">
-                    <input type="text" value="not.unnamed" id="unnamedUser" hidden>
-                    <img class="unnamed" id="profile" src="files/images/unnamed_pfp.gif" width="80px">
-                    <div class="unnamedDeco" onclick="showPopupCopyTxt()"></div>
-                </div>
-            </div>
-        </div>
-
-        <div id="profileModal" class="modal">
-            <div class="modal-content">
-              <h2>Select an Option</h2>
-              <button class="modal-button discord-btn" onclick="openDiscord()">Open Discord <i class="fa-brands fa-discord"></i></button>
-              <button class="modal-button github-btn" onclick="openGithub()">Open GitHub <i class="fa-brands fa-github"></i></button>
-              <br><br>
-              <button class="modal-button cancel-btn" onclick="closePopup()">Cancel</button>
+            <input type="text" value="not.unnamed" id="unnamedUser" hidden>
+            <button class="creator-card" type="button" onclick="showPopupCopyTxt(event)" aria-haspopup="menu" aria-expanded="false">
+                <span class="creator-card__glow" aria-hidden="true"></span>
+                <span class="creator-card__avatar">
+                    <img src="files/images/unnamed_pfp.gif" alt="Profile picture for Unnamed" loading="lazy">
+                </span>
+                <span class="creator-card__meta">
+                    <span class="creator-card__label">Game created by</span>
+                    <span class="creator-card__title">Unnamed RNG</span>
+                    <span class="creator-card__handle">not.unnamed</span>
+                </span>
+            </button>
+            <div id="copyToast" class="copy-toast" role="status" aria-live="polite" aria-hidden="true"></div>
+            <div id="profileDropdown" class="profile-dropdown" role="menu" aria-hidden="true">
+                <button class="profile-dropdown__button discord-btn" type="button" onclick="openDiscord()">
+                    Join Discord <i class="fa-brands fa-discord" aria-hidden="true"></i>
+                </button>
+                <button class="profile-dropdown__button github-btn" type="button" onclick="openGithub()">
+                    View GitHub <i class="fa-brands fa-github" aria-hidden="true"></i>
+                </button>
             </div>
         </div>
 
         <div class="container">
             <div class="containerInside">
-                <h1 class="gameTitle">Unnamed's RNG</h1>
-
-                <button class="rButton" id="rollButton" onclick="clickSound()"><i id="roll" class="fa-solid fa-arrows-rotate"></i></button>
-
-                
                 <div class="res" id="result"></div>
+
+                <button class="rButton" id="rollButton" type="button" onclick="clickSound()">
+                    <span class="rollButton__label">Roll</span>
+                    <span class="rollButton-progress" aria-hidden="true"></span>
+                </button>
             </div>
         </div>
 
@@ -533,13 +568,15 @@
                             <button id="deleteAllCelestialDawnButton" class="inventory-delete-btn" type="button" title="Delete All Celestial Dawn">Celestial Dawn</button>
                             <button id="deleteAllFatesRequiemButton" class="inventory-delete-btn" type="button" title="Delete All Fate's Requiem">Fate's Requiem</button>
                             <button id="deleteAllEonbreakButton" class="inventory-delete-btn" type="button" title="Delete All Eonbreak">Eonbreak</button>
+                            <button id="deleteAllBlodhestButton" class="inventory-delete-btn" type="button" title="Delete All Blodhest">Blodhest</button>
                             <button id="deleteAllOvertureButton" class="inventory-delete-btn" type="button" title="Delete All Overture">Overture</button>
                             <button id="deleteAllLightButton" class="inventory-delete-btn" type="button" title="Delete All Light">Light</button>
                             <button id="deleteAllUnnamedButton" class="inventory-delete-btn" type="button" title="Delete All Unnamed">Unnamed</button>
-                            <button id="deleteAllQbearButton" class="inventory-delete-btn" type="button" title="Delete All Qbear">Qbear</button>
-                            <button id="deleteAllBlodhestButton" class="inventory-delete-btn" type="button" title="Delete All Blodhest">Blodhest</button>
                             <button id="deleteAllHarvButton" class="inventory-delete-btn" type="button" title="Delete All HARV">HARV</button>
+                            <button id="deleteAllQbearButton" class="inventory-delete-btn" type="button" title="Delete All Qbear">Qbear</button>
+                            <button id="deleteAllHypernovaButton" class="inventory-delete-btn" type="button" title="Delete All Hypernova">Hypernova</button>
                             <button id="deleteAllTuonButton" class="inventory-delete-btn" type="button" title="Delete All Tuon">Tuon</button>
+                            <button id="deleteAllNebulaButton" class="inventory-delete-btn" type="button" title="Delete All Nebula">Nebula</button>
                             <button id="deleteAllDevilsHeartButton" class="inventory-delete-btn" type="button" title="Delete All Devil's Heart">Devil's Heart</button>
                             <button id="deleteAllArcanePulseButton" class="inventory-delete-btn" type="button" title="Delete All Arcane Pulse">Arcane Pulse</button>
                         </div>
@@ -551,7 +588,9 @@
                             <button id="deleteAllUnder1mButton" class="inventory-group__clear" type="button">Clear Supreme</button>
                         </div>
                         <div class="inventory-group__grid">
+                            <button id="deleteAllAstraldButton" class="inventory-delete-btn" type="button" title="Delete All Astrald">Astrald</button>
                             <button id="deleteAllImpeachedButton" class="inventory-delete-btn" type="button" title="Delete All Impeached">Impeached</button>
+                            <button id="deleteAllMastermindButton" class="inventory-delete-btn" type="button" title="Delete All Mastermind">Mastermind</button>
                             <button id="deleteAllCelestialChorusButton" class="inventory-delete-btn" type="button" title="Delete All Celestial Chorus">Celestial Chorus</button>
                             <button id="deleteAllX1staButton" class="inventory-delete-btn" type="button" title="Delete All X1sta">X1sta</button>
                         </div>
@@ -594,6 +633,11 @@
     <audio preload="none" id="scareSuspenceLofiAudio" src="files/sounds_and_music/scare_suspence_lofi.mp3"></audio>
     <audio preload="none" id="bigSuspenceAudio" src="files/sounds_and_music/big_suspence.mp3"></audio>
     <audio preload="none" id="hugeSuspenceAudio" src="files/sounds_and_music/onemillionsuspence.mp3"></audio>
+    <audio preload="none" id="hypernovaAudio" src="files/sounds_and_music/hypernova.mp3" loop></audio>
+    <audio preload="none" id="astraldAudio" src="files/sounds_and_music/astrald.mp3" loop></audio>
+    <audio preload="none" id="nebulaAudio" src="files/sounds_and_music/nebula.mp3" loop></audio>
+    <audio preload="none" id="glitchedAudio" src="files/sounds_and_music/glitched.mp3" loop></audio>
+    <audio preload="none" id="mastermindAudio" src="files/sounds_and_music/mastermind.mp3" loop></audio>
     <audio preload="none" id="expOpeningAudio" src="files/sounds_and_music/exp_opening.mp3"></audio>
     <audio preload="none" id="plabreAudio" src="files/sounds_and_music/plabre.mp3" loop></audio>
     <audio preload="none" id="isekailofiAudio" src="files/sounds_and_music/isekailofi.mp3" loop></audio>
@@ -693,9 +737,9 @@
     <audio preload="none" id="gingerAudio" src="files/sounds_and_music/ginger.mp3" loop></audio>
     <audio preload="none" id="esteggAudio" src="files/sounds_and_music/estegg.mp3" loop></audio>
     <audio preload="none" id="estbunAudio" src="files/sounds_and_music/estbun.mp3" loop></audio>
-    <!-- <audio preload="none" id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio> -->
+    <audio preload="none" id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio>
     <!-- <audio preload="none" id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio> -->
-    <audio preload="none" id="mainAudio" src="files/sounds_and_music/mainEvent2.mp3" loop></audio>
+    <!-- <audio preload="none" id="mainAudio" src="files/sounds_and_music/mainEvent2.mp3" loop></audio> -->
 
     
     <script src="files/script.js"></script>

@@ -69,6 +69,10 @@ let isChangeEnabled = true;
 let autoRollInterval = null;
 const AUTO_ROLL_UNLOCK_ROLLS = 1000;
 let audioVolume = 1;
+let rollAudioVolume = 1;
+let cutsceneAudioVolume = 1;
+let titleAudioVolume = 1;
+let menuAudioVolume = 1;
 let isMuted = false;
 let previousVolume = audioVolume;
 let refreshTimeout;
@@ -76,11 +80,19 @@ let skipCutscene1K = true;
 let skipCutscene10K = true;
 let skipCutscene100K = true;
 let skipCutscene1M = true;
+let skipCutsceneTranscendent = true;
 let cooldownBuffActive = cooldownTime < BASE_COOLDOWN_TIME;
+const COOLDOWN_BUFF_REDUCE_TO_KEY = "cooldownBuffReduceTo";
+const COOLDOWN_BUFF_EXPIRES_AT_KEY = "cooldownBuffExpiresAt";
+let cooldownBuffTimeoutId = null;
+let cooldownEffectIntervalId = null;
 let rollDisplayHiddenByUser = false;
 let cutsceneHidRollDisplay = false;
 let cutsceneActive = false;
 let cutsceneFailsafeTimeout = null;
+// Keep the safeguard comfortably longer than any scripted cutscene
+// so extended sequences aren't aborted before their own cleanup runs.
+const CUTSCENE_FAILSAFE_DURATION_MS = 120000;
 let lastRollPersisted = true;
 let lastRollAutoDeleted = false;
 let lastRollRarityClass = null;
@@ -89,16 +101,267 @@ let pinnedAudioId = null;
 let pausedEquippedAudioState = null;
 let resumeEquippedAudioAfterCutscene = false;
 let pendingCutsceneRarity = null;
+let pendingAutoEquipRecord = null;
 const rolledRarityBuckets = new Set(storage.get("rolledRarityBuckets", []));
+
+const ROLL_AUDIO_IDS = new Set([
+  "click",
+  "suspenseAudio",
+  "geezerSuspenceAudio",
+  "polarrSuspenceAudio",
+  "scareSuspenceAudio",
+  "scareSuspenceLofiAudio",
+  "bigSuspenceAudio",
+  "hugeSuspenceAudio",
+]);
+
+const MENU_AUDIO_IDS = new Set(["mainAudio"]);
+
+const MIN_ROLL_BUTTON_PROGRESS_DURATION = 320;
+const CUTSCENE_PROGRESS_DURATION_FALLBACK = 5000;
+const rollCooldownDurationMap = new Map();
+let rollButtonDisableTimestamp = null;
+let rollButtonCooldownContext = "default";
+let rollButtonProgressArmed = false;
+
+function recordRollCooldownDuration(context, duration) {
+  if (typeof duration !== "number" || !Number.isFinite(duration) || duration <= 0) {
+    return;
+  }
+
+  const key = context || "default";
+  const normalized = Math.max(duration, MIN_ROLL_BUTTON_PROGRESS_DURATION);
+  rollCooldownDurationMap.set(key, normalized);
+
+  if (key === "default") {
+    rollCooldownDurationMap.set("buffed", normalized);
+  }
+}
+
+function determineRollCooldownContext() {
+  if (pendingCutsceneRarity && pendingCutsceneRarity.type) {
+    return `cutscene:${pendingCutsceneRarity.type}`;
+  }
+
+  if (cutsceneActive) {
+    return "cutscene:active";
+  }
+
+  if (cooldownBuffActive && cooldownTime < BASE_COOLDOWN_TIME) {
+    return "buffed";
+  }
+
+  return "default";
+}
+
+function getRollCooldownDurationEstimate(context) {
+  const stored = rollCooldownDurationMap.get(context);
+  if (typeof stored === "number" && Number.isFinite(stored) && stored > 0) {
+    return stored;
+  }
+
+  let fallback = cooldownTime;
+  if (context.startsWith("cutscene:")) {
+    fallback = Math.max(fallback, CUTSCENE_PROGRESS_DURATION_FALLBACK);
+  }
+
+  if (typeof fallback !== "number" || !Number.isFinite(fallback) || fallback <= 0) {
+    const defaultStored = rollCooldownDurationMap.get("default");
+    fallback = typeof defaultStored === "number" && Number.isFinite(defaultStored) && defaultStored > 0
+      ? defaultStored
+      : BASE_COOLDOWN_TIME;
+  }
+
+  return Math.max(fallback, MIN_ROLL_BUTTON_PROGRESS_DURATION);
+}
+
+function startRollButtonCooldownAnimation(button, duration) {
+  if (!button) {
+    return;
+  }
+
+  const progress = button.querySelector(".rollButton-progress");
+  if (!progress) {
+    return;
+  }
+
+  button.classList.add("is-cooling");
+  progress.style.transition = "none";
+  progress.style.transform = "translateX(0)";
+  progress.offsetWidth; // reflow to restart transition
+  progress.style.transition = `transform ${Math.max(duration, MIN_ROLL_BUTTON_PROGRESS_DURATION)}ms linear`;
+  progress.style.transform = "translateX(-100%)";
+}
+
+function stopRollButtonCooldownAnimation(button) {
+  if (!button) {
+    return;
+  }
+
+  const progress = button.querySelector(".rollButton-progress");
+  if (!progress) {
+    return;
+  }
+
+  button.classList.remove("is-cooling");
+  progress.style.transition = "none";
+  progress.style.transform = "translateX(-100%)";
+  progress.offsetWidth;
+  progress.style.transition = "";
+}
+
+function handleRollButtonDisabled(button) {
+  if (!button || !rollButtonProgressArmed) {
+    return;
+  }
+
+  rollButtonCooldownContext = determineRollCooldownContext();
+  rollButtonDisableTimestamp = performance.now();
+
+  const estimate = getRollCooldownDurationEstimate(rollButtonCooldownContext);
+  startRollButtonCooldownAnimation(button, estimate);
+}
+
+function handleRollButtonEnabled(button) {
+  if (!button) {
+    return;
+  }
+
+  if (!rollButtonProgressArmed) {
+    rollButtonProgressArmed = true;
+  }
+
+  if (rollButtonDisableTimestamp !== null) {
+    const elapsed = performance.now() - rollButtonDisableTimestamp;
+    if (elapsed > 0 && Number.isFinite(elapsed)) {
+      recordRollCooldownDuration(rollButtonCooldownContext, elapsed);
+    }
+  }
+
+  rollButtonDisableTimestamp = null;
+  rollButtonCooldownContext = "default";
+  stopRollButtonCooldownAnimation(button);
+}
+
+function setupRollButtonProgress(button) {
+  if (!button || button.dataset.rollProgressAttached === "true") {
+    return;
+  }
+
+  const observer = new MutationObserver((mutations) => {
+    for (const mutation of mutations) {
+      if (mutation.type !== "attributes" || mutation.attributeName !== "disabled") {
+        continue;
+      }
+
+      if (button.disabled) {
+        handleRollButtonDisabled(button);
+      } else {
+        handleRollButtonEnabled(button);
+      }
+    }
+  });
+
+  observer.observe(button, { attributes: true, attributeFilter: ["disabled"] });
+
+  if (!button.disabled) {
+    rollButtonProgressArmed = true;
+    stopRollButtonCooldownAnimation(button);
+  } else {
+    rollButtonProgressArmed = false;
+    stopRollButtonCooldownAnimation(button);
+  }
+
+  button.dataset.rollProgressAttached = "true";
+}
+
+recordRollCooldownDuration("default", cooldownTime);
 
 let postStartInitialized = false;
 let audioSliderElement = null;
 let audioSliderValueLabelElement = null;
+let rollAudioSliderElement = null;
+let rollAudioSliderValueLabelElement = null;
+let cutsceneAudioSliderElement = null;
+let cutsceneAudioSliderValueLabelElement = null;
+let titleAudioSliderElement = null;
+let titleAudioSliderValueLabelElement = null;
+let menuAudioSliderElement = null;
+let menuAudioSliderValueLabelElement = null;
 let muteButtonElement = null;
 let heartContainerElement = null;
 let heartIntervalId = null;
 let playTimeIntervalId = null;
 let playTimeSeconds = parseInt(localStorage.getItem("playTime"), 10) || 0;
+
+function normalizePlayTime(value) {
+  const parsed = Number.parseInt(value, 10);
+  if (Number.isFinite(parsed) && parsed >= 0) {
+    return parsed;
+  }
+  return 0;
+}
+
+function formatPlayTimeDisplay(seconds) {
+  const normalized = normalizePlayTime(seconds);
+  const hrs = Math.floor(normalized / 3600);
+  const mins = Math.floor((normalized % 3600) / 60);
+  const secs = normalized % 60;
+
+  return [
+    hrs.toString().padStart(2, "0"),
+    mins.toString().padStart(2, "0"),
+    secs.toString().padStart(2, "0"),
+  ].join(":");
+}
+
+function updatePlayTimeDisplay(seconds) {
+  const timerDisplay = document.getElementById("timer");
+  if (!timerDisplay) {
+    return;
+  }
+
+  timerDisplay.textContent = formatPlayTimeDisplay(seconds);
+}
+
+function stopPlayTimeTracker() {
+  if (!playTimeIntervalId) {
+    return;
+  }
+
+  clearInterval(playTimeIntervalId);
+  playTimeIntervalId = null;
+}
+
+function setPlayTimeSeconds(seconds, { persist = true, updateDisplay = true } = {}) {
+  const normalized = normalizePlayTime(seconds);
+  playTimeSeconds = normalized;
+
+  if (persist) {
+    localStorage.setItem("playTime", normalized);
+  }
+
+  if (updateDisplay) {
+    updatePlayTimeDisplay(normalized);
+  }
+
+  return normalized;
+}
+
+function collectLocalStorageSnapshot() {
+  const snapshot = {};
+
+  for (let index = 0; index < localStorage.length; index += 1) {
+    const key = localStorage.key(index);
+    if (!key) {
+      continue;
+    }
+
+    snapshot[key] = localStorage.getItem(key);
+  }
+
+  return snapshot;
+}
 let autoRollButtonElement = null;
 
 const STOPPABLE_AUDIO_IDS = [
@@ -205,10 +468,29 @@ const STOPPABLE_AUDIO_IDS = [
   "qbearAudio",
   "estbunAudio",
   "esteggAudio",
-  "isekailofiAudio"
+  "isekailofiAudio",
+  "hypernovaAudio",
+  "astraldAudio",
+  "nebulaAudio",
+  "glitchedAudio",
+  "mastermindAudio",
 ];
 
 const STOPPABLE_AUDIO_SET = new Set(STOPPABLE_AUDIO_IDS);
+const CUTSCENE_AUDIO_IDS = STOPPABLE_AUDIO_IDS.filter(
+  (id) => !ROLL_AUDIO_IDS.has(id) && !MENU_AUDIO_IDS.has(id)
+);
+const CUTSCENE_AUDIO_SET = new Set(CUTSCENE_AUDIO_IDS);
+const CUTSCENE_VOLUME_AUDIO_IDS = new Set([
+  "geezerSuspenceAudio",
+  "polarrSuspenceAudio",
+  "scareSuspenceAudio",
+  "scareSuspenceLofiAudio",
+  "bigSuspenceAudio",
+  "hugeSuspenceAudio",
+  "expOpeningAudio",
+]);
+const CUTSCENE_AUDIO_PLAYBACK_DELAY_MS = 100;
 
 const RARITY_BUCKET_LABELS = {
   under100: "Basic",
@@ -220,15 +502,56 @@ const RARITY_BUCKET_LABELS = {
   special: "Special"
 };
 
+// Update this set with the active event buckets (e.g., 'eventTitle') when seasonal events are running.
+const ACTIVE_EVENT_BUCKETS = new Set([]);
+
+function isEventBucketActive(bucket) {
+  return typeof bucket === "string" && ACTIVE_EVENT_BUCKETS.has(bucket);
+}
+
 const originalAudioPlay = HTMLMediaElement.prototype.play;
 HTMLMediaElement.prototype.play = function (...args) {
-  if (
-    this instanceof HTMLAudioElement &&
-    STOPPABLE_AUDIO_SET.has(this.id) &&
-    !lastRollPersisted &&
-    !allowForcedAudioPlayback
-  ) {
-    return Promise.resolve();
+  if (this instanceof HTMLAudioElement) {
+    if (
+      STOPPABLE_AUDIO_SET.has(this.id) &&
+      !lastRollPersisted &&
+      !allowForcedAudioPlayback
+    ) {
+      return Promise.resolve();
+    }
+
+    if (
+      CUTSCENE_AUDIO_SET.has(this.id) &&
+      (cutsceneActive || pendingCutsceneRarity) &&
+      !allowForcedAudioPlayback
+    ) {
+      try {
+        if (typeof this.pause === "function") {
+          this.pause();
+        }
+      } catch (error) {
+        /* no-op */
+      }
+
+      if (this.id) {
+        resetAudioState(this, this.id);
+      }
+
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          try {
+            const result = originalAudioPlay.apply(this, args);
+            if (result && typeof result.then === "function") {
+              result.then(resolve).catch(reject);
+            } else {
+              resolve(result);
+            }
+          } catch (error) {
+            reject(error);
+          }
+        }, CUTSCENE_AUDIO_PLAYBACK_DELAY_MS);
+      });
+    }
   }
 
   return originalAudioPlay.apply(this, args);
@@ -273,7 +596,7 @@ function scheduleCutsceneFailsafe() {
     isChangeEnabled = true;
     finalizeCutsceneState();
     setRollButtonEnabled(true);
-  }, 15000);
+  }, CUTSCENE_FAILSAFE_DURATION_MS);
 }
 
 function finalizeCutsceneState() {
@@ -281,12 +604,23 @@ function finalizeCutsceneState() {
   cutsceneFailsafeTimeout = null;
   cutsceneActive = false;
   updateEquipToggleButtonsDisabled(false);
+  updateInventoryDeleteButtonsDisabled(false);
   ensureBgStack();
   if (__bgStack) {
     __bgStack.classList.remove("is-hidden");
   }
   restoreRollDisplayAfterCutscene();
   resumePausedEquippedAudio();
+}
+
+function restartClass(el, cls) {
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+}
+
+function startFlash() {
+  restartClass(document.body, 'flashing');
 }
 
 function hideRollDisplayForCutscene(container) {
@@ -377,6 +711,8 @@ const rarityCategories = {
     "qbearBgImg",
     "lightBgImg",
     "blodBgImg",
+    "nebulaBgImg",
+    "hypernovaBgImg",
   ],
   under1m: [
     "impeachedBgImg",
@@ -386,6 +722,8 @@ const rarityCategories = {
     "mintllieBgImg",
     "geezerBgGif",
     "polarrBgImg",
+    "astraldBgImg",
+    "mastermindBgImg",
   ],
   transcendent: [
     "silcarBgImg",
@@ -403,6 +741,7 @@ const rarityCategories = {
     "orbBgImg",
     "crazeBgImg",
     "shenviiBgImg",
+    "glitchedBgImg",
   ],
 };
 
@@ -556,16 +895,43 @@ function initializeAfterStart() {
   registerDataPersistenceButtons();
   initializePlayTimeTracker();
   registerRarityDeletionButtons();
+  initializeCooldownBuffState();
   scheduleAllCooldownButtons();
   updateAchievementsList();
   processAchievementToastQueue();
 }
 
 const CUTSCENE_SKIP_SETTINGS = [
-  { key: "skipCutscene1K", labelId: "1KTxt", label: "Skip Decent Cutscenes" },
-  { key: "skipCutscene10K", labelId: "10KTxt", label: "Skip Grand Cutscenes" },
-  { key: "skipCutscene100K", labelId: "100KTxt", label: "Skip Mastery Cutscenes" },
-  { key: "skipCutscene1M", labelId: "1MTxt", label: "Skip Supreme Cutscenes" },
+  {
+    key: "skipCutscene1K",
+    labelId: "1KTxt",
+    label: "Skip Decent Cutscenes",
+    buttonId: "toggleCutscene1K",
+  },
+  {
+    key: "skipCutscene10K",
+    labelId: "10KTxt",
+    label: "Skip Grand Cutscenes",
+    buttonId: "toggleCutscene10K",
+  },
+  {
+    key: "skipCutscene100K",
+    labelId: "100KTxt",
+    label: "Skip Mastery Cutscenes",
+    buttonId: "toggleCutscene100K",
+  },
+  {
+    key: "skipCutscene1M",
+    labelId: "1MTxt",
+    label: "Skip Supreme Cutscenes",
+    buttonId: "toggleCutscene1M",
+  },
+  {
+    key: "skipCutsceneTranscendent",
+    labelId: "transcendentTxt",
+    label: "Skip Transcendent Cutscenes",
+    buttonId: "toggleCutsceneTranscendent",
+  },
 ];
 
 const CUTSCENE_STATE_SETTERS = {
@@ -573,7 +939,28 @@ const CUTSCENE_STATE_SETTERS = {
   skipCutscene10K: (value) => { skipCutscene10K = value; },
   skipCutscene100K: (value) => { skipCutscene100K = value; },
   skipCutscene1M: (value) => { skipCutscene1M = value; },
+  skipCutsceneTranscendent: (value) => { skipCutsceneTranscendent = value; },
 };
+
+const CUTSCENE_STATE_GETTERS = {
+  skipCutscene1K: () => skipCutscene1K,
+  skipCutscene10K: () => skipCutscene10K,
+  skipCutscene100K: () => skipCutscene100K,
+  skipCutscene1M: () => skipCutscene1M,
+  skipCutsceneTranscendent: () => skipCutsceneTranscendent,
+};
+
+function updateCutsceneSkipDisplay({ labelId, label, buttonId }, isSkipping) {
+  const labelElement = byId(labelId);
+  if (labelElement) {
+    labelElement.textContent = `${label} ${isSkipping ? "On" : "Off"}`;
+  }
+
+  const buttonElement = byId(buttonId);
+  if (buttonElement) {
+    buttonElement.classList.toggle("active", Boolean(isSkipping));
+  }
+}
 
 const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "transcendent", "special"]);
 
@@ -790,6 +1177,7 @@ const ACHIEVEMENTS = [
   { name: "One of a Kind", rarityBucket: "special" },
   { name: "Mastered the Odds", rarityBucket: "under100k" },
   { name: "Supreme Fortune", rarityBucket: "under1m" },
+  { name: "Transcendent Conqueror", rarityBucket: "transcendent" },
   // Title triumphs
   { name: "Celestial Alignment", requiredTitle: "『Equinox』 [1 in 25,000,000]" },
   { name: "Creator?!", requiredTitle: "Unnamed [1 in 30,303]" },
@@ -803,6 +1191,7 @@ const ACHIEVEMENTS = [
   { name: "Cherry Grove Champion", requiredTitle: "LubbyJubby's Cherry Grove [1 in 5,666]" },
   { name: "Firestarter", requiredTitle: "FireCraze [1 in 4,200/69th]" },
   { name: "Orbital Dreamer", requiredTitle: "ORB [1 in 55,555/30th]" },
+  { name: "Glitched Reality", requiredTitle: "Gl1tch3d [1 in 12,404/40,404th]" },
   { name: "Gregarious Encounter", requiredTitle: "Greg [1 in 50,000,000]" },
   { name: "Mint Condition", requiredTitle: "Mintllie [1 in 500,000,000]" },
   { name: "Geezer Whisperer", requiredTitle: "Geezer [1 in 5,000,000,000]" },
@@ -819,6 +1208,33 @@ const ACHIEVEMENTS = [
   { name: "Seasonal Archivist", minEventTitleCount: 10 },
 ];
 
+const ACHIEVEMENT_DATA_BY_NAME = new Map(
+  ACHIEVEMENTS.map((achievement) => [achievement.name, achievement])
+);
+
+function isAchievementCurrentlyAvailable(achievement) {
+  if (!achievement) {
+    return true;
+  }
+
+  if (achievement.requiredEventBucket) {
+    return isEventBucketActive(achievement.requiredEventBucket);
+  }
+
+  if (Array.isArray(achievement.requiredEventBuckets)) {
+    return achievement.requiredEventBuckets.every((bucket) => isEventBucketActive(bucket));
+  }
+
+  if (
+    typeof achievement.minDistinctEventBuckets === "number" ||
+    typeof achievement.minEventTitleCount === "number"
+  ) {
+    return ACTIVE_EVENT_BUCKETS.size > 0;
+  }
+
+  return true;
+}
+
 const COLLECTOR_ACHIEVEMENTS = [
   { name: "Achievement Collector", count: 5 },
   { name: "Achievement Hoarder", count: 10 },
@@ -831,14 +1247,14 @@ const COLLECTOR_ACHIEVEMENTS = [
 
 const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-item", unlocked: { backgroundColor: "blue" } },
-  { selector: ".achievement-itemT", unlocked: { backgroundColor: "#000fff" } },
-  { selector: ".achievement-itemC", unlocked: { backgroundColor: "#ff0000" } },
-  { selector: ".achievement-itemInv", unlocked: { backgroundColor: "#2e8b57" } },
-  { selector: ".achievement-itemE", unlocked: { backgroundColor: "#fff000", color: "black" } },
-  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "#ff00d9ff" } },
-  { selector: ".achievement-itemR", unlocked: { backgroundColor: "#0033ffff" } },
-  { selector: ".achievement-itemTitle", unlocked: { backgroundColor: "#7a3cff" } },
-  { selector: ".achievement-itemEvent", unlocked: { backgroundColor: "#ff8800", color: "black" } },
+  { selector: ".achievement-itemT", unlocked: { backgroundColor: "#0011ff9a" } },
+  { selector: ".achievement-itemC", unlocked: { backgroundColor: "#ff00f281" } },
+  { selector: ".achievement-itemInv", unlocked: { backgroundColor: "#2e8b5670" } },
+  { selector: ".achievement-itemE", unlocked: { backgroundColor: "#ffee008a", color: "black" } },
+  { selector: ".achievement-itemSum", unlocked: { backgroundColor: "#ff00158e" } },
+  { selector: ".achievement-itemR", unlocked: { backgroundColor: "#0033ffa1" } },
+  { selector: ".achievement-itemTitle", unlocked: { backgroundColor: "#765cafa2" } },
+  { selector: ".achievement-itemEvent", unlocked: { backgroundColor: "#ffee00b7", color: "black" } },
 ];
 
 const ACHIEVEMENT_TOAST_DURATION = 3400;
@@ -1173,6 +1589,7 @@ function isItemCurrentlyEquipped(item) {
 
 function applyEquippedItemOnStartup() {
   if (!equippedItem) {
+    ensureMenuMusicPlaying();
     return;
   }
 
@@ -1182,6 +1599,7 @@ function applyEquippedItemOnStartup() {
     storage.remove("equippedItem");
     changeBackground("menuDefault", null, { force: true });
     setEquinoxPulseActive(false);
+    ensureMenuMusicPlaying();
     return;
   }
 
@@ -1191,6 +1609,7 @@ function applyEquippedItemOnStartup() {
     storage.remove("equippedItem");
     changeBackground("menuDefault", null, { force: true });
     setEquinoxPulseActive(false);
+    ensureMenuMusicPlaying();
     return;
   }
 
@@ -1218,7 +1637,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (rollButton) {
-    rollButton.disabled = true;
+    setRollButtonEnabled(false);
+    setupRollButtonProgress(rollButton);
   }
 
   if (!startButton) {
@@ -1291,7 +1711,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (rollButton) {
-      rollButton.disabled = false;
+      setRollButtonEnabled(true);
     }
 
     initializeAfterStart();
@@ -1299,7 +1719,8 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function loadCutsceneSkip() {
-  CUTSCENE_SKIP_SETTINGS.forEach(({ key, labelId, label }) => {
+  CUTSCENE_SKIP_SETTINGS.forEach((config) => {
+    const { key } = config;
     const storedValue = storage.get(key);
     const resolvedValue = typeof storedValue === "boolean" ? storedValue : true;
 
@@ -1312,10 +1733,7 @@ function loadCutsceneSkip() {
       assignState(resolvedValue);
     }
 
-    const labelElement = byId(labelId);
-    if (labelElement) {
-      labelElement.textContent = `${label} ${resolvedValue ? "" : "On"}`;
-    }
+    updateCutsceneSkipDisplay(config, resolvedValue);
   });
 }
 
@@ -1398,7 +1816,10 @@ function checkAchievements(context = {}) {
 
       if (bucket && bucket.startsWith("event")) {
         totalEventTitleCount += 1;
-        eventBucketCounts.set(bucket, (eventBucketCounts.get(bucket) || 0) + 1);
+        eventBucketCounts.set(
+          bucket,
+          (eventBucketCounts.get(bucket) || 0) + 1
+        );
       }
     });
   }
@@ -1526,6 +1947,47 @@ function updateAchievementsList() {
       }
     });
   });
+
+  $all("[data-name]").forEach((item) => {
+    const achievementName = item.getAttribute("data-name");
+    const achievement = ACHIEVEMENT_DATA_BY_NAME.get(achievementName);
+    const isUnlocked = achievementName && unlocked.has(achievementName);
+    const isActive = isAchievementCurrentlyAvailable(achievement);
+    const isEventAchievement = Boolean(
+      achievement && (
+        achievement.requiredEventBucket ||
+        (Array.isArray(achievement.requiredEventBuckets) && achievement.requiredEventBuckets.length) ||
+        typeof achievement.minDistinctEventBuckets === "number" ||
+        typeof achievement.minEventTitleCount === "number"
+      )
+    );
+
+    if (isEventAchievement) {
+      if (!item.dataset.eventHint) {
+        const baseHint = item.getAttribute("data-event");
+        if (baseHint) {
+          item.dataset.eventHint = baseHint;
+        }
+      }
+
+      if (!isUnlocked && !isActive) {
+        item.classList.add("achievement--inactive");
+        item.setAttribute("data-availability", "inactive");
+        if (item.dataset.eventHint) {
+          item.setAttribute("data-event", `${item.dataset.eventHint} (Currently unavailable)`);
+        }
+      } else {
+        item.classList.remove("achievement--inactive");
+        item.removeAttribute("data-availability");
+        if (item.dataset.eventHint) {
+          item.setAttribute("data-event", item.dataset.eventHint);
+        }
+      }
+    } else {
+      item.classList.remove("achievement--inactive");
+      item.removeAttribute("data-availability");
+    }
+  });
 }
 
 function registerRollButtonHandler() {
@@ -1535,10 +1997,10 @@ function registerRollButtonHandler() {
   }
 
   rollButtonElement.addEventListener("click", function () {
-  const rollButton = byId("rollButton");
-  if (!rollButton) {
-    return;
-  }
+    const rollButton = byId("rollButton");
+    if (!rollButton) {
+      return;
+    }
 
   const rollDisplay = document.querySelector(".container");
   if (rollDisplay && !rollDisplayHiddenByUser && rollDisplay.style.visibility === "hidden") {
@@ -1583,7 +2045,7 @@ function registerRollButtonHandler() {
 
   let title = selectTitle(rarity);
 
-  rollButton.disabled = true;
+  setRollButtonEnabled(false);
 
   const rollCountDisplay = byId("rollCountDisplay");
   if (rollCountDisplay) {
@@ -1673,10 +2135,11 @@ function registerRollButtonHandler() {
     rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]" ||
     rarity.type === "『Equinox』 [1 in 25,000,000]" ||
     rarity.type === "Ginger [1 in 1,144,141]" ||
-    rarity.type === "Wave [1 in 2,555]" ||
-    rarity.type === "Scorching [1 in 7,923]" ||
-    rarity.type === "Beach [1 in 12,555]" ||
-    rarity.type === "Tidal Wave [1 in 25,500]"
+    rarity.type === "Astrald [1 in 100,000]" ||
+    rarity.type === "Hypernova [1 in 40,000]" ||
+    rarity.type === "Nebula [1 in 62,500]" ||
+    rarity.type === "Mastermind [1 in 110,010]" ||
+    rarity.type === "Gl1tch3d [1 in 12,404/40,404th]"
   ) {
     const resultContainer = byId("result");
     if (resultContainer) {
@@ -1690,6 +2153,8 @@ function registerRollButtonHandler() {
 
     if (rarity.type === "Fright [1 in 1,075]") {
       frightAudio.play();
+    } else if (rarity.type === "Gl1tch3d [1 in 12,404/40,404th]") {
+      glitchedAudio.play();
     } else if (rarity.type === "Gargantua [1 in 143]") {
       gargantuaAudio.play();
     } else if (rarity.type === "Heart [1 in ♡♡♡]") {
@@ -1769,6 +2234,14 @@ function registerRollButtonHandler() {
     } else if (rarity.type === "Arcane Pulse [1 in 77,777]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "HARV [1 in 33,333]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Astrald [1 in 100,000]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Hypernova [1 in 40,000]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Nebula [1 in 62,500]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Mastermind [1 in 110,010]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Tuon [1 in 50,000]") {
       hugeSuspenceAudio.play();
@@ -1857,7 +2330,26 @@ function registerRollButtonHandler() {
     } else if (rarity.type === "MSFU [1 in 333/333rd]") {
       msfuAudio.play();
     } else if (rarity.type == "Silly Car :3 [1 in 1,000,000]") {
-      silcarAudio.play();
+      if (!skipCutsceneTranscendent) {
+        if (typeof silcarAudio?.pause === "function") {
+          try {
+            silcarAudio.pause();
+            silcarAudio.currentTime = 0;
+          } catch (error) {
+            /* no-op */
+          }
+        }
+        silcarAudio.play();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+      } else {
+        silcarAudio.play();
       setTimeout(function () {
         document.body.className = "blackBg";
       }, 100);
@@ -1969,6 +2461,7 @@ function registerRollButtonHandler() {
       setTimeout(function () {
         document.body.className = "blackBg";
       }, 3700);
+      }
     } else if (rarity.type === "Mintllie [1 in 500,000,000]") {
       suspenseAudio.play();
       let warningPopup = document.getElementById("warningPopup");
@@ -2115,7 +2608,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -2216,7 +2709,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -2230,7 +2723,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -2303,7 +2796,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -2311,6 +2804,680 @@ function registerRollButtonHandler() {
         }, 100);
         enableChange();
       }, 20550); // Wait for 20.55 seconds
+    } else if (rarity.type === "Hypernova [1 in 40,000]") {
+      if (skipCutscene100K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-yellow";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "orange-star",
+            "dark-red-star",
+            "black-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "◈";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            hypernovaAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        hypernovaAudio.play();
+      }
+    } else if (rarity.type === "Nebula [1 in 62,500]") {
+      if (skipCutscene100K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "blue-star",
+            "dark-blue-star",
+            "black-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "◈";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            nebulaAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        nebulaAudio.play();
+      }
+    } else if (rarity.type === "Astrald [1 in 100,000]") {
+      if (skipCutscene1M) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "purple-star",
+            "blue-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "<*>";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            astraldAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        astraldAudio.play();
+      }
+    } else if (rarity.type === "Mastermind [1 in 110,010]") {
+      if (skipCutscene1M) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-white";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "white-star",
+            "black-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "-X-";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            mastermindAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        mastermindAudio.play();
+      }
+    } else if (rarity.type === "Gl1tch3d [1 in 12,404/40,404th]") {
+      disableChange();
+      startAnimationA2()
+    
+      const container1 = document.getElementById("squareContainer");
+      const container = document.getElementById("starContainer");
+      const container2 = document.getElementById("starContainer");
+      const container3 = document.getElementById("starContainer");
+
+      function createSquare() {
+        const square = document.createElement("div");
+        square.className = "animated-square-white";
+
+        square.style.left = Math.random() * 100 + "vw";
+        square.style.top = Math.random() * 100 + "vh";
+
+        container1.appendChild(square);
+
+        square.addEventListener("animationend", () => {
+          square.remove();
+        });
+      }
+
+      const squareInterval = setInterval(() => {
+        createSquare();
+      }, 50);
+
+      setTimeout(() => {
+        clearInterval(squareInterval);
+      }, 4550); // Stop after 4.55 seconds
+    
+      for (let i = 0; i < 404; i++) {
+        const star = document.createElement("span");
+        const star2 = document.createElement("span2");
+        const star3 = document.createElement("span3");
+    
+        const starClass = [
+          "glitch-green-star",
+        ];
+        const starClass2 = [
+          "glitch-blue-star",
+        ];
+        const starClass3 = [
+          "glitch-red-star",
+        ];
+        star.className = starClass[Math.floor(Math.random() * starClass.length)];
+        star2.className = starClass2[Math.floor(Math.random() * starClass2.length)];
+        star3.className = starClass3[Math.floor(Math.random() * starClass3.length)];
+
+        star.innerHTML = "#";
+        star.style.left = Math.random() * 100 + "vw";
+
+        star2.innerHTML = "$";
+        star2.style.left = Math.random() * 100 + "vw";
+
+        star3.innerHTML = "@";
+        star3.style.left = Math.random() * 100 + "vw";
+    
+        const randomX = (Math.random() - 0.25) * 10 + "vw";
+        star.style.setProperty("--randomX", randomX);
+        star2.style.setProperty("--randomX", randomX);
+        star3.style.setProperty("--randomX", randomX);
+    
+        const randomRotation = (Math.random() - 0.5) * 7200 + "deg";
+        star.style.setProperty("--randomRotation", randomRotation);
+        star2.style.setProperty("--randomRotation", randomRotation);
+        star3.style.setProperty("--randomRotation", randomRotation);
+    
+        star.style.animationDelay = i * 0.01 + "s";
+        star2.style.animationDelay = i * 0.01 + "s";
+        star3.style.animationDelay = i * 0.01 + "s";
+    
+        container.appendChild(star);
+        container2.appendChild(star2);
+        container3.appendChild(star3);
+
+        star.addEventListener("animationend", () => {
+          star.remove();
+        });
+        star2.addEventListener("animationend", () => {
+          star2.remove();
+        });
+        star3.addEventListener("animationend", () => {
+          star3.remove();
+        });
+      }
+      startFlash();
+      document.body.classList.add('flashing');
+    
+      setTimeout(() => {
+        document.body.classList.remove('flashing');
+        setTimeout(() => {
+          document.body.className = rarity.class;
+          addToInventory(title, rarity.class);
+          displayResult(title, rarity.type);
+          updateRollingHistory(title, rarity.type);
+          changeBackground(rarity.class);
+          setRollButtonEnabled(true);
+          rollCount++;
+          rollCount1++;
+          titleCont.style.visibility = "visible";
+        }, 100);
+        enableChange();
+      }, 5450); // Wait for 5.45 seconds
     } else if (rarity.type === "HARV [1 in 33,333]") {
       if (skipCutscene100K) {
         document.body.className = "blackBg";
@@ -2434,7 +3601,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -2448,7 +3615,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -2577,7 +3744,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -2591,7 +3758,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -2735,7 +3902,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -2749,7 +3916,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -2893,7 +4060,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -2907,7 +4074,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -3051,7 +4218,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -3065,7 +4232,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -3193,7 +4360,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -3323,7 +4490,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -3454,7 +4621,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -3468,7 +4635,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -3597,7 +4764,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -3611,7 +4778,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -3740,7 +4907,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -3754,7 +4921,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -3882,7 +5049,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -4013,7 +5180,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -4027,7 +5194,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -4154,7 +5321,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -4168,7 +5335,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -4292,7 +5459,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -4306,7 +5473,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -4430,7 +5597,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -4444,7 +5611,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -4516,7 +5683,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -4530,7 +5697,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -4602,7 +5769,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -4616,7 +5783,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -4708,7 +5875,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -4883,7 +6050,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -5115,7 +6282,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -5189,7 +6356,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -5203,7 +6370,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -5273,7 +6440,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -5318,7 +6485,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -5330,15 +6497,25 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
       }
     } else if (rarity.type === "H1di [1 in 9,890,089]") {
-      document.body.className = "blackBg";
-      disableChange();
-      startAnimation06();
+      if (!skipCutsceneTranscendent) {
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+      } else {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimation06();
 
       const container1 = document.getElementById("squareContainer");
 
@@ -5405,13 +6582,14 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
       }, 14000); // Wait for 14 seconds
+      }
     } else if (rarity.type === "ORB [1 in 55,555/30th]") {
       document.body.className = "blackBg";
       disableChange();
@@ -5534,7 +6712,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -5663,7 +6841,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -5729,7 +6907,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -5851,7 +7029,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -5865,7 +7043,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -5936,7 +7114,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -5986,7 +7164,7 @@ function registerRollButtonHandler() {
             addToInventory(title, rarity.class);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -5998,7 +7176,7 @@ function registerRollButtonHandler() {
         addToInventory(title, rarity.class);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6061,7 +7239,7 @@ function registerRollButtonHandler() {
           addToInventory(title, rarity.class);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           msfuAudio.play();
           titleCont.style.visibility = "visible";
@@ -6120,7 +7298,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6134,7 +7312,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6192,7 +7370,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6206,7 +7384,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6311,7 +7489,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6325,7 +7503,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6368,7 +7546,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6382,14 +7560,24 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
         isekaiAudio.play();
       }
     } else if (rarity.type === "『Equinox』 [1 in 25,000,000]") {
-      disableChange();
+      if (!skipCutsceneTranscendent) {
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+      } else {
+        disableChange();
 
       setTimeout(() => {
         document.body.style.backgroundImage = "url('files/backgrounds/equinox_cutscene.gif')";
@@ -6434,13 +7622,13 @@ function registerRollButtonHandler() {
       createStars("white", 500);
       createStars("black", 500);
 
-      const squareInterval = setInterval(() => {
-        createCircles("white");
-        createCircles("black");
-      }, 50); 
+      const circleInterval = setInterval(() => {
+        createCircle("white");
+        createCircle("black");
+      }, 50);
 
       setTimeout(() => {
-        clearInterval(squareInterval);
+        clearInterval(circleInterval);
       }, 10500);
 
       setTimeout(() => {
@@ -6452,13 +7640,14 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
       }, 10500); // Wait for 10.5 seconds
+      }
     } else if (rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]") {
       if (skipCutscene10K) {
         document.body.className = "blackBg";
@@ -6519,7 +7708,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6533,7 +7722,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6576,7 +7765,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6590,7 +7779,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6633,7 +7822,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6647,7 +7836,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6690,7 +7879,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6704,7 +7893,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6747,7 +7936,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6759,7 +7948,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6816,7 +8005,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6830,7 +8019,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -6976,7 +8165,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -6990,14 +8179,14 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
         unnamedAudio.play();
       }
     } else if (rarity.type === "Ginger [1 in 1,144,141]") {
-      if (skipCutscene1M) {
+      if (skipCutsceneTranscendent) {
         document.body.className = "blackBg";
         console.log("Rolled Ginger");
         disableChange();
@@ -7114,7 +8303,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7128,7 +8317,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7252,7 +8441,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7266,7 +8455,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -7389,7 +8578,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -7514,7 +8703,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -7639,7 +8828,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -7764,7 +8953,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -7867,7 +9056,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -7881,7 +9070,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -8027,7 +9216,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
             titleCont.style.visibility = "visible";
@@ -8041,7 +9230,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         rollCount++;
         rollCount1++;
         titleCont.style.visibility = "visible";
@@ -8059,7 +9248,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           geezerAudio.play();
@@ -8129,7 +9318,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           rollCount++;
           rollCount1++;
           titleCont.style.visibility = "visible";
@@ -8174,7 +9363,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             unstoppableAudio.play();
           }, 100);
@@ -8186,7 +9375,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         unstoppableAudio.play();
       }
@@ -8227,7 +9416,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             wanspiAudio.play();
           }, 100);
@@ -8239,7 +9428,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         wanspiAudio.play();
       }
@@ -8280,7 +9469,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             spectralAudio.play();
           }, 100);
@@ -8292,7 +9481,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         spectralAudio.play();
       }
@@ -8333,7 +9522,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             starfallAudio.play();
           }, 100);
@@ -8345,7 +9534,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         starfallAudio.play();
       }
@@ -8386,7 +9575,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             curartAudio.play();
           }, 100);
@@ -8398,7 +9587,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         curartAudio.play();
       }
@@ -8439,7 +9628,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             forgAudio.play();
           }, 100);
@@ -8451,7 +9640,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         forgAudio.play();
       }
@@ -8492,7 +9681,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             forgAudio.play();
           }, 100);
@@ -8504,7 +9693,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         forgAudio.play();
       }
@@ -8545,7 +9734,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             mysAudio.play();
           }, 100);
@@ -8557,7 +9746,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         mysAudio.play();
       }
@@ -8598,7 +9787,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             froAudio.play();
           }, 100);
@@ -8610,7 +9799,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         froAudio.play();
       }
@@ -8652,7 +9841,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             shadAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -8664,7 +9853,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         shadAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -8706,7 +9895,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             nighAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -8718,7 +9907,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         nighAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -8759,7 +9948,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             voiAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -8771,7 +9960,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         voiAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -8812,7 +10001,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             silAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -8824,7 +10013,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         silAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -8865,7 +10054,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             ghoAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -8877,7 +10066,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         ghoAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -8918,7 +10107,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             endAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -8930,7 +10119,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         endAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -8971,7 +10160,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             abysAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -8983,7 +10172,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         abysAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -9023,7 +10212,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             darAudio.play();
           }, 100);
@@ -9035,7 +10224,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         froAudio.play();
       }
@@ -9075,7 +10264,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             twiligAudio.play();
           }, 100);
@@ -9087,7 +10276,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         froAudio.play();
       }
@@ -9127,7 +10316,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             ethpulAudio.play();
           }, 100);
@@ -9139,7 +10328,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         froAudio.play();
       }
@@ -9179,7 +10368,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             eniAudio.play();
           }, 100);
@@ -9191,7 +10380,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         eniAudio.play();
       }
@@ -9231,7 +10420,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             fearAudio.play();
           }, 100);
@@ -9243,7 +10432,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         fearAudio.play();
       }
@@ -9283,7 +10472,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             hauAudio.play();
           }, 100);
@@ -9295,7 +10484,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         hauntAudio.play();
       }
@@ -9335,7 +10524,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             lostsAudio.play();
           }, 100);
@@ -9347,7 +10536,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         lostsAudio.play();
       }
@@ -9387,7 +10576,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             titleCont.style.visibility = "visible";
             foundsAudio.play();
           }, 100);
@@ -9399,7 +10588,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         titleCont.style.visibility = "visible";
         foundsAudio.play();
       }
@@ -9440,7 +10629,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             hauntAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -9452,7 +10641,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         hauntAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -9493,7 +10682,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             ethAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -9505,7 +10694,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         ethAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -9546,7 +10735,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
-            rollButton.disabled = false;
+            setRollButtonEnabled(true);
             serAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -9558,7 +10747,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
-        rollButton.disabled = false;
+        setRollButtonEnabled(true);
         serAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -9618,7 +10807,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
-          rollButton.disabled = false;
+          setRollButtonEnabled(true);
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -9632,7 +10821,7 @@ function registerRollButtonHandler() {
     rollCount++;
     rollCount1++;
     setTimeout(() => {
-      rollButton.disabled = false;
+      setRollButtonEnabled(true);
     }, cooldownTime);
   }
   localStorage.setItem("rollCount", rollCount);
@@ -9642,49 +10831,26 @@ function registerRollButtonHandler() {
 }
 
 function registerCutsceneToggleButtons() {
-  const toggleCutscene1KBtn = document.getElementById("toggleCutscene1K");
-  const toggleCutscene1KTxt = document.getElementById("1KTxt");
-  if (toggleCutscene1KBtn && toggleCutscene1KTxt) {
-    toggleCutscene1KBtn.addEventListener("click", function () {
-      skipCutscene1K = !skipCutscene1K;
-      console.log(`Cutscene skip for 1K has been set to ${skipCutscene1K}`);
-      localStorage.setItem("skipCutscene1K", JSON.stringify(skipCutscene1K));
-      toggleCutscene1KTxt.textContent = `Skip Decent Cutscenes ${skipCutscene1K ? "" : "On"}`;
-    });
-  }
+  CUTSCENE_SKIP_SETTINGS.forEach((config) => {
+    const { key, buttonId } = config;
+    const buttonElement = byId(buttonId);
+    const assignState = CUTSCENE_STATE_SETTERS[key];
+    const readState = CUTSCENE_STATE_GETTERS[key];
 
-  const toggleCutscene10KBtn = document.getElementById("toggleCutscene10K");
-  const toggleCutscene10KTxt = document.getElementById("10KTxt");
-  if (toggleCutscene10KBtn && toggleCutscene10KTxt) {
-    toggleCutscene10KBtn.addEventListener("click", function () {
-      skipCutscene10K = !skipCutscene10K;
-      console.log(`Cutscene skip for 10K has been set to ${skipCutscene10K}`);
-      localStorage.setItem("skipCutscene10K", JSON.stringify(skipCutscene10K));
-      toggleCutscene10KTxt.textContent = `Skip Grand Cutscenes ${skipCutscene10K ? "" : "On"}`;
-    });
-  }
+    if (!buttonElement || typeof assignState !== "function" || typeof readState !== "function") {
+      return;
+    }
 
-  const toggleCutscene100KBtn = document.getElementById("toggleCutscene100K");
-  const toggleCutscene100KTxt = document.getElementById("100KTxt");
-  if (toggleCutscene100KBtn && toggleCutscene100KTxt) {
-    toggleCutscene100KBtn.addEventListener("click", function () {
-      skipCutscene100K = !skipCutscene100K;
-      console.log(`Cutscene skip for 100K has been set to ${skipCutscene100K}`);
-      localStorage.setItem("skipCutscene100K", JSON.stringify(skipCutscene100K));
-      toggleCutscene100KTxt.textContent = `Skip Mastery Cutscenes ${skipCutscene100K ? "" : "On"}`;
-    });
-  }
+    updateCutsceneSkipDisplay(config, readState());
 
-  const toggleCutscene1MBtn = document.getElementById("toggleCutscene1M");
-  const toggleCutscene1MTxt = document.getElementById("1MTxt");
-  if (toggleCutscene1MBtn && toggleCutscene1MTxt) {
-    toggleCutscene1MBtn.addEventListener("click", function () {
-      skipCutscene1M = !skipCutscene1M;
-      console.log(`Cutscene skip for 1M has been set to ${skipCutscene1M}`);
-      localStorage.setItem("skipCutscene1M", JSON.stringify(skipCutscene1M));
-      toggleCutscene1MTxt.textContent = `Skip Supreme Cutscenes ${skipCutscene1M ? "" : "On"}`;
+    buttonElement.addEventListener("click", () => {
+      const nextValue = !Boolean(readState());
+      assignState(nextValue);
+      storage.set(key, nextValue);
+      console.log(`Cutscene skip for ${config.label} has been set to ${nextValue}`);
+      updateCutsceneSkipDisplay(config, nextValue);
     });
-  }
+  });
 }
 
 function rollRarity() {
@@ -9887,12 +11053,6 @@ function rollRarity() {
       titles: ["Enigmatic Dream"],
     },
     {
-      type: "Grim Destiny [1 in 8,500]",
-      class: "griBgImg",
-      chance: 0.012,
-      titles: ["Grim Destiny"],
-    },
-    {
       type: "Ginger [1 in 1,144,141]",
       class: "gingerBgImg",
       chance: 0.00008740181,
@@ -9999,12 +11159,6 @@ function rollRarity() {
       class: "contBgImg",
       chance: 0.1001001001,
       titles: ["Flexibility", "Twisting", "Bending: Acrobatics", "Agility: Gymnastics", "Elasticity", "Contorting: Movability", "Bending", "Stretching", "Agility", "Contorting"],
-    },
-    {
-      type: "Fright [1 in 1,075]",
-      class: "frightBgImg",
-      chance: 0.093,
-      titles: ["Twilight: Iridescent Memory", "Glitch", "Arcane: Dark", "Exotic: Apex", "Ethereal", "Stormal: Hurricane", "Matrix", "Arcane: Legacy", "Starscourge", "Sailor: Flying Dutchman"],
     },
     {
       type: "Seraph's Wing [1 in 1,333]",
@@ -10115,12 +11269,6 @@ function rollRarity() {
       titles: ["H1di"],
     },
     {
-      type: "Rad [1 in 6,969]",
-      class: "radBgImg",
-      chance: 0.01434926101,
-      titles: ["Rad", "Furry", ":3"],
-    },
-    {
       type: "Blodhest [1 in 25,252]",
       class: "blodBgImg",
       chance: 0.00396008236,
@@ -10175,30 +11323,37 @@ function rollRarity() {
       titles: ["LAYERS", "CHROMA", "衡"]
     },
     {
-      type: "Wave [1 in 2,555]",
-      class: "waveBgImg",
-      chance: 0.03913894324,
-      titles: ["Water", "H2O", "Ocean"]
+      type: "Astrald [1 in 100,000]",
+      class: "astraldBgImg",
+      chance: 0.001,
+      titles: ["Astral", "Dream", "Cosmic"]
     },
     {
-      type: "Scorching [1 in 7,923]",
-      class: "scorchingBgImg",
-      chance: 0.01262148176,
-      titles: ["Burning", "Warm", "Sweatty", "Fire", "Heat"]
+      type: "Hypernova [1 in 40,000]",
+      class: "hypernovaBgImg",
+      chance: 0.0025,
+      titles: ["Supernova", "Stellar", "Celestial"]
     },
     {
-      type: "Beach [1 in 12,555]",
-      class: "beachBgImg",
-      chance: 0.0079649542,
-      titles: ["Dusty", "Sandy", "Tropical"]
+      type: "Nebula [1 in 62,500]",
+      class: "nebulaBgImg",
+      chance: 0.0016,
+      titles: ["Nebula", "Cosmic Cloud", "Stellar Nursery"]
     },
     {
-      type: "Tidal Wave [1 in 25,500]",
-      class: "tidalwaveBgImg",
-      chance: 0.00392156862,
-      titles: ["Du da du dum du, da du dum du", "Tsunami", "Surf"]
+      type: "Mastermind [1 in 110,010]",
+      class: "mastermindBgImg",
+      chance: 0.00090900827,
+      titles: ["Mastermind", "Strategist", "Tactician"]
     }
   ];
+
+  const glitchedRarity = {
+    type: "Gl1tch3d [1 in 12,404/40,404th]",
+    class: "glitchedBgImg",
+    chance: 0.0000806,
+    titles: ["Gl1tch3d", "Glitch", "Corrupted"]
+  };
 
   const abominationRarity = {
     type: "Abomination [1 in 1,000,000/20th]",
@@ -10210,21 +11365,21 @@ function rollRarity() {
   const iridocyclitisVeilRarity = {
     type: "Iridocyclitis Veil [1 in 5,000/50th]",
     class: "iriBgImg",
-    chance: 0.02,
+    chance: 0.0002,
     titles: ["Cyclithe", "Veilborne", "Hemovail", "Abomination: 902"],
   };
 
   const ShenviiRarity = {
     type: "sʜeɴvɪ✞∞ [1 in 77,777/7th]",
     class: "shenviiBgImg",
-    chance: 0.000055,
+    chance: 0.00001286,
     titles: ["Cat", "Unforgettable", "Pookie", "Orb: 902", "Infinity"],
   };
 
   const orbRarity = {
     type: "ORB [1 in 55,555/30th]",
     class: "orbBgImg",
-    chance: 0.00019,
+    chance: 0.000018,
     titles: ["Energy", "Iris: 902", "Power"],
   }
 
@@ -10240,89 +11395,60 @@ function rollRarity() {
   const veilRarity = {
     type: "Veil [1 in 50,000/5th]",
     class: "veilBgImg",
-    chance: 0.0002,
+    chance: 0.00002,
     titles: ["Fight", "Peace", "MSFU: 902"],
   };
 
   const blindRarity = {
     type: "BlindGT [1 in 2,000,000/15th]",
     class: "blindBgImg",
-    chance: 0.000005,
+    chance: 0.0000005,
     titles: ["Moderator", "Moderator: 902"],
   };
 
   const msfuRarity = {
     type: "MSFU [1 in 333/333rd]",
     class: "msfuBgImg",
-    chance: 0.3003003003,
+    chance: 0.003003,
     titles: ["Metal", "Universe", "Veil: 902"],
   };
 
   const fireCrazeRarity = {
     type: "FireCraze [1 in 4,200/69th]",
     class: "crazeBgImg",
-    chance: 0.001,
+    chance: 0.000238,
     titles: ["Fire", "Craze", "Iridocyclitis: 902"],
   };
 
-  let randomNum = Math.random() * 110;
-  let cumulativeChance = 0.004;
+  const specials = [
+    { gate: 40404, data: glitchedRarity },
+    { gate: 333,   data: msfuRarity },
+    { gate: 69,    data: fireCrazeRarity },
+    { gate: 50,    data: iridocyclitisVeilRarity },
+    { gate: 30,    data: orbRarity },
+    { gate: 20,    data: abominationRarity },
+    { gate: 15,    data: blindRarity },
+    { gate: 10,    data: experimentRarity },
+    { gate: 7,     data: ShenviiRarity },
+    { gate: 5,     data: veilRarity },
+  ];
 
-  if (rollCount % 333 === 0) {
-    cumulativeChance += msfuRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return msfuRarity;
-    }
-  } else if (rollCount % 69 === 0) {
-    cumulativeChance += fireCrazeRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return fireCrazeRarity;
-    }
-  } else if (rollCount % 50 === 0) {
-    cumulativeChance += iridocyclitisVeilRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return iridocyclitisVeilRarity;
-    }
-  } else if (rollCount % 30 === 0) {
-    cumulativeChance += orbRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return orbRarity;
-    }
-  } else if (rollCount % 20 === 0) {
-    cumulativeChance += abominationRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return abominationRarity;
-    }
-  } else if (rollCount % 10 === 0) {
-    cumulativeChance += experimentRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return experimentRarity;
-    }
-  } else if (rollCount % 15 === 0) {
-    cumulativeChance += blindRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return blindRarity;
-    }
-  } else if (rollCount % 7 === 0) {
-    cumulativeChance += ShenviiRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return ShenviiRarity;
-    }
-  } else if (rollCount % 5 === 0) {
-    cumulativeChance += veilRarity.chance;
-    if (randomNum <= cumulativeChance) {
-      return veilRarity;
-    }
-  } else {
-    for (let rarity of rarities) {
-      cumulativeChance += rarity.chance;
-      if (randomNum <= cumulativeChance) {
-        return rarity;
-      }
+  for (const { gate, data } of specials) {
+    if (rollCount % gate === 0 && Math.random() < data.chance) {
+      return data;
     }
   }
-  
-  return rarities[0];  
+
+  const total = rarities.reduce((sum, r) => sum + r.chance, 0);
+  let pick = Math.random() * total;
+
+  for (const r of rarities) {
+    if ((pick -= r.chance) <= 0) {
+      return r;
+    }
+  }
+
+  return rarities[rarities.length - 1];
 };
 
 function clickSound() {
@@ -10333,36 +11459,147 @@ function clickSound() {
   document.getElementById("rollButton").addEventListener("click", clickSound);
 }
 
-function showPopupCopyTxt() {
-  var copyText = document.getElementById("unnamedUser");
-  copyText.hidden = false;
-  copyText.select();
-  document.execCommand("copy");
-  copyText.hidden = true;
-  alert("Copied selected discord user: " + copyText.value);
+let copyToastTimeout;
+let profileDropdownOutsideHandler = null;
 
-  document.getElementById("profileModal").style.display = "block";
+function positionCopyToast() {
+  const toast = document.getElementById("copyToast");
+  const trigger = document.querySelector(".creator-card");
+
+  if (!toast || !trigger) {
+    return;
+  }
+
+  let offset = trigger.offsetHeight + 12;
+  const dropdown = document.getElementById("profileDropdown");
+
+  if (dropdown && dropdown.classList.contains("profile-dropdown--visible")) {
+    offset = trigger.offsetHeight + 14 + dropdown.offsetHeight + 12;
+  }
+
+  toast.style.top = `${offset}px`;
+  toast.style.bottom = "auto";
 }
 
-function closePopup() {
-  document.getElementById("profileModal").style.display = "none";
+function fallbackCopyToClipboard(inputElement) {
+  inputElement.hidden = false;
+  inputElement.select();
+  inputElement.setSelectionRange(0, inputElement.value.length);
+  document.execCommand("copy");
+  inputElement.hidden = true;
+  inputElement.blur();
+}
+
+function showCopyToast(message) {
+  const toast = document.getElementById("copyToast");
+  if (!toast) {
+    return;
+  }
+
+  positionCopyToast();
+  toast.textContent = message;
+  toast.classList.add("copy-toast--visible");
+  toast.setAttribute("aria-hidden", "false");
+
+  requestAnimationFrame(() => {
+    positionCopyToast();
+  });
+
+  if (copyToastTimeout) {
+    clearTimeout(copyToastTimeout);
+  }
+
+  copyToastTimeout = setTimeout(() => {
+    toast.classList.remove("copy-toast--visible");
+    toast.setAttribute("aria-hidden", "true");
+  }, 2200);
+}
+
+function showPopupCopyTxt(event) {
+  if (event) {
+    event.stopPropagation();
+  }
+
+  const copyText = document.getElementById("unnamedUser");
+  const value = copyText.value;
+
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(value).catch(() => {
+      fallbackCopyToClipboard(copyText);
+    });
+  } else {
+    fallbackCopyToClipboard(copyText);
+  }
+
+  openProfileDropdown();
+  showCopyToast(`Copied ${value} to clipboard`);
+}
+
+function openProfileDropdown() {
+  const dropdown = document.getElementById("profileDropdown");
+  const trigger = document.querySelector(".creator-card");
+
+  if (!dropdown || !trigger) {
+    return;
+  }
+
+  dropdown.classList.add("profile-dropdown--visible");
+  dropdown.setAttribute("aria-hidden", "false");
+  trigger.setAttribute("aria-expanded", "true");
+
+  if (profileDropdownOutsideHandler) {
+    document.removeEventListener("click", profileDropdownOutsideHandler);
+  }
+
+  profileDropdownOutsideHandler = (event) => {
+    if (!event.isTrusted) {
+      return;
+    }
+
+    if (!dropdown.contains(event.target) && !trigger.contains(event.target)) {
+      closeProfileDropdown();
+    }
+  };
+
+  setTimeout(() => {
+    document.addEventListener("click", profileDropdownOutsideHandler);
+  }, 0);
+}
+
+function closeProfileDropdown() {
+  const dropdown = document.getElementById("profileDropdown");
+  const trigger = document.querySelector(".creator-card");
+
+  if (!dropdown) {
+    return;
+  }
+
+  dropdown.classList.remove("profile-dropdown--visible");
+  dropdown.setAttribute("aria-hidden", "true");
+
+  if (trigger) {
+    trigger.setAttribute("aria-expanded", "false");
+  }
+
+  const toast = document.getElementById("copyToast");
+  if (toast && toast.classList.contains("copy-toast--visible")) {
+    requestAnimationFrame(() => {
+      positionCopyToast();
+    });
+  }
+
+  if (profileDropdownOutsideHandler) {
+    document.removeEventListener("click", profileDropdownOutsideHandler);
+    profileDropdownOutsideHandler = null;
+  }
 }
 
 function openDiscord() {
   window.open("https://discord.gg/m6k7Jagm3v", "_blank");
-  closePopup();
 }
 
 function openGithub() {
   window.open("https://github.com/The-Unnamed-Official/Unnamed-RNG/tree/published", "_blank");
-  closePopup();
-}
-
-window.onclick = function(event) {
-  var modal = document.getElementById("profileModal");
-  if (event.target === modal) {
-    modal.style.display = "none";
-  }
 }
 
 function selectTitle(rarity) {
@@ -10375,6 +11612,7 @@ function addToInventory(title, rarityClass) {
   const rolledAt = typeof rollCount === "number"
     ? rollCount
     : parseInt(localStorage.getItem("rollCount")) || 0;
+  pendingAutoEquipRecord = null;
   const autoDeleteSet = getAutoDeleteSet();
   const bucket = normalizeRarityBucket(rarityClass);
   recordRarityBucketRoll(bucket);
@@ -10382,7 +11620,6 @@ function addToInventory(title, rarityClass) {
     lastRollPersisted = false;
     lastRollAutoDeleted = true;
     resumeEquippedAudioAfterCutscene = true;
-    showStatusMessage(`${title} auto-deleted`, 800);
     return false; // not persisted
   }
 
@@ -10404,6 +11641,7 @@ function addToInventory(title, rarityClass) {
 
   inventory.push(newRecord);
   storage.set("inventory", inventory);
+  pendingAutoEquipRecord = newRecord;
   renderInventory();
   checkAchievements();
   updateAchievementsList();
@@ -10413,6 +11651,31 @@ function addToInventory(title, rarityClass) {
   lastRollPersisted = true;
   lastRollAutoDeleted = false;
   return true; // persisted
+}
+
+function applyPendingAutoEquip() {
+  if (!pendingAutoEquipRecord) {
+    return;
+  }
+
+  const normalized = normalizeEquippedItemRecord(pendingAutoEquipRecord);
+  pendingAutoEquipRecord = null;
+
+  if (!normalized) {
+    return;
+  }
+
+  if (isItemCurrentlyEquipped(normalized)) {
+    return;
+  }
+
+  resumeEquippedAudioAfterCutscene = false;
+  pausedEquippedAudioState = null;
+
+  equippedItem = normalized;
+  storage.set("equippedItem", normalized);
+  setEquinoxPulseActive(isEquinoxRecord(normalized));
+  renderInventory();
 }
 
 function displayResult(title, rarity) {
@@ -10908,6 +12171,11 @@ const backgroundDetails = {
   ethershiftBgImg: { image: "files/backgrounds/ether.png", audio: "ethAudio" },
   msfuBgImg: { image: "files/backgrounds/msfu.png", audio: "msfuAudio" },
   oppBgImg: { image: "files/backgrounds/oppression.jpg", audio: "oppAudio" },
+  glitchedBgImg: { image: "files/backgrounds/glitched.gif", audio: "glitchedAudio" },
+  astraldBgImg: { image: "files/backgrounds/astrald.gif", audio: "astraldAudio" },
+  hypernovaBgImg: { image: "files/backgrounds/hypernova.gif", audio: "hypernovaAudio" },
+  mastermindBgImg: { image: "files/backgrounds/mastermind.gif", audio: "mastermindAudio" },
+  nebulaBgImg: { image: "files/backgrounds/nebula.gif", audio: "nebulaAudio" },
   norstaBgImg: { image: "files/backgrounds/norsta.png", audio: "norstaAudio" },
   sanclaBgImg: { image: "files/backgrounds/sancla.png", audio: "sanclaAudio" },
   silnigBgImg: { image: "files/backgrounds/silnig.png", audio: "silnigAudio" },
@@ -11003,6 +12271,31 @@ function updateEquipToggleButtonsDisabled(disabled) {
   });
 }
 
+function setInventoryDeleteButtonDisabled(button, disabled) {
+  if (!button) {
+    return;
+  }
+
+  const shouldDisable = Boolean(disabled);
+  if (button.disabled !== shouldDisable) {
+    button.disabled = shouldDisable;
+  }
+
+  button.classList.toggle("dropdown-item--disabled", shouldDisable);
+
+  if (shouldDisable) {
+    button.setAttribute("aria-disabled", "true");
+  } else {
+    button.removeAttribute("aria-disabled");
+  }
+}
+
+function updateInventoryDeleteButtonsDisabled(disabled) {
+  $all('.dropdown-item[data-action="delete"]').forEach((button) => {
+    setInventoryDeleteButtonDisabled(button, disabled);
+  });
+}
+
 function disableChange() {
   isChangeEnabled = false;
   cutsceneActive = true;
@@ -11011,6 +12304,7 @@ function disableChange() {
   if (__bgStack) __bgStack.classList.add("is-hidden");
   pauseEquippedAudioForPendingCutscene();
   updateEquipToggleButtonsDisabled(true);
+  updateInventoryDeleteButtonsDisabled(true);
 }
 
 function renderInventory() {
@@ -11137,9 +12431,15 @@ function renderInventory() {
     });
 
     const deleteButton = document.createElement("button");
+    deleteButton.className = "dropdown-item danger";
+    deleteButton.dataset.action = "delete";
     deleteButton.textContent = "Delete";
+    setInventoryDeleteButtonDisabled(deleteButton, cutsceneActive);
     deleteButton.addEventListener("click", (event) => {
       event.stopPropagation();
+      if (cutsceneActive) {
+        return;
+      }
       if (listItem.dataset.locked !== "true") {
         deleteFromInventory(absoluteIndex);
       }
@@ -11200,8 +12500,18 @@ function toggleLock(itemTitle, listItem, lockButton) {
 function deleteFromInventory(absoluteIndex) {
   const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
   const item = inventory[absoluteIndex];
+  if (!item) {
+    return;
+  }
+
   delete lockedItems[item.title];
   localStorage.setItem("lockedItems", JSON.stringify(lockedItems));
+
+  const wasEquipped = isItemCurrentlyEquipped(item);
+
+  if (wasEquipped) {
+    unequipItem({ force: true, skipRender: true });
+  }
 
   inventory.splice(absoluteIndex, 1);
   renderInventory();
@@ -11213,6 +12523,8 @@ function equipItem(item) {
   if (cutsceneActive) {
     return;
   }
+
+  pendingAutoEquipRecord = null;
 
   const normalized = normalizeEquippedItemRecord(item);
   if (!normalized) {
@@ -11238,8 +12550,10 @@ function equipItem(item) {
   renderInventory();
 }
 
-function unequipItem() {
-  if (cutsceneActive) {
+function unequipItem(options = {}) {
+  const { force = false, skipRender = false } = options;
+
+  if (cutsceneActive && !force) {
     return;
   }
 
@@ -11271,8 +12585,11 @@ function unequipItem() {
   pinnedAudioId = null;
 
   changeBackground("menuDefault", null, { force: true });
+  ensureMenuMusicPlaying();
 
-  renderInventory();
+  if (!skipRender) {
+    renderInventory();
+  }
 }
 
 function handleEquippedItem(item) {
@@ -11465,6 +12782,35 @@ function startAnimationA1() {
     heart.classList.remove("heart_show");
     heart.classList.remove("heartbeat");
   }, 20450);
+}
+
+function startAnimationA2() {
+  const heart = document.getElementById("heart");
+
+  setTimeout(() => {
+    heart.classList.add("heartbeat");
+    heart.classList.remove("hide1");
+  }, 100);
+
+  setTimeout(() => {
+    heart.classList.add("scale-up11")
+  }, 1900);
+
+  setTimeout(() => {
+    heart.classList.add("scale-up12")
+  }, 2500);
+
+  setTimeout(() => {
+    heart.classList.add("scale-up-and-vanish");
+  }, 4100);
+
+  setTimeout(() => {
+    heart.classList.add("hide1");
+    heart.classList.add("cutsceneHeart");
+    heart.classList.remove("scale-up-and-vanish");
+    heart.classList.remove("heart_show");
+    heart.classList.remove("heartbeat");
+  }, 5450);
 }
 
 function startAnimation3() {
@@ -11955,10 +13301,7 @@ function spawnCooldownButton(config) {
       return;
     }
 
-    cooldownBuffActive = true;
-    cooldownTime = config.reduceTo;
-
-    showCooldownEffect(config.effectSeconds);
+    activateCooldownBuff(config.reduceTo, config.effectSeconds, config.resetDelay);
 
     button.innerText = "Cooldown Reduced!";
     button.disabled = true;
@@ -11968,50 +13311,162 @@ function spawnCooldownButton(config) {
         document.body.removeChild(button);
       }
     }, 1000);
-
-    setTimeout(() => {
-      cooldownTime = BASE_COOLDOWN_TIME;
-      cooldownBuffActive = false;
-      scheduleAllCooldownButtons();
-    }, config.resetDelay);
   });
 
   document.body.appendChild(button);
 }
 
-function showCooldownEffect(duration) {
+function clearCooldownEffectDisplay() {
+  if (cooldownEffectIntervalId) {
+    clearInterval(cooldownEffectIntervalId);
+    cooldownEffectIntervalId = null;
+  }
+
   const existingDisplay = document.getElementById("countdownDisplay");
-  if (existingDisplay) {
+  if (existingDisplay && existingDisplay.isConnected) {
     existingDisplay.remove();
+  }
+}
+
+function showCooldownEffect(duration, { expiresAt } = {}) {
+  clearCooldownEffectDisplay();
+
+  const normalizedDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
+  const targetExpiresAt = Number.isFinite(expiresAt)
+    ? expiresAt
+    : Date.now() + normalizedDuration * 1000;
+
+  if (!Number.isFinite(targetExpiresAt) || targetExpiresAt <= Date.now()) {
+    return;
   }
 
   const countdownDisplay = document.createElement("div");
   countdownDisplay.id = "countdownDisplay";
-  countdownDisplay.style.position = "fixed";
-  countdownDisplay.style.bottom = "20px";
-  countdownDisplay.style.right = "20px";
-  countdownDisplay.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
-  countdownDisplay.style.color = "white";
-  countdownDisplay.style.padding = "10px";
-  countdownDisplay.style.borderRadius = "5px";
-  countdownDisplay.style.zIndex = "100000";
-
-  countdownDisplay.innerText = `Roll-Cooldown Effect: ${duration}s`;
+  countdownDisplay.className = "roll-cooldown-display";
   document.body.appendChild(countdownDisplay);
 
-  let timeLeft = duration - 1;
-  const interval = setInterval(() => {
-    if (timeLeft < 0) {
-      clearInterval(interval);
-      if (countdownDisplay.isConnected) {
-        document.body.removeChild(countdownDisplay);
-      }
+  const updateCountdown = () => {
+    const millisecondsLeft = targetExpiresAt - Date.now();
+    if (millisecondsLeft <= 0) {
+      clearCooldownEffectDisplay();
       return;
     }
 
-    countdownDisplay.innerText = `Roll-Cooldown Effect: ${timeLeft}s`;
-    timeLeft--;
-  }, 1000);
+    const secondsLeft = Math.max(0, Math.ceil(millisecondsLeft / 1000));
+    countdownDisplay.textContent = `Roll-Cooldown Effect: ${secondsLeft}s`;
+  };
+
+  updateCountdown();
+  cooldownEffectIntervalId = setInterval(updateCountdown, 1000);
+}
+
+function persistCooldownBuffState(reduceTo, expiresAt) {
+  if (!Number.isFinite(reduceTo) || !Number.isFinite(expiresAt)) {
+    return;
+  }
+
+  localStorage.setItem(COOLDOWN_BUFF_REDUCE_TO_KEY, String(reduceTo));
+  localStorage.setItem(COOLDOWN_BUFF_EXPIRES_AT_KEY, String(expiresAt));
+}
+
+function clearPersistedCooldownBuffState() {
+  localStorage.removeItem(COOLDOWN_BUFF_REDUCE_TO_KEY);
+  localStorage.removeItem(COOLDOWN_BUFF_EXPIRES_AT_KEY);
+}
+
+function endCooldownBuff() {
+  clearPersistedCooldownBuffState();
+  clearCooldownEffectDisplay();
+
+  if (cooldownBuffTimeoutId) {
+    clearTimeout(cooldownBuffTimeoutId);
+    cooldownBuffTimeoutId = null;
+  }
+
+  cooldownTime = BASE_COOLDOWN_TIME;
+  recordRollCooldownDuration("default", cooldownTime);
+  cooldownBuffActive = false;
+  scheduleAllCooldownButtons();
+}
+
+function scheduleCooldownBuffExpiration(expiresAt) {
+  if (cooldownBuffTimeoutId) {
+    clearTimeout(cooldownBuffTimeoutId);
+    cooldownBuffTimeoutId = null;
+  }
+
+  if (!Number.isFinite(expiresAt)) {
+    return;
+  }
+
+  const remainingMs = expiresAt - Date.now();
+  if (remainingMs <= 0) {
+    endCooldownBuff();
+    return;
+  }
+
+  cooldownBuffTimeoutId = setTimeout(() => {
+    cooldownBuffTimeoutId = null;
+    endCooldownBuff();
+  }, remainingMs);
+}
+
+function activateCooldownBuff(reduceTo, effectSeconds, resetDelay) {
+  if (!Number.isFinite(reduceTo) || reduceTo <= 0) {
+    return;
+  }
+
+  const durationMs = Number.isFinite(resetDelay) && resetDelay > 0
+    ? resetDelay
+    : (Number.isFinite(effectSeconds) && effectSeconds > 0 ? effectSeconds * 1000 : 0);
+
+  if (!Number.isFinite(durationMs) || durationMs <= 0) {
+    return;
+  }
+
+  const expiresAt = Date.now() + durationMs;
+
+  cooldownBuffActive = true;
+  cooldownTime = reduceTo;
+  recordRollCooldownDuration("buffed", cooldownTime);
+
+  persistCooldownBuffState(reduceTo, expiresAt);
+
+  const secondsForDisplay = Number.isFinite(effectSeconds) && effectSeconds > 0
+    ? effectSeconds
+    : Math.ceil(durationMs / 1000);
+
+  showCooldownEffect(secondsForDisplay, { expiresAt });
+  scheduleCooldownBuffExpiration(expiresAt);
+}
+
+function initializeCooldownBuffState() {
+  const storedReduceTo = Number.parseInt(localStorage.getItem(COOLDOWN_BUFF_REDUCE_TO_KEY), 10);
+  const storedExpiresAt = Number.parseInt(localStorage.getItem(COOLDOWN_BUFF_EXPIRES_AT_KEY), 10);
+
+  if (!Number.isFinite(storedReduceTo) || storedReduceTo <= 0) {
+    clearPersistedCooldownBuffState();
+    return;
+  }
+
+  if (!Number.isFinite(storedExpiresAt)) {
+    clearPersistedCooldownBuffState();
+    return;
+  }
+
+  const remainingMs = storedExpiresAt - Date.now();
+  if (remainingMs <= 0) {
+    endCooldownBuff();
+    return;
+  }
+
+  cooldownBuffActive = true;
+  cooldownTime = storedReduceTo;
+  recordRollCooldownDuration("buffed", cooldownTime);
+
+  const secondsForDisplay = Math.ceil(remainingMs / 1000);
+  showCooldownEffect(secondsForDisplay, { expiresAt: storedExpiresAt });
+  scheduleCooldownBuffExpiration(storedExpiresAt);
 }
 
 function scheduleAllCooldownButtons() {
@@ -12265,24 +13720,150 @@ function registerMenuButtons() {
   }
 }
 
-function setupAudioControls() {
-  audioSliderElement = document.getElementById("audioSlider");
-  audioSliderValueLabelElement = document.getElementById("audioSliderValue");
-  muteButtonElement = document.getElementById("muteButton");
-  const resetDataButton = document.getElementById("resetDataButton");
-
-  const savedVolume = localStorage.getItem("audioVolume");
-  if (savedVolume !== null) {
-    audioVolume = parseFloat(savedVolume);
-    previousVolume = audioVolume;
+function clampVolume(value, fallback = 1) {
+  const number = typeof value === "number" ? value : parseFloat(value);
+  if (!Number.isFinite(number)) {
+    return fallback;
   }
 
-  updateAudioElements(audioVolume);
+  if (number < 0) {
+    return 0;
+  }
+  if (number > 1) {
+    return 1;
+  }
+  return number;
+}
+
+function getAudioCategory(id) {
+  if (typeof id !== "string" || !id) {
+    return "title";
+  }
+
+  if (CUTSCENE_VOLUME_AUDIO_IDS.has(id)) {
+    if (!ROLL_AUDIO_IDS.has(id) || cutsceneActive || pendingCutsceneRarity) {
+      return "cutscene";
+    }
+  }
+
+  if (ROLL_AUDIO_IDS.has(id)) {
+    return "roll";
+  }
+
+  if (MENU_AUDIO_IDS.has(id)) {
+    return "menu";
+  }
+
+  return "title";
+}
+
+function getCategoryVolume(category) {
+  switch (category) {
+    case "roll":
+      return rollAudioVolume;
+    case "cutscene":
+      return cutsceneAudioVolume;
+    case "menu":
+      return menuAudioVolume;
+    case "title":
+    default:
+      return titleAudioVolume;
+  }
+}
+
+function getEffectiveVolumeForAudioId(id) {
+  const masterVolume = clampVolume(audioVolume, 1);
+  const categoryVolume = clampVolume(getCategoryVolume(getAudioCategory(id)), 1);
+  return clampVolume(masterVolume * categoryVolume, 0);
+}
+
+function ensureMenuMusicPlaying() {
+  const audio =
+    typeof mainAudio !== "undefined" && mainAudio instanceof HTMLAudioElement
+      ? mainAudio
+      : document.getElementById("mainAudio");
+
+  if (!audio || typeof audio.play !== "function") {
+    return;
+  }
+
+  try {
+    if (audio.preload === "none") {
+      audio.preload = "auto";
+      try {
+        audio.load();
+      } catch (error) {
+        /* no-op */
+      }
+    }
+
+    audio.volume = getEffectiveVolumeForAudioId(audio.id || "mainAudio");
+
+    const playAttempt = audio.play();
+    if (playAttempt && typeof playAttempt.catch === "function") {
+      playAttempt.catch(() => {});
+    }
+  } catch (error) {
+    /* no-op */
+  }
+}
+
+function initializeAudioVolumeStateFromStorage() {
+  const savedVolume = localStorage.getItem("audioVolume");
+  if (savedVolume !== null) {
+    audioVolume = clampVolume(savedVolume, audioVolume);
+    if (audioVolume > 0) {
+      previousVolume = audioVolume;
+    }
+  }
+
+  const savedRollVolume = localStorage.getItem("rollAudioVolume");
+  if (savedRollVolume !== null) {
+    rollAudioVolume = clampVolume(savedRollVolume, rollAudioVolume);
+  }
+
+  const savedCutsceneVolume = localStorage.getItem("cutsceneAudioVolume");
+  if (savedCutsceneVolume !== null) {
+    cutsceneAudioVolume = clampVolume(savedCutsceneVolume, cutsceneAudioVolume);
+  }
+
+  const savedTitleVolume = localStorage.getItem("titleAudioVolume");
+  if (savedTitleVolume !== null) {
+    titleAudioVolume = clampVolume(savedTitleVolume, titleAudioVolume);
+  }
+
+  const savedMenuVolume = localStorage.getItem("menuAudioVolume");
+  if (savedMenuVolume !== null) {
+    menuAudioVolume = clampVolume(savedMenuVolume, menuAudioVolume);
+  }
+
+  isMuted = audioVolume === 0;
+
+  updateAudioElements();
+}
+
+initializeAudioVolumeStateFromStorage();
+
+function setupAudioControls() {
+  initializeAudioVolumeStateFromStorage();
+
+  audioSliderElement = document.getElementById("audioSlider");
+  audioSliderValueLabelElement = document.getElementById("audioSliderValue");
+  rollAudioSliderElement = document.getElementById("rollAudioSlider");
+  rollAudioSliderValueLabelElement = document.getElementById("rollAudioSliderValue");
+  cutsceneAudioSliderElement = document.getElementById("cutsceneAudioSlider");
+  cutsceneAudioSliderValueLabelElement = document.getElementById("cutsceneAudioSliderValue");
+  titleAudioSliderElement = document.getElementById("titleAudioSlider");
+  titleAudioSliderValueLabelElement = document.getElementById("titleAudioSliderValue");
+  menuAudioSliderElement = document.getElementById("menuAudioSlider");
+  menuAudioSliderValueLabelElement = document.getElementById("menuAudioSliderValue");
+  muteButtonElement = document.getElementById("muteButton");
+  const resetDataButton = document.getElementById("resetDataButton");
 
   if (audioSliderElement) {
     audioSliderElement.value = audioVolume;
     audioSliderElement.addEventListener("input", () => {
-      audioVolume = parseFloat(audioSliderElement.value);
+      audioVolume = clampVolume(audioSliderElement.value, audioVolume);
       if (audioVolume === 0) {
         isMuted = true;
         setSliderMutedState(true);
@@ -12292,27 +13873,82 @@ function setupAudioControls() {
         setSliderMutedState(false);
       }
       localStorage.setItem("audioVolume", audioVolume);
-      updateAudioElements(audioVolume);
+      updateAudioElements();
       updateAudioSliderUi();
     });
+    updateAudioSliderUi();
   }
+
+  const attachCategorySliderHandler = (sliderElement, valueLabelElement, storageKey, onUpdate) => {
+    if (!sliderElement) {
+      return;
+    }
+
+    sliderElement.value = clampVolume(onUpdate("get"), 1);
+    updateSliderUi(sliderElement, valueLabelElement);
+
+    sliderElement.addEventListener("input", () => {
+      const value = clampVolume(sliderElement.value, onUpdate("get"));
+      onUpdate("set", value);
+      localStorage.setItem(storageKey, value);
+      updateAudioElements();
+      updateSliderUi(sliderElement, valueLabelElement);
+    });
+  };
+
+  attachCategorySliderHandler(rollAudioSliderElement, rollAudioSliderValueLabelElement, "rollAudioVolume", (action, value) => {
+    if (action === "set") {
+      rollAudioVolume = value;
+    }
+    return rollAudioVolume;
+  });
+
+  attachCategorySliderHandler(
+    cutsceneAudioSliderElement,
+    cutsceneAudioSliderValueLabelElement,
+    "cutsceneAudioVolume",
+    (action, value) => {
+      if (action === "set") {
+        cutsceneAudioVolume = value;
+      }
+      return cutsceneAudioVolume;
+    }
+  );
+
+  attachCategorySliderHandler(titleAudioSliderElement, titleAudioSliderValueLabelElement, "titleAudioVolume", (action, value) => {
+    if (action === "set") {
+      titleAudioVolume = value;
+    }
+    return titleAudioVolume;
+  });
+
+  attachCategorySliderHandler(menuAudioSliderElement, menuAudioSliderValueLabelElement, "menuAudioVolume", (action, value) => {
+    if (action === "set") {
+      menuAudioVolume = value;
+    }
+    return menuAudioVolume;
+  });
 
   if (muteButtonElement) {
     muteButtonElement.addEventListener("click", () => {
       isMuted = !isMuted;
 
       if (isMuted) {
-        previousVolume = audioVolume;
+        if (audioVolume > 0) {
+          previousVolume = audioVolume;
+        }
         audioVolume = 0;
       } else {
-        audioVolume = previousVolume;
+        audioVolume = previousVolume > 0 ? previousVolume : 1;
       }
+
+      audioVolume = clampVolume(audioVolume, 1);
 
       if (audioSliderElement) {
         audioSliderElement.value = audioVolume;
       }
       localStorage.setItem("audioVolume", audioVolume);
-      updateAudioElements(audioVolume);
+      updateAudioElements();
       setSliderMutedState(isMuted);
       updateAudioSliderUi();
     });
@@ -12322,7 +13958,11 @@ function setupAudioControls() {
     resetDataButton.addEventListener("click", () => {
       if (confirm("Are you sure you want to reset all data?")) {
         console.log("Data reset!");
+        stopPlayTimeTracker();
         localStorage.clear();
+        setPlayTimeSeconds(0, { persist: false });
+        checkAchievements();
+        updateAchievementsList();
 
         setTimeout(() => {
           localStorage.clear();
@@ -12333,12 +13973,14 @@ function setupAudioControls() {
   }
 
   setSliderMutedState(audioVolume === 0);
-  updateAudioSliderUi();
 }
 
-function updateAudioElements(volume) {
+function updateAudioElements() {
   const audioElements = document.querySelectorAll("audio");
-  audioElements.forEach((audio) => (audio.volume = volume));
+  audioElements.forEach((audio) => {
+    const id = typeof audio.id === "string" ? audio.id : "";
+    audio.volume = getEffectiveVolumeForAudioId(id);
+  });
 }
 
 function setSliderMutedState(muted) {
@@ -12350,14 +13992,18 @@ function setSliderMutedState(muted) {
 }
 
 function updateAudioSliderUi() {
-  if (!audioSliderElement) {
+  updateSliderUi(audioSliderElement, audioSliderValueLabelElement);
+}
+
+function updateSliderUi(sliderElement, valueLabelElement) {
+  if (!sliderElement) {
     return;
   }
 
-  const value = Math.max(0, Math.min(1, parseFloat(audioSliderElement.value) || 0));
+  const value = clampVolume(sliderElement.value, 0);
   const percentage = Math.round(value * 100);
-  if (audioSliderValueLabelElement) {
-    audioSliderValueLabelElement.textContent = `${percentage}%`;
+  if (valueLabelElement) {
+    valueLabelElement.textContent = `${percentage}%`;
   }
 
   const startColor = { r: 96, g: 0, b: 126 };
@@ -12367,13 +14013,14 @@ function updateAudioSliderUi() {
   const b = Math.round(startColor.b + (endColor.b - startColor.b) * value);
   const thumbColor = `rgb(${r}, ${g}, ${b})`;
 
-  audioSliderElement.style.setProperty("--thumb-color", thumbColor);
+  sliderElement.style.setProperty("--thumb-color", thumbColor);
 
-  const trackColor = audioSliderElement.classList.contains("muted")
+  const trackColor = sliderElement.classList.contains("muted")
     ? "rgba(128, 96, 186, 0.75)"
     : thumbColor;
 
-  audioSliderElement.style.background = `linear-gradient(90deg, ${trackColor} ${percentage}%, rgba(255, 255, 255, 0.12) ${percentage}%)`;
+  sliderElement.style.setProperty("--slider-fill-color", trackColor);
+  sliderElement.style.setProperty("--slider-progress", `${percentage}%`);
 }
 
 function initializeAutoRollControls() {
@@ -12531,7 +14178,7 @@ function registerDataPersistenceButtons() {
 
   if (saveButton) {
     saveButton.addEventListener("click", () => {
-      const data = JSON.stringify(localStorage);
+      const data = JSON.stringify(collectLocalStorageSnapshot());
       const encryptedData = CryptoJS.AES.encrypt(data, secretKey).toString();
       const blob = new Blob([encryptedData], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -12568,10 +14215,36 @@ function registerDataPersistenceButtons() {
             const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
             const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
             const importedData = JSON.parse(decryptedData);
+            if (!importedData || typeof importedData !== "object") {
+              throw new Error("Invalid file format.");
+            }
 
-            Object.keys(importedData).forEach((key) => {
-              localStorage.setItem(key, importedData[key]);
+            stopPlayTimeTracker();
+
+            localStorage.clear();
+
+            let importedPlayTime = null;
+
+            Object.entries(importedData).forEach(([key, value]) => {
+              if (typeof key !== "string") {
+                return;
+              }
+
+              const stringValue = typeof value === "string" ? value : String(value);
+              localStorage.setItem(key, stringValue);
+
+              if (key === "playTime") {
+                importedPlayTime = stringValue;
+              }
             });
+
+            if (importedPlayTime !== null) {
+              setPlayTimeSeconds(importedPlayTime);
+            } else {
+              setPlayTimeSeconds(0, { persist: false });
+            }
+
+            initializePlayTimeTracker();
 
             showStatusMessage("Data imported successfully! Refreshing...", 1500);
 
@@ -12596,32 +14269,17 @@ function initializePlayTimeTracker() {
     return;
   }
 
-  const storedPlayTime = parseInt(localStorage.getItem("playTime"), 10);
-  if (!Number.isNaN(storedPlayTime)) {
-    playTimeSeconds = storedPlayTime;
-  }
   const timerDisplay = document.getElementById("timer");
   if (!timerDisplay) {
     return;
   }
 
-  const formatTime = (seconds) => {
-    const hrs = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    return [
-      hrs.toString().padStart(2, "0"),
-      mins.toString().padStart(2, "0"),
-      secs.toString().padStart(2, "0"),
-    ].join(":");
-  };
-
-  timerDisplay.textContent = formatTime(playTimeSeconds);
+  setPlayTimeSeconds(localStorage.getItem("playTime"), { persist: false });
+  checkAchievements();
+  updateAchievementsList();
 
   playTimeIntervalId = setInterval(() => {
-    playTimeSeconds += 1;
-    timerDisplay.textContent = formatTime(playTimeSeconds);
-    localStorage.setItem("playTime", playTimeSeconds);
+    setPlayTimeSeconds(playTimeSeconds + 1);
     checkAchievements();
     updateAchievementsList();
   }, 1000);
@@ -12767,7 +14425,12 @@ function getClassForRarity(rarity) {
       'Wave [1 in 2,555]': 'eventS',
       'Scorching [1 in 7,923]': 'eventS',
       'Beach [1 in 12,555]': 'eventS',
-      'Tidal Wave [1 in 25,500]': 'eventS'
+      'Tidal Wave [1 in 25,500]': 'eventS',
+      'Hypernova [1 in 40,000]': 'under100k',
+      'Astrald [1 in 100,000]': 'under1m',
+      'Nebula [1 in 62,500]': 'under100k',
+      'Gl1tch3d [1 in 12,404/40,404th]': 'special',
+      'Mastermind [110,010]': 'under1m'
   };
 
   return rarityClasses[rarity] || null;
@@ -13072,6 +14735,8 @@ document
       "astblaBgImg",
       "qbearImgBg",
       "lightImgBg",
+      "hypernovaBgImg",
+      "nebulaBgImg"
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
@@ -13187,6 +14852,18 @@ document
 document
   .getElementById("deleteAllX1staButton")
   .addEventListener("click", () => deleteAllByRarity("x1staBgImg"));
+document
+  .getElementById("deleteAllAstraldButton")
+  .addEventListener("click", () => deleteAllByRarity("astraldBgImg"));
+document
+  .getElementById("deleteAllMastermindButton")
+  .addEventListener("click", () => deleteAllByRarity("mastermindBgImg"));
+document
+  .getElementById("deleteAllHypernovaButton")
+  .addEventListener("click", () => deleteAllByRarity("hypernovaBgImg"));
+document
+  .getElementById("deleteAllNebulaButton")
+  .addEventListener("click", () => deleteAllByRarity("nebulaBgImg"));
 
 
 document
@@ -13197,6 +14874,8 @@ document
       "impeachedBgImg",
       "celestialchorusBgImg",
       "x1staBgImg",
+      "astraldBgImg",
+      "mastermindBgImg"
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
@@ -13214,7 +14893,7 @@ document
       "msfuBgImg",
       "orbBgImg",
       'crazeBgImg',
-      'shenviiBgImg'
+      'shenviiBgImg',
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
@@ -13270,14 +14949,6 @@ document.querySelectorAll(".rarity-button").forEach(button => {
     saveToggledStates();
   });
 });
-
-document.querySelectorAll(".cutsceneSkipBtb").forEach(button => {
-  button.addEventListener("click", () => {
-    button.classList.toggle("active");
-    saveToggledStates();
-  });
-});
-
 
 const canvas = document.getElementById('fireworksCanvas');
 const ctx = canvas.getContext('2d');
@@ -13502,7 +15173,7 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
       if (details.audio) {
         const newAudio = document.getElementById(details.audio);
         if (newAudio) {
-          newAudio.volume = typeof audioVolume === "number" ? audioVolume : 1;
+          newAudio.volume = getEffectiveVolumeForAudioId(details.audio);
           const playPromise = newAudio.play();
           if (playPromise && typeof playPromise.catch === "function") {
             playPromise.catch(() => {});
@@ -13520,6 +15191,11 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
   } finally {
     if (force) {
       allowForcedAudioPlayback = previousForcedState;
+    }
+    if (!force) {
+      applyPendingAutoEquip();
+    } else {
+      pendingAutoEquipRecord = null;
     }
   }
 }
