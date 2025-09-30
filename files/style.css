@@ -3162,7 +3162,7 @@ body.flashing {
 
 .copy-toast {
     position: absolute;
-    bottom: calc(100% + 12px);
+    top: calc(100% + 12px);
     right: 0;
     padding: 8px 14px;
     border-radius: 12px;
