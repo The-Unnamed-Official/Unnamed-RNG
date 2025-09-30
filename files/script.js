@@ -1544,6 +1544,7 @@ function isItemCurrentlyEquipped(item) {
 
 function applyEquippedItemOnStartup() {
   if (!equippedItem) {
+    ensureMenuMusicPlaying();
     return;
   }
 
@@ -1553,6 +1554,7 @@ function applyEquippedItemOnStartup() {
     storage.remove("equippedItem");
     changeBackground("menuDefault", null, { force: true });
     setEquinoxPulseActive(false);
+    ensureMenuMusicPlaying();
     return;
   }
 
@@ -1562,6 +1564,7 @@ function applyEquippedItemOnStartup() {
     storage.remove("equippedItem");
     changeBackground("menuDefault", null, { force: true });
     setEquinoxPulseActive(false);
+    ensureMenuMusicPlaying();
     return;
   }
 
@@ -12499,6 +12502,7 @@ function unequipItem(options = {}) {
   pinnedAudioId = null;
 
   changeBackground("menuDefault", null, { force: true });
+  ensureMenuMusicPlaying();
 
   if (!skipRender) {
     renderInventory();
@@ -13653,12 +13657,14 @@ function getAudioCategory(id) {
     return "title";
   }
 
-  if (ROLL_AUDIO_IDS.has(id)) {
-    return "roll";
+  if (CUTSCENE_VOLUME_AUDIO_IDS.has(id)) {
+    if (!ROLL_AUDIO_IDS.has(id) || cutsceneActive || pendingCutsceneRarity) {
+      return "cutscene";
+    }
   }
 
-  if (CUTSCENE_VOLUME_AUDIO_IDS.has(id)) {
-    return "cutscene";
+  if (ROLL_AUDIO_IDS.has(id)) {
+    return "roll";
   }
 
   if (MENU_AUDIO_IDS.has(id)) {
@@ -13686,6 +13692,37 @@ function getEffectiveVolumeForAudioId(id) {
   const masterVolume = clampVolume(audioVolume, 1);
   const categoryVolume = clampVolume(getCategoryVolume(getAudioCategory(id)), 1);
   return clampVolume(masterVolume * categoryVolume, 0);
+}
+
+function ensureMenuMusicPlaying() {
+  const audio =
+    typeof mainAudio !== "undefined" && mainAudio instanceof HTMLAudioElement
+      ? mainAudio
+      : document.getElementById("mainAudio");
+
+  if (!audio || typeof audio.play !== "function") {
+    return;
+  }
+
+  try {
+    if (audio.preload === "none") {
+      audio.preload = "auto";
+      try {
+        audio.load();
+      } catch (error) {
+        /* no-op */
+      }
+    }
+
+    audio.volume = getEffectiveVolumeForAudioId(audio.id || "mainAudio");
+
+    const playAttempt = audio.play();
+    if (playAttempt && typeof playAttempt.catch === "function") {
+      playAttempt.catch(() => {});
+    }
+  } catch (error) {
+    /* no-op */
+  }
 }
 
 function initializeAudioVolumeStateFromStorage() {
