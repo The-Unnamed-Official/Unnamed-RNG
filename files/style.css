@@ -5200,7 +5200,8 @@ body.flashing {
     flex-direction: column;
     color: #f1f5ff;
     z-index: 10000000;
-    overflow: visible;
+    overflow: hidden;
+    overflow-y: visible;
     scrollbar-width: thin;
     scrollbar-color: #7aa2ff #181a2c;
 }
@@ -5274,7 +5275,7 @@ body.flashing {
 .achievements-body {
     flex: 1;
     overflow-y: auto;
-    overflow-x: visible;
+    overflow-x: hidden;
     padding: 20px 24px 28px 24px;
     display: flex;
     flex-direction: column;
