@@ -96,6 +96,7 @@ const CUTSCENE_FAILSAFE_DURATION_MS = 120000;
 let lastRollPersisted = true;
 let lastRollAutoDeleted = false;
 let lastRollRarityClass = null;
+let lastRollTitle = null;
 let allowForcedAudioPlayback = false;
 let pinnedAudioId = null;
 let pausedEquippedAudioState = null;
@@ -789,6 +790,109 @@ const AUDIO_RESET_OVERRIDES = {
 
 const audioElementCache = new Map();
 const pendingAudioResetHandlers = new WeakMap();
+let dynamicAudioContainer = null;
+
+function getDynamicAudioContainer() {
+  if (dynamicAudioContainer && document.contains(dynamicAudioContainer)) {
+    return dynamicAudioContainer;
+  }
+
+  let container = document.getElementById("dynamicAudioContainer");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "dynamicAudioContainer";
+    container.style.display = "none";
+    const parent = document.body || document.documentElement;
+    if (parent) {
+      parent.appendChild(container);
+    }
+  }
+
+  dynamicAudioContainer = container;
+  return dynamicAudioContainer;
+}
+
+function registerDynamicAudioId(id, { category = "title" } = {}) {
+  if (typeof id !== "string" || !id) {
+    return;
+  }
+
+  if (!STOPPABLE_AUDIO_SET.has(id)) {
+    STOPPABLE_AUDIO_SET.add(id);
+    STOPPABLE_AUDIO_IDS.push(id);
+  }
+
+  if (category === "roll") {
+    ROLL_AUDIO_IDS.add(id);
+  } else if (category === "menu") {
+    MENU_AUDIO_IDS.add(id);
+  }
+}
+
+function createDynamicAudioElement(
+  id,
+  src,
+  { loop = true, preload = "none", category = "title" } = {}
+) {
+  if (typeof id !== "string" || !id || typeof src !== "string" || !src) {
+    return null;
+  }
+
+  const existing = document.getElementById(id);
+  if (existing instanceof HTMLAudioElement) {
+    return existing;
+  }
+
+  const audio = document.createElement("audio");
+  audio.id = id;
+  audio.src = src;
+  audio.loop = Boolean(loop);
+  audio.preload = preload;
+  audio.setAttribute("data-dynamic-audio", "true");
+  audio.style.display = "none";
+
+  const container = getDynamicAudioContainer();
+  if (container) {
+    container.appendChild(audio);
+  }
+
+  registerDynamicAudioId(id, { category });
+
+  if (typeof updateAudioElements === "function") {
+    updateAudioElements();
+  }
+
+  return audio;
+}
+
+function ensureDynamicAudioElement(id) {
+  if (typeof id !== "string" || !id) {
+    return null;
+  }
+
+  const trimmedId = id.trim();
+  if (!trimmedId) {
+    return null;
+  }
+
+  if (trimmedId === "99mLimboRollSound") {
+    return createDynamicAudioElement(
+      trimmedId,
+      `files/sounds_and_music/${trimmedId}.mp3`,
+      { loop: false, category: "roll" }
+    );
+  }
+
+  if (trimmedId === "limboMusic" || trimmedId.endsWith("BiomeMusic")) {
+    return createDynamicAudioElement(
+      trimmedId,
+      `files/sounds_and_music/${trimmedId}.mp3`,
+      { loop: true }
+    );
+  }
+
+  return null;
+}
 
 const LOADING_SEQUENCE = [
   {
@@ -1433,7 +1537,8 @@ function getAudioElement(id) {
     audioElementCache.delete(id);
   }
 
-  const element = document.getElementById(id) || window[id] || null;
+  const element =
+    document.getElementById(id) || window[id] || ensureDynamicAudioElement(id);
   if (element && element.preload === "none") {
     element.preload = "auto";
   }
@@ -1560,9 +1665,7 @@ function pauseEquippedAudioForRarity(rarity) {
   const rarityClass = rarity && typeof rarity === "object" ? rarity.class : null;
   const hasEquippableBackground = Boolean(
     rarityClass &&
-    typeof backgroundDetails !== "undefined" &&
-    backgroundDetails &&
-    backgroundDetails[rarityClass]
+    resolveBackgroundDetails(rarityClass)
   );
 
   const shouldResume = !hasEquippableBackground;
@@ -11688,6 +11791,7 @@ function selectTitle(rarity) {
 }
 
 function addToInventory(title, rarityClass) {
+  lastRollTitle = title || null;
   lastRollRarityClass = rarityClass || null;
   const rolledAt = typeof rollCount === "number"
     ? rollCount
@@ -12300,6 +12404,58 @@ const backgroundDetails = {
   esteggBgImg: { image: "files/backgrounds/estegg.png", audio: "esteggAudio" },
   estbunBgImg: { image: "files/backgrounds/estbun.png", audio: "estbunAudio" },
 };
+
+function createBiomeBackgroundDetails(rarityClass) {
+  if (typeof rarityClass !== "string") {
+    return null;
+  }
+
+  const trimmed = rarityClass.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const lower = trimmed.toLowerCase();
+  if (lower === "limboimage") {
+    return {
+      image: `files/backgrounds/${trimmed}.jpg`,
+      audio: "limboMusic",
+    };
+  }
+
+  if (trimmed.endsWith("BiomeImage")) {
+    const base = trimmed.slice(0, -"Image".length);
+    return {
+      image: `files/backgrounds/${trimmed}.jpg`,
+      audio: `${base}Music`,
+    };
+  }
+
+  return null;
+}
+
+function resolveBackgroundDetails(rarityClass) {
+  if (typeof rarityClass !== "string") {
+    return null;
+  }
+
+  const trimmed = rarityClass.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(backgroundDetails, trimmed)) {
+    return backgroundDetails[trimmed];
+  }
+
+  const dynamic = createBiomeBackgroundDetails(trimmed);
+  if (!dynamic) {
+    return null;
+  }
+
+  backgroundDetails[trimmed] = dynamic;
+  return dynamic;
+}
 
 function triggerScreenShakeByBucket(bucket) {
   // Map rarity buckets to shake classes
@@ -15212,17 +15368,86 @@ function ensureBgStack() {
   }
 }
 
+function extractLargestNumberFromString(value) {
+  if (value == null) {
+    return null;
+  }
+
+  const text = typeof value === "string" ? value : String(value);
+  const matches = text.match(/\d[\d,]*/g);
+  if (!matches) {
+    return null;
+  }
+
+  let largest = null;
+  for (const part of matches) {
+    const normalized = parseInt(part.replace(/,/g, ""), 10);
+    if (Number.isFinite(normalized)) {
+      largest = largest === null ? normalized : Math.max(largest, normalized);
+    }
+  }
+
+  return largest;
+}
+
+function isLimboRarityClass(rarityClass) {
+  return typeof rarityClass === "string" && rarityClass.trim().toLowerCase() === "limboimage";
+}
+
+function maybePlayLimboRollSound(rarityClass, title, options = {}) {
+  if (!isLimboRarityClass(rarityClass)) {
+    return;
+  }
+
+  let rollValue = null;
+  if (options && typeof options.limboRoll === "number" && Number.isFinite(options.limboRoll)) {
+    rollValue = options.limboRoll;
+  }
+
+  if (rollValue == null) {
+    rollValue = extractLargestNumberFromString(title);
+  }
+
+  if (rollValue == null || rollValue < 99_999_999) {
+    return;
+  }
+
+  const effect = getAudioElement("99mLimboRollSound");
+  if (!effect) {
+    return;
+  }
+
+  try {
+    if (typeof effect.pause === "function") {
+      effect.pause();
+    }
+    if (typeof effect.currentTime === "number") {
+      effect.currentTime = 0;
+    }
+  } catch (error) {
+    /* no-op */
+  }
+
+  effect.volume = getEffectiveVolumeForAudioId("99mLimboRollSound");
+  const playPromise = effect.play();
+  if (playPromise && typeof playPromise.catch === "function") {
+    playPromise.catch(() => {});
+  }
+}
+
 function changeBackground(rarityClass, itemTitle, options = {}) {
-  const force = typeof options === "object" && options !== null
-    ? Boolean(options.force)
-    : Boolean(options);
+  const isOptionsObject = typeof options === "object" && options !== null;
+  const force = isOptionsObject ? Boolean(options.force) : Boolean(options);
+  const extraOptions = isOptionsObject ? options : {};
 
   if (!force && (!isChangeEnabled || !lastRollPersisted)) {
     return;
   }
 
-  const details = backgroundDetails[rarityClass];
+  const details = resolveBackgroundDetails(rarityClass);
   if (!details) return;
+
+  const resolvedTitle = itemTitle || lastRollTitle;
 
   const shouldSkipAudioUpdate = !force && resumeEquippedAudioAfterCutscene && pausedEquippedAudioState && pausedEquippedAudioState.element;
 
@@ -15275,7 +15500,7 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
         currentAudio.currentTime = 0;
       }
       if (details.audio) {
-        const newAudio = document.getElementById(details.audio);
+        const newAudio = getAudioElement(details.audio);
         if (newAudio) {
           newAudio.volume = getEffectiveVolumeForAudioId(details.audio);
           const playPromise = newAudio.play();
@@ -15292,6 +15517,10 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
     // Clear direct body background inline style so the stack is the only visual source.
     // This prevents flicker if some other code set document.body.style.backgroundImage.
     document.body.style.backgroundImage = "";
+
+    if (!force) {
+      maybePlayLimboRollSound(rarityClass, resolvedTitle, extraOptions);
+    }
   } finally {
     if (force) {
       allowForcedAudioPlayback = previousForcedState;
