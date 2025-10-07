@@ -2606,6 +2606,12 @@ body {
     object-fit: contain;
 }
 
+.mythicwallBgImg {
+    background: url(backgrounds/mythicwall.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
 .gregBgImg {
     background: url(backgrounds/greg.png);
     background-size: cover;
@@ -4544,6 +4550,16 @@ body.flashing {
     width: 40px;
     height: 40px;
     background-color: #ff0000b3;
+    animation: spin-scale-fast 1.5s ease-out forwards;
+    border-radius: 2px;
+    box-shadow: 0px 0px 15px #ff0000e6;
+}
+
+.animated-square-cyan {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: #00ffff;
     animation: spin-scale-fast 1.5s ease-out forwards;
     border-radius: 2px;
     box-shadow: 0px 0px 15px #ff0000e6;
