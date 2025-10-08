@@ -25,6 +25,56 @@ const EQUINOX_RARITY_CLASS = "equinoxBgImg";
 let equinoxPulseActive = false;
 let pendingEquinoxPulseState = null;
 
+const REDUCED_ANIMATIONS_KEY = "reducedAnimationsEnabled";
+let reducedAnimationsEnabled = Boolean(storage.get(REDUCED_ANIMATIONS_KEY, false));
+let pendingReducedAnimationsState = reducedAnimationsEnabled ? true : null;
+
+function syncReducedAnimationsOnBody(active) {
+  const body = document.body;
+  if (!body) {
+    pendingReducedAnimationsState = Boolean(active);
+    return;
+  }
+
+  body.classList.toggle("reduced-motion", Boolean(active));
+  pendingReducedAnimationsState = null;
+}
+
+function isReducedAnimationsEnabled() {
+  return reducedAnimationsEnabled;
+}
+
+function setReducedAnimationsEnabled(enabled) {
+  const next = Boolean(enabled);
+  if (next === reducedAnimationsEnabled && pendingReducedAnimationsState === null) {
+    if (document.body) {
+      document.body.classList.toggle("reduced-motion", next);
+    }
+    return;
+  }
+
+  reducedAnimationsEnabled = next;
+
+  if (reducedAnimationsEnabled) {
+    storage.set(REDUCED_ANIMATIONS_KEY, true);
+  } else {
+    storage.remove(REDUCED_ANIMATIONS_KEY);
+  }
+
+  syncReducedAnimationsOnBody(reducedAnimationsEnabled);
+
+  if (reducedAnimationsEnabled) {
+    setEquinoxPulseActive(false);
+    stopFireworksAnimation();
+  } else {
+    startFireworksAnimation();
+  }
+}
+
+if (reducedAnimationsEnabled) {
+  syncReducedAnimationsOnBody(true);
+}
+
 function isEquinoxRarityClass(value) {
   return typeof value === "string" && value === EQUINOX_RARITY_CLASS;
 }
@@ -44,7 +94,7 @@ function syncEquinoxPulseOnBody(active) {
 }
 
 function setEquinoxPulseActive(active) {
-  const shouldActivate = Boolean(active);
+  const shouldActivate = Boolean(active) && !isReducedAnimationsEnabled();
   if (shouldActivate === equinoxPulseActive && pendingEquinoxPulseState === null) {
     if (shouldActivate && document.body && !document.body.classList.contains("equinox-pulse-active")) {
       document.body.classList.add("equinox-pulse-active");
@@ -185,6 +235,13 @@ function startRollButtonCooldownAnimation(button, duration) {
     return;
   }
 
+  if (isReducedAnimationsEnabled()) {
+    button.classList.remove("is-cooling");
+    progress.style.transition = "none";
+    progress.style.transform = "translateX(-100%)";
+    return;
+  }
+
   button.classList.add("is-cooling");
   progress.style.transition = "none";
   progress.style.transform = "translateX(0)";
@@ -204,6 +261,12 @@ function stopRollButtonCooldownAnimation(button) {
   }
 
   button.classList.remove("is-cooling");
+  if (isReducedAnimationsEnabled()) {
+    progress.style.transition = "none";
+    progress.style.transform = "translateX(-100%)";
+    return;
+  }
+
   progress.style.transition = "none";
   progress.style.transform = "translateX(-100%)";
   progress.offsetWidth;
@@ -1735,6 +1798,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (pendingEquinoxPulseState !== null || equinoxPulseActive) {
     const desiredState = pendingEquinoxPulseState !== null ? pendingEquinoxPulseState : equinoxPulseActive;
     syncEquinoxPulseOnBody(desiredState);
+  }
+
+  if (pendingReducedAnimationsState !== null || reducedAnimationsEnabled) {
+    const desiredReducedState = pendingReducedAnimationsState !== null ? pendingReducedAnimationsState : reducedAnimationsEnabled;
+    syncReducedAnimationsOnBody(desiredReducedState);
   }
 
   if (rollButton) {
@@ -12291,6 +12359,22 @@ function registerInterfaceToggleButtons() {
       }
     });
   }
+
+  const toggleReducedAnimationsBtn = document.getElementById("toggleReducedAnimationsBtn");
+  if (toggleReducedAnimationsBtn) {
+    const updateButtonState = () => {
+      const active = isReducedAnimationsEnabled();
+      toggleReducedAnimationsBtn.textContent = active ? "Restore Animations" : "Reduce Animations";
+      toggleReducedAnimationsBtn.setAttribute("aria-pressed", String(active));
+    };
+
+    updateButtonState();
+
+    toggleReducedAnimationsBtn.addEventListener("click", () => {
+      setReducedAnimationsEnabled(!isReducedAnimationsEnabled());
+      updateButtonState();
+    });
+  }
 }
 
 function registerResponsiveHandlers() {
@@ -12522,6 +12606,10 @@ function triggerScreenShakeByBucket(bucket) {
   };
   const cls = map[bucket];
   if (!cls) return;
+
+  if (isReducedAnimationsEnabled()) {
+    return;
+  }
 
   const el = document.body;
 
@@ -15269,14 +15357,20 @@ document.querySelectorAll(".rarity-button").forEach(button => {
 });
 
 const canvas = document.getElementById('fireworksCanvas');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
 
 function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+  if (!canvas) {
+    return;
+  }
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 }
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+
+if (canvas) {
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+}
 
 class Particle {
     constructor(x, y, color, velocityX, velocityY, lifetime) {
@@ -15296,6 +15390,9 @@ class Particle {
     }
 
     draw() {
+        if (!ctx) {
+            return;
+        }
         ctx.beginPath();
         ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
@@ -15327,6 +15424,10 @@ class Firework {
     }
 
     draw() {
+        if (!ctx) {
+            return;
+        }
+
         if (!this.exploded) {
             ctx.beginPath();
             ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
@@ -15351,15 +15452,27 @@ class Firework {
 
 const fireworks = [];
 const colors = ['#FF5733', '#33FF57', '#3357FF', '#FFFF33', '#FF33FF', '#33FFFF'];
+let fireworksIntervalId = null;
+let fireworksAnimationFrameId = null;
+let fireworksActive = false;
 
 function launchFirework() {
+    if (!fireworksActive || !canvas) {
+        return;
+    }
+
     const x = Math.random() * canvas.width;
     const targetY = Math.random() * canvas.height / 2;
     const color = colors[Math.floor(Math.random() * colors.length)];
     fireworks.push(new Firework(x, canvas.height, targetY, color));
 }
 
-function animate() {
+function runFireworksFrame() {
+    if (!fireworksActive || !ctx) {
+        fireworksAnimationFrameId = null;
+        return;
+    }
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     fireworks.forEach((firework, index) => {
         firework.update();
@@ -15368,12 +15481,59 @@ function animate() {
             fireworks.splice(index, 1);
         }
     });
-    requestAnimationFrame(animate);
+
+    fireworksAnimationFrameId = typeof requestAnimationFrame === 'function'
+        ? requestAnimationFrame(runFireworksFrame)
+        : setTimeout(runFireworksFrame, 16);
 }
 
-setInterval(launchFirework, 9999);
+function startFireworksAnimation() {
+    if (!canvas || !ctx || isReducedAnimationsEnabled()) {
+        return;
+    }
 
-animate();
+    if (fireworksActive) {
+        return;
+    }
+
+    fireworksActive = true;
+
+    if (fireworksIntervalId === null) {
+        fireworksIntervalId = setInterval(launchFirework, 9999);
+    }
+
+    if (fireworksAnimationFrameId === null) {
+        runFireworksFrame();
+    }
+}
+
+function stopFireworksAnimation() {
+    fireworksActive = false;
+
+    if (fireworksIntervalId !== null) {
+        clearInterval(fireworksIntervalId);
+        fireworksIntervalId = null;
+    }
+
+    if (fireworksAnimationFrameId !== null) {
+        if (typeof cancelAnimationFrame === 'function') {
+            cancelAnimationFrame(fireworksAnimationFrameId);
+        } else {
+            clearTimeout(fireworksAnimationFrameId);
+        }
+        fireworksAnimationFrameId = null;
+    }
+
+    fireworks.length = 0;
+
+    if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
+if (!isReducedAnimationsEnabled()) {
+    startFireworksAnimation();
+}
 
 function startRefreshTimer() {
   refreshTimeout = setTimeout(() => {

@@ -28,6 +28,41 @@
   }
 }
 
+body.reduced-motion {
+  --btn-transition: 0ms linear;
+}
+
+body.reduced-motion *,
+body.reduced-motion *::before,
+body.reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  animation-delay: 0ms !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+
+body.reduced-motion #fireworksCanvas,
+body.reduced-motion .loading-animation,
+body.reduced-motion .particle-system {
+  display: none !important;
+}
+
+body.reduced-motion.equinox-pulse-active {
+  animation: none !important;
+}
+
+body.reduced-motion.equinox-pulse-active::before,
+body.reduced-motion.equinox-pulse-active::after {
+  animation: none !important;
+  content: none;
+}
+
+body.reduced-motion .rollButton-progress {
+  transition: none !important;
+}
+
 /* Base button apply: native buttons and common classes */
 button,
 input[type="button"],
