@@ -12279,9 +12279,11 @@ function registerInterfaceToggleButtons() {
       if (isVisible) {
         inventorySection.style.visibility = "visible";
         this.textContent = "Hide Inventory";
+        document.body.classList.add("inventory-open");
       } else {
         inventorySection.style.visibility = "hidden";
         this.textContent = "Show Inventory";
+        document.body.classList.remove("inventory-open");
       }
     });
   }

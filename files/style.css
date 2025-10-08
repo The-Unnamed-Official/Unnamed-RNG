@@ -3481,10 +3481,10 @@ body.flashing {
 .inventory {
   visibility: hidden;
   position: fixed;
-  right: 20px;
+  right: clamp(16px, 3vw, 32px);
   top: 50%;
-  transform: translateY(-50%);
-  width: 60vh;
+  transform: translate3d(0, -50%, 0);
+  width: clamp(320px, 32vw, 420px);
   /* Keep background image but add a dark overlay for readability */
   background:
     linear-gradient(rgba(15,15,15,0.75), rgba(15,15,15,0.75)),
@@ -3499,10 +3499,79 @@ body.flashing {
   box-shadow: 0 10px 30px rgba(0,0,0,0.45);
   text-align: left;
   overflow-y: auto;
-  max-height: 85vh;
+  max-height: min(85vh, 720px);
   /* No animated transitions */
   z-index: 999999;
 }
+
+@media (max-width: 960px) {
+  body {
+    overflow-y: auto;
+  }
+
+  .ui {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(18px, 5vh, 28px);
+    padding: clamp(80px, 18vh, 140px) clamp(16px, 5vw, 28px) clamp(140px, 32vh, 220px);
+  }
+
+  .ui > #rollingHistory,
+  .ui > .container1,
+  .ui > .container,
+  .ui > .inventory {
+    position: static;
+    width: min(92vw, 520px);
+    max-width: 520px;
+    transform: none;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+  }
+
+  .ui > #rollingHistory {
+    width: min(92vw, 500px);
+    align-self: stretch;
+  }
+
+  .container {
+    order: 1;
+  }
+
+  .container1 {
+    order: 2;
+  }
+
+  #rollingHistory {
+    order: 3;
+  }
+
+  .inventory {
+    order: 4;
+    visibility: hidden;
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
+    width: min(92vw, 520px);
+  }
+
+  body.inventory-open .inventory {
+    visibility: visible !important;
+  }
+
+  #toggleInventoryBtn {
+    position: fixed;
+    top: clamp(16px, 5vh, 32px);
+    right: clamp(16px, 5vw, 32px);
+    left: auto;
+    bottom: auto;
+    transform: none;
+    z-index: 1000000;
+  }
+}
+
 
 /* Inner content container */
 .invent {
