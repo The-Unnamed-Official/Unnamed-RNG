@@ -1332,12 +1332,36 @@ const ACHIEVEMENTS = [
   { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]" },
   { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 17,017]" },
   // Event exclusives
-  { name: "Spooky Spectator", requiredEventBucket: "eventTitleHalloween24" },
-  { name: "Winter Wonderland", requiredEventBucket: "eventTitleXmas24" },
-  { name: "Festival Firecracker", requiredEventBucket: "eventTitleNew25" },
-  { name: "Valentine's Sweetheart", requiredEventBucket: "eventV25" },
-  { name: "Happy Easter 2025!", requiredEventBucket: "eventE25" },
-  { name: "Happy Summer 2025!", requiredEventBucket: "eventS25" },
+  {
+    name: "Spooky Spectator",
+    requiredEventBucket: "eventTitleHalloween24",
+    unobtainable: true,
+  },
+  {
+    name: "Winter Wonderland",
+    requiredEventBucket: "eventTitleXmas24",
+    unobtainable: true,
+  },
+  {
+    name: "Festival Firecracker",
+    requiredEventBucket: "eventTitleNew25",
+    unobtainable: true,
+  },
+  {
+    name: "Valentine's Sweetheart",
+    requiredEventBucket: "eventV25",
+    unobtainable: true,
+  },
+  {
+    name: "Happy Easter 2025!",
+    requiredEventBucket: "eventE25",
+    unobtainable: true,
+  },
+  {
+    name: "Happy Summer 2025!",
+    requiredEventBucket: "eventS25",
+    unobtainable: true,
+  },
   { name: "It's SPOOKY season!", requiredEventBucket: "eventTitleHalloween25" },
   { name: "Seasonal Tourist", minEventTitleCount: 1 },
   { name: "Event!", minDistinctEventBuckets: 1 },
@@ -1390,12 +1414,23 @@ function hasEventAchievementProgress(achievement, stats = latestAchievementStats
   return false;
 }
 
-function isAchievementCurrentlyAvailable(achievement, stats = latestAchievementStats) {
+function isAchievementCurrentlyAvailable(
+  achievement,
+  stats = latestAchievementStats,
+  context = {}
+) {
   if (!achievement) {
     return true;
   }
 
-  if (hasEventAchievementProgress(achievement, stats)) {
+  const { isUnlocked = false } = context;
+  const hasProgress = hasEventAchievementProgress(achievement, stats);
+
+  if (achievement.unobtainable) {
+    return Boolean(isUnlocked) || hasProgress;
+  }
+
+  if (hasProgress) {
     return true;
   }
 
@@ -1425,8 +1460,12 @@ const COLLECTOR_ACHIEVEMENTS = [
   { name: "Ultimate Collector", count: 50 },
   { name: "Nice...", count: 69 },
   { name: "Achievement Enthusiast", count: 100 },
-  { name: "Achievements...", count: 200 },
+  { name: "Achievements...", count: 200, unobtainable: true },
 ];
+
+COLLECTOR_ACHIEVEMENTS.forEach((achievement) => {
+  ACHIEVEMENT_DATA_BY_NAME.set(achievement.name, achievement);
+});
 
 const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-item", unlocked: { backgroundColor: "blue" } },
@@ -2114,7 +2153,9 @@ function updateAchievementsList() {
     const achievementName = item.getAttribute("data-name");
     const achievement = ACHIEVEMENT_DATA_BY_NAME.get(achievementName);
     const isUnlocked = achievementName && unlocked.has(achievementName);
-    const isActive = isAchievementCurrentlyAvailable(achievement, stats);
+    const isActive = isAchievementCurrentlyAvailable(achievement, stats, {
+      isUnlocked,
+    });
     const hasProgress = hasEventAchievementProgress(achievement, stats);
     const isEventAchievement = Boolean(
       achievement && (
@@ -2124,6 +2165,7 @@ function updateAchievementsList() {
         typeof achievement.minEventTitleCount === "number"
       )
     );
+    const isUnobtainable = Boolean(achievement?.unobtainable);
 
     if (isEventAchievement) {
       if (!item.dataset.eventHint) {
@@ -2133,22 +2175,43 @@ function updateAchievementsList() {
         }
       }
 
+      const baseHint = item.dataset.eventHint || "";
+
+      if (isUnobtainable) {
+        if (baseHint) {
+          item.setAttribute("data-event", `${baseHint} (Unobtainable)`);
+        } else {
+          item.setAttribute("data-event", "This achievement is unobtainable.");
+        }
+      } else if (!isUnlocked && !isActive && !hasProgress) {
+        if (baseHint) {
+          item.setAttribute(
+            "data-event",
+            `${baseHint} (Currently unavailable)`
+          );
+        }
+      } else if (baseHint) {
+        item.setAttribute("data-event", baseHint);
+      }
+
       if (!isUnlocked && !isActive && !hasProgress) {
         item.classList.add("achievement--inactive");
-        item.setAttribute("data-availability", "inactive");
-        if (item.dataset.eventHint) {
-          item.setAttribute("data-event", `${item.dataset.eventHint} (Currently unavailable)`);
-        }
+        item.setAttribute(
+          "data-availability",
+          isUnobtainable ? "unobtainable" : "inactive"
+        );
       } else {
         item.classList.remove("achievement--inactive");
         item.removeAttribute("data-availability");
-        if (item.dataset.eventHint) {
-          item.setAttribute("data-event", item.dataset.eventHint);
-        }
       }
     } else {
-      item.classList.remove("achievement--inactive");
-      item.removeAttribute("data-availability");
+      if (isUnobtainable && !isUnlocked) {
+        item.classList.add("achievement--inactive");
+        item.setAttribute("data-availability", "unobtainable");
+      } else {
+        item.classList.remove("achievement--inactive");
+        item.removeAttribute("data-availability");
+      }
     }
   });
 }

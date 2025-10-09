@@ -5304,6 +5304,29 @@ body.flashing {
     word-break: break-word;
 }
 
+.achievement-flag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 8px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: rgba(255, 107, 107, 0.22);
+    color: #ffdede;
+    border: 1px solid rgba(255, 128, 128, 0.35);
+    white-space: nowrap;
+}
+
+.achievement-flag--unobtainable {
+    background: rgba(252, 79, 79, 0.3);
+    color: #ffe0e0;
+    border-color: rgba(252, 79, 79, 0.55);
+}
+
 .achievement--unlocked {
     border-color: rgba(255, 255, 255, 0.45);
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
@@ -5312,6 +5335,15 @@ body.flashing {
 .achievement--inactive {
     opacity: 0.55;
     filter: grayscale(0.35);
+}
+
+[data-availability="unobtainable"] {
+    cursor: not-allowed;
+}
+
+.achievement-itemC[data-availability="unobtainable"]:hover::after,
+.achievement-item[data-availability="unobtainable"]:hover::after {
+    content: "This achievement is no longer obtainable.";
 }
 
 .achievement-itemEvent[data-availability="inactive"] {
