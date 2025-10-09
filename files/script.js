@@ -1479,7 +1479,7 @@ const ACHIEVEMENT_GROUP_STYLES = [
   { selector: ".achievement-itemEvent", unlocked: { backgroundColor: "#ffee00b7", color: "black" } },
 ];
 
-const ACHIEVEMENT_TOAST_DURATION = 3400;
+const ACHIEVEMENT_TOAST_DURATION = 4400;
 const achievementToastQueue = [];
 let achievementToastContainer = null;
 let achievementToastActive = false;
