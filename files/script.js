@@ -962,6 +962,7 @@ function initializeAfterStart() {
   registerInterfaceToggleButtons();
   registerMenuButtons();
   registerResponsiveHandlers();
+  setupInventoryTabs();
   registerMenuDragHandlers();
   enhanceInventoryDeleteButtons();
   setupAudioControls();
@@ -13538,6 +13539,89 @@ function registerResponsiveHandlers() {
   window.addEventListener("resize", applyLayout);
 }
 
+function setupInventoryTabs() {
+  const tabButtons = Array.from(document.querySelectorAll(".inventory-tab"));
+  const panels = Array.from(document.querySelectorAll(".inventory-panel"));
+
+  if (!tabButtons.length || !panels.length) {
+    return;
+  }
+
+  panels.forEach((panel, index) => {
+    if (!panel.id) {
+      const suffix = panel.dataset.tabPanel ? panel.dataset.tabPanel.replace(/\s+/g, "-") : String(index);
+      panel.id = `inventory-panel-${suffix}`;
+    }
+  });
+
+  tabButtons.forEach((button) => {
+    const targetPanel = panels.find((panel) => panel.dataset.tabPanel === button.dataset.tab);
+    if (targetPanel) {
+      button.setAttribute("aria-controls", targetPanel.id);
+    }
+  });
+
+  let activeTabName = null;
+
+  const activateTab = (tabName) => {
+    if (!tabName || tabName === activeTabName) {
+      return;
+    }
+
+    activeTabName = tabName;
+
+    tabButtons.forEach((button) => {
+      const isActive = button.dataset.tab === tabName;
+      button.classList.toggle("inventory-tab--active", isActive);
+      button.setAttribute("aria-selected", String(isActive));
+      button.setAttribute("tabindex", isActive ? "0" : "-1");
+    });
+
+    panels.forEach((panel) => {
+      const isActive = panel.dataset.tabPanel === tabName;
+      panel.classList.toggle("inventory-panel--active", isActive);
+      panel.setAttribute("aria-hidden", String(!isActive));
+    });
+
+    document.querySelectorAll(".dropdown-menu.open").forEach((menu) => {
+      menu.style.display = "none";
+      menu.classList.remove("open");
+      const parentItem = menu.closest(".inventory-item");
+      if (parentItem) {
+        parentItem.classList.remove("inventory-item--menu-open");
+      }
+    });
+  };
+
+  tabButtons.forEach((button, index) => {
+    button.addEventListener("click", () => {
+      activateTab(button.dataset.tab);
+    });
+
+    button.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") {
+        return;
+      }
+
+      event.preventDefault();
+      const direction = event.key === "ArrowRight" ? 1 : -1;
+      const nextIndex = (index + direction + tabButtons.length) % tabButtons.length;
+      const nextButton = tabButtons[nextIndex];
+      if (nextButton) {
+        nextButton.focus();
+        activateTab(nextButton.dataset.tab);
+      }
+    });
+  });
+
+  const defaultTab = tabButtons.find((button) => button.classList.contains("inventory-tab--active"))
+    || tabButtons[0];
+
+  if (defaultTab) {
+    activateTab(defaultTab.dataset.tab);
+  }
+}
+
 const backgroundDetails = {
   menuDefault: { image: "files/backgrounds/menu.png", audio: null },
   commonBgImg: { image: "files/backgrounds/common.png", audio: null },
@@ -13985,6 +14069,10 @@ function renderInventory() {
         if (m !== dropdownMenu) {
           m.style.display = "none";
           m.classList.remove("open");
+          const parentItem = m.closest(".inventory-item");
+          if (parentItem) {
+            parentItem.classList.remove("inventory-item--menu-open");
+          }
         }
       });
 
@@ -13992,6 +14080,7 @@ function renderInventory() {
       const willOpen = dropdownMenu.style.display !== "block";
       dropdownMenu.style.display = willOpen ? "block" : "none";
       dropdownMenu.classList.toggle("open", willOpen);
+      listItem.classList.toggle("inventory-item--menu-open", willOpen);
     });
 
     inventoryList.appendChild(listItem);
