@@ -13131,6 +13131,13 @@ function openGithub() {
   window.open("https://github.com/The-Unnamed-Official/Unnamed-RNG/tree/published", "_blank");
 }
 
+function openRollingSimulator() {
+  window.open(
+    "https://the-unnamed-official.github.io/Sols-Rolling-Calculator/",
+    "_blank"
+  );
+}
+
 function selectTitle(rarity) {
   const titles = rarity.titles;
   return titles[Math.floor(Math.random() * titles.length)];

@@ -3570,6 +3570,15 @@ body.flashing {
     filter: brightness(1.08);
 }
 
+.profile-dropdown__button.simulator-btn {
+    background: linear-gradient(135deg, #ff9a44, #fc6076);
+}
+
+.profile-dropdown__button.simulator-btn:hover,
+.profile-dropdown__button.simulator-btn:focus-visible {
+    filter: brightness(1.08);
+}
+
 .profile-dropdown__button.github-btn {
     background: linear-gradient(135deg, #333333, #1f1f1f);
 }
