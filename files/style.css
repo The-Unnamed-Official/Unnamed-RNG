@@ -3055,6 +3055,42 @@ body {
     object-fit: contain;
 }
 
+.hollowhillmanorBgImg {
+    background: url(backgrounds/hollowhillmanor.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.pumpkinhollowBgImg {
+    background: url(backgrounds/pumpkinhollow.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.thephantommoonBgImg {
+    background: url(backgrounds/thephantommoon.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.thescarecrowssigilBgImg {
+    background: url(backgrounds/thescarecrowssigil.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.thevoidsveilBgImg {
+    background: url(backgrounds/thevoidsveil.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.wailingshadeBgImg {
+    background: url(backgrounds/wailingshade.gif);
+    background-size: cover;
+    object-fit: contain;
+}
+
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
@@ -4694,7 +4730,7 @@ body.flashing {
     color: #e0ffff;
 }
 
-.eventTitleHalloween {
+.eventTitleHalloween24 {
     color: #ffa500;
     background: linear-gradient(135deg, #ffb347 0%, #ffd166 45%, #ff6b35 100%);
     background-size: 240% 240%;
@@ -4704,7 +4740,17 @@ body.flashing {
     color: transparent;
 }
 
-.eventTitleXmas {
+.eventTitleHalloween25 {
+    color: #ffa500;
+    background: linear-gradient(135deg, #ffb347 0%, #ffd166 45%, #ff6b35 100%);
+    background-size: 240% 240%;
+    animation: gradient-shift 3s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.eventTitleXmas24 {
     background: radial-gradient(#ff002b, #009919);
     background-size: 300%;
     animation: gradient-shift 2.5s ease infinite;
@@ -4713,7 +4759,7 @@ body.flashing {
     color: transparent;
 }
 
-.eventTitle {
+.eventTitleNew25 {
     background: radial-gradient(#ffbb00, #990000);
     background-size: 300%;
     animation: gradient-shift 2.5s ease infinite;
@@ -4849,7 +4895,7 @@ body.flashing {
     color: transparent;
 }
 
-.eventV {
+.eventV25 {
     background: radial-gradient(#ff0000, #f5a7ff);
     background-size: 300%;
     animation: gradient-shift2 4s ease infinite;
@@ -4858,7 +4904,7 @@ body.flashing {
     color: transparent;
 }
 
-.eventE {
+.eventE25 {
     background: radial-gradient(#f0ff1e, #ff0000);
     background-size: 300%;
     animation: gradient-shift2 9s ease infinite;
@@ -4867,7 +4913,7 @@ body.flashing {
     color: transparent;
 }
 
-.eventS {
+.eventS25 {
     background: radial-gradient(#0066ff, #fffaad);
     background-size: 300%;
     animation: gradient-shift2 6s ease infinite;
