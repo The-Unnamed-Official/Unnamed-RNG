@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Unnamed's RNG - 1.2.5</title>
+    <title>Unnamed's RNG - 1.3 Halloween Frights</title>
     <script src="https://kit.fontawesome.com/fe85db6219.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="files/style.css">
@@ -19,13 +19,22 @@
   <div id="flashLayer" aria-hidden="true"></div>
 
     <div class="version" role="status" aria-live="polite">
-        <h1 class="gameTitle version__title">Unnamed's RNG</h1>
-        
-        <div class="vNumber">
-            <span class="vNumberLabel">Version</span>
-            <span class="vNumberValue">1.2.7</span>
-            <span class="vNumberDetailed">(1.2.7_upd)</span>
-        </div>
+        <h1 class="version__group">
+            <span class="version__chip version__chip--event">
+                <span class="version__eyebrow">Event</span>
+                <span class="version__value">Halloween Frights</span>
+            </span>
+            
+            <span class="version__chip version__chip--number" role="text">
+                <span class="version__eyebrow">Version</span>
+                <span class="version__value">1.3</span>
+                <span class="version__detail">1.3_updHALLOWEEN</span>
+            </span>
+            
+            <span class="version__chip version__chip--title">
+                <span class="version__value">Unnamed's RNG</span>
+            </span>
+        </h1>
     </div>
 
     <canvas id="fireworksCanvas"></canvas>
@@ -36,7 +45,7 @@
     <div id="loadingScreen">
         <div class="loading-content">
             <div class="loading-animation"></div>
-            <p class="loadTxt">Loading assets...</p>
+            <p class="loadTxt">Loading assets..</p>
         </div>
     </div>
 
@@ -248,6 +257,10 @@
                         <div class="achievement-itemC" data-achievement="50" data-name="Ultimate Collector">Ultimate Collector</div>
                         <div class="achievement-itemC" data-achievement="69" data-name="Nice...">Nice...</div>
                         <div class="achievement-itemC" data-achievement="100" data-name="Achievement Enthusiast">Achievement Enthusiast</div>
+                        <div class="achievement-itemC" data-achievement="200" data-name="Achievements...">
+                            Achievements...
+                            <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                        </div>
                     </div>
                 </section>
 
@@ -300,74 +313,14 @@
                 <section class="achievements-section">
                     <h4 class="achievements-section__title">Event Exclusives</h4>
                     <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Spring &amp; Easter</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemE achievement-itemEvent"
-                                data-event="Obtain an Easter event title to unlock this achievement"
-                                data-name="Happy Easter!"
-                            >
-                                Happy Easter!
-                            </div>
-                        </div>
-                    </div>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Summer</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemSum achievement-itemEvent"
-                                data-event="Obtain a Summer event title to unlock this achievement"
-                                data-name="Happy Summer!"
-                            >
-                                Happy Summer!
-                            </div>
-                        </div>
-                    </div>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Valentine's</h5>
+                        <h5 class="achievements-section__subtitle">Halloween Frights 2025</h5>
                         <div class="achievement-grid">
                             <div
                                 class="achievement-itemEvent"
-                                data-event="Share the love with a Valentine's event title to unlock this achievement"
-                                data-name="Valentine's Sweetheart"
+                                data-event="Collect a Halloween-exclusive title in 2025 to unlock this achievement"
+                                data-name="It's SPOOKY season!"
                             >
-                                Valentine's Sweetheart
-                            </div>
-                        </div>
-                    </div>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Festival of Fire</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Secure the Firecracker festival title to unlock this achievement"
-                                data-name="Festival Firecracker"
-                            >
-                                Festival Firecracker
-                            </div>
-                        </div>
-                    </div>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Halloween</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Collect a Halloween-exclusive title to unlock this achievement"
-                                data-name="Spooky Spectator"
-                            >
-                                Spooky Spectator
-                            </div>
-                        </div>
-                    </div>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Winter Holidays</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Gather a Winter holiday title to unlock this achievement"
-                                data-name="Winter Wonderland"
-                            >
-                                Winter Wonderland
+                                It's SPOOKY season!
                             </div>
                         </div>
                     </div>
@@ -383,6 +336,13 @@
                             </div>
                             <div
                                 class="achievement-itemEvent"
+                                data-event="Hold titles from at least one event to unlock this achievement"
+                                data-name="Event!"
+                            >
+                                Event!
+                            </div>
+                            <div
+                                class="achievement-itemEvent"
                                 data-event="Hold titles from three different events to unlock this achievement"
                                 data-name="Event Explorer"
                             >
@@ -390,10 +350,114 @@
                             </div>
                             <div
                                 class="achievement-itemEvent"
+                                data-event="Hold titles from five different events to unlock this achievement"
+                                data-name="Event Expert"
+                            >
+                                Event Expert
+                            </div>
+                            <div
+                                class="achievement-itemEvent"
                                 data-event="Store 10 event titles across your vault to unlock this achievement"
                                 data-name="Seasonal Archivist"
                             >
                                 Seasonal Archivist
+                            </div>
+                            <div
+                                class="achievement-itemEvent"
+                                data-event="Store 20 event titles across your vault to unlock this achievement"
+                                data-name="All the Seasons!"
+                            >
+                                All the Seasons!
+                            </div>
+                            <div
+                                class="achievement-itemEvent"
+                                data-event="Store 50 event titles across your vault to unlock this achievement"
+                                data-name="I LOVE SEASONS!!!"
+                            >
+                                I LOVE SEASONS!!!
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="achievements-section">
+                    <h4 class="achievements-section__title">Unobtainable Events</h4>
+                    <p class="achievements-section__note">These achievements are no longer obtainable but remain visible for players who previously earned them.</p>
+                    <div class="achievements-subsection">
+                        <h5 class="achievements-section__subtitle">Halloween 2024</h5>
+                        <div class="achievement-grid">
+                            <div
+                                class="achievement-itemEvent"
+                                data-event="Previously unlocked by collecting the Halloween-exclusive title in 2024."
+                                data-name="Spooky Spectator"
+                            >
+                                Spooky Spectator
+                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="achievements-subsection">
+                        <h5 class="achievements-section__subtitle">Winter Holidays 2024</h5>
+                        <div class="achievement-grid">
+                            <div
+                                class="achievement-itemEvent"
+                                data-event="Previously unlocked by gathering a Winter holiday-exclusive title in 2024."
+                                data-name="Winter Wonderland"
+                            >
+                                Winter Wonderland
+                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="achievements-subsection">
+                        <h5 class="achievements-section__subtitle">Festival of Fire 2025</h5>
+                        <div class="achievement-grid">
+                            <div
+                                class="achievement-itemEvent"
+                                data-event="Previously unlocked by securing the Festival of Fire-exclusive title in 2025."
+                                data-name="Festival Firecracker"
+                            >
+                                Festival Firecracker
+                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="achievements-subsection">
+                        <h5 class="achievements-section__subtitle">Valentine's Sweetheart 2025</h5>
+                        <div class="achievement-grid">
+                            <div
+                                class="achievement-itemEvent"
+                                data-event="Previously unlocked by earning a Valentine's Sweetheart-exclusive event title in 2025."
+                                data-name="Valentine's Sweetheart"
+                            >
+                                Valentine's Sweetheart
+                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="achievements-subsection">
+                        <h5 class="achievements-section__subtitle">Spring &amp; Easter 2025</h5>
+                        <div class="achievement-grid">
+                            <div
+                                class="achievement-itemE achievement-itemEvent"
+                                data-event="Previously unlocked by obtaining a Spring &amp; Easter-exclusive event title in 2025."
+                                data-name="Spring &amp; Easter"
+                            >
+                                Spring &amp; Easter 2025
+                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="achievements-subsection">
+                        <h5 class="achievements-section__subtitle">Summer Vibes 2025</h5>
+                        <div class="achievement-grid">
+                            <div
+                                class="achievement-itemSum achievement-itemEvent"
+                                data-event="Previously unlocked by obtaining a Summer Vibes-exclusive event title in 2025."
+                                data-name="Summer Vibes"
+                            >
+                                Summer Vibes
+                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
                             </div>
                         </div>
                     </div>
@@ -461,6 +525,9 @@
                 <button class="profile-dropdown__button discord-btn" type="button" onclick="openDiscord()">
                     Join Discord <i class="fa-brands fa-discord" aria-hidden="true"></i>
                 </button>
+                <button class="profile-dropdown__button simulator-btn" type="button" onclick="openRollingSimulator()">
+                    Sol's Rolling Simulator <i class="fa-solid fa-dice" aria-hidden="true"></i>
+                </button>
                 <button class="profile-dropdown__button github-btn" type="button" onclick="openGithub()">
                     View GitHub <i class="fa-brands fa-github" aria-hidden="true"></i>
                 </button>
@@ -481,205 +548,219 @@
         <button id="toggleInventoryBtn">Show Inventory</button>
 
         <div class="inventory">
-            <div class="invent">
-                <h2><i class="fa-solid fa-box-archive"></i> Inventory</h2>
-
-                <div class="inventory-actions">
-                    <button class="deleteAll" id="deleteAllButton" type="button">Delete Entire Inventory</button>
-
-                    <section class="inventory-group inventory-group--basic">
-                        <div class="inventory-group__header">
-                            <h4 class="inventory-group__title">Basic Titles</h4>
-                            <button id="deleteAllUnder100Button" class="inventory-group__clear" type="button">Clear Basic</button>
-                        </div>
-                        <div class="inventory-group__grid">
-                            <button id="deleteAllCommonButton" class="inventory-delete-btn" type="button" title="Delete All Common">Common</button>
-                            <button id="deleteAllRareButton" class="inventory-delete-btn" type="button" title="Delete All Rare">Rare</button>
-                            <button id="deleteAllEpicButton" class="inventory-delete-btn" type="button" title="Delete All Epic">Epic</button>
-                            <button id="deleteAllLegendaryButton" class="inventory-delete-btn" type="button" title="Delete All Legendary">Legendary</button>
-                            <button id="deleteAllImpossibleButton" class="inventory-delete-btn" type="button" title="Delete All Impossible">Impossible</button>
-                            <button id="deleteAllPoweredButton" class="inventory-delete-btn" type="button" title="Delete All Powered">Powered</button>
-                            <button id="deleteAllToxicButton" class="inventory-delete-btn" type="button" title="Delete All Toxic">Toxic</button>
-                            <button id="deleteAllSolarpowerButton" class="inventory-delete-btn" type="button" title="Delete All Solarpower">Solarpower</button>
-                            <button id="deleteAllFlickerButton" class="inventory-delete-btn" type="button" title="Delete All Flicker">Flicker</button>
-                            <button id="deleteAllBelieverButton" class="inventory-delete-btn" type="button" title="Delete All Believer">Believer</button>
-                            <button id="deleteAllPlanetBreakerButton" class="inventory-delete-btn" type="button" title="Delete All Planet Breaker">Planet Breaker</button>
-                        </div>
-                    </section>
-
-                    <section class="inventory-group inventory-group--decent">
-                        <div class="inventory-group__header">
-                            <h4 class="inventory-group__title">Decent Titles</h4>
-                            <button id="deleteAllUnder1kButton" class="inventory-group__clear" type="button">Clear Decent</button>
-                        </div>
-                        <div class="inventory-group__grid">
-                            <button id="deleteAllUnstoppableButton" class="inventory-delete-btn" type="button" title="Delete All Unstoppable">Unstoppable</button>
-                            <button id="deleteAllGargantuaButton" class="inventory-delete-btn" type="button" title="Delete All Gargantua">Gargantua</button>
-                            <button id="deleteAllWanderingSpiritButton" class="inventory-delete-btn" type="button" title="Delete All Wandering Spirit">Wandering Spirit</button>
-                            <button id="deleteAllMemoryButton" class="inventory-delete-btn" type="button" title="Delete All Memory">Memory</button>
-                            <button id="deleteAllOblivionButton" class="inventory-delete-btn" type="button" title="Delete All Oblivion">Oblivion</button>
-                            <button id="deleteAllFrozenFateButton" class="inventory-delete-btn" type="button" title="Delete All Frozen Fate">Frozen Fate</button>
-                            <button id="deleteAllSpectralButton" class="inventory-delete-btn" type="button" title="Delete All Spectral Whisper">Spectral Whisper</button>
-                            <button id="deleteAllMysteriousEchoButton" class="inventory-delete-btn" type="button" title="Delete All Mysterious Echo">Mysterious Echo</button>
-                            <button id="deleteAllIsekaiButton" class="inventory-delete-btn" type="button" title="Delete All Isekai">Isekai</button>
-                            <button id="deleteAllForgottenWhisperButton" class="inventory-delete-btn" type="button" title="Delete All Forgotten Whisper">Forgotten Whisper</button>
-                            <button id="deleteAllEmergenciesButton" class="inventory-delete-btn" type="button" title="Delete All Emergencies">Emergencies</button>
-                            <button id="deleteAllStarfallButton" class="inventory-delete-btn" type="button" title="Delete All Starfall">Starfall</button>
-                            <button id="deleteAllCursedArtifactButton" class="inventory-delete-btn" type="button" title="Delete All Cursed Artifact">Cursed Artifact</button>
-                            <button id="deleteAllSamuraiButton" class="inventory-delete-btn" type="button" title="Delete All Samurai">Samurai</button>
-                            <button id="deleteAllSpectralGlareButton" class="inventory-delete-btn" type="button" title="Delete All Spectral Glare">Spectral Glare</button>
-                            <button id="deleteAllPhantomStrideButton" class="inventory-delete-btn" type="button" title="Delete All Phantom Stride">Phantom Stride</button>
-                            <button id="deleteAllContortionsButton" class="inventory-delete-btn" type="button" title="Delete All Contortions">Contortions</button>
-                        </div>
-                    </section>
-
-                    <section class="inventory-group inventory-group--grand">
-                        <div class="inventory-group__header">
-                            <h4 class="inventory-group__title">Grand Titles</h4>
-                            <button id="deleteAllUnder10kButton" class="inventory-group__clear" type="button">Clear Grand</button>
-                        </div>
-                        <div class="inventory-group__grid">
-                            <button id="deleteAllShadowVeilButton" class="inventory-delete-btn" type="button" title="Delete All Shadow Veil">Shadow Veil</button>
-                            <button id="deleteAllFrightButton" class="inventory-delete-btn" type="button" title="Delete All Fright">Fright</button>
-                            <button id="deleteAllNightfallButton" class="inventory-delete-btn" type="button" title="Delete All Nightfall">Nightfall</button>
-                            <button id="deleteAllFearButton" class="inventory-delete-btn" type="button" title="Delete All Fear">Fear</button>
-                            <button id="deleteAllSeraphsWingButton" class="inventory-delete-btn" type="button" title="Delete All Seraph's Wing">Seraph's Wing</button>
-                            <button id="deleteAllVoidWalkerButton" class="inventory-delete-btn" type="button" title="Delete All Void Walker">Void Walker</button>
-                            <button id="deleteAllHauntedSoulButton" class="inventory-delete-btn" type="button" title="Delete All Haunted Soul">Haunted Soul</button>
-                            <button id="deleteAllGDAddictButton" class="inventory-delete-btn" type="button" title="Delete All GD Addict">GD Addict</button>
-                            <button id="deleteAllSilentListenerButton" class="inventory-delete-btn" type="button" title="Delete All Silent Listener">Silent Listener</button>
-                            <button id="deleteAllGhostlyEmbraceButton" class="inventory-delete-btn" type="button" title="Delete All Ghostly Embrace">Ghostly Embrace</button>
-                            <button id="deleteAllEndlessTwilightButton" class="inventory-delete-btn" type="button" title="Delete All Endless Twilight">Endless Twilight</button>
-                            <button id="deleteAllIsekaiLofiButton" class="inventory-delete-btn" type="button" title="Delete All Isekai: Lo-fi">Isekai: Lo-fi</button>
-                            <button id="deleteAllLostSoulButton" class="inventory-delete-btn" type="button" title="Delete All Lost Soul">Lost Soul</button>
-                            <button id="deleteAllAbyssalShadeButton" class="inventory-delete-btn" type="button" title="Delete All Abyssal Shade">Abyssal Shade</button>
-                            <button id="deleteAllDarkenedSkyButton" class="inventory-delete-btn" type="button" title="Delete All Darkened Sky">Darkened Sky</button>
-                            <button id="deleteAllShad0wButton" class="inventory-delete-btn" type="button" title="Delete All Shad0w">Shad0w</button>
-                            <button id="deleteAllTwistedLightButton" class="inventory-delete-btn" type="button" title="Delete All Twisted Light">Twisted Light</button>
-                            <button id="deleteAllFoundSoulButton" class="inventory-delete-btn" type="button" title="Delete All Found Soul">Found Soul</button>
-                            <button id="deleteAllHauntedRealityButton" class="inventory-delete-btn" type="button" title="Delete All Haunted Reality">Haunted Reality</button>
-                            <button id="deleteAllLubJubButton" class="inventory-delete-btn" type="button" title="Delete All LubbyJubby's Cherry Grove">LubbyJubby's Cherry Grove</button>
-                            <button id="deleteAllEtherShiftButton" class="inventory-delete-btn" type="button" title="Delete All Ether Shift">Ether Shift</button>
-                            <button id="deleteAllEtherealPulseButton" class="inventory-delete-btn" type="button" title="Delete All Ethereal Pulse">Ethereal Pulse</button>
-                            <button id="deleteAllHellishFireButton" class="inventory-delete-btn" type="button" title="Delete All Hellish Fire">Hellish Fire</button>
-                            <button id="deleteAllRadButton" class="inventory-delete-btn" type="button" title="Delete All Rad">Rad</button>
-                            <button id="deleteAllEnigmaticDreamButton" class="inventory-delete-btn" type="button" title="Delete All Enigmatic Dream">Enigmatic Dream</button>
-                            <button id="deleteAllGrimDestinyButton" class="inventory-delete-btn" type="button" title="Delete All Grim Destiny">Grim Destiny</button>
-                            <button id="deleteAllDemonSoulButton" class="inventory-delete-btn" type="button" title="Delete All Demon Soul">Demon Soul</button>
-                        </div>
-                    </section>
-
-                    <section class="inventory-group inventory-group--events">
-                        <div class="inventory-group__header">
-                            <h4 class="inventory-group__title">Event Titles</h4>
-                        </div>
-                        <div class="inventory-group__grid">
-                            <button id="deleteAllPumpkinButton" class="inventory-delete-btn" type="button" title="Delete All Pumpkin">Pumpkin</button>
-                            <button id="deleteAllCrimsonStockingsButton" class="inventory-delete-btn" type="button" title="Delete All Crimson Stockings"><span class="eventTitleXmas">Crimson Stockings</span></button>
-                            <button id="deleteAllHolidayCheerButton" class="inventory-delete-btn" type="button" title="Delete All Holiday Cheer"><span class="eventTitleXmas">Holiday Cheer</span></button>
-                            <button id="deleteAllReindeerDashButton" class="inventory-delete-btn" type="button" title="Delete All Reindeer Dash"><span class="eventTitleXmas">Reindeer Dash</span></button>
-                            <button id="deleteAllGingerbreadHarmonyButton" class="inventory-delete-btn" type="button" title="Delete All Gingerbread Harmony"><span class="eventTitleXmas">Gingerbread Harmony</span></button>
-                            <button id="deleteAllSilentNightButton" class="inventory-delete-btn" type="button" title="Delete All Silent Night"><span class="eventTitleXmas">Silent Night</span></button>
-                            <button id="deleteAllFrostedGarlandButton" class="inventory-delete-btn" type="button" title="Delete All Frosted Garland"><span class="eventTitleXmas">Frosted Garland</span></button>
-                            <button id="deleteAllCandyCaneSymphonyButton" class="inventory-delete-btn" type="button" title="Delete All Candy Cane Symphony"><span class="eventTitleXmas">Candy Cane Symphony</span></button>
-                            <button id="deleteAllSantaClausButton" class="inventory-delete-btn" type="button" title="Delete All Santa Claus"><span class="eventTitleXmas">Santa Claus</span></button>
-                            <button id="deleteAllJollyBellsButton" class="inventory-delete-btn" type="button" title="Delete All Jolly Bells"><span class="eventTitleXmas">Jolly Bells</span></button>
-                            <button id="deleteAllNorthStarButton" class="inventory-delete-btn" type="button" title="Delete All North Star"><span class="eventTitleXmas">North Star</span></button>
-                            <button id="deleteAllFircraButton" class="inventory-delete-btn" type="button" title="Delete All Firecracker"><span class="eventTitle">Firecracker</span></button>
-                            <button id="deleteAllHeartButton" class="inventory-delete-btn" type="button" title="Delete All Heart"><span class="eventV">Heart</span></button>
-                            <button id="deleteAllEasterEggButton" class="inventory-delete-btn" type="button" title="Delete All Easter Egg"><span class="eventE">Easter Egg</span></button>
-                            <button id="deleteAllEasterBunnyButton" class="inventory-delete-btn" type="button" title="Delete All Easter Bunny"><span class="eventE">Easter Bunny</span></button>
-                            <button id="deleteAllWaveButton" class="inventory-delete-btn" type="button" title="Delete All Wave"><span class="eventS">Wave</span></button>
-                            <button id="deleteAllScorchingButton" class="inventory-delete-btn" type="button" title="Delete All Scorching"><span class="eventS">Scorching</span></button>
-                            <button id="deleteAllBeachButton" class="inventory-delete-btn" type="button" title="Delete All Beach"><span class="eventS">Beach</span></button>
-                            <button id="deleteAllTidalWaveButton" class="inventory-delete-btn" type="button" title="Delete All Tidal Wave"><span class="eventS">Tidal Wave</span></button>
-                        </div>
-                    </section>
-
-                    <section class="inventory-group inventory-group--special">
-                        <div class="inventory-group__header">
-                            <h4 class="inventory-group__title">Special Titles</h4>
-                            <button id="deleteAllSpecialButton" class="inventory-group__clear" type="button"><span class="special">Clear Special</span></button>
-                        </div>
-                        <div class="inventory-group__grid">
-                            <button id="deleteAllVeilButton" class="inventory-delete-btn" type="button" title="Delete All Veil"><span class="special">Veil</span></button>
-                            <button id="deleteAllExperimentButton" class="inventory-delete-btn" type="button" title="Delete All Experiment"><span class="special">Experiment</span></button>
-                            <button id="deleteAllAbominationButton" class="inventory-delete-btn" type="button" title="Delete All Abomination"><span class="special">Abomination</span></button>
-                            <button id="deleteAllIridocyclitisVeilButton" class="inventory-delete-btn" type="button" title="Delete All Iridocyclitis Veil"><span class="special">Iridocyclitis Veil</span></button>
-                            <button id="deleteAllBlindGTButton" class="inventory-delete-btn" type="button" title="Delete All BlindGT"><span class="special">BlindGT</span></button>
-                            <button id="deleteAllMSFUButton" class="inventory-delete-btn" type="button" title="Delete All MSFU"><span class="special">MSFU</span></button>
-                            <button id="deleteAllOrbButton" class="inventory-delete-btn" type="button" title="Delete All Orb"><span class="special">Orb</span></button>
-                            <button id="deleteAllFireCrazeButton" class="inventory-delete-btn" type="button" title="Delete All FireCraze"><span class="special">FireCraze</span></button>
-                            <button id="deleteAllShenviiButton" class="inventory-delete-btn" type="button" title="Delete All sʜeɴvɪ✞∞"><span class="special">sʜeɴvɪ✞∞</span></button>
-                        </div>
-                    </section>
-
-                    <section class="inventory-group inventory-group--mastery">
-                        <div class="inventory-group__header">
-                            <h4 class="inventory-group__title">Mastery Titles</h4>
-                            <button id="deleteAllUnder100kButton" class="inventory-group__clear" type="button">Clear Mastery</button>
-                        </div>
-                        <div class="inventory-group__grid">
-                            <button id="deleteAllUnfairButton" class="inventory-delete-btn" type="button" title="Delete All Unfair">Unfair</button>
-                            <button id="deleteAllCursedMirageButton" class="inventory-delete-btn" type="button" title="Delete All Cursed Mirage">Cursed Mirage</button>
-                            <button id="deleteAllCelestialDawnButton" class="inventory-delete-btn" type="button" title="Delete All Celestial Dawn">Celestial Dawn</button>
-                            <button id="deleteAllFatesRequiemButton" class="inventory-delete-btn" type="button" title="Delete All Fate's Requiem">Fate's Requiem</button>
-                            <button id="deleteAllMythicWallButton" class="inventory-delete-btn" type="button" title="Delete All MythicWall">MythicWall</button>
-                            <button id="deleteAllEonbreakButton" class="inventory-delete-btn" type="button" title="Delete All Eonbreak">Eonbreak</button>
-                            <button id="deleteAllBlodhestButton" class="inventory-delete-btn" type="button" title="Delete All Blodhest">Blodhest</button>
-                            <button id="deleteAllOvertureButton" class="inventory-delete-btn" type="button" title="Delete All Overture">Overture</button>
-                            <button id="deleteAllLightButton" class="inventory-delete-btn" type="button" title="Delete All Light">Light</button>
-                            <button id="deleteAllUnnamedButton" class="inventory-delete-btn" type="button" title="Delete All Unnamed">Unnamed</button>
-                            <button id="deleteAllHarvButton" class="inventory-delete-btn" type="button" title="Delete All HARV">HARV</button>
-                            <button id="deleteAllQbearButton" class="inventory-delete-btn" type="button" title="Delete All Qbear">Qbear</button>
-                            <button id="deleteAllHypernovaButton" class="inventory-delete-btn" type="button" title="Delete All Hypernova">Hypernova</button>
-                            <button id="deleteAllTuonButton" class="inventory-delete-btn" type="button" title="Delete All Tuon">Tuon</button>
-                            <button id="deleteAllNebulaButton" class="inventory-delete-btn" type="button" title="Delete All Nebula">Nebula</button>
-                            <button id="deleteAllDevilsHeartButton" class="inventory-delete-btn" type="button" title="Delete All Devil's Heart">Devil's Heart</button>
-                            <button id="deleteAllArcanePulseButton" class="inventory-delete-btn" type="button" title="Delete All Arcane Pulse">Arcane Pulse</button>
-                        </div>
-                    </section>
-
-                    <section class="inventory-group inventory-group--supreme">
-                        <div class="inventory-group__header">
-                            <h4 class="inventory-group__title">Supreme Titles</h4>
-                            <button id="deleteAllUnder1mButton" class="inventory-group__clear" type="button">Clear Supreme</button>
-                        </div>
-                        <div class="inventory-group__grid">
-                            <button id="deleteAllAstraldButton" class="inventory-delete-btn" type="button" title="Delete All Astrald">Astrald</button>
-                            <button id="deleteAllImpeachedButton" class="inventory-delete-btn" type="button" title="Delete All Impeached">Impeached</button>
-                            <button id="deleteAllMastermindButton" class="inventory-delete-btn" type="button" title="Delete All Mastermind">Mastermind</button>
-                            <button id="deleteAllCelestialChorusButton" class="inventory-delete-btn" type="button" title="Delete All Celestial Chorus">Celestial Chorus</button>
-                            <button id="deleteAllX1staButton" class="inventory-delete-btn" type="button" title="Delete All X1sta">X1sta</button>
-                        </div>
-                    </section>
-
-                    <section class="inventory-group inventory-group--transcendent">
-                        <div class="inventory-group__header">
-                            <h4 class="inventory-group__title">Transcendent Titles</h4>
-                            <button id="deleteAllTranscendentButton" class="inventory-group__clear" type="button"><span class="transcendent">Clear Transcendent</span></button>
-                        </div>
-                        <div class="inventory-group__grid">
-                            <button id="deleteAllSillyCarButton" class="inventory-delete-btn" type="button" title="Delete All Silly Car :3"><span class="transcendent">Silly Car :3</span></button>
-                            <button id="deleteAllGingerButton" class="inventory-delete-btn" type="button" title="Delete All Ginger"><span class="transcendent">Ginger</span></button>
-                            <button id="deleteAllH1diButton" class="inventory-delete-btn" type="button" title="Delete All H1di"><span class="transcendent h1di-flash">H1di</span></button>
-                            <button id="deleteAllEquinoxButton" class="inventory-delete-btn" type="button" title="Delete All 『Equinox』"><span class="transcendent equinox-flash">『Equinox』</span></button>
-                        </div>
-                    </section>
+            <h2><i class="fa-solid fa-box-archive"></i> Inventory</h2>
+            <div class="inventory-tabs" role="tablist" aria-label="Inventory sections">
+                <button id="inventoryTabTitles" class="inventory-tab inventory-tab--active" type="button" role="tab" aria-selected="true" data-tab="titles">Titles</button>
+                <button id="inventoryTabDelete" class="inventory-tab" type="button" role="tab" aria-selected="false" data-tab="delete">Delete Titles</button>
+            </div>
+            <div class="inventory-panels">
+                <div class="inventory-panel inventory-panel--active" role="tabpanel" aria-labelledby="inventoryTabTitles" data-tab-panel="titles">
+                    <div class="invent inventory-panel__scroll">
+                        <ul class="inv" id="inventoryList"></ul>
+                    </div>
+                    <div class="pagination">
+                        <button id="backPageButton" class="pageButton" onclick="backPage()">First</button>
+                        <button id="prevPageButton" class="pageButton" onclick="prevPage()">Previous</button>
+                        <span class="pgNr" id="pageNumber"></span>
+                        <button id="nextPageButton" class="pageButton" onclick="nextPage()">Next</button>
+                        <button id="lastPageButton" class="pageButton" onclick="lastPage()">Last</button>
+                    </div>
                 </div>
+                <div class="inventory-panel" role="tabpanel" aria-labelledby="inventoryTabDelete" aria-hidden="true" data-tab-panel="delete">
+                    <div class="invent inventory-panel__scroll">
+                        <div class="inventory-actions">
+                            <button class="deleteAll" id="deleteAllButton" type="button">Delete Entire Inventory</button>
 
-                <ul class="inv" id="inventoryList"></ul>
+                            <section class="inventory-group inventory-group--basic">
+                                <div class="inventory-group__header">
+                                    <h4 class="inventory-group__title">Basic Titles</h4>
+                                    <button id="deleteAllUnder100Button" class="inventory-group__clear" type="button">Clear Basic</button>
+                                </div>
+                                <div class="inventory-group__grid">
+                                    <button id="deleteAllCommonButton" class="inventory-delete-btn" type="button" title="Delete All Common">Common</button>
+                                    <button id="deleteAllRareButton" class="inventory-delete-btn" type="button" title="Delete All Rare">Rare</button>
+                                    <button id="deleteAllEpicButton" class="inventory-delete-btn" type="button" title="Delete All Epic">Epic</button>
+                                    <button id="deleteAllLegendaryButton" class="inventory-delete-btn" type="button" title="Delete All Legendary">Legendary</button>
+                                    <button id="deleteAllImpossibleButton" class="inventory-delete-btn" type="button" title="Delete All Impossible">Impossible</button>
+                                    <button id="deleteAllPoweredButton" class="inventory-delete-btn" type="button" title="Delete All Powered">Powered</button>
+                                    <button id="deleteAllToxicButton" class="inventory-delete-btn" type="button" title="Delete All Toxic">Toxic</button>
+                                    <button id="deleteAllSolarpowerButton" class="inventory-delete-btn" type="button" title="Delete All Solarpower">Solarpower</button>
+                                    <button id="deleteAllFlickerButton" class="inventory-delete-btn" type="button" title="Delete All Flicker">Flicker</button>
+                                    <button id="deleteAllBelieverButton" class="inventory-delete-btn" type="button" title="Delete All Believer">Believer</button>
+                                    <button id="deleteAllPlanetBreakerButton" class="inventory-delete-btn" type="button" title="Delete All Planet Breaker">Planet Breaker</button>
+                                </div>
+                            </section>
 
-                <div class="pagination">
-                    <button id="backPageButton" class="pageButton" onclick="backPage()">First</button>
-                    <button id="prevPageButton" class="pageButton" onclick="prevPage()">Previous</button>
-                    <span class="pgNr" id="pageNumber"></span>
-                    <button id="nextPageButton" class="pageButton" onclick="nextPage()">Next</button>
-                    <button id="lastPageButton" class="pageButton" onclick="lastPage()">Last</button>
+                            <section class="inventory-group inventory-group--decent">
+                                <div class="inventory-group__header">
+                                    <h4 class="inventory-group__title">Decent Titles</h4>
+                                    <button id="deleteAllUnder1kButton" class="inventory-group__clear" type="button">Clear Decent</button>
+                                </div>
+                                <div class="inventory-group__grid">
+                                    <button id="deleteAllUnstoppableButton" class="inventory-delete-btn" type="button" title="Delete All Unstoppable">Unstoppable</button>
+                                    <button id="deleteAllGargantuaButton" class="inventory-delete-btn" type="button" title="Delete All Gargantua">Gargantua</button>
+                                    <button id="deleteAllWanderingSpiritButton" class="inventory-delete-btn" type="button" title="Delete All Wandering Spirit">Wandering Spirit</button>
+                                    <button id="deleteAllMemoryButton" class="inventory-delete-btn" type="button" title="Delete All Memory">Memory</button>
+                                    <button id="deleteAllOblivionButton" class="inventory-delete-btn" type="button" title="Delete All Oblivion">Oblivion</button>
+                                    <button id="deleteAllFrozenFateButton" class="inventory-delete-btn" type="button" title="Delete All Frozen Fate">Frozen Fate</button>
+                                    <button id="deleteAllSpectralButton" class="inventory-delete-btn" type="button" title="Delete All Spectral Whisper">Spectral Whisper</button>
+                                    <button id="deleteAllMysteriousEchoButton" class="inventory-delete-btn" type="button" title="Delete All Mysterious Echo">Mysterious Echo</button>
+                                    <button id="deleteAllIsekaiButton" class="inventory-delete-btn" type="button" title="Delete All Isekai">Isekai</button>
+                                    <button id="deleteAllForgottenWhisperButton" class="inventory-delete-btn" type="button" title="Delete All Forgotten Whisper">Forgotten Whisper</button>
+                                    <button id="deleteAllEmergenciesButton" class="inventory-delete-btn" type="button" title="Delete All Emergencies">Emergencies</button>
+                                    <button id="deleteAllStarfallButton" class="inventory-delete-btn" type="button" title="Delete All Starfall">Starfall</button>
+                                    <button id="deleteAllCursedArtifactButton" class="inventory-delete-btn" type="button" title="Delete All Cursed Artifact">Cursed Artifact</button>
+                                    <button id="deleteAllSamuraiButton" class="inventory-delete-btn" type="button" title="Delete All Samurai">Samurai</button>
+                                    <button id="deleteAllSpectralGlareButton" class="inventory-delete-btn" type="button" title="Delete All Spectral Glare">Spectral Glare</button>
+                                    <button id="deleteAllPhantomStrideButton" class="inventory-delete-btn" type="button" title="Delete All Phantom Stride">Phantom Stride</button>
+                                    <button id="deleteAllContortionsButton" class="inventory-delete-btn" type="button" title="Delete All Contortions">Contortions</button>
+                                </div>
+                            </section>
+
+                            <section class="inventory-group inventory-group--grand">
+                                <div class="inventory-group__header">
+                                    <h4 class="inventory-group__title">Grand Titles</h4>
+                                    <button id="deleteAllUnder10kButton" class="inventory-group__clear" type="button">Clear Grand</button>
+                                </div>
+                                <div class="inventory-group__grid">
+                                    <button id="deleteAllShadowVeilButton" class="inventory-delete-btn" type="button" title="Delete All Shadow Veil">Shadow Veil</button>
+                                    <button id="deleteAllFrightButton" class="inventory-delete-btn" type="button" title="Delete All Fright">Fright</button>
+                                    <button id="deleteAllNightfallButton" class="inventory-delete-btn" type="button" title="Delete All Nightfall">Nightfall</button>
+                                    <button id="deleteAllFearButton" class="inventory-delete-btn" type="button" title="Delete All Fear">Fear</button>
+                                    <button id="deleteAllSeraphsWingButton" class="inventory-delete-btn" type="button" title="Delete All Seraph's Wing">Seraph's Wing</button>
+                                    <button id="deleteAllVoidWalkerButton" class="inventory-delete-btn" type="button" title="Delete All Void Walker">Void Walker</button>
+                                    <button id="deleteAllHauntedSoulButton" class="inventory-delete-btn" type="button" title="Delete All Haunted Soul">Haunted Soul</button>
+                                    <button id="deleteAllGDAddictButton" class="inventory-delete-btn" type="button" title="Delete All GD Addict">GD Addict</button>
+                                    <button id="deleteAllSilentListenerButton" class="inventory-delete-btn" type="button" title="Delete All Silent Listener">Silent Listener</button>
+                                    <button id="deleteAllGhostlyEmbraceButton" class="inventory-delete-btn" type="button" title="Delete All Ghostly Embrace">Ghostly Embrace</button>
+                                    <button id="deleteAllEndlessTwilightButton" class="inventory-delete-btn" type="button" title="Delete All Endless Twilight">Endless Twilight</button>
+                                    <button id="deleteAllIsekaiLofiButton" class="inventory-delete-btn" type="button" title="Delete All Isekai: Lo-fi">Isekai: Lo-fi</button>
+                                    <button id="deleteAllLostSoulButton" class="inventory-delete-btn" type="button" title="Delete All Lost Soul">Lost Soul</button>
+                                    <button id="deleteAllAbyssalShadeButton" class="inventory-delete-btn" type="button" title="Delete All Abyssal Shade">Abyssal Shade</button>
+                                    <button id="deleteAllDarkenedSkyButton" class="inventory-delete-btn" type="button" title="Delete All Darkened Sky">Darkened Sky</button>
+                                    <button id="deleteAllShad0wButton" class="inventory-delete-btn" type="button" title="Delete All Shad0w">Shad0w</button>
+                                    <button id="deleteAllTwistedLightButton" class="inventory-delete-btn" type="button" title="Delete All Twisted Light">Twisted Light</button>
+                                    <button id="deleteAllFoundSoulButton" class="inventory-delete-btn" type="button" title="Delete All Found Soul">Found Soul</button>
+                                    <button id="deleteAllHauntedRealityButton" class="inventory-delete-btn" type="button" title="Delete All Haunted Reality">Haunted Reality</button>
+                                    <button id="deleteAllLubJubButton" class="inventory-delete-btn" type="button" title="Delete All LubbyJubby's Cherry Grove">LubbyJubby's Cherry Grove</button>
+                                    <button id="deleteAllEtherShiftButton" class="inventory-delete-btn" type="button" title="Delete All Ether Shift">Ether Shift</button>
+                                    <button id="deleteAllEtherealPulseButton" class="inventory-delete-btn" type="button" title="Delete All Ethereal Pulse">Ethereal Pulse</button>
+                                    <button id="deleteAllHellishFireButton" class="inventory-delete-btn" type="button" title="Delete All Hellish Fire">Hellish Fire</button>
+                                    <button id="deleteAllRadButton" class="inventory-delete-btn" type="button" title="Delete All Rad">Rad</button>
+                                    <button id="deleteAllEnigmaticDreamButton" class="inventory-delete-btn" type="button" title="Delete All Enigmatic Dream">Enigmatic Dream</button>
+                                    <button id="deleteAllGrimDestinyButton" class="inventory-delete-btn" type="button" title="Delete All Grim Destiny">Grim Destiny</button>
+                                    <button id="deleteAllDemonSoulButton" class="inventory-delete-btn" type="button" title="Delete All Demon Soul">Demon Soul</button>
+                                </div>
+                            </section>
+
+                            <section class="inventory-group inventory-group--events">
+                                <div class="inventory-group__header">
+                                    <h4 class="inventory-group__title">Event Titles</h4>
+                                </div>
+                                <div class="inventory-group__grid">
+                                    <button id="deleteAllPumpkinButton" class="inventory-delete-btn" type="button" title="Delete All Pumpkin">Pumpkin</button>
+                                    <button id="deleteAllCrimsonStockingsButton" class="inventory-delete-btn" type="button" title="Delete All Crimson Stockings"><span class="eventTitleXmas24">Crimson Stockings</span></button>
+                                    <button id="deleteAllHolidayCheerButton" class="inventory-delete-btn" type="button" title="Delete All Holiday Cheer"><span class="eventTitleXmas24">Holiday Cheer</span></button>
+                                    <button id="deleteAllReindeerDashButton" class="inventory-delete-btn" type="button" title="Delete All Reindeer Dash"><span class="eventTitleXmas24">Reindeer Dash</span></button>
+                                    <button id="deleteAllGingerbreadHarmonyButton" class="inventory-delete-btn" type="button" title="Delete All Gingerbread Harmony"><span class="eventTitleXmas24">Gingerbread Harmony</span></button>
+                                    <button id="deleteAllSilentNightButton" class="inventory-delete-btn" type="button" title="Delete All Silent Night"><span class="eventTitleXmas24">Silent Night</span></button>
+                                    <button id="deleteAllFrostedGarlandButton" class="inventory-delete-btn" type="button" title="Delete All Frosted Garland"><span class="eventTitleXmas24">Frosted Garland</span></button>
+                                    <button id="deleteAllCandyCaneSymphonyButton" class="inventory-delete-btn" type="button" title="Delete All Candy Cane Symphony"><span class="eventTitleXmas24">Candy Cane Symphony</span></button>
+                                    <button id="deleteAllSantaClausButton" class="inventory-delete-btn" type="button" title="Delete All Santa Claus"><span class="eventTitleXmas24">Santa Claus</span></button>
+                                    <button id="deleteAllJollyBellsButton" class="inventory-delete-btn" type="button" title="Delete All Jolly Bells"><span class="eventTitleXmas24">Jolly Bells</span></button>
+                                    <button id="deleteAllNorthStarButton" class="inventory-delete-btn" type="button" title="Delete All North Star"><span class="eventTitleXmas24">North Star</span></button>
+                                    <button id="deleteAllFircraButton" class="inventory-delete-btn" type="button" title="Delete All Firecracker"><span class="eventTitleNew25">Firecracker</span></button>
+                                    <button id="deleteAllHeartButton" class="inventory-delete-btn" type="button" title="Delete All Heart"><span class="eventV25">Heart</span></button>
+                                    <button id="deleteAllEasterEggButton" class="inventory-delete-btn" type="button" title="Delete All Easter Egg"><span class="eventE25">Easter Egg</span></button>
+                                    <button id="deleteAllEasterBunnyButton" class="inventory-delete-btn" type="button" title="Delete All Easter Bunny"><span class="eventE25">Easter Bunny</span></button>
+                                    <button id="deleteAllWaveButton" class="inventory-delete-btn" type="button" title="Delete All Wave"><span class="eventS25">Wave</span></button>
+                                    <button id="deleteAllScorchingButton" class="inventory-delete-btn" type="button" title="Delete All Scorching"><span class="eventS25">Scorching</span></button>
+                                    <button id="deleteAllBeachButton" class="inventory-delete-btn" type="button" title="Delete All Beach"><span class="eventS25">Beach</span></button>
+                                    <button id="deleteAllTidalWaveButton" class="inventory-delete-btn" type="button" title="Delete All Tidal Wave"><span class="eventS25">Tidal Wave</span></button>
+                                    <button id="deleteAllTheScarecrowsSigilButton" class="inventory-delete-btn" type="button" title="Delete All The Scarecrow's Sigil"><span class="eventTitleHalloween25">The Scarecrow's Sigil</span></button>
+                                    <button id="deleteAllPumpkinHollowButton" class="inventory-delete-btn" type="button" title="Delete All Pumpkin Hollow"><span class="eventTitleHalloween25">Pumpkin Hollow</span></button>
+                                    <button id="deleteAllHollowHillManorButton" class="inventory-delete-btn" type="button" title="Delete All Hollow Hill Manor"><span class="eventTitleHalloween25">Hollow Hill Manor</span></button>
+                                    <button id="deleteAllThePhantomMoonButton" class="inventory-delete-btn" type="button" title="Delete All The Phantom Moon"><span class="eventTitleHalloween25">The Phantom Moon</span></button>
+                                    <button id="deleteAllTheVoidsVeilButton" class="inventory-delete-btn" type="button" title="Delete All The Void's Veil"><span class="eventTitleHalloween25">The Void's Veil</span></button>
+                                    <button id="deleteAllWailingShadeButton" class="inventory-delete-btn" type="button" title="Delete All Wailing Shade"><span class="eventTitleHalloween25">Wailing Shade</span></button>
+                                </div>
+                            </section>
+
+                            <section class="inventory-group inventory-group--special">
+                                <div class="inventory-group__header">
+                                    <h4 class="inventory-group__title">Special Titles</h4>
+                                    <button id="deleteAllSpecialButton" class="inventory-group__clear" type="button"><span class="special">Clear Special</span></button>
+                                </div>
+                                <div class="inventory-group__grid">
+                                    <button id="deleteAllVeilButton" class="inventory-delete-btn" type="button" title="Delete All Veil"><span class="special">Veil</span></button>
+                                    <button id="deleteAllExperimentButton" class="inventory-delete-btn" type="button" title="Delete All Experiment"><span class="special">Experiment</span></button>
+                                    <button id="deleteAllAbominationButton" class="inventory-delete-btn" type="button" title="Delete All Abomination"><span class="special">Abomination</span></button>
+                                    <button id="deleteAllIridocyclitisVeilButton" class="inventory-delete-btn" type="button" title="Delete All Iridocyclitis Veil"><span class="special">Iridocyclitis Veil</span></button>
+                                    <button id="deleteAllBlindGTButton" class="inventory-delete-btn" type="button" title="Delete All BlindGT"><span class="special">BlindGT</span></button>
+                                    <button id="deleteAllMSFUButton" class="inventory-delete-btn" type="button" title="Delete All MSFU"><span class="special">MSFU</span></button>
+                                    <button id="deleteAllOrbButton" class="inventory-delete-btn" type="button" title="Delete All Orb"><span class="special">Orb</span></button>
+                                    <button id="deleteAllFireCrazeButton" class="inventory-delete-btn" type="button" title="Delete All FireCraze"><span class="special">FireCraze</span></button>
+                                    <button id="deleteAllShenviiButton" class="inventory-delete-btn" type="button" title="Delete All sʜeɴvɪ✞∞"><span class="special">sʜeɴvɪ✞∞</span></button>
+                                </div>
+                            </section>
+
+                            <section class="inventory-group inventory-group--mastery">
+                                <div class="inventory-group__header">
+                                    <h4 class="inventory-group__title">Mastery Titles</h4>
+                                    <button id="deleteAllUnder100kButton" class="inventory-group__clear" type="button">Clear Mastery</button>
+                                </div>
+                                <div class="inventory-group__grid">
+                                    <button id="deleteAllUnfairButton" class="inventory-delete-btn" type="button" title="Delete All Unfair">Unfair</button>
+                                    <button id="deleteAllCursedMirageButton" class="inventory-delete-btn" type="button" title="Delete All Cursed Mirage">Cursed Mirage</button>
+                                    <button id="deleteAllCelestialDawnButton" class="inventory-delete-btn" type="button" title="Delete All Celestial Dawn">Celestial Dawn</button>
+                                    <button id="deleteAllFatesRequiemButton" class="inventory-delete-btn" type="button" title="Delete All Fate's Requiem">Fate's Requiem</button>
+                                    <button id="deleteAllMythicWallButton" class="inventory-delete-btn" type="button" title="Delete All MythicWall">MythicWall</button>
+                                    <button id="deleteAllEonbreakButton" class="inventory-delete-btn" type="button" title="Delete All Eonbreak">Eonbreak</button>
+                                    <button id="deleteAllBlodhestButton" class="inventory-delete-btn" type="button" title="Delete All Blodhest">Blodhest</button>
+                                    <button id="deleteAllOvertureButton" class="inventory-delete-btn" type="button" title="Delete All Overture">Overture</button>
+                                    <button id="deleteAllLightButton" class="inventory-delete-btn" type="button" title="Delete All Light">Light</button>
+                                    <button id="deleteAllUnnamedButton" class="inventory-delete-btn" type="button" title="Delete All Unnamed">Unnamed</button>
+                                    <button id="deleteAllHarvButton" class="inventory-delete-btn" type="button" title="Delete All HARV">HARV</button>
+                                    <button id="deleteAllQbearButton" class="inventory-delete-btn" type="button" title="Delete All Qbear">Qbear</button>
+                                    <button id="deleteAllHypernovaButton" class="inventory-delete-btn" type="button" title="Delete All Hypernova">Hypernova</button>
+                                    <button id="deleteAllTuonButton" class="inventory-delete-btn" type="button" title="Delete All Tuon">Tuon</button>
+                                    <button id="deleteAllNebulaButton" class="inventory-delete-btn" type="button" title="Delete All Nebula">Nebula</button>
+                                    <button id="deleteAllDevilsHeartButton" class="inventory-delete-btn" type="button" title="Delete All Devil's Heart">Devil's Heart</button>
+                                    <button id="deleteAllArcanePulseButton" class="inventory-delete-btn" type="button" title="Delete All Arcane Pulse">Arcane Pulse</button>
+                                </div>
+                            </section>
+
+                            <section class="inventory-group inventory-group--supreme">
+                                <div class="inventory-group__header">
+                                    <h4 class="inventory-group__title">Supreme Titles</h4>
+                                    <button id="deleteAllUnder1mButton" class="inventory-group__clear" type="button">Clear Supreme</button>
+                                </div>
+                                <div class="inventory-group__grid">
+                                    <button id="deleteAllAstraldButton" class="inventory-delete-btn" type="button" title="Delete All Astrald">Astrald</button>
+                                    <button id="deleteAllImpeachedButton" class="inventory-delete-btn" type="button" title="Delete All Impeached">Impeached</button>
+                                    <button id="deleteAllMastermindButton" class="inventory-delete-btn" type="button" title="Delete All Mastermind">Mastermind</button>
+                                    <button id="deleteAllCelestialChorusButton" class="inventory-delete-btn" type="button" title="Delete All Celestial Chorus">Celestial Chorus</button>
+                                    <button id="deleteAllX1staButton" class="inventory-delete-btn" type="button" title="Delete All X1sta">X1sta</button>
+                                </div>
+                            </section>
+
+                            <section class="inventory-group inventory-group--transcendent">
+                                <div class="inventory-group__header">
+                                    <h4 class="inventory-group__title">Transcendent Titles</h4>
+                                    <button id="deleteAllTranscendentButton" class="inventory-group__clear" type="button"><span class="transcendent">Clear Transcendent</span></button>
+                                </div>
+                                <div class="inventory-group__grid">
+                                    <button id="deleteAllSillyCarButton" class="inventory-delete-btn" type="button" title="Delete All Silly Car :3"><span class="transcendent">Silly Car :3</span></button>
+                                    <button id="deleteAllGingerButton" class="inventory-delete-btn" type="button" title="Delete All Ginger"><span class="transcendent">Ginger</span></button>
+                                    <button id="deleteAllH1diButton" class="inventory-delete-btn" type="button" title="Delete All H1di"><span class="transcendent h1di-flash">H1di</span></button>
+                                    <button id="deleteAllEquinoxButton" class="inventory-delete-btn" type="button" title="Delete All 『Equinox』"><span class="transcendent equinox-flash">『Equinox』</span></button>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
         <button class="fullscreen-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
     </div>
 
@@ -693,6 +774,12 @@
     <audio preload="none" id="hugeSuspenceAudio" src="files/sounds_and_music/onemillionsuspence.mp3"></audio>
     <audio preload="none" id="hypernovaAudio" src="files/sounds_and_music/hypernova.mp3" loop></audio>
     <audio preload="none" id="astraldAudio" src="files/sounds_and_music/astrald.mp3" loop></audio>
+    <audio preload="none" id="wailingshadeAudio" src="files/sounds_and_music/wailingshade.mp3" loop></audio>
+    <audio preload="none" id="thevoidsveilAudio" src="files/sounds_and_music/thevoidsveil.mp3" loop></audio>
+    <audio preload="none" id="thescarecrowssigilAudio" src="files/sounds_and_music/thescarecrowssigil.mp3" loop></audio>
+    <audio preload="none" id="thephantommoonAudio" src="files/sounds_and_music/thephantommoon.mp3" loop></audio>
+    <audio preload="none" id="pumpkinhollowAudio" src="files/sounds_and_music/pumpkinhollow.mp3" loop></audio>
+    <audio preload="none" id="hollowhillmanorAudio" src="files/sounds_and_music/hollowhillmanor.mp3" loop></audio>
     <audio preload="none" id="nebulaAudio" src="files/sounds_and_music/nebula.mp3" loop></audio>
     <audio preload="none" id="glitchedAudio" src="files/sounds_and_music/glitched.mp3" loop></audio>
     <audio preload="none" id="mastermindAudio" src="files/sounds_and_music/mastermind.mp3" loop></audio>
@@ -796,9 +883,10 @@
     <audio preload="none" id="gingerAudio" src="files/sounds_and_music/ginger.mp3" loop></audio>
     <audio preload="none" id="esteggAudio" src="files/sounds_and_music/estegg.mp3" loop></audio>
     <audio preload="none" id="estbunAudio" src="files/sounds_and_music/estbun.mp3" loop></audio>
-    <audio preload="none" id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio>
+    <!-- <audio preload="none" id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio> -->
     <!-- <audio preload="none" id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio> -->
     <!-- <audio preload="none" id="mainAudio" src="files/sounds_and_music/mainEvent2.mp3" loop></audio> -->
+    <audio preload="none" id="mainAudio" src="files/sounds_and_music/mainEvent3.mp3" loop></audio>
 
     
     <script src="files/script.js"></script>
