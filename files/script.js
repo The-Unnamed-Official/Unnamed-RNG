@@ -1353,12 +1353,12 @@ const ACHIEVEMENTS = [
     unobtainable: true,
   },
   {
-    name: "Happy Easter 2025!",
+    name: "Spring & Easter",
     requiredEventBucket: "eventE25",
     unobtainable: true,
   },
   {
-    name: "Happy Summer 2025!",
+    name: "Summer Vibes",
     requiredEventBucket: "eventS25",
     unobtainable: true,
   },
