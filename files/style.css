@@ -681,7 +681,7 @@ body.equinox-pulse-active :is(
     align-items: stretch;
     gap: 14px;
     padding: 18px;
-    width: min(94vw, 960px);
+    width: min(54vw, 560px);
     border-radius: 28px;
     position: relative;
     background:
