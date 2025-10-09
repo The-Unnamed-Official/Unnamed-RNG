@@ -734,6 +734,22 @@ body.equinox-pulse-active :is(
         inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
+.version__subtitle {
+    margin: -4px 0 0;
+    padding: 4px 16px 8px;
+    border-radius: 14px;
+    font-size: clamp(1rem, 2.3vw, 1.45rem);
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #ffe7c4;
+    background: linear-gradient(160deg, rgba(255, 115, 55, 0.35), rgba(255, 208, 125, 0.28));
+    border: 1px solid rgba(255, 189, 129, 0.4);
+    box-shadow:
+        0 10px 22px rgba(28, 12, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
 .heart {
     position: fixed;
     font-size: 69px;
@@ -3534,7 +3550,9 @@ body.flashing {
   /* Stronger, softer shadow */
   box-shadow: 0 10px 30px rgba(0,0,0,0.45);
   text-align: left;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   max-height: min(85vh, 720px);
   /* No animated transitions */
   z-index: 999999;
@@ -3589,7 +3607,6 @@ body.flashing {
     order: 4;
     visibility: hidden;
     max-height: min(70vh, 520px);
-    overflow-y: auto;
     width: min(92vw, 520px);
   }
 
@@ -3630,11 +3647,84 @@ body.flashing {
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
 
+.inventory-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 6px 12px 6px;
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(140deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+}
+
+.inventory-tab {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inventory-tab:hover {
+  color: #ffffff;
+  border-color: rgba(255,255,255,0.18);
+}
+
+.inventory-tab:focus-visible {
+  outline: 2px solid rgba(255, 211, 139, 0.85);
+  outline-offset: 2px;
+}
+
+.inventory-tab--active {
+  color: #1f1309;
+  background: linear-gradient(135deg, rgba(255, 166, 78, 0.88), rgba(255, 215, 154, 0.85));
+  border-color: rgba(255, 203, 142, 0.85);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.32);
+}
+
+.inventory-tab--active:focus-visible {
+  outline-color: rgba(255, 205, 141, 0.95);
+}
+
+.inventory-panels {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.inventory-panel {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+}
+
+.inventory-panel--active {
+  display: flex;
+}
+
+.inventory-panel__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
 #inventoryList {
   list-style: none;
   padding: 12px;
   margin: 0;
-  overflow-y: auto;
+  overflow: visible;
   /* Remove height transition (no animations) */
 }
 
@@ -3783,6 +3873,15 @@ body.flashing {
     overflow: visible;
 }
 
+#inventoryList li.inventory-item--menu-open {
+  z-index: 100000020;
+  transform: none;
+}
+
+#inventoryList li.inventory-item--menu-open:hover {
+  transform: none;
+}
+
 #inventoryList li.inventory-item--equipped {
   box-shadow:
     0 0 0 2px rgba(118, 228, 195, 0.35),
@@ -3836,6 +3935,10 @@ body.flashing {
   top: calc(100% + 6px);      /* right under the burger */
   right: 0;
   z-index: 100000011;         /* above titles and other content */
+}
+
+#inventoryList li.inventory-item--menu-open .burger-bar .dropdown-menu {
+  z-index: 100000021;
 }
 
 .inventory .deleteAll {
@@ -4140,9 +4243,13 @@ body.flashing {
 }
 
 .pagination {
-    text-align: center;
-    margin-top: 10px;
-    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 6px 0 6px;
+    color: #ffffff;
 }
 
 .rollsCount {
