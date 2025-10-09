@@ -671,28 +671,35 @@ body.equinox-pulse-active :is(
     gap: 10px;
     width: auto;
     z-index: 100010;
+    opacity: 0.33;
+    transition: opacity 0.33s ease-in-out;
+}
+
+.version:hover,
+.version:focus-within {
+    opacity: 0.95;
 }
 
 .version__group {
     --accent-light: rgba(120, 180, 255, 0.45);
     margin: 0;
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: wrap-reverse;
     align-items: stretch;
-    gap: 14px;
-    padding: 18px;
-    width: min(54vw, 560px);
+    gap: 7px;
+    padding: 9px;
+    width: min(47.5vw, 475px);
     border-radius: 28px;
     position: relative;
     background:
         linear-gradient(160deg, rgba(25, 38, 80, 0.82), rgba(8, 16, 34, 0.82));
     border: 1px solid rgba(120, 180, 255, 0.28);
     box-shadow:
-        0 26px 42px rgba(6, 12, 28, 0.55),
+        0 20px 32px rgba(6, 12, 28, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.22);
-    backdrop-filter: blur(14px);
+    backdrop-filter: blur(44px);
     color: #f6f9ff;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
 }
 
@@ -700,7 +707,7 @@ body.equinox-pulse-active :is(
     content: "";
     position: absolute;
     inset: 1px;
-    border-radius: 26px;
+    border-radius: 20px;
     background: linear-gradient(150deg, rgba(90, 146, 255, 0.18), rgba(0, 204, 255, 0.12));
     opacity: 0.65;
     pointer-events: none;
@@ -712,12 +719,12 @@ body.equinox-pulse-active :is(
 }
 
 .version__chip {
-    flex: 1 1 220px;
+    flex: 1 1 200px;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    padding: 14px 18px;
+    gap: 3px;
+    padding: 6px 7px;
     border-radius: 20px;
     border: 1px solid rgba(255, 255, 255, 0.18);
     background:
@@ -725,9 +732,9 @@ body.equinox-pulse-active :is(
     box-shadow:
         inset 0 1px 0 rgba(255, 255, 255, 0.3),
         0 16px 26px rgba(0, 0, 0, 0.35);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(22px);
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-    cursor: default;
+    cursor: help;
 }
 
 .version__chip:not(:last-child)::after {
@@ -736,7 +743,7 @@ body.equinox-pulse-active :is(
     top: 18px;
     bottom: 18px;
     right: -10px;
-    width: 20px;
+    width: 10px;
     border-radius: 12px;
     background: linear-gradient(90deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0));
     opacity: 0.6;
@@ -787,7 +794,7 @@ body.equinox-pulse-active :is(
 }
 
 .version__value {
-    font-size: clamp(1.1rem, 2.6vw, 1.65rem);
+    font-size: clamp(0.6rem, 1.6vw, 1rem);
     font-weight: 800;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -816,30 +823,6 @@ body.equinox-pulse-active :is(
 .version__detail::after {
     content: ")";
     margin-left: 0.2em;
-}
-
-@media (max-width: 720px) {
-    .version__group {
-        gap: 12px;
-        padding: 16px;
-    }
-
-    .version__chip {
-        flex: 1 1 100%;
-        padding: 12px 14px;
-    }
-
-    .version__chip:not(:last-child)::after {
-        display: none;
-    }
-
-    .version__value {
-        font-size: clamp(1rem, 4vw, 1.4rem);
-    }
-
-    .version__detail {
-        letter-spacing: 0.12em;
-    }
 }
 
 .heart {
@@ -3666,8 +3649,7 @@ body.flashing {
 
   .ui > #rollingHistory,
   .ui > .container1,
-  .ui > .container,
-  .ui > .inventory {
+  .ui > .container {
     position: static;
     width: min(92vw, 520px);
     max-width: 520px;
@@ -3713,7 +3695,7 @@ body.flashing {
     left: auto;
     bottom: auto;
     transform: none;
-    z-index: 1000000;
+    z-index: 100022000;
   }
 }
 
@@ -4749,9 +4731,8 @@ body.flashing {
 
 #countdownDisplay::before,
 .roll-cooldown-display::before {
-    content: "\f2f2";
-    font-family: "Font Awesome 6 Free";
-    font-weight: 900;
+    content: '\f0c3';
+    font: var(--fa-font-solid);
     font-size: 16px;
     color: #8eb8ff;
 }
