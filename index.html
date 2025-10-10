@@ -20,9 +20,13 @@
 
     <div class="version" role="status" aria-live="polite">
         <h1 class="version__group">
-            <span class="version__chip version__chip--event">
-                <span class="version__eyebrow">Event</span>
+            <span class="version__chip version__chip--event" role="group" aria-labelledby="eventChipTitle">
+                <span class="version__eyebrow" id="eventChipTitle">Event</span>
                 <span class="version__value">Halloween Frights</span>
+                <div class="version__event-meta">
+                    <span id="eventCountdown" class="version__detail version__countdown" aria-live="polite"></span>
+                    <span id="eventCountdownTimestamp" class="version__detail version__countdown version__countdown--timestamp"></span>
+                </div>
             </span>
             
             <span class="version__chip version__chip--number" role="text">

@@ -21,6 +21,11 @@ const storage = {
 const byId = (id) => document.getElementById(id);
 const $all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
+const EVENT_END_TIMESTAMP = 1762614000 * 1000;
+const EVENT_DISCORD_TIMESTAMP_FULL = "<t:1762614000:f>";
+const EVENT_DISCORD_TIMESTAMP_RELATIVE = "<t:1762614000:R>";
+const EVENT_TIME_ZONE = "Europe/Berlin";
+
 const EQUINOX_RARITY_CLASS = "equinoxBgImg";
 let equinoxPulseActive = false;
 let pendingEquinoxPulseState = null;
@@ -104,6 +109,77 @@ function setEquinoxPulseActive(active) {
 
   equinoxPulseActive = shouldActivate;
   syncEquinoxPulseOnBody(shouldActivate);
+}
+
+function initEventCountdown() {
+  const countdownElement = byId("eventCountdown");
+  if (!countdownElement) {
+    return;
+  }
+
+  const timestampElement = byId("eventCountdownTimestamp");
+  const eventDate = new Date(EVENT_END_TIMESTAMP);
+
+  let absoluteLabel = eventDate.toLocaleString();
+  try {
+    absoluteLabel = eventDate.toLocaleString(undefined, {
+      dateStyle: "long",
+      timeStyle: "short",
+      timeZone: EVENT_TIME_ZONE,
+    });
+  } catch (error) {
+  }
+
+  if (timestampElement) {
+    timestampElement.textContent = `Ends on ${absoluteLabel} CET · Discord ${EVENT_DISCORD_TIMESTAMP_FULL} | ${EVENT_DISCORD_TIMESTAMP_RELATIVE}`;
+  }
+
+  const segmentsFor = (diffMs) => {
+    const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const parts = [];
+    if (days > 0) {
+      parts.push(`${days}d`);
+    }
+    if (days > 0 || hours > 0) {
+      parts.push(`${hours}h`);
+    }
+    if (days > 0 || hours > 0 || minutes > 0) {
+      parts.push(`${minutes}m`);
+    }
+    parts.push(`${seconds}s`);
+
+    return parts.join(" ");
+  };
+
+  let intervalId = null;
+
+  const render = () => {
+    const now = Date.now();
+    const diffMs = EVENT_END_TIMESTAMP - now;
+
+    if (diffMs <= 0) {
+      countdownElement.textContent = "Event concluded";
+      if (timestampElement) {
+        timestampElement.textContent = `Concluded on ${absoluteLabel} CET · Discord ${EVENT_DISCORD_TIMESTAMP_FULL} | ${EVENT_DISCORD_TIMESTAMP_RELATIVE}`;
+      }
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      return;
+    }
+
+    const remainingLabel = segmentsFor(diffMs);
+    countdownElement.textContent = `Ends in ${remainingLabel}`;
+  };
+
+  render();
+  intervalId = setInterval(render, 1000);
 }
 
 let inventory = [];
@@ -1855,6 +1931,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadingScreen = byId("loadingScreen");
   const menuScreen = byId("menuScreen");
   const loadingText = loadingScreen ? loadingScreen.querySelector(".loadTxt") : null;
+
+  initEventCountdown();
 
   if (pendingEquinoxPulseState !== null || equinoxPulseActive) {
     const desiredState = pendingEquinoxPulseState !== null ? pendingEquinoxPulseState : equinoxPulseActive;
