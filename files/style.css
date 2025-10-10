@@ -3657,7 +3657,7 @@ body.flashing {
   overflow: hidden;
   max-height: min(85vh, 720px);
   /* No animated transitions */
-  z-index: 999999;
+  z-index: 99999;
 }
 
 @media (max-width: 960px) {
@@ -3704,10 +3704,6 @@ body.flashing {
     visibility: hidden;
     max-height: min(70vh, 520px);
     width: min(92vw, 520px);
-  }
-
-  body.inventory-open .inventory {
-    visibility: visible !important;
   }
 }
 
@@ -5585,6 +5581,7 @@ body.flashing {
 
 #achievementsMenu::-webkit-scrollbar {
     width: 10px;
+    border-radius: 50%;
 }
 
 #achievementsMenu::-webkit-scrollbar-thumb {
@@ -5637,6 +5634,7 @@ body.flashing {
     border-bottom: 1px solid rgba(120, 164, 255, 0.16);
     background: rgba(10, 14, 26, 0.75);
     backdrop-filter: blur(12px);
+    border-radius: 17px;
     cursor: grab;
     user-select: none;
     position: sticky;
