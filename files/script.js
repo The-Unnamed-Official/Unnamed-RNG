@@ -543,7 +543,8 @@ const STOPPABLE_AUDIO_IDS = [
   "hollowhillmanorAudio",
   "thevoidsveilAudio",
   "thephantommoonAudio",
-  "wailingshadeAudio"
+  "wailingshadeAudio",
+  "alienAudio"
 ];
 
 const STOPPABLE_AUDIO_SET = new Set(STOPPABLE_AUDIO_IDS);
@@ -795,6 +796,7 @@ const rarityCategories = {
     "polarrBgImg",
     "astraldBgImg",
     "mastermindBgImg",
+    "alienBgImg"
   ],
   transcendent: [
     "silcarBgImg",
@@ -1331,6 +1333,8 @@ const ACHIEVEMENTS = [
   { name: "Geezer Whisperer", requiredTitle: "Geezer [1 in 5,000,000,000]" },
   { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]" },
   { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 17,017]" },
+  { name: "Master of your Mind", requiredTitle: "Mastermind [1 in 110,010]" },
+  { name: "T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈", requiredTitle: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" },
   // Event exclusives
   {
     name: "Spooky Spectator",
@@ -2372,7 +2376,8 @@ function registerRollButtonHandler() {
     rarity.type === "Hollow Hill Manor [1 in 10,031]" ||
     rarity.type === "The Phantom Moon [1 in 10,031]" ||
     rarity.type === "The Void's Veil [1 in 10,031]" ||
-    rarity.type === "Wailing Shade [1 in 31,010]"
+    rarity.type === "Wailing Shade [1 in 31,010]" ||
+    rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]"
   ) {
     const resultContainer = byId("result");
     if (resultContainer) {
@@ -2393,6 +2398,8 @@ function registerRollButtonHandler() {
     } else if (rarity.type === "Heart [1 in ♡♡♡]") {
       bigSuspenceAudio.play();
     } else if (rarity.type === "Qbear [1 in 35,555]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Easter Egg [1 in 13,333]") {
       hugeSuspenceAudio.play();
@@ -3478,6 +3485,148 @@ function registerRollButtonHandler() {
         rollCount1++;
         titleCont.style.visibility = "visible";
         astraldAudio.play();
+      }
+    } else if (rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]") {
+      if (skipCutscene1M) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5H();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-lime";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "lime-star",
+            "green-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "!!!";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            alienAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        alienAudio.play();
       }
     } else if (rarity.type === "Mastermind [1 in 110,010]") {
       if (skipCutscene1M) {
@@ -12874,6 +13023,12 @@ function rollRarity() {
       class: "wailingshadeBgImg",
       chance: 0.0032247662,
       titles: ["Haunt", "Pray"]
+    },
+    {
+      type: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]",
+      class: "alienBgImg",
+      chance: 0.00015293279,
+      titles: ["Catien", "Another Species"]
     }
   ];
 
@@ -13843,6 +13998,7 @@ const backgroundDetails = {
   astraldBgImg: { image: "files/backgrounds/astrald.gif", audio: "astraldAudio" },
   hypernovaBgImg: { image: "files/backgrounds/hypernova.gif", audio: "hypernovaAudio" },
   mastermindBgImg: { image: "files/backgrounds/mastermind.gif", audio: "mastermindAudio" },
+  alienBgImg: { image: "files/backgrounds/alien.png", audio: "alienAudio" },
   nebulaBgImg: { image: "files/backgrounds/nebula.gif", audio: "nebulaAudio" },
   norstaBgImg: { image: "files/backgrounds/norsta.png", audio: "norstaAudio" },
   sanclaBgImg: { image: "files/backgrounds/sancla.png", audio: "sanclaAudio" },
@@ -16108,6 +16264,7 @@ function getClassForRarity(rarity) {
       'Nebula [1 in 62,500]': 'under100k',
       'Gl1tch3d [1 in 12,404/40,404th]': 'special',
       'Mastermind [110,010]': 'under1m',
+      'Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]': 'under1m',
       "MythicWall [1 in 17,017]": 'under100k',
       "MythicWall [1 in 1,031]": 'under100k',
       "MythicWall [1 in 3,110]": 'under100k',
@@ -16569,6 +16726,9 @@ document
   .getElementById("deleteAllMastermindButton")
   .addEventListener("click", () => deleteAllByRarity("mastermindBgImg"));
 document
+  .getElementById("deleteAllAlienButton")
+  .addEventListener("click", () => deleteAllByRarity("alienBgImg"));
+document
   .getElementById("deleteAllHypernovaButton")
   .addEventListener("click", () => deleteAllByRarity("hypernovaBgImg"));
 document
@@ -16585,7 +16745,8 @@ document
       "celestialchorusBgImg",
       "x1staBgImg",
       "astraldBgImg",
-      "mastermindBgImg"
+      "mastermindBgImg",
+      "alienBgImg"
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });

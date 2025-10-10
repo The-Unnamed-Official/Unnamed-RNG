@@ -3182,6 +3182,12 @@ body {
     object-fit: contain;
 }
 
+.alienBgImg {
+    background: url(backgrounds/alien.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
@@ -4428,6 +4434,14 @@ body.flashing {
     animation: levitate 3s ease-out forwards, fade 3s ease-out forwards;
 }
 
+.lime-star {
+    position: absolute;
+    font-size: 33px;
+    color: lime;
+    opacity: 1;
+    animation: levitate 3s ease-out forwards, fade 3s ease-out forwards;
+}
+
 .glitch-green-star {
     position: absolute;
     font-size: 33px;
@@ -4809,6 +4823,16 @@ body.flashing {
     width: 40px;
     height: 40px;
     background-color: rgba(4, 109, 0, 0.7);
+    animation: spin-scale-fast 1.5s ease-out forwards;
+    border-radius: 2px;
+    box-shadow: 0px 0px 15px rgba(0, 99, 16, 0.9);
+}
+
+.animated-square-lime {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(100, 255, 0, 0.7);
     animation: spin-scale-fast 1.5s ease-out forwards;
     border-radius: 2px;
     box-shadow: 0px 0px 15px rgba(0, 99, 16, 0.9);
