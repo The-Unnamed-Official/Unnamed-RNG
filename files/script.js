@@ -1332,7 +1332,7 @@ const ACHIEVEMENTS = [
   { name: "Mint Condition", requiredTitle: "Mintllie [1 in 500,000,000]" },
   { name: "Geezer Whisperer", requiredTitle: "Geezer [1 in 5,000,000,000]" },
   { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]" },
-  { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 17,017]" },
+  { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 170,017]" },
   { name: "Master of your Mind", requiredTitle: "Mastermind [1 in 110,010]" },
   { name: "T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈", requiredTitle: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" },
   // Event exclusives
@@ -2370,7 +2370,7 @@ function registerRollButtonHandler() {
     rarity.type === "Nebula [1 in 62,500]" ||
     rarity.type === "Mastermind [1 in 110,010]" ||
     rarity.type === "Gl1tch3d [1 in 12,404/40,404th]" ||
-    rarity.type === "MythicWall [1 in 17,017]" ||
+    rarity.type === "MythicWall [1 in 170,017]" ||
     rarity.type === "The Scarecrow's Sigil [1 in 1,031]" ||
     rarity.type === "Pumpkin Hollow [1 in 3,110]" ||
     rarity.type === "Hollow Hill Manor [1 in 10,031]" ||
@@ -2417,7 +2417,7 @@ function registerRollButtonHandler() {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Wailing Shade [1 in 31,010]") {
       hugeSuspenceAudio.play();
-    } else if (rarity.type === "MythicWall [1 in 17,017]") {
+    } else if (rarity.type === "MythicWall [1 in 170,017]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Memory [1 in 175]") {
       polarrSuspenceAudio.play();
@@ -6454,7 +6454,7 @@ function registerRollButtonHandler() {
         }, 100);
         enableChange();
       }, 10750); // Wait for 10.75 seconds
-    } else if (rarity.type === "MythicWall [1 in 17,017]") {
+    } else if (rarity.type === "MythicWall [1 in 170,017]") {
       if (skipCutscene100K) {
         document.body.className = "blackBg";
         disableChange();
@@ -12983,9 +12983,9 @@ function rollRarity() {
       titles: ["Mastermind", "Strategist", "Tactician"]
     },
     {
-      type: "MythicWall [1 in 17,017]",
+      type: "MythicWall [1 in 170,017]",
       class: "mythicwallBgImg",
-      chance: 0.00587647646,
+      chance: 0.00058817647,
       titles: ["Mythical", "Dude"]
     },
     {
@@ -16265,11 +16265,13 @@ function getClassForRarity(rarity) {
       'Gl1tch3d [1 in 12,404/40,404th]': 'special',
       'Mastermind [110,010]': 'under1m',
       'Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]': 'under1m',
-      "MythicWall [1 in 17,017]": 'under100k',
-      "MythicWall [1 in 1,031]": 'under100k',
-      "MythicWall [1 in 3,110]": 'under100k',
-      "MythicWall [1 in 31,010]": 'under100k',
+      "MythicWall [1 in 170,017]": 'under100k',
+      "The Scarecrow's Sigil [1 in 1,031]": 'eventHalloween25',
+      "Pumpkin Hollow [1 in 3,110]": 'eventHalloween25',
+      "Wailing Shade [1 in 31,010]": 'eventHalloween25',
       "Hollow Hill Maner [1 in 10,031]": 'eventHalloween25',
+      "The Void's Veil [1 in 10,031]": 'eventHalloween25',
+      "The Phantom Moon [1 in 10,031]": 'eventHalloween25',
   };
 
   return rarityClasses[rarity] || null;

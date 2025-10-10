@@ -380,8 +380,6 @@ body.equinox-pulse-active :is(
     .inventory-group__header,
     .inventory-group__title,
     #inventoryList,
-    #inventoryList li,
-    .inventory-item,
     .rollsCount,
     .container,
     .container1,
@@ -392,8 +390,6 @@ body.equinox-pulse-active :is(
     .rButton,
     #rollBtn,
     #roll-button,
-    .dropdown-menu,
-    .dropdown-menu *
   ) {
   animation: equinoxUIPulse 0.6s ease-in-out infinite;
   transform-origin: center;
@@ -670,7 +666,7 @@ body.equinox-pulse-active :is(
     align-items: center;
     gap: 10px;
     width: auto;
-    z-index: 100010;
+    z-index: 10000;
     opacity: 0.33;
     transition: opacity 0.33s ease-in-out;
 }
@@ -688,7 +684,7 @@ body.equinox-pulse-active :is(
     align-items: stretch;
     gap: 7px;
     padding: 9px;
-    width: min(47.5vw, 475px);
+    width: min(52.5vw, 525px);
     border-radius: 28px;
     position: relative;
     background:
