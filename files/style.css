@@ -354,8 +354,6 @@ body.equinox-pulse-active :is(
     .roll-result-card__title,
     .roll-result-card__status,
     .roll-result-card__badge,
-    #rollingHistory,
-    #rollingHistory *,
     .stats-menu,
     .stats-panel,
     .stats-panel *,
@@ -404,8 +402,6 @@ body.equinox-pulse-active :is(
       .roll-result-card__title,
       .roll-result-card__status,
       .roll-result-card__badge,
-      #rollingHistory,
-      #rollingHistory *,
       .stats-menu,
       .stats-panel,
       .stats-panel *,
@@ -430,8 +426,6 @@ body.equinox-pulse-active :is(
       .inventory-group__header,
       .inventory-group__title,
       #inventoryList,
-      #inventoryList li,
-      .inventory-item,
       .rollsCount,
       .container,
       .container1,
@@ -442,8 +436,6 @@ body.equinox-pulse-active :is(
       .rButton,
       #rollBtn,
       #roll-button,
-      .dropdown-menu,
-      .dropdown-menu *
     ) {
     animation: equinoxUIPulseFallback 0.6s ease-in-out infinite;
   }
@@ -630,7 +622,10 @@ body.equinox-pulse-active :is(
         transform: translateX(-50%);
     }
     #rollingHistory {
-        visibility: hidden;
+        width: min(92vw, 520px);
+        bottom: 28px;
+        margin-left: 0;
+        transform: translateX(-50%);
     }
 }
 
@@ -645,7 +640,10 @@ body.equinox-pulse-active :is(
         transform: translateX(-50%);
     }
     #rollingHistory {
-        visibility: hidden;
+        width: min(94vw, 460px);
+        bottom: 24px;
+        margin-left: 0;
+        transform: translateX(-50%);
     }
     .container1 {
         left: 10px;
@@ -666,7 +664,7 @@ body.equinox-pulse-active :is(
     align-items: center;
     gap: 10px;
     width: auto;
-    z-index: 10000;
+    z-index: 99999;
     opacity: 0.33;
     transition: opacity 0.33s ease-in-out;
 }
@@ -811,8 +809,9 @@ body.equinox-pulse-active :is(
 
 .version__countdown {
     color: rgba(255, 231, 196, 0.88);
-    letter-spacing: 0.16em;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
+    font-size: 0.7rem !important;
 }
 
 .version__countdown::before,
@@ -820,14 +819,8 @@ body.equinox-pulse-active :is(
     content: none;
 }
 
-.version__countdown--timestamp {
-    font-size: 0.68rem;
-    color: rgba(255, 231, 196, 0.7);
-    letter-spacing: 0.12em;
-}
-
 .version__detail {
-    font-size: 0.82rem;
+    font-size: 0.7rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: rgba(184, 214, 255, 0.85);
@@ -1044,7 +1037,7 @@ body {
 
   overflow: hidden;
   isolation: isolate;                 /* ensures pseudo-elements stack within */
-  z-index: 100000;                    /* keep above surrounding UI */
+  z-index: 1;                    /* keep above surrounding UI */
 }
 
 /* Subtle animated sheen across the panel */
@@ -1456,7 +1449,7 @@ body {
 }
 
 #toggleUiBtn {
-    position: absolute;
+    position: fixed;
     background-color: #ff6347;
     color: #ffffff;
     border-radius: 5px;
@@ -3694,11 +3687,6 @@ body.flashing {
     bottom: auto;
   }
 
-  .ui > #rollingHistory {
-    width: min(92vw, 500px);
-    align-self: stretch;
-  }
-
   .container {
     order: 1;
   }
@@ -3720,16 +3708,6 @@ body.flashing {
 
   body.inventory-open .inventory {
     visibility: visible !important;
-  }
-
-  #toggleInventoryBtn {
-    position: fixed;
-    top: clamp(16px, 5vh, 32px);
-    right: clamp(16px, 5vw, 32px);
-    left: auto;
-    bottom: auto;
-    transform: none;
-    z-index: 100022000;
   }
 }
 
@@ -4311,7 +4289,7 @@ body.flashing {
 }
 
 #toggleInventoryBtn {
-    position: absolute;
+    position: fixed;
     background-color: #ff6347;
     color: #ffffff;
     border-radius: 5px;

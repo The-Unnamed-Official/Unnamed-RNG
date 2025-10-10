@@ -25,7 +25,6 @@
                 <span class="version__value">Halloween Frights</span>
                 <div class="version__event-meta">
                     <span id="eventCountdown" class="version__detail version__countdown" aria-live="polite"></span>
-                    <span id="eventCountdownTimestamp" class="version__detail version__countdown version__countdown--timestamp"></span>
                 </div>
             </span>
             
@@ -472,8 +471,6 @@
         </div>
     </div>
 
-    <button id="toggleUiBtn">Hide UI</button>
-
     <div id="warningPopup" class="warning-popup">
         <h1>WARNING</h1>
     </div>
@@ -770,6 +767,7 @@
         </div>
         <button class="fullscreen-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
     </div>
+        <button id="toggleUiBtn">Hide UI</button>
 
     <audio preload="none" id="click" src="files/sounds_and_music/click.mp3"></audio>
     <audio preload="none" id="suspenseAudio" src="files/sounds_and_music/suspence.mp3"></audio>

@@ -117,7 +117,6 @@ function initEventCountdown() {
     return;
   }
 
-  const timestampElement = byId("eventCountdownTimestamp");
   const eventDate = new Date(EVENT_END_TIMESTAMP);
 
   let absoluteLabel = eventDate.toLocaleString();
@@ -128,10 +127,6 @@ function initEventCountdown() {
       timeZone: EVENT_TIME_ZONE,
     });
   } catch (error) {
-  }
-
-  if (timestampElement) {
-    timestampElement.textContent = `Ends on ${absoluteLabel} CET · Discord ${EVENT_DISCORD_TIMESTAMP_FULL} | ${EVENT_DISCORD_TIMESTAMP_RELATIVE}`;
   }
 
   const segmentsFor = (diffMs) => {
@@ -163,10 +158,7 @@ function initEventCountdown() {
     const diffMs = EVENT_END_TIMESTAMP - now;
 
     if (diffMs <= 0) {
-      countdownElement.textContent = "Event concluded";
-      if (timestampElement) {
-        timestampElement.textContent = `Concluded on ${absoluteLabel} CET · Discord ${EVENT_DISCORD_TIMESTAMP_FULL} | ${EVENT_DISCORD_TIMESTAMP_RELATIVE}`;
-      }
+      countdownElement.textContent = "Ending event!";
       if (intervalId !== null) {
         clearInterval(intervalId);
         intervalId = null;
@@ -13796,36 +13788,38 @@ function registerResponsiveHandlers() {
   const applyLayout = () => {
     const container = document.querySelector(".container1");
     const inventory = document.querySelector(".inventory");
+    const rollingHistory = document.querySelector("rollingHistory");
     const settingsButton = document.getElementById("settingsButton");
     const achievementsButton = document.getElementById("achievementsButton");
     const statsButton = document.getElementById("statsButton");
     const sliderContainer = document.querySelector(".slider-container");
     const originalParent = document.querySelector(".original-parent");
 
-    if (!container || !inventory || !settingsButton || !achievementsButton || !statsButton) {
+    if (!container || !rollingHistory || !inventory || !settingsButton || !achievementsButton || !statsButton) {
       return;
     }
 
     if (window.innerWidth < 821) {
-      settingsButton.style.display = "none";
-      achievementsButton.style.display = "none";
-      statsButton.style.display = "none";
       container.style.left = "10px";
+      rollingHistory.style.left = "10px";
       inventory.style.height = "58vh";
       inventory.style.width = "42vh";
 
-      if (sliderContainer && !container.contains(sliderContainer)) {
+      if (sliderContainer && rollingHistory.contains(sliderContainer) && !container.contains(sliderContainer)) {
         container.appendChild(sliderContainer);
+        rollingHistory.appendChild(sliderContainer);
       }
     } else if (window.innerWidth > 821 && window.innerHeight > 1400) {
       inventory.style.width = "70vh";
       container.style.left = "383px";
+      rollingHistory.style.left = "383px";
 
       if (originalParent && sliderContainer && !originalParent.contains(sliderContainer)) {
         originalParent.appendChild(sliderContainer);
       }
     } else {
       container.style.left = "383px";
+      rollingHistory.style.left = "383px";
       settingsButton.style.display = "inline-block";
       achievementsButton.style.display = "inline-block";
       statsButton.style.display = "inline-block";
