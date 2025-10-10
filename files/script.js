@@ -13788,38 +13788,33 @@ function registerResponsiveHandlers() {
   const applyLayout = () => {
     const container = document.querySelector(".container1");
     const inventory = document.querySelector(".inventory");
-    const rollingHistory = document.querySelector("rollingHistory");
     const settingsButton = document.getElementById("settingsButton");
     const achievementsButton = document.getElementById("achievementsButton");
     const statsButton = document.getElementById("statsButton");
     const sliderContainer = document.querySelector(".slider-container");
     const originalParent = document.querySelector(".original-parent");
 
-    if (!container || !rollingHistory || !inventory || !settingsButton || !achievementsButton || !statsButton) {
+    if (!container || !inventory || !settingsButton || !achievementsButton || !statsButton) {
       return;
     }
 
     if (window.innerWidth < 821) {
       container.style.left = "10px";
-      rollingHistory.style.left = "10px";
       inventory.style.height = "58vh";
       inventory.style.width = "42vh";
 
-      if (sliderContainer && rollingHistory.contains(sliderContainer) && !container.contains(sliderContainer)) {
+      if (sliderContainer && !container.contains(sliderContainer)) {
         container.appendChild(sliderContainer);
-        rollingHistory.appendChild(sliderContainer);
       }
     } else if (window.innerWidth > 821 && window.innerHeight > 1400) {
       inventory.style.width = "70vh";
       container.style.left = "383px";
-      rollingHistory.style.left = "383px";
 
       if (originalParent && sliderContainer && !originalParent.contains(sliderContainer)) {
         originalParent.appendChild(sliderContainer);
       }
     } else {
       container.style.left = "383px";
-      rollingHistory.style.left = "383px";
       settingsButton.style.display = "inline-block";
       achievementsButton.style.display = "inline-block";
       statsButton.style.display = "inline-block";
