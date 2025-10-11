@@ -1278,6 +1278,7 @@ function createEmptyAchievementStats() {
   return {
     qualifyingInventoryCount: 0,
     inventoryTitleSet: new Set(),
+    inventoryRarityClassSet: new Set(),
     eventBucketCounts: new Map(),
     totalEventTitleCount: 0,
     distinctEventBucketCount: 0,
@@ -1289,6 +1290,7 @@ let latestAchievementStats = createEmptyAchievementStats();
 function computeAchievementStats(items = inventory) {
   const qualifyingInventoryCount = getQualifyingInventoryCount(items);
   const inventoryTitleSet = new Set();
+  const inventoryRarityClassSet = new Set();
   const eventBucketCounts = new Map();
   let totalEventTitleCount = 0;
 
@@ -1300,6 +1302,10 @@ function computeAchievementStats(items = inventory) {
 
       if (typeof item.title === "string" && item.title) {
         inventoryTitleSet.add(item.title);
+      }
+
+      if (typeof item.rarityClass === "string" && item.rarityClass) {
+        inventoryRarityClassSet.add(item.rarityClass.trim());
       }
 
       const bucket =
@@ -1316,6 +1322,7 @@ function computeAchievementStats(items = inventory) {
   const stats = {
     qualifyingInventoryCount,
     inventoryTitleSet,
+    inventoryRarityClassSet,
     eventBucketCounts,
     totalEventTitleCount,
     distinctEventBucketCount: eventBucketCounts.size,
@@ -1402,26 +1409,31 @@ const ACHIEVEMENTS = [
   { name: "Supreme Fortune", rarityBucket: "under1m" },
   { name: "Transcendent Conqueror", rarityBucket: "transcendent" },
   // Title triumphs
-  { name: "Celestial Alignment", requiredTitle: "『Equinox』 [1 in 25,000,000]" },
-  { name: "Creator?!", requiredTitle: "Unnamed [1 in 30,303]" },
-  { name: "Silly Joyride", requiredTitle: "Silly Car :3 [1 in 1,000,000]" },
-  { name: "Ginger Guardian", requiredTitle: "Ginger [1 in 1,144,141]" },
-  { name: "H1di Hunted", requiredTitle: "H1di [1 in 9,890,089]" },
-  { name: "902.. released.. wilderness..", requiredTitle: "Experiment [1 in 100,000/10th]" },
-  { name: "Abomination Wrangler", requiredTitle: "Abomination [1 in 1,000,000/20th]" },
-  { name: "Veiled Visionary", requiredTitle: "Veil [1 in 50,000/5th]" },
-  { name: "Iridocyclitis Survivor", requiredTitle: "Iridocyclitis Veil [1 in 5,000/50th]" },
-  { name: "Cherry Grove Champion", requiredTitle: "LubbyJubby's Cherry Grove [1 in 5,666]" },
-  { name: "Firestarter", requiredTitle: "FireCraze [1 in 4,200/69th]" },
-  { name: "Orbital Dreamer", requiredTitle: "ORB [1 in 55,555/30th]" },
-  { name: "Glitched Reality", requiredTitle: "Gl1tch3d [1 in 12,404/40,404th]" },
-  { name: "Gregarious Encounter", requiredTitle: "Greg [1 in 50,000,000]" },
-  { name: "Mint Condition", requiredTitle: "Mintllie [1 in 500,000,000]" },
-  { name: "Geezer Whisperer", requiredTitle: "Geezer [1 in 5,000,000,000]" },
-  { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]" },
-  { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 170,017]" },
-  { name: "Master of your Mind", requiredTitle: "Mastermind [1 in 110,010]" },
-  { name: "T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈", requiredTitle: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" },
+  { name: "Celestial Alignment", requiredTitle: "『Equinox』 [1 in 25,000,000]", requiredRarityClass: "equinoxBgImg" },
+  { name: "Creator?!", requiredTitle: "Unnamed [1 in 30,303]", requiredRarityClass: "unnamedBgImg" },
+  { name: "Silly Joyride", requiredTitle: "Silly Car :3 [1 in 1,000,000]", requiredRarityClass: "silcarBgImg" },
+  { name: "Ginger Guardian", requiredTitle: "Ginger [1 in 1,144,141]", requiredRarityClass: "gingerBgImg" },
+  { name: "H1di Hunted", requiredTitle: "H1di [1 in 9,890,089]", requiredRarityClass: "h1diBgImg" },
+  { name: "902.. released.. wilderness..", requiredTitle: "Experiment [1 in 100,000/10th]", requiredRarityClass: "expBgImg" },
+  { name: "Abomination Wrangler", requiredTitle: "Abomination [1 in 1,000,000/20th]", requiredRarityClass: "aboBgImg" },
+  { name: "Veiled Visionary", requiredTitle: "Veil [1 in 50,000/5th]", requiredRarityClass: "veilBgImg" },
+  { name: "Iridocyclitis Survivor", requiredTitle: "Iridocyclitis Veil [1 in 5,000/50th]", requiredRarityClass: "iriBgImg" },
+  { name: "Cherry Grove Champion", requiredTitle: "LubbyJubby's Cherry Grove [1 in 5,666]", requiredRarityClass: "lubjubBgImg" },
+  { name: "Firestarter", requiredTitle: "FireCraze [1 in 4,200/69th]", requiredRarityClass: "crazeBgImg" },
+  { name: "Orbital Dreamer", requiredTitle: "ORB [1 in 55,555/30th]", requiredRarityClass: "orbBgImg" },
+  { name: "The Hunter of All Souls", requiredTitle: "MSFU [1 in 333/333rd]", requiredRarityClass: "msfuBgImg" },
+  { name: "Glitched Reality", requiredTitle: "Gl1tch3d [1 in 12,404/40,404th]", requiredRarityClass: "glitchedBgImg" },
+  { name: "Gregarious Encounter", requiredTitle: "Greg [1 in 50,000,000]", requiredRarityClass: "gregBgImg" },
+  { name: "Mint Condition", requiredTitle: "Mintllie [1 in 500,000,000]", requiredRarityClass: "mintllieBgImg" },
+  { name: "Geezer Whisperer", requiredTitle: "Geezer [1 in 5,000,000,000]", requiredRarityClass: "geezerBgGif" },
+  { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]", requiredRarityClass: "polarrBgImg" },
+  { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 170,017]", requiredRarityClass: "mythicwallBgImg" },
+  { name: "Master of your Mind", requiredTitle: "Mastermind [1 in 110,010]", requiredRarityClass: "mastermindBgImg" },
+  {
+    name: "T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈",
+    requiredTitle: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]",
+    requiredRarityClass: "alienBgImg",
+  },
   // Event exclusives
   {
     name: "Spooky Spectator",
@@ -2114,6 +2126,7 @@ function checkAchievements(context = {}) {
   const {
     qualifyingInventoryCount,
     inventoryTitleSet,
+    inventoryRarityClassSet,
     eventBucketCounts,
     totalEventTitleCount,
     distinctEventBucketCount,
@@ -2146,6 +2159,31 @@ function checkAchievements(context = {}) {
     if (
       achievement.requiredTitle &&
       inventoryTitleSet.has(achievement.requiredTitle)
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      achievement.requiredRarityClass &&
+      inventoryRarityClassSet.has(achievement.requiredRarityClass)
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      Array.isArray(achievement.requiredRarityClasses) &&
+      achievement.requiredRarityClasses.every((rarityClass) =>
+        inventoryRarityClassSet.has(rarityClass)
+      )
+    ) {
+      unlockAchievement(achievement.name, unlocked);
+    }
+
+    if (
+      Array.isArray(achievement.anyRarityClass) &&
+      achievement.anyRarityClass.some((rarityClass) =>
+        inventoryRarityClassSet.has(rarityClass)
+      )
     ) {
       unlockAchievement(achievement.name, unlocked);
     }
