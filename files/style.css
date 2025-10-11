@@ -3717,6 +3717,17 @@ body.flashing {
 }
 
 /* Title */
+.inventory-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 6px 12px 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
 .inventory h2 {
   display: flex;
   align-items: center;
@@ -3724,9 +3735,7 @@ body.flashing {
   font-size: 18px;
   font-weight: 700;
   color: #fff;
-  margin: 6px 6px 12px 6px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin: 0;
 }
 
 .inventory-tabs {
@@ -3738,6 +3747,71 @@ body.flashing {
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.08);
   background: linear-gradient(140deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+}
+
+.inventory-sort {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(140deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+}
+
+.inventory-sort__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.75);
+}
+
+.inventory-sort__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inventory-sort__button {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: rgba(255,255,255,0.7);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inventory-sort__button:hover {
+  color: #ffffff;
+  border-color: rgba(255,255,255,0.18);
+}
+
+.inventory-sort__button:focus-visible {
+  outline: 2px solid rgba(255, 211, 139, 0.85);
+  outline-offset: 2px;
+}
+
+.inventory-sort__button--active {
+  color: #1f1309;
+  background: linear-gradient(135deg, rgba(255, 166, 78, 0.88), rgba(255, 215, 154, 0.85));
+  border-color: rgba(255, 203, 142, 0.85);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.32);
+}
+
+.inventory-sort__button--active:focus-visible {
+  outline-color: rgba(255, 205, 141, 0.95);
 }
 
 .inventory-tab {

@@ -177,6 +177,24 @@ function initEventCountdown() {
 let inventory = [];
 let currentPage = 1;
 const itemsPerPage = 10;
+const INVENTORY_SORT_MODES = Object.freeze({
+  DEFAULT: "default",
+  LOCKED: "locked",
+  RARITY: "rarity",
+});
+const INVENTORY_SORT_MODE_KEY = "inventorySortMode";
+const storedInventorySortMode = storage.get(
+  INVENTORY_SORT_MODE_KEY,
+  INVENTORY_SORT_MODES.DEFAULT
+);
+let inventorySortMode = normalizeInventorySortMode(storedInventorySortMode);
+if (inventorySortMode !== storedInventorySortMode) {
+  if (inventorySortMode === INVENTORY_SORT_MODES.DEFAULT) {
+    storage.remove(INVENTORY_SORT_MODE_KEY);
+  } else {
+    storage.set(INVENTORY_SORT_MODE_KEY, inventorySortMode);
+  }
+}
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 let rollCount1 = parseInt(localStorage.getItem("rollCount1")) || 0;
 const BASE_COOLDOWN_TIME = 500;
@@ -1033,6 +1051,7 @@ function initializeAfterStart() {
   registerMenuButtons();
   registerResponsiveHandlers();
   setupInventoryTabs();
+  setupInventorySortControls();
   registerMenuDragHandlers();
   enhanceInventoryDeleteButtons();
   setupAudioControls();
@@ -14191,6 +14210,161 @@ function updateInventoryDeleteButtonsDisabled(disabled) {
   });
 }
 
+function normalizeInventorySortMode(mode) {
+  if (typeof mode !== "string") {
+    return INVENTORY_SORT_MODES.DEFAULT;
+  }
+
+  const normalized = mode.trim().toLowerCase();
+  return Object.values(INVENTORY_SORT_MODES).includes(normalized)
+    ? normalized
+    : INVENTORY_SORT_MODES.DEFAULT;
+}
+
+function getLockedItemsMap() {
+  try {
+    const stored = localStorage.getItem("lockedItems");
+    if (!stored) {
+      return {};
+    }
+
+    const parsed = JSON.parse(stored);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function getRaritySortRank(item) {
+  const bucket = normalizeRarityBucket(item && item.rarityClass);
+
+  if (bucket === "special") {
+    return 0;
+  }
+
+  if (bucket === "transcendent") {
+    return 1;
+  }
+
+  if (bucket && bucket.startsWith("event")) {
+    return 2;
+  }
+
+  if (bucket === "under1m") {
+    return 3;
+  }
+
+  if (bucket === "under100k") {
+    return 4;
+  }
+
+  if (bucket === "under10k") {
+    return 5;
+  }
+
+  if (bucket === "under1k") {
+    return 6;
+  }
+
+  if (bucket === "under100") {
+    return 7;
+  }
+
+  if (bucket) {
+    return 8;
+  }
+
+  return 9;
+}
+
+function getSortedInventoryEntries(lockedItems = getLockedItemsMap()) {
+  const entries = inventory.map((item, index) => ({ item, index }));
+
+  if (!entries.length) {
+    return entries;
+  }
+
+  if (inventorySortMode === INVENTORY_SORT_MODES.LOCKED) {
+    return entries.sort((a, b) => {
+      const aLocked = Boolean(lockedItems && lockedItems[a.item.title]);
+      const bLocked = Boolean(lockedItems && lockedItems[b.item.title]);
+
+      if (aLocked !== bLocked) {
+        return aLocked ? -1 : 1;
+      }
+
+      return a.index - b.index;
+    });
+  }
+
+  if (inventorySortMode === INVENTORY_SORT_MODES.RARITY) {
+    return entries.sort((a, b) => {
+      const rankA = getRaritySortRank(a.item);
+      const rankB = getRaritySortRank(b.item);
+
+      if (rankA !== rankB) {
+        return rankA - rankB;
+      }
+
+      return a.index - b.index;
+    });
+  }
+
+  return entries;
+}
+
+function applyInventorySortModeToButtons() {
+  const buttons = document.querySelectorAll(".inventory-sort__button");
+  if (!buttons.length) {
+    return;
+  }
+
+  buttons.forEach((button) => {
+    const buttonMode = normalizeInventorySortMode(button.dataset.sortMode);
+    const isActive = buttonMode === inventorySortMode;
+    button.classList.toggle("inventory-sort__button--active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+}
+
+function setInventorySortMode(mode) {
+  const normalized = normalizeInventorySortMode(mode);
+  if (normalized === inventorySortMode) {
+    return;
+  }
+
+  inventorySortMode = normalized;
+
+  if (inventorySortMode === INVENTORY_SORT_MODES.DEFAULT) {
+    storage.remove(INVENTORY_SORT_MODE_KEY);
+  } else {
+    storage.set(INVENTORY_SORT_MODE_KEY, inventorySortMode);
+  }
+
+  currentPage = 1;
+  renderInventory();
+}
+
+function setupInventorySortControls() {
+  const container = document.querySelector(".inventory-sort");
+  if (!container) {
+    return;
+  }
+
+  const buttons = Array.from(container.querySelectorAll(".inventory-sort__button"));
+  if (!buttons.length) {
+    return;
+  }
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setInventorySortMode(button.dataset.sortMode);
+    });
+  });
+
+  applyInventorySortModeToButtons();
+}
+
 function disableChange() {
   isChangeEnabled = false;
   cutsceneActive = true;
@@ -14205,6 +14379,8 @@ function disableChange() {
 function renderInventory() {
   const inventoryList = document.getElementById("inventoryList");
   inventoryList.innerHTML = "";
+
+  applyInventorySortModeToButtons();
 
   let newBucketRecorded = false;
   let inventoryUpdated = false;
@@ -14246,14 +14422,20 @@ function renderInventory() {
     checkAchievements();
   }
 
-  const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
+  const lockedItems = getLockedItemsMap();
+  const sortedEntries = getSortedInventoryEntries(lockedItems);
+  const totalItems = sortedEntries.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+  if (currentPage > totalPages) {
+    currentPage = totalPages;
+  }
 
   const start = (currentPage - 1) * itemsPerPage;
   const end = start + itemsPerPage;
-  const paginatedItems = inventory.slice(start, end);
+  const paginatedEntries = sortedEntries.slice(start, end);
 
-  paginatedItems.forEach((item, index) => {
-    const absoluteIndex = start + index;
+  paginatedEntries.forEach(({ item, index: originalIndex }) => {
     const listItem = document.createElement("li");
     listItem.className = item.rarityClass || "";
     listItem.classList.add("inventory-item");
@@ -14336,7 +14518,7 @@ function renderInventory() {
         return;
       }
       if (listItem.dataset.locked !== "true") {
-        deleteFromInventory(absoluteIndex);
+        deleteFromInventory(originalIndex);
       }
     });
 
@@ -14384,7 +14566,7 @@ function renderInventory() {
 }
 
 function toggleLock(itemTitle, listItem, lockButton) {
-  const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
+  const lockedItems = getLockedItemsMap();
   const isLocked = listItem.dataset.locked === "true";
   listItem.dataset.locked = isLocked ? "false" : "true";
   lockButton.textContent = isLocked ? "Lock" : "Unlock";
@@ -14395,10 +14577,14 @@ function toggleLock(itemTitle, listItem, lockButton) {
     lockedItems[itemTitle] = true;
   }
   localStorage.setItem("lockedItems", JSON.stringify(lockedItems));
+
+  if (inventorySortMode === INVENTORY_SORT_MODES.LOCKED) {
+    renderInventory();
+  }
 }
 
 function deleteFromInventory(absoluteIndex) {
-  const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
+  const lockedItems = getLockedItemsMap();
   const item = inventory[absoluteIndex];
   if (!item) {
     return;
@@ -14509,19 +14695,13 @@ function updatePagination() {
   const nextPageButton = document.getElementById("nextPageButton");
   const lastPageButton = document.getElementById("lastPageButton");
 
-  const sortedInventory = [...inventory];
-
-  const totalPages = Math.ceil(sortedInventory.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(inventory.length / itemsPerPage));
   pageNumber.textContent = `Page ${currentPage} of ${totalPages}`;
 
   backPageButton.disabled = currentPage === 1;
   prevPageButton.disabled = currentPage === 1;
   nextPageButton.disabled = currentPage === totalPages;
   lastPageButton.disabled = currentPage === totalPages;
-
-  const end = (currentPage - 1) * itemsPerPage;
-  const start = end + itemsPerPage;
-  sortedInventory.slice(start, end);
 }
 
 function backPage() {

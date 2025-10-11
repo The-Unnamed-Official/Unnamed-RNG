@@ -551,7 +551,23 @@
         <button id="toggleInventoryBtn">Show Inventory</button>
 
         <div class="inventory">
-            <h2><i class="fa-solid fa-box-archive"></i> Inventory</h2>
+            <div class="inventory-header">
+                <h2><i class="fa-solid fa-box-archive"></i> Inventory</h2>
+                <div class="inventory-sort">
+                    <span class="inventory-sort__label" id="inventorySortLabel"><i class="fa-solid fa-sort" aria-hidden="true"></i> Title Sorting</span>
+                    <div class="inventory-sort__controls" role="group" aria-labelledby="inventorySortLabel">
+                        <button class="inventory-sort__button inventory-sort__button--active" type="button" data-sort-mode="default" title="Default order" aria-label="Sort by most recent" aria-pressed="true">
+                            <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                        </button>
+                        <button class="inventory-sort__button" type="button" data-sort-mode="rarity" title="Rarity order" aria-label="Sort by rarity" aria-pressed="false">
+                            <i class="fa-solid fa-star" aria-hidden="true"></i>
+                        </button>
+                        <button class="inventory-sort__button" type="button" data-sort-mode="locked" title="Locked first" aria-label="Sort by locked status" aria-pressed="false">
+                            <i class="fa-solid fa-table-cells-column-lock" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div class="inventory-tabs" role="tablist" aria-label="Inventory sections">
                 <button id="inventoryTabTitles" class="inventory-tab inventory-tab--active" type="button" role="tab" aria-selected="true" data-tab="titles">Titles</button>
                 <button id="inventoryTabDelete" class="inventory-tab" type="button" role="tab" aria-selected="false" data-tab="delete">Delete Titles</button>
