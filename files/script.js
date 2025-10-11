@@ -21,6 +21,11 @@ const storage = {
 const byId = (id) => document.getElementById(id);
 const $all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
+const EVENT_END_TIMESTAMP = 1762614000 * 1000;
+const EVENT_DISCORD_TIMESTAMP_FULL = "<t:1762614000:f>";
+const EVENT_DISCORD_TIMESTAMP_RELATIVE = "<t:1762614000:R>";
+const EVENT_TIME_ZONE = "Europe/Berlin";
+
 const EQUINOX_RARITY_CLASS = "equinoxBgImg";
 let equinoxPulseActive = false;
 let pendingEquinoxPulseState = null;
@@ -106,9 +111,90 @@ function setEquinoxPulseActive(active) {
   syncEquinoxPulseOnBody(shouldActivate);
 }
 
+function initEventCountdown() {
+  const countdownElement = byId("eventCountdown");
+  if (!countdownElement) {
+    return;
+  }
+
+  const eventDate = new Date(EVENT_END_TIMESTAMP);
+
+  let absoluteLabel = eventDate.toLocaleString();
+  try {
+    absoluteLabel = eventDate.toLocaleString(undefined, {
+      dateStyle: "long",
+      timeStyle: "short",
+      timeZone: EVENT_TIME_ZONE,
+    });
+  } catch (error) {
+  }
+
+  const segmentsFor = (diffMs) => {
+    const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    const parts = [];
+    if (days > 0) {
+      parts.push(`${days}d`);
+    }
+    if (days > 0 || hours > 0) {
+      parts.push(`${hours}h`);
+    }
+    if (days > 0 || hours > 0 || minutes > 0) {
+      parts.push(`${minutes}m`);
+    }
+    parts.push(`${seconds}s`);
+
+    return parts.join(" ");
+  };
+
+  let intervalId = null;
+
+  const render = () => {
+    const now = Date.now();
+    const diffMs = EVENT_END_TIMESTAMP - now;
+
+    if (diffMs <= 0) {
+      countdownElement.textContent = "Ending event!";
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      return;
+    }
+
+    const remainingLabel = segmentsFor(diffMs);
+    countdownElement.textContent = `Ends in ${remainingLabel}`;
+  };
+
+  render();
+  intervalId = setInterval(render, 1000);
+}
+
 let inventory = [];
 let currentPage = 1;
 const itemsPerPage = 10;
+const INVENTORY_SORT_MODES = Object.freeze({
+  DEFAULT: "default",
+  LOCKED: "locked",
+  RARITY: "rarity",
+});
+const INVENTORY_SORT_MODE_KEY = "inventorySortMode";
+const storedInventorySortMode = storage.get(
+  INVENTORY_SORT_MODE_KEY,
+  INVENTORY_SORT_MODES.DEFAULT
+);
+let inventorySortMode = normalizeInventorySortMode(storedInventorySortMode);
+if (inventorySortMode !== storedInventorySortMode) {
+  if (inventorySortMode === INVENTORY_SORT_MODES.DEFAULT) {
+    storage.remove(INVENTORY_SORT_MODE_KEY);
+  } else {
+    storage.set(INVENTORY_SORT_MODE_KEY, inventorySortMode);
+  }
+}
 let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
 let rollCount1 = parseInt(localStorage.getItem("rollCount1")) || 0;
 const BASE_COOLDOWN_TIME = 500;
@@ -543,7 +629,8 @@ const STOPPABLE_AUDIO_IDS = [
   "hollowhillmanorAudio",
   "thevoidsveilAudio",
   "thephantommoonAudio",
-  "wailingshadeAudio"
+  "wailingshadeAudio",
+  "alienAudio"
 ];
 
 const STOPPABLE_AUDIO_SET = new Set(STOPPABLE_AUDIO_IDS);
@@ -795,6 +882,7 @@ const rarityCategories = {
     "polarrBgImg",
     "astraldBgImg",
     "mastermindBgImg",
+    "alienBgImg"
   ],
   transcendent: [
     "silcarBgImg",
@@ -963,6 +1051,7 @@ function initializeAfterStart() {
   registerMenuButtons();
   registerResponsiveHandlers();
   setupInventoryTabs();
+  setupInventorySortControls();
   registerMenuDragHandlers();
   enhanceInventoryDeleteButtons();
   setupAudioControls();
@@ -1330,7 +1419,9 @@ const ACHIEVEMENTS = [
   { name: "Mint Condition", requiredTitle: "Mintllie [1 in 500,000,000]" },
   { name: "Geezer Whisperer", requiredTitle: "Geezer [1 in 5,000,000,000]" },
   { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]" },
-  { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 17,017]" },
+  { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 170,017]" },
+  { name: "Master of your Mind", requiredTitle: "Mastermind [1 in 110,010]" },
+  { name: "T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈", requiredTitle: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" },
   // Event exclusives
   {
     name: "Spooky Spectator",
@@ -1852,6 +1943,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const menuScreen = byId("menuScreen");
   const loadingText = loadingScreen ? loadingScreen.querySelector(".loadTxt") : null;
 
+  initEventCountdown();
+
   if (pendingEquinoxPulseState !== null || equinoxPulseActive) {
     const desiredState = pendingEquinoxPulseState !== null ? pendingEquinoxPulseState : equinoxPulseActive;
     syncEquinoxPulseOnBody(desiredState);
@@ -2366,13 +2459,14 @@ function registerRollButtonHandler() {
     rarity.type === "Nebula [1 in 62,500]" ||
     rarity.type === "Mastermind [1 in 110,010]" ||
     rarity.type === "Gl1tch3d [1 in 12,404/40,404th]" ||
-    rarity.type === "MythicWall [1 in 17,017]" ||
+    rarity.type === "MythicWall [1 in 170,017]" ||
     rarity.type === "The Scarecrow's Sigil [1 in 1,031]" ||
     rarity.type === "Pumpkin Hollow [1 in 3,110]" ||
     rarity.type === "Hollow Hill Manor [1 in 10,031]" ||
     rarity.type === "The Phantom Moon [1 in 10,031]" ||
     rarity.type === "The Void's Veil [1 in 10,031]" ||
-    rarity.type === "Wailing Shade [1 in 31,010]"
+    rarity.type === "Wailing Shade [1 in 31,010]" ||
+    rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]"
   ) {
     const resultContainer = byId("result");
     if (resultContainer) {
@@ -2394,6 +2488,8 @@ function registerRollButtonHandler() {
       bigSuspenceAudio.play();
     } else if (rarity.type === "Qbear [1 in 35,555]") {
       hugeSuspenceAudio.play();
+    } else if (rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]") {
+      hugeSuspenceAudio.play();
     } else if (rarity.type === "Easter Egg [1 in 13,333]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Easter Bunny [1 in 133,333]") {
@@ -2410,7 +2506,7 @@ function registerRollButtonHandler() {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Wailing Shade [1 in 31,010]") {
       hugeSuspenceAudio.play();
-    } else if (rarity.type === "MythicWall [1 in 17,017]") {
+    } else if (rarity.type === "MythicWall [1 in 170,017]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Memory [1 in 175]") {
       polarrSuspenceAudio.play();
@@ -3478,6 +3574,148 @@ function registerRollButtonHandler() {
         rollCount1++;
         titleCont.style.visibility = "visible";
         astraldAudio.play();
+      }
+    } else if (rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]") {
+      if (skipCutscene1M) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5H();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-lime";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "lime-star",
+            "green-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "!!!";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            alienAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        alienAudio.play();
       }
     } else if (rarity.type === "Mastermind [1 in 110,010]") {
       if (skipCutscene1M) {
@@ -6305,7 +6543,7 @@ function registerRollButtonHandler() {
         }, 100);
         enableChange();
       }, 10750); // Wait for 10.75 seconds
-    } else if (rarity.type === "MythicWall [1 in 17,017]") {
+    } else if (rarity.type === "MythicWall [1 in 170,017]") {
       if (skipCutscene100K) {
         document.body.className = "blackBg";
         disableChange();
@@ -12834,9 +13072,9 @@ function rollRarity() {
       titles: ["Mastermind", "Strategist", "Tactician"]
     },
     {
-      type: "MythicWall [1 in 17,017]",
+      type: "MythicWall [1 in 170,017]",
       class: "mythicwallBgImg",
-      chance: 0.00587647646,
+      chance: 0.00058817647,
       titles: ["Mythical", "Dude"]
     },
     {
@@ -12874,6 +13112,12 @@ function rollRarity() {
       class: "wailingshadeBgImg",
       chance: 0.0032247662,
       titles: ["Haunt", "Pray"]
+    },
+    {
+      type: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]",
+      class: "alienBgImg",
+      chance: 0.00015293279,
+      titles: ["Catien", "Another Species"]
     }
   ];
 
@@ -13363,6 +13607,12 @@ function normalizeRarityBucket(rarityClass) {
     }
   }
 
+  const fallbackBucket = getClassForRarity(cls);
+  if (fallbackBucket) {
+    return fallbackBucket;
+  }
+
+
   return RARITY_CLASS_BUCKET_MAP[cls] || "";
 }
 
@@ -13574,9 +13824,6 @@ function registerResponsiveHandlers() {
     }
 
     if (window.innerWidth < 821) {
-      settingsButton.style.display = "none";
-      achievementsButton.style.display = "none";
-      statsButton.style.display = "none";
       container.style.left = "10px";
       inventory.style.height = "58vh";
       inventory.style.width = "42vh";
@@ -13843,6 +14090,7 @@ const backgroundDetails = {
   astraldBgImg: { image: "files/backgrounds/astrald.gif", audio: "astraldAudio" },
   hypernovaBgImg: { image: "files/backgrounds/hypernova.gif", audio: "hypernovaAudio" },
   mastermindBgImg: { image: "files/backgrounds/mastermind.gif", audio: "mastermindAudio" },
+  alienBgImg: { image: "files/backgrounds/alien.png", audio: "alienAudio" },
   nebulaBgImg: { image: "files/backgrounds/nebula.gif", audio: "nebulaAudio" },
   norstaBgImg: { image: "files/backgrounds/norsta.png", audio: "norstaAudio" },
   sanclaBgImg: { image: "files/backgrounds/sancla.png", audio: "sanclaAudio" },
@@ -13968,6 +14216,161 @@ function updateInventoryDeleteButtonsDisabled(disabled) {
   });
 }
 
+function normalizeInventorySortMode(mode) {
+  if (typeof mode !== "string") {
+    return INVENTORY_SORT_MODES.DEFAULT;
+  }
+
+  const normalized = mode.trim().toLowerCase();
+  return Object.values(INVENTORY_SORT_MODES).includes(normalized)
+    ? normalized
+    : INVENTORY_SORT_MODES.DEFAULT;
+}
+
+function getLockedItemsMap() {
+  try {
+    const stored = localStorage.getItem("lockedItems");
+    if (!stored) {
+      return {};
+    }
+
+    const parsed = JSON.parse(stored);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function getRaritySortRank(item) {
+  const bucket = normalizeRarityBucket(item && item.rarityClass);
+
+  if (bucket === "special") {
+    return 0;
+  }
+
+  if (bucket === "transcendent") {
+    return 1;
+  }
+
+  if (bucket && bucket.startsWith("event")) {
+    return 2;
+  }
+
+  if (bucket === "under1m") {
+    return 3;
+  }
+
+  if (bucket === "under100k") {
+    return 4;
+  }
+
+  if (bucket === "under10k") {
+    return 5;
+  }
+
+  if (bucket === "under1k") {
+    return 6;
+  }
+
+  if (bucket === "under100") {
+    return 7;
+  }
+
+  if (bucket) {
+    return 8;
+  }
+
+  return 9;
+}
+
+function getSortedInventoryEntries(lockedItems = getLockedItemsMap()) {
+  const entries = inventory.map((item, index) => ({ item, index }));
+
+  if (!entries.length) {
+    return entries;
+  }
+
+  if (inventorySortMode === INVENTORY_SORT_MODES.LOCKED) {
+    return entries.sort((a, b) => {
+      const aLocked = Boolean(lockedItems && lockedItems[a.item.title]);
+      const bLocked = Boolean(lockedItems && lockedItems[b.item.title]);
+
+      if (aLocked !== bLocked) {
+        return aLocked ? -1 : 1;
+      }
+
+      return a.index - b.index;
+    });
+  }
+
+  if (inventorySortMode === INVENTORY_SORT_MODES.RARITY) {
+    return entries.sort((a, b) => {
+      const rankA = getRaritySortRank(a.item);
+      const rankB = getRaritySortRank(b.item);
+
+      if (rankA !== rankB) {
+        return rankA - rankB;
+      }
+
+      return a.index - b.index;
+    });
+  }
+
+  return entries;
+}
+
+function applyInventorySortModeToButtons() {
+  const buttons = document.querySelectorAll(".inventory-sort__button");
+  if (!buttons.length) {
+    return;
+  }
+
+  buttons.forEach((button) => {
+    const buttonMode = normalizeInventorySortMode(button.dataset.sortMode);
+    const isActive = buttonMode === inventorySortMode;
+    button.classList.toggle("inventory-sort__button--active", isActive);
+    button.setAttribute("aria-pressed", String(isActive));
+  });
+}
+
+function setInventorySortMode(mode) {
+  const normalized = normalizeInventorySortMode(mode);
+  if (normalized === inventorySortMode) {
+    return;
+  }
+
+  inventorySortMode = normalized;
+
+  if (inventorySortMode === INVENTORY_SORT_MODES.DEFAULT) {
+    storage.remove(INVENTORY_SORT_MODE_KEY);
+  } else {
+    storage.set(INVENTORY_SORT_MODE_KEY, inventorySortMode);
+  }
+
+  currentPage = 1;
+  renderInventory();
+}
+
+function setupInventorySortControls() {
+  const container = document.querySelector(".inventory-sort");
+  if (!container) {
+    return;
+  }
+
+  const buttons = Array.from(container.querySelectorAll(".inventory-sort__button"));
+  if (!buttons.length) {
+    return;
+  }
+
+  buttons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setInventorySortMode(button.dataset.sortMode);
+    });
+  });
+
+  applyInventorySortModeToButtons();
+}
+
 function disableChange() {
   isChangeEnabled = false;
   cutsceneActive = true;
@@ -13982,6 +14385,8 @@ function disableChange() {
 function renderInventory() {
   const inventoryList = document.getElementById("inventoryList");
   inventoryList.innerHTML = "";
+
+  applyInventorySortModeToButtons();
 
   let newBucketRecorded = false;
   let inventoryUpdated = false;
@@ -14023,14 +14428,20 @@ function renderInventory() {
     checkAchievements();
   }
 
-  const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
+  const lockedItems = getLockedItemsMap();
+  const sortedEntries = getSortedInventoryEntries(lockedItems);
+  const totalItems = sortedEntries.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+  if (currentPage > totalPages) {
+    currentPage = totalPages;
+  }
 
   const start = (currentPage - 1) * itemsPerPage;
   const end = start + itemsPerPage;
-  const paginatedItems = inventory.slice(start, end);
+  const paginatedEntries = sortedEntries.slice(start, end);
 
-  paginatedItems.forEach((item, index) => {
-    const absoluteIndex = start + index;
+  paginatedEntries.forEach(({ item, index: originalIndex }) => {
     const listItem = document.createElement("li");
     listItem.className = item.rarityClass || "";
     listItem.classList.add("inventory-item");
@@ -14113,7 +14524,7 @@ function renderInventory() {
         return;
       }
       if (listItem.dataset.locked !== "true") {
-        deleteFromInventory(absoluteIndex);
+        deleteFromInventory(originalIndex);
       }
     });
 
@@ -14161,7 +14572,7 @@ function renderInventory() {
 }
 
 function toggleLock(itemTitle, listItem, lockButton) {
-  const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
+  const lockedItems = getLockedItemsMap();
   const isLocked = listItem.dataset.locked === "true";
   listItem.dataset.locked = isLocked ? "false" : "true";
   lockButton.textContent = isLocked ? "Lock" : "Unlock";
@@ -14172,10 +14583,14 @@ function toggleLock(itemTitle, listItem, lockButton) {
     lockedItems[itemTitle] = true;
   }
   localStorage.setItem("lockedItems", JSON.stringify(lockedItems));
+
+  if (inventorySortMode === INVENTORY_SORT_MODES.LOCKED) {
+    renderInventory();
+  }
 }
 
 function deleteFromInventory(absoluteIndex) {
-  const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
+  const lockedItems = getLockedItemsMap();
   const item = inventory[absoluteIndex];
   if (!item) {
     return;
@@ -14286,19 +14701,13 @@ function updatePagination() {
   const nextPageButton = document.getElementById("nextPageButton");
   const lastPageButton = document.getElementById("lastPageButton");
 
-  const sortedInventory = [...inventory];
-
-  const totalPages = Math.ceil(sortedInventory.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(inventory.length / itemsPerPage));
   pageNumber.textContent = `Page ${currentPage} of ${totalPages}`;
 
   backPageButton.disabled = currentPage === 1;
   prevPageButton.disabled = currentPage === 1;
   nextPageButton.disabled = currentPage === totalPages;
   lastPageButton.disabled = currentPage === totalPages;
-
-  const end = (currentPage - 1) * itemsPerPage;
-  const start = end + itemsPerPage;
-  sortedInventory.slice(start, end);
 }
 
 function backPage() {
@@ -16108,11 +16517,14 @@ function getClassForRarity(rarity) {
       'Nebula [1 in 62,500]': 'under100k',
       'Gl1tch3d [1 in 12,404/40,404th]': 'special',
       'Mastermind [110,010]': 'under1m',
-      "MythicWall [1 in 17,017]": 'under100k',
-      "MythicWall [1 in 1,031]": 'under100k',
-      "MythicWall [1 in 3,110]": 'under100k',
-      "MythicWall [1 in 31,010]": 'under100k',
+      'Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]': 'under1m',
+      "MythicWall [1 in 170,017]": 'under100k',
+      "The Scarecrow's Sigil [1 in 1,031]": 'eventHalloween25',
+      "Pumpkin Hollow [1 in 3,110]": 'eventHalloween25',
+      "Wailing Shade [1 in 31,010]": 'eventHalloween25',
       "Hollow Hill Maner [1 in 10,031]": 'eventHalloween25',
+      "The Void's Veil [1 in 10,031]": 'eventHalloween25',
+      "The Phantom Moon [1 in 10,031]": 'eventHalloween25',
   };
 
   return rarityClasses[rarity] || null;
@@ -16569,6 +16981,9 @@ document
   .getElementById("deleteAllMastermindButton")
   .addEventListener("click", () => deleteAllByRarity("mastermindBgImg"));
 document
+  .getElementById("deleteAllAlienButton")
+  .addEventListener("click", () => deleteAllByRarity("alienBgImg"));
+document
   .getElementById("deleteAllHypernovaButton")
   .addEventListener("click", () => deleteAllByRarity("hypernovaBgImg"));
 document
@@ -16585,7 +17000,8 @@ document
       "celestialchorusBgImg",
       "x1staBgImg",
       "astraldBgImg",
-      "mastermindBgImg"
+      "mastermindBgImg",
+      "alienBgImg"
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });

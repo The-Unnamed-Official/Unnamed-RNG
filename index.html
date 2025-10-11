@@ -20,15 +20,18 @@
 
     <div class="version" role="status" aria-live="polite">
         <h1 class="version__group">
-            <span class="version__chip version__chip--event">
-                <span class="version__eyebrow">Event</span>
+            <span class="version__chip version__chip--event" role="group" aria-labelledby="eventChipTitle">
+                <span class="version__eyebrow" id="eventChipTitle">Event</span>
                 <span class="version__value">Halloween Frights</span>
+                <div class="version__event-meta">
+                    <span id="eventCountdown" class="version__detail version__countdown" aria-live="polite"></span>
+                </div>
             </span>
             
             <span class="version__chip version__chip--number" role="text">
                 <span class="version__eyebrow">Version</span>
-                <span class="version__value">1.3</span>
-                <span class="version__detail">1.3_updHALLOWEEN</span>
+                <span class="version__value">1.3.1</span>
+                <span class="version__detail">1.3.1_updHALLOWEEN</span>
             </span>
             
             <span class="version__chip version__chip--title">
@@ -48,425 +51,6 @@
             <p class="loadTxt">Loading assets..</p>
         </div>
     </div>
-
-    <div id="settingsMenu" class="settings-menu" style="display: none;">
-        <div class="settings-panel">
-            <div class="settings-header">
-                <h3 class="dragTxt">Settings</h3>
-                <button id="closeSettings" class="settings-close-btn" type="button">Close</button>
-            </div>
-            <div class="settings-body">
-                <div class="settings-layout">
-                    <section class="settings-section">
-                        <h4 class="settings-section__title">Audio</h4>
-                        <div class="settings-audio">
-                            <label class="settings-audio__label" for="audioSlider">Master Volume</label>
-                            <div class="settings-audio__controls">
-                                <div class="settings-audio__slider">
-                                    <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
-                                    <span id="audioSliderValue" class="settings-audio__value">100%</span>
-                                </div>
-                                <button id="muteButton" class="settings-btn settings-btn--ghost" type="button">Mute</button>
-                            </div>
-                        </div>
-                        <div class="settings-audio">
-                            <label class="settings-audio__label" for="rollAudioSlider">Rolling Sound Volume</label>
-                            <div class="settings-audio__controls">
-                                <div class="settings-audio__slider">
-                                    <input type="range" id="rollAudioSlider" min="0" max="1" step="0.01" value="1">
-                                    <span id="rollAudioSliderValue" class="settings-audio__value">100%</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="settings-audio">
-                            <label class="settings-audio__label" for="titleAudioSlider">Title Music Volume</label>
-                            <div class="settings-audio__controls">
-                                <div class="settings-audio__slider">
-                                    <input type="range" id="titleAudioSlider" min="0" max="1" step="0.01" value="1">
-                                    <span id="titleAudioSliderValue" class="settings-audio__value">100%</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="settings-audio">
-                            <label class="settings-audio__label" for="menuAudioSlider">Main Menu Music Volume</label>
-                            <div class="settings-audio__controls">
-                                <div class="settings-audio__slider">
-                                    <input type="range" id="menuAudioSlider" min="0" max="1" step="0.01" value="1">
-                                    <span id="menuAudioSliderValue" class="settings-audio__value">100%</span>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="settings-section">
-                        <h4 class="settings-section__title">Data Management</h4>
-                        <div class="settings-grid">
-                            <button id="saveButton" class="settings-btn" type="button">Save Data</button>
-                            <button id="importButton" class="settings-btn" type="button">Import Data</button>
-                            <button id="resetDataButton" class="settings-btn settings-btn--danger" type="button">Reset Data</button>
-                        </div>
-                        <p id="status" class="statusImport"></p>
-                    </section>
-
-                    <section class="settings-section">
-                        <h4 class="settings-section__title">Interface</h4>
-                        <div class="settings-grid">
-                            <button id="toggleRollDisplayBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll &amp; Display</button>
-                            <button id="toggleRollHistoryBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll History</button>
-                            <button id="toggleReducedAnimationsBtn" class="settings-btn settings-btn--ghost" type="button">Reduce Animations</button>
-                        </div>
-                    </section>
-
-                    <section class="settings-section">
-                        <h4 class="settings-section__title">Cutscene Skip</h4>
-                        <div id="rarityChecklistC" class="settings-chip-group">
-                            <button id="toggleCutscene1K" class="cutsceneSkipBtb" data-tier="decent" type="button"><span id="1KTxt" class="under1kT">Skip Decent Cutscenes</span></button>
-                            <button id="toggleCutscene10K" class="cutsceneSkipBtb" data-tier="grand" type="button"><span id="10KTxt" class="under10kT">Skip Grand Cutscenes</span></button>
-                            <button id="toggleCutscene100K" class="cutsceneSkipBtb" data-tier="mastery" type="button"><span id="100KTxt" class="under100k">Skip Mastery Cutscenes</span></button>
-                            <button id="toggleCutscene1M" class="cutsceneSkipBtb" data-tier="supreme" type="button"><span id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</span></button>
-                            <button id="toggleCutsceneTranscendent" class="cutsceneSkipBtb" data-tier="transcendent" type="button"><span id="transcendentTxt" class="transcendent">Skip Transcendent Cutscenes</span></button>
-                        </div>
-                    </section>
-                </div>
-
-                <section class="settings-section settings-section--full">
-                    <h4 class="settings-section__title">Auto Delete Rarity</h4>
-                    <div id="rarityChecklist" class="settings-chip-group">
-                        <button class="rarity-button" data-rarity="under100" type="button"><span class="under100T">Basic</span></button>
-                        <button class="rarity-button" data-rarity="under1k" type="button"><span class="under1kT">Decent</span></button>
-                        <button class="rarity-button" data-rarity="under10k" type="button"><span class="under10kT">Grand</span></button>
-                        <button class="rarity-button" data-rarity="under100k" type="button"><span class="under100k">Mastery</span></button>
-                        <button class="rarity-button" data-rarity="under1m" type="button"><span class="under1mBtn">Supreme</span></button>
-                        <button class="rarity-button" data-rarity="transcendent" type="button"><span class="transcendent">Transcendent</span></button>
-                        <button class="rarity-button" data-rarity="special" type="button"><span class="special">Special</span></button>
-                    </div>
-                </section>
-            </div>
-        </div>
-    </div>
-
-    <div id="statsMenu" class="stats-menu" style="display: none;">
-        <div class="stats-panel">
-            <div class="stats-header">
-                <h3 class="dragTxt">Statistics</h3>
-                <button id="closeStats" class="stats-close-btn" type="button">Close</button>
-            </div>
-            <div class="stats-body">
-                <div class="stats-overview">
-                    <div class="stat-card">
-                        <span class="stat-label">Total Rolls</span>
-                        <span class="stat-value" id="rollCountDisplay1">NaN</span>
-                    </div>
-                    <div class="stat-card">
-                        <span class="stat-label">Playtime</span>
-                        <span class="stat-value stat-timer" id="timer">00:00:00</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="achievementsMenu" class="achievements-menu" style="display: none;">
-        <div class="achievements-panel">
-            <div class="achievements-header">
-                <h3 class="dragTxt">Achievements</h3>
-                <button id="closeAchievements" class="achievements-close-btn" type="button">Close</button>
-            </div>
-            <div class="achievements-body">
-                <section class="achievements-section">
-                    <h4 class="achievements-section__title">Roll Milestones</h4>
-                    <div class="achievement-grid">
-                        <div class="achievement-item" data-roll="100" data-name="I think I like this">I think I like this</div>
-                        <div class="achievement-item" data-roll="250" data-name="Finding the Groove">Finding the Groove</div>
-                        <div class="achievement-item" data-roll="500" data-name="Hooked Already">Hooked Already</div>
-                        <div class="achievement-item" data-roll="1,000" data-name="This is getting serious">This is getting serious</div>
-                        <div class="achievement-item" data-roll="2,500" data-name="Can't Stop Now">Can't Stop Now</div>
-                        <div class="achievement-item" data-roll="5,000" data-name="I'm the Roll Master">I'm the Roll Master</div>
-                        <div class="achievement-item" data-roll="7,500" data-name="Streak Seeker">Streak Seeker</div>
-                        <div class="achievement-item" data-roll="10,000" data-name="It's over 9000!!">It's over 9000!!</div>
-                        <div class="achievement-item" data-roll="15,000" data-name="Roll Revolution">Roll Revolution</div>
-                        <div class="achievement-item" data-roll="25,000" data-name="When will you stop?">When will you stop?</div>
-                        <div class="achievement-item" data-roll="30,303" data-name="No Unnamed?">No Unnamed?</div>
-                        <div class="achievement-item" data-roll="40,000" data-name="Calculated Chaos">Calculated Chaos</div>
-                        <div class="achievement-item" data-roll="50,000" data-name="Beyond Luck">Beyond Luck</div>
-                        <div class="achievement-item" data-roll="100,000" data-name="Rolling machine">Rolling machine</div>
-                        <div class="achievement-item" data-roll="250,000" data-name="Your PC must be burning">Your PC must be burning</div>
-                        <div class="achievement-item" data-roll="500,000" data-name="Half a million!1!!1">Half a million!1!!1</div>
-                        <div class="achievement-item" data-roll="750,000" data-name="Rolling Virtuoso">Rolling Virtuoso</div>
-                        <div class="achievement-item" data-roll="1,000,000" data-name="One, Two.. ..One Million!">One, Two.. ..One Million!</div>
-                        <div class="achievement-item" data-roll="2,000,000" data-name="Millionaire Machine">Millionaire Machine</div>
-                        <div class="achievement-item" data-roll="3,000,000" data-name="Triple Threat Spinner">Triple Threat Spinner</div>
-                        <div class="achievement-item" data-roll="5,000,000" data-name="Momentum Master">Momentum Master</div>
-                        <div class="achievement-item" data-roll="7,500,000" data-name="Lucky Tenacity">Lucky Tenacity</div>
-                        <div class="achievement-item" data-roll="10,000,000" data-name="No H1di?">No H1di?</div>
-                        <div class="achievement-item" data-roll="15,000,000" data-name="Breaking Reality">Breaking Reality</div>
-                        <div class="achievement-item" data-roll="25,000,000" data-name="Are you really doing this?">Are you really doing this?</div>
-                        <div class="achievement-item" data-roll="30,000,000" data-name="Multiversal Roller">Multiversal Roller</div>
-                        <div class="achievement-item" data-roll="50,000,000" data-name="You have no limits...">You have no limits...</div>
-                        <div class="achievement-item" data-roll="75,000,000" data-name="Anomaly Hunter">Anomaly Hunter</div>
-                        <div class="achievement-item" data-roll="100,000,000" data-name="WHAT HAVE YOU DONE">WHAT HAVE YOU DONE</div>
-                        <div class="achievement-item" data-roll="150,000,000" data-name="Oddity Voyager">Oddity Voyager</div>
-                        <div class="achievement-item" data-roll="300,000,000" data-name="Improbability Engine">Improbability Engine</div>
-                        <div class="achievement-item" data-roll="500,000,000" data-name="Beyond Imagination">Beyond Imagination</div>
-                        <div class="achievement-item" data-roll="1,000,000,000" data-name="AHHHHHHHHHHH">AHHHHHHHHHHH</div>
-                        <div class="achievement-item" data-roll="2,500,000,000" data-name="Worldshaper">Worldshaper</div>
-                        <div class="achievement-item" data-roll="5,000,000,000" data-name="Entropy Rewriter">Entropy Rewriter</div>
-                        <div class="achievement-item" data-roll="25,000,000,000" data-name="RNG Architect">RNG Architect</div>
-                    </div>
-                </section>
-
-                <section class="achievements-section">
-                    <h4 class="achievements-section__title">Playtime Goals</h4>
-                    <div class="achievement-grid">
-                        <div class="achievement-itemT" data-time="the game" data-name="Just the beginning">Just the beginning</div>
-                        <div class="achievement-itemT" data-time="thirty minutes" data-name="Just Five More Minutes...">Just Five More Minutes...</div>
-                        <div class="achievement-itemT" data-time="one hour" data-name="This doesn't add up">This doesn't add up</div>
-                        <div class="achievement-itemT" data-time="two hours" data-name="When does it end...">When does it end...</div>
-                        <div class="achievement-itemT" data-time="six hours" data-name="Late Night Grinder">Late Night Grinder</div>
-                        <div class="achievement-itemT" data-time="10 hours" data-name="I swear I'm not addicted...">I swear I'm not addicted...</div>
-                        <div class="achievement-itemT" data-time="one day" data-name="Grass? What's that?">Grass? What's that?</div>
-                        <div class="achievement-itemT" data-time="two days" data-name="Unnamed's RNG biggest fan">Unnamed's RNG biggest fan</div>
-                        <div class="achievement-itemT" data-time="five days" data-name="Weekday Warrior">Weekday Warrior</div>
-                        <div class="achievement-itemT" data-time="one week" data-name="RNG is life!">RNG is life!</div>
-                        <div class="achievement-itemT" data-time="two weeks" data-name="I. CAN'T. STOP">I. CAN'T. STOP</div>
-                        <div class="achievement-itemT" data-time="a month" data-name="No Lifer">No Lifer</div>
-                        <div class="achievement-itemT" data-time="two months" data-name="Are you okay?">Are you okay?</div>
-                        <div class="achievement-itemT" data-time="four months" data-name="Seasoned Grinder">Seasoned Grinder</div>
-                        <div class="achievement-itemT" data-time="six months" data-name="You are a True No Lifer">You are a True No Lifer</div>
-                        <div class="achievement-itemT" data-time="a year" data-name="No one's getting this legit">No one's getting this legit</div>
-                        <div class="achievement-itemT" data-time="two years" data-name="Two Years Deep">Two Years Deep</div>
-                        <div class="achievement-itemT" data-time="three years" data-name="Triennial Tenacity">Triennial Tenacity</div>
-                        <div class="achievement-itemT" data-time="four years" data-name="Four-Year Fixture">Four-Year Fixture</div>
-                        <div class="achievement-itemT" data-time="five years" data-name="Half-Decade Hero">Half-Decade Hero</div>
-                        <div class="achievement-itemT" data-time="seven years" data-name="Seven-Year Streak">Seven-Year Streak</div>
-                        <div class="achievement-itemT" data-time="ten years" data-name="Decade of Determination">Decade of Determination</div>
-                        <div class="achievement-itemT" data-time="fifteen years" data-name="Fifteen-Year Folly">Fifteen-Year Folly</div>
-                        <div class="achievement-itemT" data-time="twenty years" data-name="Twenty-Year Timeline">Twenty-Year Timeline</div>
-                        <div class="achievement-itemT" data-time="twenty-five years" data-name="Quarter-Century Quest">Quarter-Century Quest</div>
-                        <div class="achievement-itemT" data-time="thirty years" data-name="Timeless Wanderer">Timeless Wanderer</div>
-                    </div>
-                </section>
-
-                <section class="achievements-section">
-                    <h4 class="achievements-section__title">Collection Challenges</h4>
-                    <div class="achievement-grid">
-                        <div class="achievement-itemC" data-achievement="5" data-name="Achievement Collector">Achievement Collector</div>
-                        <div class="achievement-itemC" data-achievement="10" data-name="Achievement Hoarder">Achievement Hoarder</div>
-                        <div class="achievement-itemC" data-achievement="20" data-name="Achievement Addict">Achievement Addict</div>
-                        <div class="achievement-itemC" data-achievement="33" data-name="Achievement God">Achievement God</div>
-                        <div class="achievement-itemC" data-achievement="50" data-name="Ultimate Collector">Ultimate Collector</div>
-                        <div class="achievement-itemC" data-achievement="69" data-name="Nice...">Nice...</div>
-                        <div class="achievement-itemC" data-achievement="100" data-name="Achievement Enthusiast">Achievement Enthusiast</div>
-                        <div class="achievement-itemC" data-achievement="200" data-name="Achievements...">
-                            Achievements...
-                            <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="achievements-section">
-                    <h4 class="achievements-section__title">Vault Mastery</h4>
-                    <p class="achievements-section__note">Only Mastery, Supreme, and Special titles count toward Vault Mastery achievements.</p>
-                    <div class="achievement-grid">
-                        <div class="achievement-itemInv" data-items="10" data-name="Tiny Vault" title="Only Mastery, Supreme, and Special titles count toward Vault Mastery achievements.">Tiny Vault</div>
-                        <div class="achievement-itemInv" data-items="25" data-name="Growing Gallery" title="Only Mastery, Supreme, and Special titles count toward Vault Mastery achievements.">Growing Gallery</div>
-                        <div class="achievement-itemInv" data-items="50" data-name="Treasure Trove" title="Only Mastery, Supreme, and Special titles count toward Vault Mastery achievements.">Treasure Trove</div>
-                        <div class="achievement-itemInv" data-items="100" data-name="Vault Legend" title="Only Mastery, Supreme, and Special titles count toward Vault Mastery achievements.">Vault Legend</div>
-                    </div>
-                </section>
-
-                <section class="achievements-section">
-                    <h4 class="achievements-section__title">Rarity Triumphs</h4>
-                    <div class="achievement-grid">
-                        <div class="achievement-itemR" data-rarity="Grand" data-name="Grand Entrance">Grand Entrance</div>
-                        <div class="achievement-itemR" data-rarity="Special" data-name="One of a Kind">One of a Kind</div>
-                        <div class="achievement-itemR" data-rarity="Mastery" data-name="Mastered the Odds">Mastered the Odds</div>
-                        <div class="achievement-itemR" data-rarity="Supreme" data-name="Supreme Fortune">Supreme Fortune</div>
-                        <div class="achievement-itemR" data-rarity="Transcendent" data-name="Transcendent Triumph">Transcendent Triumph</div>
-                    </div>
-                </section>
-
-                <section class="achievements-section">
-                    <h4 class="achievements-section__title">Title Legends</h4>
-                    <div class="achievement-grid">
-                        <div class="achievement-itemTitle" data-title="『Equinox』 [1 in 25,000,000]" data-name="Celestial Alignment">Celestial Alignment</div>
-                        <div class="achievement-itemTitle" data-title="Unnamed [1 in 30,303]" data-name="Creator?!">Creator?!</div>
-                        <div class="achievement-itemTitle" data-title="Silly Car :3 [1 in 1,000,000]" data-name="Silly Joyride">Silly Joyride</div>
-                        <div class="achievement-itemTitle" data-title="Ginger [1 in 1,144,141]" data-name="Ginger Guardian">Ginger Guardian</div>
-                        <div class="achievement-itemTitle" data-title="H1di [1 in 9,890,089]" data-name="H1di Hunted">H1di Hunted</div>
-                        <div class="achievement-itemTitle" data-title="Experiment [1 in 100,000/10th]" data-name="902.. released.. wilderness..">902.. released.. wilderness..</div>
-                        <div class="achievement-itemTitle" data-title="Abomination [1 in 1,000,000/20th]" data-name="Abomination Wrangler">Abomination Wrangler</div>
-                        <div class="achievement-itemTitle" data-title="Veil [1 in 50,000/5th]" data-name="Veiled Visionary">Veiled Visionary</div>
-                        <div class="achievement-itemTitle" data-title="Iridocyclitis Veil [1 in 5,000/50th]" data-name="Iridocyclitis Survivor">Iridocyclitis Survivor</div>
-                        <div class="achievement-itemTitle" data-title="LubbyJubby's Cherry Grove [1 in 5,666]" data-name="Cherry Grove Champion">Cherry Grove Champion</div>
-                        <div class="achievement-itemTitle" data-title="FireCraze [1 in 4,200/69th]" data-name="Firestarter">Firestarter</div>
-                        <div class="achievement-itemTitle" data-title="ORB [1 in 55,555/30th]" data-name="Orbital Dreamer">Orbital Dreamer</div>
-                        <div class="achievement-itemTitle" data-title="Gl1tch3d [1 in 12,404/40,404th]" data-name="Glitched Reality">Glitched Reality</div>
-                        <div class="achievement-itemTitle" data-title="Greg [1 in 50,000,000]" data-name="Gregarious Encounter">Gregarious Encounter</div>
-                        <div class="achievement-itemTitle" data-title="Mintllie [1 in 500,000,000]" data-name="Mint Condition">Mint Condition</div>
-                        <div class="achievement-itemTitle" data-title="Geezer [1 in 5,000,000,000]" data-name="Geezer Whisperer">Geezer Whisperer</div>
-                        <div class="achievement-itemTitle" data-title="Polarr [1 in 50,000,000,000]" data-name="Polar Lights">Polar Lights</div>
-                        <div class="achievement-itemTitle" data-title="MythicWall [1 in 17,017]" data-name="Mythical Gamer!!!!">Mythical Gamer!!!!</div>
-                    </div>
-                </section>
-
-                <section class="achievements-section">
-                    <h4 class="achievements-section__title">Event Exclusives</h4>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Halloween Frights 2025</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Collect a Halloween-exclusive title in 2025 to unlock this achievement"
-                                data-name="It's SPOOKY season!"
-                            >
-                                It's SPOOKY season!
-                            </div>
-                        </div>
-                    </div>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Seasonal Collections</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Obtain any event title to unlock this achievement"
-                                data-name="Seasonal Tourist"
-                            >
-                                Seasonal Tourist
-                            </div>
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Hold titles from at least one event to unlock this achievement"
-                                data-name="Event!"
-                            >
-                                Event!
-                            </div>
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Hold titles from three different events to unlock this achievement"
-                                data-name="Event Explorer"
-                            >
-                                Event Explorer
-                            </div>
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Hold titles from five different events to unlock this achievement"
-                                data-name="Event Expert"
-                            >
-                                Event Expert
-                            </div>
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Store 10 event titles across your vault to unlock this achievement"
-                                data-name="Seasonal Archivist"
-                            >
-                                Seasonal Archivist
-                            </div>
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Store 20 event titles across your vault to unlock this achievement"
-                                data-name="All the Seasons!"
-                            >
-                                All the Seasons!
-                            </div>
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Store 50 event titles across your vault to unlock this achievement"
-                                data-name="I LOVE SEASONS!!!"
-                            >
-                                I LOVE SEASONS!!!
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                <section class="achievements-section">
-                    <h4 class="achievements-section__title">Unobtainable Events</h4>
-                    <p class="achievements-section__note">These achievements are no longer obtainable but remain visible for players who previously earned them.</p>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Halloween 2024</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Previously unlocked by collecting the Halloween-exclusive title in 2024."
-                                data-name="Spooky Spectator"
-                            >
-                                Spooky Spectator
-                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Winter Holidays 2024</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Previously unlocked by gathering a Winter holiday-exclusive title in 2024."
-                                data-name="Winter Wonderland"
-                            >
-                                Winter Wonderland
-                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Festival of Fire 2025</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Previously unlocked by securing the Festival of Fire-exclusive title in 2025."
-                                data-name="Festival Firecracker"
-                            >
-                                Festival Firecracker
-                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Valentine's Sweetheart 2025</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemEvent"
-                                data-event="Previously unlocked by earning a Valentine's Sweetheart-exclusive event title in 2025."
-                                data-name="Valentine's Sweetheart"
-                            >
-                                Valentine's Sweetheart
-                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Spring &amp; Easter 2025</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemE achievement-itemEvent"
-                                data-event="Previously unlocked by obtaining a Spring &amp; Easter-exclusive event title in 2025."
-                                data-name="Spring &amp; Easter"
-                            >
-                                Spring &amp; Easter 2025
-                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="achievements-subsection">
-                        <h5 class="achievements-section__subtitle">Summer Vibes 2025</h5>
-                        <div class="achievement-grid">
-                            <div
-                                class="achievement-itemSum achievement-itemEvent"
-                                data-event="Previously unlocked by obtaining a Summer Vibes-exclusive event title in 2025."
-                                data-name="Summer Vibes"
-                            >
-                                Summer Vibes
-                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        </div>
-    </div>
-
-    <button id="toggleUiBtn">Hide UI</button>
 
     <div id="warningPopup" class="warning-popup">
         <h1>WARNING</h1>
@@ -491,6 +75,425 @@
     <img class="cutsceneHeart" src="files/images/cutscene_heart.png" id="heart">
 
     <div class="ui">
+
+        <div id="settingsMenu" class="settings-menu" style="display: none;">
+            <div class="settings-panel">
+                <div class="settings-header">
+                    <h3 class="dragTxt">Settings</h3>
+                    <button id="closeSettings" class="settings-close-btn" type="button">Close</button>
+                </div>
+                <div class="settings-body">
+                    <div class="settings-layout">
+                        <section class="settings-section">
+                            <h4 class="settings-section__title">Audio</h4>
+                            <div class="settings-audio">
+                                <label class="settings-audio__label" for="audioSlider">Master Volume</label>
+                                <div class="settings-audio__controls">
+                                    <div class="settings-audio__slider">
+                                        <input type="range" id="audioSlider" min="0" max="1" step="0.01" value="1">
+                                        <span id="audioSliderValue" class="settings-audio__value">100%</span>
+                                    </div>
+                                    <button id="muteButton" class="settings-btn settings-btn--ghost" type="button">Mute</button>
+                                </div>
+                            </div>
+                            <div class="settings-audio">
+                                <label class="settings-audio__label" for="rollAudioSlider">Rolling Sound Volume</label>
+                                <div class="settings-audio__controls">
+                                    <div class="settings-audio__slider">
+                                        <input type="range" id="rollAudioSlider" min="0" max="1" step="0.01" value="1">
+                                        <span id="rollAudioSliderValue" class="settings-audio__value">100%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="settings-audio">
+                                <label class="settings-audio__label" for="titleAudioSlider">Title Music Volume</label>
+                                <div class="settings-audio__controls">
+                                    <div class="settings-audio__slider">
+                                        <input type="range" id="titleAudioSlider" min="0" max="1" step="0.01" value="1">
+                                        <span id="titleAudioSliderValue" class="settings-audio__value">100%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="settings-audio">
+                                <label class="settings-audio__label" for="menuAudioSlider">Main Menu Music Volume</label>
+                                <div class="settings-audio__controls">
+                                    <div class="settings-audio__slider">
+                                        <input type="range" id="menuAudioSlider" min="0" max="1" step="0.01" value="1">
+                                        <span id="menuAudioSliderValue" class="settings-audio__value">100%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="settings-section">
+                            <h4 class="settings-section__title">Data Management</h4>
+                            <div class="settings-grid">
+                                <button id="saveButton" class="settings-btn" type="button">Save Data</button>
+                                <button id="importButton" class="settings-btn" type="button">Import Data</button>
+                                <button id="resetDataButton" class="settings-btn settings-btn--danger" type="button">Reset Data</button>
+                            </div>
+                            <p id="status" class="statusImport"></p>
+                        </section>
+
+                        <section class="settings-section">
+                            <h4 class="settings-section__title">Interface</h4>
+                            <div class="settings-grid">
+                                <button id="toggleRollDisplayBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll &amp; Display</button>
+                                <button id="toggleRollHistoryBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll History</button>
+                                <button id="toggleReducedAnimationsBtn" class="settings-btn settings-btn--ghost" type="button">Reduce Animations</button>
+                            </div>
+                        </section>
+
+                        <section class="settings-section">
+                            <h4 class="settings-section__title">Cutscene Skip</h4>
+                            <div id="rarityChecklistC" class="settings-chip-group">
+                                <button id="toggleCutscene1K" class="cutsceneSkipBtb" data-tier="decent" type="button"><span id="1KTxt" class="under1kT">Skip Decent Cutscenes</span></button>
+                                <button id="toggleCutscene10K" class="cutsceneSkipBtb" data-tier="grand" type="button"><span id="10KTxt" class="under10kT">Skip Grand Cutscenes</span></button>
+                                <button id="toggleCutscene100K" class="cutsceneSkipBtb" data-tier="mastery" type="button"><span id="100KTxt" class="under100k">Skip Mastery Cutscenes</span></button>
+                                <button id="toggleCutscene1M" class="cutsceneSkipBtb" data-tier="supreme" type="button"><span id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</span></button>
+                                <button id="toggleCutsceneTranscendent" class="cutsceneSkipBtb" data-tier="transcendent" type="button"><span id="transcendentTxt" class="transcendent">Skip Transcendent Cutscenes</span></button>
+                            </div>
+                        </section>
+                    </div>
+
+                    <section class="settings-section settings-section--full">
+                        <h4 class="settings-section__title">Auto Delete Rarity</h4>
+                        <div id="rarityChecklist" class="settings-chip-group">
+                            <button class="rarity-button" data-rarity="under100" type="button"><span class="under100T">Basic</span></button>
+                            <button class="rarity-button" data-rarity="under1k" type="button"><span class="under1kT">Decent</span></button>
+                            <button class="rarity-button" data-rarity="under10k" type="button"><span class="under10kT">Grand</span></button>
+                            <button class="rarity-button" data-rarity="under100k" type="button"><span class="under100k">Mastery</span></button>
+                            <button class="rarity-button" data-rarity="under1m" type="button"><span class="under1mBtn">Supreme</span></button>
+                            <button class="rarity-button" data-rarity="transcendent" type="button"><span class="transcendent">Transcendent</span></button>
+                            <button class="rarity-button" data-rarity="special" type="button"><span class="special">Special</span></button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <div id="statsMenu" class="stats-menu" style="display: none;">
+            <div class="stats-panel">
+                <div class="stats-header">
+                    <h3 class="dragTxt">Statistics</h3>
+                    <button id="closeStats" class="stats-close-btn" type="button">Close</button>
+                </div>
+                <div class="stats-body">
+                    <div class="stats-overview">
+                        <div class="stat-card">
+                            <span class="stat-label">Total Rolls</span>
+                            <span class="stat-value" id="rollCountDisplay1">NaN</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="stat-label">Playtime</span>
+                            <span class="stat-value stat-timer" id="timer">00:00:00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="achievementsMenu" class="achievements-menu" style="display: none;">
+            <div class="achievements-panel">
+                <div class="achievements-header">
+                    <h3 class="dragTxt">Achievements</h3>
+                    <button id="closeAchievements" class="achievements-close-btn" type="button">Close</button>
+                </div>
+                <div class="achievements-body">
+                    <section class="achievements-section">
+                        <h4 class="achievements-section__title">Roll Milestones</h4>
+                        <div class="achievement-grid">
+                            <div class="achievement-item" data-roll="100" data-name="I think I like this">I think I like this</div>
+                            <div class="achievement-item" data-roll="250" data-name="Finding the Groove">Finding the Groove</div>
+                            <div class="achievement-item" data-roll="500" data-name="Hooked Already">Hooked Already</div>
+                            <div class="achievement-item" data-roll="1,000" data-name="This is getting serious">This is getting serious</div>
+                            <div class="achievement-item" data-roll="2,500" data-name="Can't Stop Now">Can't Stop Now</div>
+                            <div class="achievement-item" data-roll="5,000" data-name="I'm the Roll Master">I'm the Roll Master</div>
+                            <div class="achievement-item" data-roll="7,500" data-name="Streak Seeker">Streak Seeker</div>
+                            <div class="achievement-item" data-roll="10,000" data-name="It's over 9000!!">It's over 9000!!</div>
+                            <div class="achievement-item" data-roll="15,000" data-name="Roll Revolution">Roll Revolution</div>
+                            <div class="achievement-item" data-roll="25,000" data-name="When will you stop?">When will you stop?</div>
+                            <div class="achievement-item" data-roll="30,303" data-name="No Unnamed?">No Unnamed?</div>
+                            <div class="achievement-item" data-roll="40,000" data-name="Calculated Chaos">Calculated Chaos</div>
+                            <div class="achievement-item" data-roll="50,000" data-name="Beyond Luck">Beyond Luck</div>
+                            <div class="achievement-item" data-roll="100,000" data-name="Rolling machine">Rolling machine</div>
+                            <div class="achievement-item" data-roll="250,000" data-name="Your PC must be burning">Your PC must be burning</div>
+                            <div class="achievement-item" data-roll="500,000" data-name="Half a million!1!!1">Half a million!1!!1</div>
+                            <div class="achievement-item" data-roll="750,000" data-name="Rolling Virtuoso">Rolling Virtuoso</div>
+                            <div class="achievement-item" data-roll="1,000,000" data-name="One, Two.. ..One Million!">One, Two.. ..One Million!</div>
+                            <div class="achievement-item" data-roll="2,000,000" data-name="Millionaire Machine">Millionaire Machine</div>
+                            <div class="achievement-item" data-roll="3,000,000" data-name="Triple Threat Spinner">Triple Threat Spinner</div>
+                            <div class="achievement-item" data-roll="5,000,000" data-name="Momentum Master">Momentum Master</div>
+                            <div class="achievement-item" data-roll="7,500,000" data-name="Lucky Tenacity">Lucky Tenacity</div>
+                            <div class="achievement-item" data-roll="10,000,000" data-name="No H1di?">No H1di?</div>
+                            <div class="achievement-item" data-roll="15,000,000" data-name="Breaking Reality">Breaking Reality</div>
+                            <div class="achievement-item" data-roll="25,000,000" data-name="Are you really doing this?">Are you really doing this?</div>
+                            <div class="achievement-item" data-roll="30,000,000" data-name="Multiversal Roller">Multiversal Roller</div>
+                            <div class="achievement-item" data-roll="50,000,000" data-name="You have no limits...">You have no limits...</div>
+                            <div class="achievement-item" data-roll="75,000,000" data-name="Anomaly Hunter">Anomaly Hunter</div>
+                            <div class="achievement-item" data-roll="100,000,000" data-name="WHAT HAVE YOU DONE">WHAT HAVE YOU DONE</div>
+                            <div class="achievement-item" data-roll="150,000,000" data-name="Oddity Voyager">Oddity Voyager</div>
+                            <div class="achievement-item" data-roll="300,000,000" data-name="Improbability Engine">Improbability Engine</div>
+                            <div class="achievement-item" data-roll="500,000,000" data-name="Beyond Imagination">Beyond Imagination</div>
+                            <div class="achievement-item" data-roll="1,000,000,000" data-name="AHHHHHHHHHHH">AHHHHHHHHHHH</div>
+                            <div class="achievement-item" data-roll="2,500,000,000" data-name="Worldshaper">Worldshaper</div>
+                            <div class="achievement-item" data-roll="5,000,000,000" data-name="Entropy Rewriter">Entropy Rewriter</div>
+                            <div class="achievement-item" data-roll="25,000,000,000" data-name="RNG Architect">RNG Architect</div>
+                        </div>
+                    </section>
+
+                    <section class="achievements-section">
+                        <h4 class="achievements-section__title">Playtime Goals</h4>
+                        <div class="achievement-grid">
+                            <div class="achievement-itemT" data-time="the game" data-name="Just the beginning">Just the beginning</div>
+                            <div class="achievement-itemT" data-time="thirty minutes" data-name="Just Five More Minutes...">Just Five More Minutes...</div>
+                            <div class="achievement-itemT" data-time="one hour" data-name="This doesn't add up">This doesn't add up</div>
+                            <div class="achievement-itemT" data-time="two hours" data-name="When does it end...">When does it end...</div>
+                            <div class="achievement-itemT" data-time="six hours" data-name="Late Night Grinder">Late Night Grinder</div>
+                            <div class="achievement-itemT" data-time="10 hours" data-name="I swear I'm not addicted...">I swear I'm not addicted...</div>
+                            <div class="achievement-itemT" data-time="one day" data-name="Grass? What's that?">Grass? What's that?</div>
+                            <div class="achievement-itemT" data-time="two days" data-name="Unnamed's RNG biggest fan">Unnamed's RNG biggest fan</div>
+                            <div class="achievement-itemT" data-time="five days" data-name="Weekday Warrior">Weekday Warrior</div>
+                            <div class="achievement-itemT" data-time="one week" data-name="RNG is life!">RNG is life!</div>
+                            <div class="achievement-itemT" data-time="two weeks" data-name="I. CAN'T. STOP">I. CAN'T. STOP</div>
+                            <div class="achievement-itemT" data-time="a month" data-name="No Lifer">No Lifer</div>
+                            <div class="achievement-itemT" data-time="two months" data-name="Are you okay?">Are you okay?</div>
+                            <div class="achievement-itemT" data-time="four months" data-name="Seasoned Grinder">Seasoned Grinder</div>
+                            <div class="achievement-itemT" data-time="six months" data-name="You are a True No Lifer">You are a True No Lifer</div>
+                            <div class="achievement-itemT" data-time="a year" data-name="No one's getting this legit">No one's getting this legit</div>
+                            <div class="achievement-itemT" data-time="two years" data-name="Two Years Deep">Two Years Deep</div>
+                            <div class="achievement-itemT" data-time="three years" data-name="Triennial Tenacity">Triennial Tenacity</div>
+                            <div class="achievement-itemT" data-time="four years" data-name="Four-Year Fixture">Four-Year Fixture</div>
+                            <div class="achievement-itemT" data-time="five years" data-name="Half-Decade Hero">Half-Decade Hero</div>
+                            <div class="achievement-itemT" data-time="seven years" data-name="Seven-Year Streak">Seven-Year Streak</div>
+                            <div class="achievement-itemT" data-time="ten years" data-name="Decade of Determination">Decade of Determination</div>
+                            <div class="achievement-itemT" data-time="fifteen years" data-name="Fifteen-Year Folly">Fifteen-Year Folly</div>
+                            <div class="achievement-itemT" data-time="twenty years" data-name="Twenty-Year Timeline">Twenty-Year Timeline</div>
+                            <div class="achievement-itemT" data-time="twenty-five years" data-name="Quarter-Century Quest">Quarter-Century Quest</div>
+                            <div class="achievement-itemT" data-time="thirty years" data-name="Timeless Wanderer">Timeless Wanderer</div>
+                        </div>
+                    </section>
+
+                    <section class="achievements-section">
+                        <h4 class="achievements-section__title">Collection Challenges</h4>
+                        <div class="achievement-grid">
+                            <div class="achievement-itemC" data-achievement="5" data-name="Achievement Collector">Achievement Collector</div>
+                            <div class="achievement-itemC" data-achievement="10" data-name="Achievement Hoarder">Achievement Hoarder</div>
+                            <div class="achievement-itemC" data-achievement="20" data-name="Achievement Addict">Achievement Addict</div>
+                            <div class="achievement-itemC" data-achievement="33" data-name="Achievement God">Achievement God</div>
+                            <div class="achievement-itemC" data-achievement="50" data-name="Ultimate Collector">Ultimate Collector</div>
+                            <div class="achievement-itemC" data-achievement="69" data-name="Nice...">Nice...</div>
+                            <div class="achievement-itemC" data-achievement="100" data-name="Achievement Enthusiast">Achievement Enthusiast</div>
+                            <div class="achievement-itemC" data-achievement="200" data-name="Achievements...">
+                                Achievements...
+                                <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="achievements-section">
+                        <h4 class="achievements-section__title">Vault Mastery</h4>
+                        <p class="achievements-section__note">Only Mastery, Supreme, and Special titles count toward Vault Mastery achievements.</p>
+                        <div class="achievement-grid">
+                            <div class="achievement-itemInv" data-items="10" data-name="Tiny Vault" title="Only Mastery, Supreme, and Special titles count toward Vault Mastery achievements.">Tiny Vault</div>
+                            <div class="achievement-itemInv" data-items="25" data-name="Growing Gallery" title="Only Mastery, Supreme, and Special titles count toward Vault Mastery achievements.">Growing Gallery</div>
+                            <div class="achievement-itemInv" data-items="50" data-name="Treasure Trove" title="Only Mastery, Supreme, and Special titles count toward Vault Mastery achievements.">Treasure Trove</div>
+                            <div class="achievement-itemInv" data-items="100" data-name="Vault Legend" title="Only Mastery, Supreme, and Special titles count toward Vault Mastery achievements.">Vault Legend</div>
+                        </div>
+                    </section>
+
+                    <section class="achievements-section">
+                        <h4 class="achievements-section__title">Rarity Triumphs</h4>
+                        <div class="achievement-grid">
+                            <div class="achievement-itemR" data-rarity="Grand" data-name="Grand Entrance">Grand Entrance</div>
+                            <div class="achievement-itemR" data-rarity="Special" data-name="One of a Kind">One of a Kind</div>
+                            <div class="achievement-itemR" data-rarity="Mastery" data-name="Mastered the Odds">Mastered the Odds</div>
+                            <div class="achievement-itemR" data-rarity="Supreme" data-name="Supreme Fortune">Supreme Fortune</div>
+                            <div class="achievement-itemR" data-rarity="Transcendent" data-name="Transcendent Triumph">Transcendent Triumph</div>
+                        </div>
+                    </section>
+
+                    <section class="achievements-section">
+                        <h4 class="achievements-section__title">Title Legends</h4>
+                        <div class="achievement-grid">
+                            <div class="achievement-itemTitle" data-title="『Equinox』 [1 in 25,000,000]" data-name="Celestial Alignment">Celestial Alignment</div>
+                            <div class="achievement-itemTitle" data-title="Unnamed [1 in 30,303]" data-name="Creator?!">Creator?!</div>
+                            <div class="achievement-itemTitle" data-title="Silly Car :3 [1 in 1,000,000]" data-name="Silly Joyride">Silly Joyride</div>
+                            <div class="achievement-itemTitle" data-title="Ginger [1 in 1,144,141]" data-name="Ginger Guardian">Ginger Guardian</div>
+                            <div class="achievement-itemTitle" data-title="H1di [1 in 9,890,089]" data-name="H1di Hunted">H1di Hunted</div>
+                            <div class="achievement-itemTitle" data-title="Experiment [1 in 100,000/10th]" data-name="902.. released.. wilderness..">902.. released.. wilderness..</div>
+                            <div class="achievement-itemTitle" data-title="Abomination [1 in 1,000,000/20th]" data-name="Abomination Wrangler">Abomination Wrangler</div>
+                            <div class="achievement-itemTitle" data-title="Veil [1 in 50,000/5th]" data-name="Veiled Visionary">Veiled Visionary</div>
+                            <div class="achievement-itemTitle" data-title="Iridocyclitis Veil [1 in 5,000/50th]" data-name="Iridocyclitis Survivor">Iridocyclitis Survivor</div>
+                            <div class="achievement-itemTitle" data-title="LubbyJubby's Cherry Grove [1 in 5,666]" data-name="Cherry Grove Champion">Cherry Grove Champion</div>
+                            <div class="achievement-itemTitle" data-title="FireCraze [1 in 4,200/69th]" data-name="Firestarter">Firestarter</div>
+                            <div class="achievement-itemTitle" data-title="ORB [1 in 55,555/30th]" data-name="Orbital Dreamer">Orbital Dreamer</div>
+                            <div class="achievement-itemTitle" data-title="Gl1tch3d [1 in 12,404/40,404th]" data-name="Glitched Reality">Glitched Reality</div>
+                            <div class="achievement-itemTitle" data-title="Greg [1 in 50,000,000]" data-name="Gregarious Encounter">Gregarious Encounter</div>
+                            <div class="achievement-itemTitle" data-title="Mintllie [1 in 500,000,000]" data-name="Mint Condition">Mint Condition</div>
+                            <div class="achievement-itemTitle" data-title="Geezer [1 in 5,000,000,000]" data-name="Geezer Whisperer">Geezer Whisperer</div>
+                            <div class="achievement-itemTitle" data-title="Polarr [1 in 50,000,000,000]" data-name="Polar Lights">Polar Lights</div>
+                            <div class="achievement-itemTitle" data-title="MythicWall [1 in 170,017]" data-name="Mythical Gamer!!!!">Mythical Gamer!!!!</div>
+                            <div class="achievement-itemTitle" data-title="Mastermind [1 in 110,010]" data-name="Master of your Mind">Master of your Mind</div>
+                            <div class="achievement-itemTitle" data-title="Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" data-name="T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈">T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈</div>
+                        </div>
+                    </section>
+
+                    <section class="achievements-section">
+                        <h4 class="achievements-section__title">Event Exclusives</h4>
+                        <div class="achievements-subsection">
+                            <h5 class="achievements-section__subtitle">Halloween Frights 2025</h5>
+                            <div class="achievement-grid">
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Collect a Halloween-exclusive title in 2025 to unlock this achievement"
+                                    data-name="It's SPOOKY season!"
+                                >
+                                    It's SPOOKY season!
+                                </div>
+                            </div>
+                        </div>
+                        <div class="achievements-subsection">
+                            <h5 class="achievements-section__subtitle">Seasonal Collections</h5>
+                            <div class="achievement-grid">
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Obtain any event title to unlock this achievement"
+                                    data-name="Seasonal Tourist"
+                                >
+                                    Seasonal Tourist
+                                </div>
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Hold titles from at least one event to unlock this achievement"
+                                    data-name="Event!"
+                                >
+                                    Event!
+                                </div>
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Hold titles from three different events to unlock this achievement"
+                                    data-name="Event Explorer"
+                                >
+                                    Event Explorer
+                                </div>
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Hold titles from five different events to unlock this achievement"
+                                    data-name="Event Expert"
+                                >
+                                    Event Expert
+                                </div>
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Store 10 event titles across your vault to unlock this achievement"
+                                    data-name="Seasonal Archivist"
+                                >
+                                    Seasonal Archivist
+                                </div>
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Store 20 event titles across your vault to unlock this achievement"
+                                    data-name="All the Seasons!"
+                                >
+                                    All the Seasons!
+                                </div>
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Store 50 event titles across your vault to unlock this achievement"
+                                    data-name="I LOVE SEASONS!!!"
+                                >
+                                    I LOVE SEASONS!!!
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="achievements-section">
+                        <h4 class="achievements-section__title">Unobtainable Events</h4>
+                        <p class="achievements-section__note">These achievements are no longer obtainable but remain visible for players who previously earned them.</p>
+                        <div class="achievements-subsection">
+                            <h5 class="achievements-section__subtitle">Halloween 2024</h5>
+                            <div class="achievement-grid">
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Previously unlocked by collecting the Halloween-exclusive title in 2024."
+                                    data-name="Spooky Spectator"
+                                >
+                                    Spooky Spectator
+                                    <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="achievements-subsection">
+                            <h5 class="achievements-section__subtitle">Winter Holidays 2024</h5>
+                            <div class="achievement-grid">
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Previously unlocked by gathering a Winter holiday-exclusive title in 2024."
+                                    data-name="Winter Wonderland"
+                                >
+                                    Winter Wonderland
+                                    <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="achievements-subsection">
+                            <h5 class="achievements-section__subtitle">Festival of Fire 2025</h5>
+                            <div class="achievement-grid">
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Previously unlocked by securing the Festival of Fire-exclusive title in 2025."
+                                    data-name="Festival Firecracker"
+                                >
+                                    Festival Firecracker
+                                    <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="achievements-subsection">
+                            <h5 class="achievements-section__subtitle">Valentine's Sweetheart 2025</h5>
+                            <div class="achievement-grid">
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Previously unlocked by earning a Valentine's Sweetheart-exclusive event title in 2025."
+                                    data-name="Valentine's Sweetheart"
+                                >
+                                    Valentine's Sweetheart
+                                    <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="achievements-subsection">
+                            <h5 class="achievements-section__subtitle">Spring &amp; Easter 2025</h5>
+                            <div class="achievement-grid">
+                                <div
+                                    class="achievement-itemE achievement-itemEvent"
+                                    data-event="Previously unlocked by obtaining a Spring &amp; Easter-exclusive event title in 2025."
+                                    data-name="Spring &amp; Easter"
+                                >
+                                    Spring &amp; Easter 2025
+                                    <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="achievements-subsection">
+                            <h5 class="achievements-section__subtitle">Summer Vibes 2025</h5>
+                            <div class="achievement-grid">
+                                <div
+                                    class="achievement-itemSum achievement-itemEvent"
+                                    data-event="Previously unlocked by obtaining a Summer Vibes-exclusive event title in 2025."
+                                    data-name="Summer Vibes"
+                                >
+                                    Summer Vibes
+                                    <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </div>
 
         <div class="historySection" id="rollingHistory">
             <h3>Rolling History</h3>
@@ -548,7 +551,23 @@
         <button id="toggleInventoryBtn">Show Inventory</button>
 
         <div class="inventory">
-            <h2><i class="fa-solid fa-box-archive"></i> Inventory</h2>
+            <div class="inventory-header">
+                <h2><i class="fa-solid fa-box-archive"></i> Inventory</h2>
+                <div class="inventory-sort">
+                    <span class="inventory-sort__label" id="inventorySortLabel"><i class="fa-solid fa-sort" aria-hidden="true"></i> Title Sorting</span>
+                    <div class="inventory-sort__controls" role="group" aria-labelledby="inventorySortLabel">
+                        <button class="inventory-sort__button inventory-sort__button--active" type="button" data-sort-mode="default" title="Default order" aria-label="Sort by most recent" aria-pressed="true">
+                            <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
+                        </button>
+                        <button class="inventory-sort__button" type="button" data-sort-mode="rarity" title="Rarity order" aria-label="Sort by rarity" aria-pressed="false">
+                            <i class="fa-solid fa-star" aria-hidden="true"></i>
+                        </button>
+                        <button class="inventory-sort__button" type="button" data-sort-mode="locked" title="Locked first" aria-label="Sort by locked status" aria-pressed="false">
+                            <i class="fa-solid fa-table-cells-column-lock" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
             <div class="inventory-tabs" role="tablist" aria-label="Inventory sections">
                 <button id="inventoryTabTitles" class="inventory-tab inventory-tab--active" type="button" role="tab" aria-selected="true" data-tab="titles">Titles</button>
                 <button id="inventoryTabDelete" class="inventory-tab" type="button" role="tab" aria-selected="false" data-tab="delete">Delete Titles</button>
@@ -714,7 +733,6 @@
                                     <button id="deleteAllCursedMirageButton" class="inventory-delete-btn" type="button" title="Delete All Cursed Mirage">Cursed Mirage</button>
                                     <button id="deleteAllCelestialDawnButton" class="inventory-delete-btn" type="button" title="Delete All Celestial Dawn">Celestial Dawn</button>
                                     <button id="deleteAllFatesRequiemButton" class="inventory-delete-btn" type="button" title="Delete All Fate's Requiem">Fate's Requiem</button>
-                                    <button id="deleteAllMythicWallButton" class="inventory-delete-btn" type="button" title="Delete All MythicWall">MythicWall</button>
                                     <button id="deleteAllEonbreakButton" class="inventory-delete-btn" type="button" title="Delete All Eonbreak">Eonbreak</button>
                                     <button id="deleteAllBlodhestButton" class="inventory-delete-btn" type="button" title="Delete All Blodhest">Blodhest</button>
                                     <button id="deleteAllOvertureButton" class="inventory-delete-btn" type="button" title="Delete All Overture">Overture</button>
@@ -739,8 +757,10 @@
                                     <button id="deleteAllAstraldButton" class="inventory-delete-btn" type="button" title="Delete All Astrald">Astrald</button>
                                     <button id="deleteAllImpeachedButton" class="inventory-delete-btn" type="button" title="Delete All Impeached">Impeached</button>
                                     <button id="deleteAllMastermindButton" class="inventory-delete-btn" type="button" title="Delete All Mastermind">Mastermind</button>
+                                    <button id="deleteAllMythicWallButton" class="inventory-delete-btn" type="button" title="Delete All MythicWall">MythicWall</button>
                                     <button id="deleteAllCelestialChorusButton" class="inventory-delete-btn" type="button" title="Delete All Celestial Chorus">Celestial Chorus</button>
                                     <button id="deleteAllX1staButton" class="inventory-delete-btn" type="button" title="Delete All X1sta">X1sta</button>
+                                    <button id="deleteAllAlienButton" class="inventory-delete-btn" type="button" title="Delete All Alien">Alien</button>
                                 </div>
                             </section>
 
@@ -763,6 +783,7 @@
         </div>
         <button class="fullscreen-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
     </div>
+        <button id="toggleUiBtn">Hide UI</button>
 
     <audio preload="none" id="click" src="files/sounds_and_music/click.mp3"></audio>
     <audio preload="none" id="suspenseAudio" src="files/sounds_and_music/suspence.mp3"></audio>
@@ -783,6 +804,7 @@
     <audio preload="none" id="nebulaAudio" src="files/sounds_and_music/nebula.mp3" loop></audio>
     <audio preload="none" id="glitchedAudio" src="files/sounds_and_music/glitched.mp3" loop></audio>
     <audio preload="none" id="mastermindAudio" src="files/sounds_and_music/mastermind.mp3" loop></audio>
+    <audio preload="none" id="alienAudio" src="files/sounds_and_music/alien.mp3" loop></audio>
     <audio preload="none" id="expOpeningAudio" src="files/sounds_and_music/exp_opening.mp3"></audio>
     <audio preload="none" id="plabreAudio" src="files/sounds_and_music/plabre.mp3" loop></audio>
     <audio preload="none" id="isekailofiAudio" src="files/sounds_and_music/isekailofi.mp3" loop></audio>

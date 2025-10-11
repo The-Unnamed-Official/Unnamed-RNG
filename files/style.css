@@ -354,8 +354,6 @@ body.equinox-pulse-active :is(
     .roll-result-card__title,
     .roll-result-card__status,
     .roll-result-card__badge,
-    #rollingHistory,
-    #rollingHistory *,
     .stats-menu,
     .stats-panel,
     .stats-panel *,
@@ -380,8 +378,6 @@ body.equinox-pulse-active :is(
     .inventory-group__header,
     .inventory-group__title,
     #inventoryList,
-    #inventoryList li,
-    .inventory-item,
     .rollsCount,
     .container,
     .container1,
@@ -392,8 +388,6 @@ body.equinox-pulse-active :is(
     .rButton,
     #rollBtn,
     #roll-button,
-    .dropdown-menu,
-    .dropdown-menu *
   ) {
   animation: equinoxUIPulse 0.6s ease-in-out infinite;
   transform-origin: center;
@@ -408,8 +402,6 @@ body.equinox-pulse-active :is(
       .roll-result-card__title,
       .roll-result-card__status,
       .roll-result-card__badge,
-      #rollingHistory,
-      #rollingHistory *,
       .stats-menu,
       .stats-panel,
       .stats-panel *,
@@ -434,8 +426,6 @@ body.equinox-pulse-active :is(
       .inventory-group__header,
       .inventory-group__title,
       #inventoryList,
-      #inventoryList li,
-      .inventory-item,
       .rollsCount,
       .container,
       .container1,
@@ -446,8 +436,6 @@ body.equinox-pulse-active :is(
       .rButton,
       #rollBtn,
       #roll-button,
-      .dropdown-menu,
-      .dropdown-menu *
     ) {
     animation: equinoxUIPulseFallback 0.6s ease-in-out infinite;
   }
@@ -634,7 +622,10 @@ body.equinox-pulse-active :is(
         transform: translateX(-50%);
     }
     #rollingHistory {
-        visibility: hidden;
+        width: min(92vw, 520px);
+        bottom: 28px;
+        margin-left: 0;
+        transform: translateX(-50%);
     }
 }
 
@@ -649,7 +640,10 @@ body.equinox-pulse-active :is(
         transform: translateX(-50%);
     }
     #rollingHistory {
-        visibility: hidden;
+        width: min(94vw, 460px);
+        bottom: 24px;
+        margin-left: 0;
+        transform: translateX(-50%);
     }
     .container1 {
         left: 10px;
@@ -670,7 +664,7 @@ body.equinox-pulse-active :is(
     align-items: center;
     gap: 10px;
     width: auto;
-    z-index: 100010;
+    z-index: 99999;
     opacity: 0.33;
     transition: opacity 0.33s ease-in-out;
 }
@@ -688,7 +682,7 @@ body.equinox-pulse-active :is(
     align-items: stretch;
     gap: 7px;
     padding: 9px;
-    width: min(47.5vw, 475px);
+    width: min(52.5vw, 525px);
     border-radius: 28px;
     position: relative;
     background:
@@ -807,8 +801,26 @@ body.equinox-pulse-active :is(
     color: rgba(255, 231, 196, 0.65);
 }
 
+.version__event-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.version__countdown {
+    color: rgba(255, 231, 196, 0.88);
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    font-size: 0.7rem !important;
+}
+
+.version__countdown::before,
+.version__countdown::after {
+    content: none;
+}
+
 .version__detail {
-    font-size: 0.82rem;
+    font-size: 0.7rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: rgba(184, 214, 255, 0.85);
@@ -1025,7 +1037,7 @@ body {
 
   overflow: hidden;
   isolation: isolate;                 /* ensures pseudo-elements stack within */
-  z-index: 100000;                    /* keep above surrounding UI */
+  z-index: 1;                    /* keep above surrounding UI */
 }
 
 /* Subtle animated sheen across the panel */
@@ -1437,7 +1449,7 @@ body {
 }
 
 #toggleUiBtn {
-    position: absolute;
+    position: fixed;
     background-color: #ff6347;
     color: #ffffff;
     border-radius: 5px;
@@ -3182,6 +3194,12 @@ body {
     object-fit: contain;
 }
 
+.alienBgImg {
+    background: url(backgrounds/alien.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 body.griCutsceneBgImg {
     background: url('backgrounds/gri_cutscene.gif') no-repeat center center !important;
     background-size: cover !important;
@@ -3639,7 +3657,7 @@ body.flashing {
   overflow: hidden;
   max-height: min(85vh, 720px);
   /* No animated transitions */
-  z-index: 999999;
+  z-index: 99999;
 }
 
 @media (max-width: 960px) {
@@ -3669,11 +3687,6 @@ body.flashing {
     bottom: auto;
   }
 
-  .ui > #rollingHistory {
-    width: min(92vw, 500px);
-    align-self: stretch;
-  }
-
   .container {
     order: 1;
   }
@@ -3692,20 +3705,6 @@ body.flashing {
     max-height: min(70vh, 520px);
     width: min(92vw, 520px);
   }
-
-  body.inventory-open .inventory {
-    visibility: visible !important;
-  }
-
-  #toggleInventoryBtn {
-    position: fixed;
-    top: clamp(16px, 5vh, 32px);
-    right: clamp(16px, 5vw, 32px);
-    left: auto;
-    bottom: auto;
-    transform: none;
-    z-index: 100022000;
-  }
 }
 
 
@@ -3718,6 +3717,17 @@ body.flashing {
 }
 
 /* Title */
+.inventory-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 6px 6px 12px 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
 .inventory h2 {
   display: flex;
   align-items: center;
@@ -3725,9 +3735,7 @@ body.flashing {
   font-size: 18px;
   font-weight: 700;
   color: #fff;
-  margin: 6px 6px 12px 6px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  margin: 0;
 }
 
 .inventory-tabs {
@@ -3739,6 +3747,71 @@ body.flashing {
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.08);
   background: linear-gradient(140deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+}
+
+.inventory-sort {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(140deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+}
+
+.inventory-sort__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.75);
+}
+
+.inventory-sort__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.inventory-sort__button {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: rgba(255,255,255,0.7);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inventory-sort__button:hover {
+  color: #ffffff;
+  border-color: rgba(255,255,255,0.18);
+}
+
+.inventory-sort__button:focus-visible {
+  outline: 2px solid rgba(255, 211, 139, 0.85);
+  outline-offset: 2px;
+}
+
+.inventory-sort__button--active {
+  color: #1f1309;
+  background: linear-gradient(135deg, rgba(255, 166, 78, 0.88), rgba(255, 215, 154, 0.85));
+  border-color: rgba(255, 203, 142, 0.85);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.32);
+}
+
+.inventory-sort__button--active:focus-visible {
+  outline-color: rgba(255, 205, 141, 0.95);
 }
 
 .inventory-tab {
@@ -4286,7 +4359,7 @@ body.flashing {
 }
 
 #toggleInventoryBtn {
-    position: absolute;
+    position: fixed;
     background-color: #ff6347;
     color: #ffffff;
     border-radius: 5px;
@@ -4424,6 +4497,14 @@ body.flashing {
     position: absolute;
     font-size: 33px;
     color: green;
+    opacity: 1;
+    animation: levitate 3s ease-out forwards, fade 3s ease-out forwards;
+}
+
+.lime-star {
+    position: absolute;
+    font-size: 33px;
+    color: lime;
     opacity: 1;
     animation: levitate 3s ease-out forwards, fade 3s ease-out forwards;
 }
@@ -4809,6 +4890,16 @@ body.flashing {
     width: 40px;
     height: 40px;
     background-color: rgba(4, 109, 0, 0.7);
+    animation: spin-scale-fast 1.5s ease-out forwards;
+    border-radius: 2px;
+    box-shadow: 0px 0px 15px rgba(0, 99, 16, 0.9);
+}
+
+.animated-square-lime {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(100, 255, 0, 0.7);
     animation: spin-scale-fast 1.5s ease-out forwards;
     border-radius: 2px;
     box-shadow: 0px 0px 15px rgba(0, 99, 16, 0.9);
@@ -5564,6 +5655,7 @@ body.flashing {
 
 #achievementsMenu::-webkit-scrollbar {
     width: 10px;
+    border-radius: 50%;
 }
 
 #achievementsMenu::-webkit-scrollbar-thumb {
@@ -5616,6 +5708,7 @@ body.flashing {
     border-bottom: 1px solid rgba(120, 164, 255, 0.16);
     background: rgba(10, 14, 26, 0.75);
     backdrop-filter: blur(12px);
+    border-radius: 17px;
     cursor: grab;
     user-select: none;
     position: sticky;
