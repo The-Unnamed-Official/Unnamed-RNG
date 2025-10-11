@@ -13607,6 +13607,12 @@ function normalizeRarityBucket(rarityClass) {
     }
   }
 
+  const fallbackBucket = getClassForRarity(cls);
+  if (fallbackBucket) {
+    return fallbackBucket;
+  }
+
+
   return RARITY_CLASS_BUCKET_MAP[cls] || "";
 }
 
