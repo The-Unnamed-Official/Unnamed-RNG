@@ -1421,6 +1421,7 @@ const ACHIEVEMENTS = [
   { name: "Cherry Grove Champion", requiredTitle: "LubbyJubby's Cherry Grove [1 in 5,666]", requiredRarityClass: "lubjubBgImg" },
   { name: "Firestarter", requiredTitle: "FireCraze [1 in 4,200/69th]", requiredRarityClass: "crazeBgImg" },
   { name: "Orbital Dreamer", requiredTitle: "ORB [1 in 55,555/30th]", requiredRarityClass: "orbBgImg" },
+  { name: "The Hunter of All Souls", requiredTitle: "MSFU [1 in 333/333rd]", requiredRarityClass: "msfuBgImg" },
   { name: "Glitched Reality", requiredTitle: "Gl1tch3d [1 in 12,404/40,404th]", requiredRarityClass: "glitchedBgImg" },
   { name: "Gregarious Encounter", requiredTitle: "Greg [1 in 50,000,000]", requiredRarityClass: "gregBgImg" },
   { name: "Mint Condition", requiredTitle: "Mintllie [1 in 500,000,000]", requiredRarityClass: "mintllieBgImg" },
