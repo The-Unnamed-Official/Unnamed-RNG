@@ -468,6 +468,16 @@ let activeBuffs = normalizeActiveBuffs(storage.get(ACTIVE_BUFFS_KEY, []));
 let buffUpdateIntervalId = null;
 const potionSpawnTimers = new Map();
 
+function generateInventoryRecordId() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  const randomPart = Math.random().toString(36).slice(2, 10);
+  const timePart = Date.now().toString(36);
+  return `inv_${timePart}_${randomPart}`;
+}
+
 const REDUCED_ANIMATIONS_KEY = "reducedAnimationsEnabled";
 let reducedAnimationsEnabled = Boolean(storage.get(REDUCED_ANIMATIONS_KEY, false));
 let pendingReducedAnimationsState = reducedAnimationsEnabled ? true : null;
@@ -2710,6 +2720,11 @@ function normalizeInventoryRecord(raw) {
   const qualifies = QUALIFYING_VAULT_BUCKETS.has(bucket);
   if (record.qualifiesForVault !== qualifies) {
     record.qualifiesForVault = qualifies;
+    mutated = true;
+  }
+
+  if (typeof record.inventoryId !== "string" || !record.inventoryId.trim()) {
+    record.inventoryId = generateInventoryRecordId();
     mutated = true;
   }
 
@@ -15938,8 +15953,47 @@ function disableChange() {
   updateInventoryDeleteButtonsDisabled(true);
 }
 
+function getInventoryItemKey(item, index) {
+  if (item && typeof item.inventoryId === "string" && item.inventoryId.trim()) {
+    return item.inventoryId;
+  }
+
+  if (item && Number.isFinite(item?.rolledAt)) {
+    return `${item.title || "item"}::${item.rolledAt}`;
+  }
+
+  return `idx-${index}`;
+}
+
 function renderInventory() {
   const inventoryList = document.getElementById("inventoryList");
+  if (!inventoryList) {
+    return;
+  }
+
+  const previousState = new Map();
+  inventoryList.querySelectorAll(".inventory-item").forEach((element) => {
+    const key = element.dataset.itemKey;
+    if (!key) {
+      return;
+    }
+
+    const dropdownMenu = element.querySelector(".dropdown-menu");
+    const rarityTextElement = element.querySelector(".rarity-text");
+    const infoTitleElement = dropdownMenu?.querySelector(".info-title");
+    const infoSubElement = dropdownMenu?.querySelector(".info-sub");
+
+    previousState.set(key, {
+      dropdownOpen: Boolean(
+        dropdownMenu && (dropdownMenu.classList.contains("open") || dropdownMenu.style.display === "block")
+      ),
+      dropdownScrollTop: dropdownMenu ? dropdownMenu.scrollTop : 0,
+      rarityLabel: rarityTextElement ? rarityTextElement.textContent : null,
+      headerTitle: infoTitleElement ? infoTitleElement.textContent : null,
+      headerSubtitle: infoSubElement ? infoSubElement.textContent : null,
+    });
+  });
+
   inventoryList.innerHTML = "";
 
   applyInventorySortModeToButtons();
@@ -16002,6 +16056,8 @@ function renderInventory() {
     listItem.className = item.rarityClass || "";
     listItem.classList.add("inventory-item");
     listItem.dataset.locked = lockedItems[item.title] ? "true" : "false";
+    const itemKey = getInventoryItemKey(item, originalIndex);
+    listItem.dataset.itemKey = itemKey;
     const bucket = normalizeRarityBucket(item.rarityClass);
     if (bucket) {
       listItem.dataset.bucket = bucket;
@@ -16030,6 +16086,7 @@ function renderInventory() {
     const dropdownMenu = document.createElement("div");
     dropdownMenu.className = "dropdown-menu";
     dropdownMenu.style.display = "none";
+    dropdownMenu.dataset.itemKey = itemKey;
 
     // HEADER: aura title + rolled-at line
     const header = document.createElement("div");
@@ -16044,6 +16101,8 @@ function renderInventory() {
       <div class="info-title">${item.title}</div>
       <div class="info-sub">Rolled at: ${rolledText}</div>
     `;
+    const headerTitleElement = header.querySelector(".info-title");
+    const headerSubtitleElement = header.querySelector(".info-sub");
     dropdownMenu.appendChild(header);
 
     // Divider
@@ -16119,6 +16178,27 @@ function renderInventory() {
       dropdownMenu.classList.toggle("open", willOpen);
       listItem.classList.toggle("inventory-item--menu-open", willOpen);
     });
+
+    const previous = previousState.get(itemKey);
+    if (previous) {
+      if (typeof previous.rarityLabel === "string" && previous.rarityLabel.length) {
+        itemTitle.textContent = previous.rarityLabel;
+      }
+      if (previous.headerTitle != null && headerTitleElement) {
+        headerTitleElement.textContent = previous.headerTitle;
+      }
+      if (previous.headerSubtitle != null && headerSubtitleElement) {
+        headerSubtitleElement.textContent = previous.headerSubtitle;
+      }
+      if (previous.dropdownOpen && dropdownMenu) {
+        dropdownMenu.style.display = "block";
+        dropdownMenu.classList.add("open");
+        listItem.classList.add("inventory-item--menu-open");
+        if (typeof previous.dropdownScrollTop === "number" && previous.dropdownScrollTop > 0) {
+          dropdownMenu.scrollTop = previous.dropdownScrollTop;
+        }
+      }
+    }
 
     inventoryList.appendChild(listItem);
   });

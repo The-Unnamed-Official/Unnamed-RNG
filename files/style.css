@@ -5197,10 +5197,22 @@ body.flashing {
     border: none;
     border-radius: 0;
     padding: 0;
-    background: transparent;
+    background: none;
     box-shadow: none;
+    backdrop-filter: none;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.potion-spawn::after {
+    content: none;
+}
+
+.potion-spawn:focus-visible,
+.potion-spawn:hover,
+.potion-spawn:active {
+    background: none;
+    box-shadow: none;
 }
 
 .potion-spawn img {
