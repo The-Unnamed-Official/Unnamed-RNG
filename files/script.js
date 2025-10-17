@@ -1398,16 +1398,35 @@ function pruneExpiredBuffs() {
   return changed;
 }
 
-function getActivePotionLuckBonusPercent() {
-  return activeBuffs
-    .filter((buff) => buff.type === POTION_TYPES.LUCK)
-    .reduce((total, buff) => total + (Number.isFinite(buff.effectPercent) ? buff.effectPercent : 0), 0);
+function isBuffToggleExempt(buff) {
+  return Boolean(buff && buff.consumeOnRoll);
 }
 
-function getActivePotionSpeedBonusPercent() {
-  return activeBuffs
-    .filter((buff) => buff.type === POTION_TYPES.SPEED)
-    .reduce((total, buff) => total + (Number.isFinite(buff.effectPercent) ? buff.effectPercent : 0), 0);
+function sumBuffEffect(buffs) {
+  return buffs.reduce(
+    (total, buff) => total + (Number.isFinite(buff.effectPercent) ? buff.effectPercent : 0),
+    0,
+  );
+}
+
+function getActivePotionBuffsByType(type, predicate = null) {
+  return activeBuffs.filter((buff) => {
+    if (!buff || buff.type !== type) {
+      return false;
+    }
+    if (typeof predicate === "function") {
+      return predicate(buff);
+    }
+    return true;
+  });
+}
+
+function getActivePotionLuckBonusPercent(predicate = null) {
+  return sumBuffEffect(getActivePotionBuffsByType(POTION_TYPES.LUCK, predicate));
+}
+
+function getActivePotionSpeedBonusPercent(predicate = null) {
+  return sumBuffEffect(getActivePotionBuffsByType(POTION_TYPES.SPEED, predicate));
 }
 
 function findHighestCollectorTier(tiers) {
@@ -1483,7 +1502,7 @@ function getPermanentAchievementBuffs() {
 
 function getActiveLuckBonusPercent() {
   if (buffsDisabled) {
-    return 0;
+    return getActivePotionLuckBonusPercent(isBuffToggleExempt);
   }
 
   return getPermanentLuckBonusPercent() + getActivePotionLuckBonusPercent();
@@ -1491,7 +1510,7 @@ function getActiveLuckBonusPercent() {
 
 function getActiveSpeedBonusPercent() {
   if (buffsDisabled) {
-    return 0;
+    return getActivePotionSpeedBonusPercent(isBuffToggleExempt);
   }
 
   return getPermanentSpeedBonusPercent() + getActivePotionSpeedBonusPercent();
@@ -1523,7 +1542,9 @@ function updateLuckStatDisplay() {
 
   const permanent = getPermanentLuckBonusPercent();
   const potionTotal = getActivePotionLuckBonusPercent();
-  const potionEffective = buffsDisabled ? 0 : potionTotal;
+  const potionEffective = buffsDisabled
+    ? getActivePotionLuckBonusPercent(isBuffToggleExempt)
+    : potionTotal;
   const total = permanent + potionEffective;
 
   valueElement.textContent = formatPercentage(total, true);
@@ -1534,7 +1555,11 @@ function updateLuckStatDisplay() {
     if (potionTotal > 0) {
       let potionText = `Potions: ${formatPercentage(potionEffective, true)}`;
       if (buffsDisabled) {
-        potionText += " (Disabled)";
+        if (potionEffective === 0) {
+          potionText += " (Disabled)";
+        } else if (potionEffective !== potionTotal) {
+          potionText += " (Partially Disabled)";
+        }
       }
       parts.push(potionText);
     }
@@ -1591,6 +1616,7 @@ function renderBuffTray() {
       const timerText = consumeOnRoll
         ? "Next roll"
         : formatBuffDuration(remainingSecondsRaw);
+      const disableWithToggle = !isBuffToggleExempt(buff);
       return {
         id: buff.id,
         name: buff.name,
@@ -1600,7 +1626,7 @@ function renderBuffTray() {
         remainingSeconds: remainingSecondsRaw,
         timerText,
         consumeOnRoll,
-        disableWithToggle: true,
+        disableWithToggle,
       };
     });
 
