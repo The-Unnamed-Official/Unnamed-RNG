@@ -343,6 +343,23 @@ const POTION_DEFINITIONS = [
     },
   },
   {
+    id: "decentPotion",
+    name: "Decent Potion",
+    image: "files/images/DecentPotion.png",
+    buffImage: "files/images/DecentBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 5200,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next Roll",
+    consumeOnRoll: true,
+    disableWithToggle: true,
+    craftCost: {
+      classes: { commonBgImg: 300, rareBgImg: 200, unstoppableBgImg: 75, fearBgImg: 2, lostsBgImg: 2 },
+      titles: [],
+      potions: { luckyPotion: 40, fortuneSpoid1: 5 },
+    },
+  },
+  {
     id: "speedPotion",
     name: "Speed Potion",
     image: "files/images/SpeedPotion.png",
@@ -438,6 +455,7 @@ const POTION_SPAWN_CONFIGS = [
       { potionId: "fortuneSpoid1", chance: 0.1 },
       { potionId: "fortuneSpoid2", chance: 0.01 },
       { potionId: "basicPotion", chance: 0.0002 },
+      { potionId: "decentPotion", chance: 0.0001 },
     ],
   },
   {
@@ -449,6 +467,7 @@ const POTION_SPAWN_CONFIGS = [
       { potionId: "hasteSpoid1", chance: 0.1 },
       { potionId: "hasteSpoid2", chance: 0.01 },
       { potionId: "basicPotion", chance: 0.0002 },
+      { potionId: "decentPotion", chance: 0.0001 },
     ],
   },
 ];
