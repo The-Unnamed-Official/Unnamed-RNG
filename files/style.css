@@ -4490,21 +4490,54 @@ body.flashing {
 }
 
 #toggleInventoryBtn {
-    position: fixed;
     background-color: #ff6347;
-    color: #ffffff;
-    border-radius: 5px;
-    border: none;
-    padding: 10px;
-    cursor: pointer;
-    top: 20px;
-    right: 150px;
-    z-index: 999999;
-    transition: background-color 0.2s ease;
 }
 
-#toggleInventoryBtn:hover {
+#toggleInventoryBtn:hover,
+#toggleInventoryBtn:focus-visible {
     background-color: #bb4935;
+}
+
+.inventory-controls {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 12px;
+    z-index: 999999;
+    align-items: center;
+}
+
+.inventory-controls__button {
+    border: none;
+    border-radius: 6px;
+    padding: 10px 16px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0));
+}
+
+.inventory-controls__button:hover,
+.inventory-controls__button:focus-visible {
+    transform: translateY(-2px);
+}
+
+.inventory-controls__button:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+}
+
+.inventory-controls__button.inventory-controls__button--accent {
+    background-color: #f6a429;
+}
+
+.inventory-controls__button.inventory-controls__button--accent:hover,
+.inventory-controls__button.inventory-controls__button--accent:focus-visible {
+    background-color: #d68c1c;
 }
 
 .pageButton {
@@ -5221,7 +5254,7 @@ body.flashing {
     width: 32px;
     height: 32px;
     transform: translate(-50%, -50%);
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='10' fill='%230d1320' fill-opacity='0.75' stroke='%23f7f9ff' stroke-opacity='0.85' stroke-width='2'/%3E%3Cline x1='7' y1='17' x2='17' y2='7' stroke='%23f7f9ff' stroke-opacity='0.85' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") center/contain no-repeat;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 640'%3E%3Cpath fill='%23f7f9ff' fill-opacity='0.85' d='M431.2 476.5L163.5 208.8C141.1 240.2 128 278.6 128 320C128 426 214 512 320 512C361.5 512 399.9 498.9 431.2 476.5zM476.5 431.2C498.9 399.8 512 361.4 512 320C512 214 426 128 320 128C278.5 128 240.1 141.1 208.8 163.5L476.5 431.2zM64 320C64 178.6 178.6 64 320 64C461.4 64 576 178.6 576 320C576 461.4 461.4 576 320 576C178.6 576 64 461.4 64 320z'/%3E%3C/svg%3E") center/contain no-repeat;
     filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45));
     pointer-events: none;
     z-index: 2;
@@ -6416,6 +6449,10 @@ body.flashing {
     background: linear-gradient(135deg, rgba(255, 177, 109, 0.18), rgba(122, 255, 206, 0.18));
 }
 
+.stat-card--luck::before {
+    background: linear-gradient(135deg, rgba(110, 242, 176, 0.18), rgba(132, 196, 255, 0.18));
+}
+
 .stat-card:hover::before {
     opacity: 1;
 }
@@ -6594,6 +6631,8 @@ body.flashing {
     align-items: center;
     text-align: center;
     box-shadow: inset 0 1px 0 rgba(120, 164, 255, 0.12);
+    position: relative;
+    overflow: hidden;
 }
 
 .stat-label {
