@@ -335,6 +335,7 @@ const POTION_DEFINITIONS = [
     durationSeconds: 31536000,
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
+    disableWithToggle: true,
     craftCost: {
       classes: { commonBgImg: 200, rareBgImg: 150, unstoppableBgImg: 50, fearBgImg: 1, lostsBgImg: 1 },
       titles: [],
@@ -1360,7 +1361,15 @@ function normalizeActiveBuffs(raw) {
       const storedConsumeFlag = entry.consumeOnRoll === true || entry.consumeOnRoll === "true";
       const consumeOnRoll = storedConsumeFlag || Boolean(potion.consumeOnRoll);
 
-      return {
+      let disableWithToggle = null;
+      if (Object.prototype.hasOwnProperty.call(entry, "disableWithToggle")) {
+        const raw = entry.disableWithToggle;
+        disableWithToggle = raw === true || raw === "true";
+      } else if (Object.prototype.hasOwnProperty.call(potion, "disableWithToggle")) {
+        disableWithToggle = Boolean(potion.disableWithToggle);
+      }
+
+      const normalizedBuff = {
         id,
         potionId: potion.id,
         type: potion.type,
@@ -1370,6 +1379,12 @@ function normalizeActiveBuffs(raw) {
         expiresAt,
         consumeOnRoll,
       };
+
+      if (disableWithToggle !== null) {
+        normalizedBuff.disableWithToggle = disableWithToggle;
+      }
+
+      return normalizedBuff;
     })
     .filter(Boolean);
 }
@@ -1396,7 +1411,12 @@ function pruneExpiredBuffs() {
 }
 
 function isBuffToggleExempt(buff) {
-  return Boolean(buff && buff.consumeOnRoll);
+  if (!buff || !buff.consumeOnRoll) {
+    return false;
+  }
+
+  const disableFlag = buff.disableWithToggle === true || buff.disableWithToggle === "true";
+  return !disableFlag;
 }
 
 function sumBuffEffect(buffs) {
@@ -1768,6 +1788,9 @@ function activatePotionBuff(potion) {
   const durationMs = durationSeconds * 1000;
   const icon = potion.buffImage || getBuffIconForType(potion.type) || potion.image;
   const consumeOnRoll = Boolean(potion.consumeOnRoll);
+  const disableWithToggle = Object.prototype.hasOwnProperty.call(potion, "disableWithToggle")
+    ? Boolean(potion.disableWithToggle)
+    : null;
 
   const existing = activeBuffs.find((entry) => entry.potionId === potion.id);
   if (existing) {
@@ -1777,6 +1800,11 @@ function activatePotionBuff(potion) {
     existing.name = potion.name;
     existing.image = icon;
     existing.consumeOnRoll = consumeOnRoll;
+    if (disableWithToggle !== null) {
+      existing.disableWithToggle = disableWithToggle;
+    } else if (Object.prototype.hasOwnProperty.call(existing, "disableWithToggle")) {
+      delete existing.disableWithToggle;
+    }
     persistActiveBuffs();
     refreshBuffEffects();
     return;
@@ -1794,6 +1822,10 @@ function activatePotionBuff(potion) {
     consumeOnRoll,
   };
 
+  if (disableWithToggle !== null) {
+    buff.disableWithToggle = disableWithToggle;
+  }
+
   activeBuffs.push(buff);
   persistActiveBuffs();
   refreshBuffEffects();
@@ -1802,7 +1834,17 @@ function activatePotionBuff(potion) {
 function consumeSingleUseBuffs() {
   const idsToRemove = new Set(
     activeBuffs
-      .filter((buff) => buff && buff.consumeOnRoll)
+      .filter((buff) => {
+        if (!buff || !buff.consumeOnRoll) {
+          return false;
+        }
+
+        if (buffsDisabled && !isBuffToggleExempt(buff)) {
+          return false;
+        }
+
+        return true;
+      })
       .map((buff) => buff.id)
       .filter(Boolean),
   );
@@ -14881,9 +14923,10 @@ function rollRarity() {
     }
   ];
 
-  const luckMultiplier = 1 + getActiveLuckBonusPercent() / 100;
+  const activeLuckPercent = getActiveLuckBonusPercent();
+  const luckMultiplier = 1 + activeLuckPercent / 100;
   consumeSingleUseBuffs();
-  const luckThreshold = Math.max(1, luckMultiplier);
+  const luckThreshold = Math.max(1, activeLuckPercent);
   const adjustedRarities = rarities.map((rarity) => {
     const affected = isRarityClassAffectedByLuck(rarity.class);
     const effectiveChance = rarity.chance * (affected ? luckMultiplier : 1);
