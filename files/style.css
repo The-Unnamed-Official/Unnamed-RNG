@@ -4061,6 +4061,14 @@ body.flashing {
   margin-top: 3px;
   font-size: 12px;
   color: #bdbdbd;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dropdown-header .info-sub__rolled,
+.dropdown-header .info-sub__luck {
+  white-space: nowrap;
 }
 
 .dropdown-divider {
