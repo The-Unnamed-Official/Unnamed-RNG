@@ -701,6 +701,7 @@ let pausedEquippedAudioState = null;
 let resumeEquippedAudioAfterCutscene = false;
 let pendingCutsceneRarity = null;
 let pendingAutoEquipRecord = null;
+let pendingRollLuckValue = null;
 const rolledRarityBuckets = new Set(storage.get("rolledRarityBuckets", []));
 
 const ROLL_AUDIO_IDS = new Set([
@@ -14975,6 +14976,7 @@ function rollRarity() {
   ];
 
   const activeLuckPercent = getActiveLuckBonusPercent();
+  capturePendingRollLuckSnapshot(activeLuckPercent);
   const luckMultiplier = 1 + activeLuckPercent / 100;
   consumeSingleUseBuffs();
   const luckThreshold = Math.max(1, activeLuckPercent);
@@ -15281,8 +15283,27 @@ function getCurrentLuckValue() {
     (Number.isFinite(permanentPercent) ? permanentPercent : 0) +
     (Number.isFinite(potionPercent) ? potionPercent : 0);
 
-  const luckValue = 1 + totalPercent / 100;
-  return luckValue > 0 ? luckValue : 0;
+  return computeLuckValueFromPercent(totalPercent);
+}
+
+function computeLuckValueFromPercent(totalPercent) {
+  const normalizedPercent = Number.isFinite(totalPercent) ? totalPercent : 0;
+  const value = 1 + normalizedPercent / 100;
+  return value > 0 ? value : 0;
+}
+
+function capturePendingRollLuckSnapshot(totalPercent) {
+  pendingRollLuckValue = computeLuckValueFromPercent(totalPercent);
+  return pendingRollLuckValue;
+}
+
+function consumePendingRollLuckSnapshot() {
+  const snapshot = pendingRollLuckValue;
+  pendingRollLuckValue = null;
+  if (typeof snapshot === "number" && Number.isFinite(snapshot)) {
+    return snapshot >= 0 ? snapshot : 0;
+  }
+  return null;
 }
 
 function addToInventory(title, rarityClass) {
@@ -15294,6 +15315,7 @@ function addToInventory(title, rarityClass) {
   const autoDeleteSet = getAutoDeleteSet();
   const bucket = normalizeRarityBucket(rarityClass);
   recordRarityBucketRoll(bucket);
+  const pendingLuckOverride = consumePendingRollLuckSnapshot();
   if (autoDeleteSet.has(bucket)) {
     lastRollPersisted = false;
     lastRollAutoDeleted = true;
@@ -15312,7 +15334,7 @@ function addToInventory(title, rarityClass) {
     }
   }
 
-  const luckValue = getCurrentLuckValue();
+  const luckValue = pendingLuckOverride !== null ? pendingLuckOverride : getCurrentLuckValue();
 
   const { record: newRecord } = normalizeInventoryRecord({
     title,
