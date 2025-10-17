@@ -30,8 +30,8 @@
             
             <span class="version__chip version__chip--number" role="text">
                 <span class="version__eyebrow">Version</span>
-                <span class="version__value">1.3.1</span>
-                <span class="version__detail">1.3.1_updHALLOWEEN</span>
+                <span class="version__value">1.3.5</span>
+                <span class="version__detail">1.3.5_updHALLOWEEN</span>
             </span>
             
             <span class="version__chip version__chip--title">
@@ -141,6 +141,19 @@
                                 <button id="toggleRollDisplayBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll &amp; Display</button>
                                 <button id="toggleRollHistoryBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll History</button>
                                 <button id="toggleReducedAnimationsBtn" class="settings-btn settings-btn--ghost" type="button">Reduce Animations</button>
+                                <div class="settings-switch" id="potionBuffsSwitch">
+                                    <label class="settings-switch__container" for="toggleBuffsSwitch">
+                                        <input type="checkbox" id="toggleBuffsSwitch" class="settings-switch__input" role="switch" aria-checked="true">
+                                        <span class="settings-switch__visual" aria-hidden="true">
+                                            <span class="settings-switch__track"></span>
+                                            <span class="settings-switch__thumb"></span>
+                                        </span>
+                                        <span class="settings-switch__text">
+                                            <span class="settings-switch__title">Potion Buffs</span>
+                                            <span class="settings-switch__status" id="toggleBuffsStatus">Enabled</span>
+                                        </span>
+                                    </label>
+                                </div>
                             </div>
                         </section>
 
@@ -180,13 +193,18 @@
                 </div>
                 <div class="stats-body">
                     <div class="stats-overview">
-                        <div class="stat-card">
+                        <div class="stat-card stat-card--rolls">
                             <span class="stat-label">Total Rolls</span>
                             <span class="stat-value" id="rollCountDisplay1">NaN</span>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card stat-card--playtime">
                             <span class="stat-label">Playtime</span>
                             <span class="stat-value stat-timer" id="timer">00:00:00</span>
+                        </div>
+                        <div class="stat-card stat-card--luck">
+                            <span class="stat-label">Luck Bonus</span>
+                            <span class="stat-value" id="luckStatValue">+0%</span>
+                            <span class="stat-card__hint" id="luckStatBreakdown">Permanent: +0%</span>
                         </div>
                     </div>
                 </div>
@@ -496,6 +514,17 @@
             </div>
         </div>
 
+        <div id="potionCraftingMenu" class="potion-menu" style="display: none;">
+            <div class="potion-menu__header">
+                <h3 class="dragTxt">Potion Workshop</h3>
+                <button id="closePotionCrafting" class="potion-menu__close" type="button">Close</button>
+            </div>
+            <div class="potion-menu__body">
+                <p class="potion-menu__description">Craft potion buffs by exchanging spare titles. Crafted potions are stored in your inventory under the Potions tab.</p>
+                <div id="potionCraftingList" class="potion-menu__grid" role="list"></div>
+            </div>
+        </div>
+
         <div class="historySection" id="rollingHistory">
             <h3>Rolling History</h3>
             <ul id="historyList"></ul>
@@ -516,11 +545,11 @@
             <button class="creator-card" type="button" onclick="showPopupCopyTxt(event)" aria-haspopup="menu" aria-expanded="false">
                 <span class="creator-card__glow" aria-hidden="true"></span>
                 <span class="creator-card__avatar">
-                    <img src="files/images/unnamed_pfp.gif" alt="Profile picture for Unnamed" loading="lazy">
+                    <img src="files/images/unnamed_pfp.png" alt="Profile picture for Unnamed" loading="lazy">
                 </span>
                 <span class="creator-card__meta">
                     <span class="creator-card__label">Game created by</span>
-                    <span class="creator-card__title">Unnamed RNG</span>
+                    <span class="creator-card__title">The Unnamed</span>
                     <span class="creator-card__handle">not.unnamed</span>
                 </span>
             </button>
@@ -549,7 +578,10 @@
             </div>
         </div>
 
-        <button id="toggleInventoryBtn">Show Inventory</button>
+        <div class="inventory-controls" role="group" aria-label="Inventory controls">
+            <button id="toggleInventoryBtn" class="inventory-controls__button" type="button">Show Inventory</button>
+            <button id="potionCraftingButton" class="potion-controls__button" type="button">Potion Crafting</button>
+        </div>
 
         <div class="inventory">
             <div class="inventory-header">
@@ -572,6 +604,7 @@
             <div class="inventory-tabs" role="tablist" aria-label="Inventory sections">
                 <button id="inventoryTabTitles" class="inventory-tab inventory-tab--active" type="button" role="tab" aria-selected="true" data-tab="titles">Titles</button>
                 <button id="inventoryTabDelete" class="inventory-tab" type="button" role="tab" aria-selected="false" data-tab="delete">Delete Titles</button>
+                <button id="inventoryTabPotions" class="inventory-tab" type="button" role="tab" aria-selected="false" data-tab="potions">Potions</button>
             </div>
             <div class="inventory-panels">
                 <div class="inventory-panel inventory-panel--active" role="tabpanel" aria-labelledby="inventoryTabTitles" data-tab-panel="titles">
@@ -780,8 +813,15 @@
                         </div>
                     </div>
                 </div>
+                <div class="inventory-panel" role="tabpanel" aria-labelledby="inventoryTabPotions" aria-hidden="true" data-tab-panel="potions">
+                    <div class="invent inventory-panel__scroll">
+                        <ul class="potion-inventory" id="potionInventoryList"></ul>
+                    </div>
+                </div>
             </div>
         </div>
+        <div id="potionSpawnLayer" class="potion-spawn-layer" aria-live="polite"></div>
+        <div id="buffTray" class="buff-tray" aria-live="polite"></div>
         <button class="fullscreen-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
     </div>
         <button id="toggleUiBtn">Hide UI</button>
