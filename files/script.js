@@ -1361,6 +1361,14 @@ function normalizeActiveBuffs(raw) {
       const storedConsumeFlag = entry.consumeOnRoll === true || entry.consumeOnRoll === "true";
       const consumeOnRoll = storedConsumeFlag || Boolean(potion.consumeOnRoll);
 
+      let usesRemaining = 1;
+      if (consumeOnRoll) {
+        const parsedUses = Number.parseInt(entry.usesRemaining, 10);
+        if (Number.isFinite(parsedUses) && parsedUses >= 1) {
+          usesRemaining = parsedUses;
+        }
+      }
+
       let disableWithToggle = null;
       if (Object.prototype.hasOwnProperty.call(entry, "disableWithToggle")) {
         const raw = entry.disableWithToggle;
@@ -1379,6 +1387,10 @@ function normalizeActiveBuffs(raw) {
         expiresAt,
         consumeOnRoll,
       };
+
+      if (consumeOnRoll) {
+        normalizedBuff.usesRemaining = usesRemaining;
+      }
 
       if (disableWithToggle !== null) {
         normalizedBuff.disableWithToggle = disableWithToggle;
@@ -1635,8 +1647,15 @@ function renderBuffTray() {
         ? Math.max(0, Math.floor((buff.expiresAt - referenceTime) / 1000))
         : 0;
       const consumeOnRoll = Boolean(buff.consumeOnRoll);
+      let usesRemaining = null;
+      if (consumeOnRoll) {
+        const parsedUses = Number.parseInt(buff.usesRemaining, 10);
+        usesRemaining = Number.isFinite(parsedUses) && parsedUses >= 1 ? parsedUses : 1;
+      }
       const timerText = consumeOnRoll
-        ? "Next roll"
+        ? usesRemaining > 1
+          ? `Next ${usesRemaining} rolls`
+          : "Next roll"
         : formatBuffDuration(remainingSecondsRaw);
       const disableWithToggle = !isBuffToggleExempt(buff);
       return {
@@ -1648,6 +1667,7 @@ function renderBuffTray() {
         remainingSeconds: remainingSecondsRaw,
         timerText,
         consumeOnRoll,
+        usesRemaining,
         disableWithToggle,
       };
     });
@@ -1800,6 +1820,14 @@ function activatePotionBuff(potion) {
     existing.name = potion.name;
     existing.image = icon;
     existing.consumeOnRoll = consumeOnRoll;
+    if (consumeOnRoll) {
+      const currentUses = Number.isFinite(existing.usesRemaining) && existing.usesRemaining >= 1
+        ? existing.usesRemaining
+        : 1;
+      existing.usesRemaining = currentUses + 1;
+    } else if (Object.prototype.hasOwnProperty.call(existing, "usesRemaining")) {
+      delete existing.usesRemaining;
+    }
     if (disableWithToggle !== null) {
       existing.disableWithToggle = disableWithToggle;
     } else if (Object.prototype.hasOwnProperty.call(existing, "disableWithToggle")) {
@@ -1822,6 +1850,10 @@ function activatePotionBuff(potion) {
     consumeOnRoll,
   };
 
+  if (consumeOnRoll) {
+    buff.usesRemaining = 1;
+  }
+
   if (disableWithToggle !== null) {
     buff.disableWithToggle = disableWithToggle;
   }
@@ -1832,30 +1864,38 @@ function activatePotionBuff(potion) {
 }
 
 function consumeSingleUseBuffs() {
-  const idsToRemove = new Set(
-    activeBuffs
-      .filter((buff) => {
-        if (!buff || !buff.consumeOnRoll) {
-          return false;
-        }
+  let changed = false;
+  const idsToRemove = new Set();
 
-        if (buffsDisabled && !isBuffToggleExempt(buff)) {
-          return false;
-        }
+  activeBuffs.forEach((buff) => {
+    if (!buff || !buff.consumeOnRoll) {
+      return;
+    }
 
-        return true;
-      })
-      .map((buff) => buff.id)
-      .filter(Boolean),
-  );
+    if (buffsDisabled && !isBuffToggleExempt(buff)) {
+      return;
+    }
 
-  if (!idsToRemove.size) {
-    return;
+    const parsedUses = Number.parseInt(buff.usesRemaining, 10);
+    const usesRemaining = Number.isFinite(parsedUses) && parsedUses >= 1 ? parsedUses : 1;
+
+    if (usesRemaining > 1) {
+      buff.usesRemaining = usesRemaining - 1;
+      changed = true;
+    } else {
+      idsToRemove.add(buff.id);
+    }
+  });
+
+  if (idsToRemove.size) {
+    const originalLength = activeBuffs.length;
+    activeBuffs = activeBuffs.filter((buff) => !idsToRemove.has(buff.id));
+    if (activeBuffs.length !== originalLength) {
+      changed = true;
+    }
   }
 
-  const originalLength = activeBuffs.length;
-  activeBuffs = activeBuffs.filter((buff) => !idsToRemove.has(buff.id));
-  if (activeBuffs.length === originalLength) {
+  if (!changed) {
     return;
   }
 
