@@ -41,6 +41,179 @@ const BUFF_ICON_MAP = Object.freeze({
   [POTION_TYPES.SPEED]: "files/images/SpeedBuff.png",
 });
 
+const BUFF_TOOLTIP_EFFECT_CLASS_MAP = Object.freeze({
+  [POTION_TYPES.LUCK]: "buff-tooltip__effect--luck",
+  [POTION_TYPES.SPEED]: "buff-tooltip__effect--speed",
+});
+
+let buffTooltipElement = null;
+let buffTooltipNameElement = null;
+let buffTooltipEffectElement = null;
+let buffTooltipTimerElement = null;
+let activeBuffTooltipCard = null;
+let lastBuffPointerPosition = null;
+
+function ensureBuffTooltipElement() {
+  if (buffTooltipElement) {
+    return;
+  }
+
+  const tooltip = document.createElement("div");
+  tooltip.id = "buffTooltip";
+  tooltip.className = "buff-tooltip";
+  tooltip.setAttribute("role", "tooltip");
+  tooltip.setAttribute("aria-hidden", "true");
+  tooltip.innerHTML = `
+    <div class="buff-tooltip__name"></div>
+    <div class="buff-tooltip__effect"></div>
+    <div class="buff-tooltip__timer"></div>
+  `;
+
+  document.body.appendChild(tooltip);
+
+  buffTooltipElement = tooltip;
+  buffTooltipNameElement = tooltip.querySelector(".buff-tooltip__name");
+  buffTooltipEffectElement = tooltip.querySelector(".buff-tooltip__effect");
+  buffTooltipTimerElement = tooltip.querySelector(".buff-tooltip__timer");
+}
+
+function hideBuffTooltip() {
+  if (!buffTooltipElement) {
+    return;
+  }
+
+  buffTooltipElement.classList.remove("buff-tooltip--visible");
+  buffTooltipElement.classList.remove("buff-tooltip--below");
+  buffTooltipElement.classList.remove("buff-tooltip--disabled");
+  buffTooltipElement.setAttribute("aria-hidden", "true");
+  activeBuffTooltipCard = null;
+}
+
+function positionBuffTooltip(event, card) {
+  if (!buffTooltipElement) {
+    return;
+  }
+
+  const cardRect = card.getBoundingClientRect();
+  const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
+  const pointerX = event ? event.clientX : cardRect.left + cardRect.width / 2;
+
+  const tooltipWidth = buffTooltipElement.offsetWidth;
+  const halfWidth = tooltipWidth / 2;
+  const clampedX = Math.max(
+    halfWidth + 8,
+    Math.min(viewportWidth - halfWidth - 8, pointerX)
+  );
+
+  buffTooltipElement.style.left = `${clampedX}px`;
+
+  const tooltipHeight = buffTooltipElement.offsetHeight;
+  let top = cardRect.top - tooltipHeight - 14;
+  let below = false;
+
+  if (top < 8) {
+    top = cardRect.bottom + 14;
+    below = true;
+  }
+
+  buffTooltipElement.style.top = `${top}px`;
+  buffTooltipElement.classList.toggle("buff-tooltip--below", below);
+}
+
+function showBuffTooltip(card, event) {
+  ensureBuffTooltipElement();
+  if (!buffTooltipElement) {
+    return;
+  }
+
+  const { buffName = "", buffEffect = "", buffTimer = "", buffType = "", buffDisabled = "false" } = card.dataset;
+
+  buffTooltipNameElement.textContent = buffName;
+  buffTooltipEffectElement.textContent = buffEffect;
+  buffTooltipTimerElement.textContent = buffDisabled === "true" ? `${buffTimer} (Paused)` : buffTimer;
+
+  buffTooltipEffectElement.className = "buff-tooltip__effect";
+  const mappedClass = BUFF_TOOLTIP_EFFECT_CLASS_MAP[buffType];
+  if (mappedClass) {
+    buffTooltipEffectElement.classList.add(mappedClass);
+  }
+
+  buffTooltipElement.classList.toggle("buff-tooltip--disabled", buffDisabled === "true");
+  buffTooltipElement.setAttribute("aria-hidden", "false");
+  buffTooltipElement.classList.add("buff-tooltip--visible");
+
+  positionBuffTooltip(event, card);
+}
+
+function handleBuffCardPointerEnter(event) {
+  const card = event.currentTarget;
+  activeBuffTooltipCard = card;
+  if (Number.isFinite(event.clientX)) {
+    lastBuffPointerPosition = { x: event.clientX, y: event.clientY };
+  }
+  showBuffTooltip(card, event);
+}
+
+function handleBuffCardPointerMove(event) {
+  if (!activeBuffTooltipCard || activeBuffTooltipCard !== event.currentTarget) {
+    return;
+  }
+
+  if (Number.isFinite(event.clientX)) {
+    lastBuffPointerPosition = { x: event.clientX, y: event.clientY };
+  }
+  positionBuffTooltip(event, event.currentTarget);
+}
+
+function handleBuffCardPointerLeave(event) {
+  if (activeBuffTooltipCard === event.currentTarget) {
+    activeBuffTooltipCard = null;
+  }
+
+  lastBuffPointerPosition = null;
+  hideBuffTooltip();
+}
+
+function handleBuffCardFocus(event) {
+  const card = event.currentTarget;
+  activeBuffTooltipCard = card;
+  lastBuffPointerPosition = null;
+  showBuffTooltip(card, null);
+}
+
+function handleBuffCardBlur(event) {
+  if (activeBuffTooltipCard === event.currentTarget) {
+    activeBuffTooltipCard = null;
+  }
+
+  lastBuffPointerPosition = null;
+  hideBuffTooltip();
+}
+
+function restoreBuffTooltipForPointer() {
+  if (!lastBuffPointerPosition) {
+    return;
+  }
+
+  const { x, y } = lastBuffPointerPosition;
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    return;
+  }
+
+  const element = document.elementFromPoint(x, y);
+  if (!element) {
+    return;
+  }
+
+  const card = element.closest(".buff-card");
+  if (!card) {
+    return;
+  }
+
+  activeBuffTooltipCard = card;
+  showBuffTooltip(card, { clientX: x });
+}
+
 const POTION_DEFINITIONS = [
   {
     id: "luckyPotion",
@@ -1116,6 +1289,7 @@ function renderBuffTray() {
     return;
   }
 
+  hideBuffTooltip();
   tray.innerHTML = "";
 
   if (!activeBuffs.length) {
@@ -1137,6 +1311,7 @@ function renderBuffTray() {
       if (buffsDisabled) {
         card.classList.add("buff-card--disabled");
       }
+      card.tabIndex = 0;
       const icon = document.createElement("img");
       icon.className = "buff-card__icon";
       icon.src = getBuffIconForType(buff.type) || buff.image;
@@ -1152,13 +1327,32 @@ function renderBuffTray() {
       timer.className = "buff-card__timer";
       timer.textContent = formatBuffDuration(remainingSeconds);
 
-      card.title = `${buff.name} • ${effect.textContent} • ${timer.textContent}`;
+      card.dataset.buffName = buff.name;
+      card.dataset.buffEffect = effect.textContent;
+      card.dataset.buffTimer = timer.textContent;
+      card.dataset.buffType = buff.type;
+      card.dataset.buffDisabled = buffsDisabled ? "true" : "false";
+
+      card.setAttribute(
+        "aria-label",
+        `${buff.name}. ${effect.textContent}. ${timer.textContent}.`
+      );
+      card.setAttribute("role", "group");
+      card.setAttribute("aria-disabled", buffsDisabled ? "true" : "false");
+
+      card.addEventListener("mouseenter", handleBuffCardPointerEnter);
+      card.addEventListener("mouseleave", handleBuffCardPointerLeave);
+      card.addEventListener("mousemove", handleBuffCardPointerMove);
+      card.addEventListener("focus", handleBuffCardFocus);
+      card.addEventListener("blur", handleBuffCardBlur);
 
       card.appendChild(icon);
       card.appendChild(effect);
       card.appendChild(timer);
       tray.appendChild(card);
     });
+
+  restoreBuffTooltipForPointer();
 }
 
 function refreshBuffEffects() {
