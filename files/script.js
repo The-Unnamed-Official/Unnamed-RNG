@@ -326,6 +326,25 @@ const POTION_DEFINITIONS = [
     },
   },
   {
+    id: "basicPotion",
+    name: "Basic Potion",
+    image: "files/images/BasicPotion.png",
+    buffImage: "files/images/BasicBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 1000,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next Roll",
+    consumeOnRoll: true,
+    craftCost: {
+      classes: { commonBgImg: 200, rareBgImg: 100 },
+      titles: [
+        { title: "Haunted Soul", count: 2 },
+        { title: "Ether Shift", count: 1 },
+      ],
+      potions: { luckyPotion: 20, fortuneSpoid1: 2 },
+    },
+  },
+  {
     id: "speedPotion",
     name: "Speed Potion",
     image: "files/images/SpeedPotion.png",
@@ -418,8 +437,9 @@ const POTION_SPAWN_CONFIGS = [
     maxDelayMs: 7 * 60 * 1000,
     lifespanMs: 45000,
     rareSpawns: [
-      { potionId: "fortuneSpoid2", chance: 0.005 },
-      { potionId: "fortuneSpoid1", chance: 0.05 },
+      { potionId: "fortuneSpoid1", chance: 0.1 },
+      { potionId: "fortuneSpoid2", chance: 0.01 },
+      { potionId: "basicPotion", chance: 0.0002 },
     ],
   },
   {
@@ -428,8 +448,9 @@ const POTION_SPAWN_CONFIGS = [
     maxDelayMs: 7 * 60 * 1000,
     lifespanMs: 45000,
     rareSpawns: [
-      { potionId: "hasteSpoid2", chance: 0.005 },
-      { potionId: "hasteSpoid1", chance: 0.05 },
+      { potionId: "hasteSpoid1", chance: 0.1 },
+      { potionId: "hasteSpoid2", chance: 0.01 },
+      { potionId: "basicPotion", chance: 0.0002 },
     ],
   },
 ];
@@ -845,6 +866,7 @@ function adjustPotionCount(id, delta) {
 function summarizeInventoryForPotions(lockedItems = getLockedItemsMap()) {
   const classCounts = {};
   const titleCounts = {};
+  const potionCounts = {};
 
   inventory.forEach((item) => {
     if (!item || typeof item !== "object") {
@@ -864,7 +886,17 @@ function summarizeInventoryForPotions(lockedItems = getLockedItemsMap()) {
     }
   });
 
-  return { classCounts, titleCounts };
+  POTION_DEFINITIONS.forEach((potion) => {
+    if (!potion || !potion.id) {
+      return;
+    }
+    const count = getPotionCount(potion.id);
+    if (count > 0) {
+      potionCounts[potion.id] = count;
+    }
+  });
+
+  return { classCounts, titleCounts, potionCounts };
 }
 
 function hasSufficientClassResources(costClasses = {}, summary) {
@@ -892,6 +924,17 @@ function hasSufficientTitleResources(costTitles = [], summary) {
   });
 }
 
+function hasSufficientPotionResources(costPotions = {}, summary) {
+  const counts = (summary && summary.potionCounts) || {};
+  return Object.entries(costPotions).every(([potionId, required]) => {
+    if (!potionId || !Number.isFinite(required) || required <= 0) {
+      return true;
+    }
+
+    return (counts[potionId] || 0) >= required;
+  });
+}
+
 function canCraftPotion(potion, summary = summarizeInventoryForPotions()) {
   if (!potion || typeof potion !== "object") {
     return false;
@@ -900,14 +943,16 @@ function canCraftPotion(potion, summary = summarizeInventoryForPotions()) {
   const cost = potion.craftCost || {};
   const costClasses = cost.classes || {};
   const costTitles = Array.isArray(cost.titles) ? cost.titles : [];
+  const costPotions = cost.potions || {};
 
   return hasSufficientClassResources(costClasses, summary)
-    && hasSufficientTitleResources(costTitles, summary);
+    && hasSufficientTitleResources(costTitles, summary)
+    && hasSufficientPotionResources(costPotions, summary);
 }
 
 function removeItemsForPotion(potion, lockedItems = getLockedItemsMap()) {
   if (!potion) {
-    return false;
+    return { inventoryChanged: false, potionsChanged: false };
   }
 
   const cost = potion.craftCost || {};
@@ -967,18 +1012,31 @@ function removeItemsForPotion(potion, lockedItems = getLockedItemsMap()) {
     markIndicesForTitle(entry.title, entry.count);
   });
 
-  if (!indicesToRemove.size) {
-    return false;
+  let inventoryChanged = false;
+  if (indicesToRemove.size) {
+    const filtered = inventory.filter((_, index) => !indicesToRemove.has(index));
+    if (filtered.length !== inventory.length) {
+      inventory = filtered;
+      storage.set("inventory", inventory);
+      inventoryChanged = true;
+    }
   }
 
-  const filtered = inventory.filter((_, index) => !indicesToRemove.has(index));
-  if (filtered.length === inventory.length) {
-    return false;
-  }
+  let potionsChanged = false;
+  Object.entries(cost.potions || {}).forEach(([ingredientId, required]) => {
+    if (!ingredientId || !Number.isFinite(required) || required <= 0) {
+      return;
+    }
 
-  inventory = filtered;
-  storage.set("inventory", inventory);
-  return true;
+    const current = getPotionCount(ingredientId);
+    const toRemove = Math.min(current, Math.trunc(required));
+    if (toRemove > 0) {
+      adjustPotionCount(ingredientId, -toRemove);
+      potionsChanged = true;
+    }
+  });
+
+  return { inventoryChanged, potionsChanged };
 }
 
 function craftPotion(potionId) {
@@ -993,14 +1051,19 @@ function craftPotion(potionId) {
     return;
   }
 
-  const removed = removeItemsForPotion(potion, lockedItems);
+  const removalResult = removeItemsForPotion(potion, lockedItems);
   const cost = potion.craftCost || {};
   const hasCost = Object.keys(cost.classes || {}).length > 0
-    || (Array.isArray(cost.titles) && cost.titles.length > 0);
+    || (Array.isArray(cost.titles) && cost.titles.length > 0)
+    || Object.keys(cost.potions || {}).length > 0;
 
-  if (removed) {
+  const removedInventory = removalResult.inventoryChanged;
+  const removedPotions = removalResult.potionsChanged;
+  const removedSomething = removedInventory || removedPotions;
+
+  if (removedInventory) {
     renderInventory();
-  } else if (hasCost) {
+  } else if (!removedSomething && hasCost) {
     return;
   }
 
@@ -1109,7 +1172,10 @@ function renderPotionCrafting() {
 
     const duration = document.createElement("div");
     duration.className = "potion-card__duration";
-    duration.textContent = `Duration: ${formatPotionDuration(potion.durationSeconds)}`;
+    const durationText = typeof potion.durationDisplay === "string"
+      ? potion.durationDisplay
+      : `Duration: ${formatPotionDuration(potion.durationSeconds)}`;
+    duration.textContent = durationText;
 
     const costTitle = document.createElement("p");
     costTitle.className = "potion-card__cost-title";
@@ -1150,6 +1216,23 @@ function renderPotionCrafting() {
         li.classList.add("potion-card__cost-item--insufficient");
       }
       li.textContent = `${count} × "${titleName}" (${owned} owned)`;
+      costList.appendChild(li);
+    });
+
+    Object.entries(potion.craftCost?.potions || {}).forEach(([ingredientId, required]) => {
+      if (!ingredientId || !Number.isFinite(required) || required <= 0) {
+        return;
+      }
+
+      const li = document.createElement("li");
+      li.className = "potion-card__cost-item";
+      const ingredient = getPotionDefinition(ingredientId);
+      const owned = summary.potionCounts[ingredientId] || 0;
+      if (owned < required) {
+        li.classList.add("potion-card__cost-item--insufficient");
+      }
+      const label = ingredient ? ingredient.name : ingredientId;
+      li.textContent = `${required} × ${label} (${owned} owned)`;
       costList.appendChild(li);
     });
 
@@ -1271,14 +1354,24 @@ function normalizeActiveBuffs(raw) {
         ? entry.id
         : `${potion.id}-${expiresAt}`;
 
+      const storedImage = typeof entry.image === "string" && entry.image ? entry.image : "";
+      const image = storedImage
+        || potion.buffImage
+        || getBuffIconForType(potion.type)
+        || potion.image;
+
+      const storedConsumeFlag = entry.consumeOnRoll === true || entry.consumeOnRoll === "true";
+      const consumeOnRoll = storedConsumeFlag || Boolean(potion.consumeOnRoll);
+
       return {
         id,
         potionId: potion.id,
         type: potion.type,
         effectPercent,
         name: entry.name || potion.name,
-        image: getBuffIconForType(potion.type) || potion.image,
+        image,
         expiresAt,
+        consumeOnRoll,
       };
     })
     .filter(Boolean);
@@ -1368,7 +1461,7 @@ function getPermanentAchievementBuffs() {
       effectPercent: luckTier.value,
       image: getBuffIconForType(POTION_TYPES.LUCK),
       isPermanent: true,
-      disableWithToggle: false,
+      disableWithToggle: true,
     });
   }
 
@@ -1381,7 +1474,7 @@ function getPermanentAchievementBuffs() {
       effectPercent: speedTier.value,
       image: getBuffIconForType(POTION_TYPES.SPEED),
       isPermanent: true,
-      disableWithToggle: false,
+      disableWithToggle: true,
     });
   }
 
@@ -1389,13 +1482,19 @@ function getPermanentAchievementBuffs() {
 }
 
 function getActiveLuckBonusPercent() {
-  const potionBonus = buffsDisabled ? 0 : getActivePotionLuckBonusPercent();
-  return getPermanentLuckBonusPercent() + potionBonus;
+  if (buffsDisabled) {
+    return 0;
+  }
+
+  return getPermanentLuckBonusPercent() + getActivePotionLuckBonusPercent();
 }
 
 function getActiveSpeedBonusPercent() {
-  const potionBonus = buffsDisabled ? 0 : getActivePotionSpeedBonusPercent();
-  return getPermanentSpeedBonusPercent() + potionBonus;
+  if (buffsDisabled) {
+    return 0;
+  }
+
+  return getPermanentSpeedBonusPercent() + getActivePotionSpeedBonusPercent();
 }
 
 function formatBuffEffectValue(value) {
@@ -1485,15 +1584,22 @@ function renderBuffTray() {
     .slice()
     .sort((a, b) => a.expiresAt - b.expiresAt)
     .map((buff) => {
-      const remainingSeconds = Math.max(0, Math.floor((buff.expiresAt - referenceTime) / 1000));
+      const remainingSecondsRaw = Number.isFinite(buff.expiresAt)
+        ? Math.max(0, Math.floor((buff.expiresAt - referenceTime) / 1000))
+        : 0;
+      const consumeOnRoll = Boolean(buff.consumeOnRoll);
+      const timerText = consumeOnRoll
+        ? "Next roll"
+        : formatBuffDuration(remainingSecondsRaw);
       return {
         id: buff.id,
         name: buff.name,
         type: buff.type,
         effectPercent: buff.effectPercent,
         image: buff.image,
-        remainingSeconds,
-        timerText: formatBuffDuration(remainingSeconds),
+        remainingSeconds: remainingSecondsRaw,
+        timerText,
+        consumeOnRoll,
         disableWithToggle: true,
       };
     });
@@ -1525,7 +1631,7 @@ function renderBuffTray() {
 
     const icon = document.createElement("img");
     icon.className = "buff-card__icon";
-    icon.src = getBuffIconForType(buff.type) || buff.image;
+    icon.src = buff.image || getBuffIconForType(buff.type) || "";
     icon.alt = "";
 
     const effect = document.createElement("span");
@@ -1548,6 +1654,9 @@ function renderBuffTray() {
     card.dataset.buffTimer = timerText;
     card.dataset.buffType = buff.type;
     card.dataset.buffDisabled = isDisabled ? "true" : "false";
+    if (buff.consumeOnRoll) {
+      card.dataset.buffConsume = "true";
+    }
 
     card.setAttribute("aria-label", `${name}. ${effectText}. ${timerText}.`);
     card.setAttribute("role", "group");
@@ -1625,8 +1734,12 @@ function activatePotionBuff(potion) {
   const referenceTime = buffsDisabled && Number.isFinite(buffPauseStart)
     ? buffPauseStart
     : now;
-  const durationMs = potion.durationSeconds * 1000;
-  const icon = getBuffIconForType(potion.type) || potion.image;
+  const durationSeconds = Number.isFinite(potion.durationSeconds)
+    ? Math.max(0, potion.durationSeconds)
+    : 0;
+  const durationMs = durationSeconds * 1000;
+  const icon = potion.buffImage || getBuffIconForType(potion.type) || potion.image;
+  const consumeOnRoll = Boolean(potion.consumeOnRoll);
 
   const existing = activeBuffs.find((entry) => entry.potionId === potion.id);
   if (existing) {
@@ -1635,6 +1748,7 @@ function activatePotionBuff(potion) {
     existing.effectPercent = potion.effectPercent;
     existing.name = potion.name;
     existing.image = icon;
+    existing.consumeOnRoll = consumeOnRoll;
     persistActiveBuffs();
     refreshBuffEffects();
     return;
@@ -1649,9 +1763,32 @@ function activatePotionBuff(potion) {
     name: potion.name,
     image: icon,
     expiresAt,
+    consumeOnRoll,
   };
 
   activeBuffs.push(buff);
+  persistActiveBuffs();
+  refreshBuffEffects();
+}
+
+function consumeSingleUseBuffs() {
+  const idsToRemove = new Set(
+    activeBuffs
+      .filter((buff) => buff && buff.consumeOnRoll)
+      .map((buff) => buff.id)
+      .filter(Boolean),
+  );
+
+  if (!idsToRemove.size) {
+    return;
+  }
+
+  const originalLength = activeBuffs.length;
+  activeBuffs = activeBuffs.filter((buff) => !idsToRemove.has(buff.id));
+  if (activeBuffs.length === originalLength) {
+    return;
+  }
+
   persistActiveBuffs();
   refreshBuffEffects();
 }
@@ -1817,12 +1954,29 @@ function spawnPotionPickup(config) {
     removeSpawn();
   }, lifespan);
 
+  let collected = false;
   spawn.addEventListener("click", () => {
+    if (collected) {
+      return;
+    }
+
+    collected = true;
     clearTimeout(despawnTimeout);
-    removeSpawn();
+    spawn.classList.add("potion-spawn--collected");
+    spawn.disabled = true;
+    spawn.setAttribute("aria-hidden", "true");
+
     adjustPotionCount(potion.id, 1);
     renderPotionInventory();
     renderPotionCrafting();
+
+    const finalizeCollection = () => {
+      removeSpawn();
+    };
+
+    spawn.addEventListener("animationend", finalizeCollection, { once: true });
+    spawn.addEventListener("transitionend", finalizeCollection, { once: true });
+    setTimeout(finalizeCollection, 400);
   });
 
   layer.appendChild(spawn);
@@ -14700,6 +14854,7 @@ function rollRarity() {
   ];
 
   const luckMultiplier = 1 + getActiveLuckBonusPercent() / 100;
+  consumeSingleUseBuffs();
   const luckThreshold = Math.max(1, luckMultiplier);
   const adjustedRarities = rarities.map((rarity) => {
     const affected = isRarityClassAffectedByLuck(rarity.class);
