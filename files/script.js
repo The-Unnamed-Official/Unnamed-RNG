@@ -1537,18 +1537,23 @@ function updateLuckStatDisplay() {
     return;
   }
 
-  const permanent = getPermanentLuckBonusPercent();
+  const permanentTotal = getPermanentLuckBonusPercent();
+  const permanentEffective = buffsDisabled ? 0 : permanentTotal;
   const potionTotal = getActivePotionLuckBonusPercent();
   const potionEffective = buffsDisabled
     ? getActivePotionLuckBonusPercent(isBuffToggleExempt)
     : potionTotal;
-  const total = permanent + potionEffective;
+  const total = permanentEffective + potionEffective;
 
   valueElement.textContent = formatPercentage(total, true);
 
   const breakdownElement = byId("luckStatBreakdown");
   if (breakdownElement) {
-    const parts = [`Permanent: ${formatPercentage(permanent, true)}`];
+    let permanentText = `Permanent: ${formatPercentage(permanentEffective, true)}`;
+    if (permanentTotal > 0 && permanentEffective !== permanentTotal) {
+      permanentText += " (Disabled)";
+    }
+    const parts = [permanentText];
     if (potionTotal > 0) {
       let potionText = `Potions: ${formatPercentage(potionEffective, true)}`;
       if (buffsDisabled) {
