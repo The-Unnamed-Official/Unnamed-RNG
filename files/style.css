@@ -4730,94 +4730,417 @@ body.flashing {
     }
 }
 
-#cooldownButton {
-    background-color: #4CAF50;
-    color: white;
+.potion-menu {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(10, 14, 23, 0.78);
+    backdrop-filter: blur(6px);
+    z-index: 100030;
+}
+
+.potion-menu__panel {
+    width: min(960px, 90vw);
+    max-height: 90vh;
+    background: linear-gradient(180deg, rgba(26, 32, 46, 0.96), rgba(12, 15, 24, 0.98));
+    border: 1px solid rgba(118, 169, 255, 0.35);
+    border-radius: 18px;
+    box-shadow: 0 32px 60px rgba(0, 0, 0, 0.55);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.potion-menu__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    background: rgba(17, 24, 38, 0.95);
+    border-bottom: 1px solid rgba(118, 169, 255, 0.25);
+}
+
+.potion-menu__close {
+    background: none;
     border: none;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;    
+    color: #f6f8ff;
+    font-size: 15px;
     cursor: pointer;
-    border-radius: 5px;
-    z-index: 900000000;
-    transition: background-color 0.3s, transform 0.3s;
-    position: absolute;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-#cooldownButton:hover {
-    background-color: #45a049;
-    transform: scale(1.05);
+.potion-menu__close:hover {
+    background: rgba(118, 169, 255, 0.12);
+    transform: translateY(-1px);
 }
 
-#cooldownButton1 {
-    background-color: #4caf91;
-    color: white;
+.potion-menu__body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow: hidden;
+}
+
+.potion-menu__description {
+    color: #e0e8ff;
+    margin: 0;
+    font-size: 14px;
+    opacity: 0.85;
+}
+
+.potion-menu__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 18px;
+    overflow-y: auto;
+    padding-bottom: 8px;
+}
+
+.potion-card {
+    background: linear-gradient(180deg, rgba(23, 30, 46, 0.92), rgba(16, 20, 31, 0.98));
+    border: 1px solid rgba(118, 169, 255, 0.25);
+    border-radius: 16px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    box-shadow: inset 0 1px 0 rgba(174, 207, 255, 0.18);
+}
+
+.potion-card__image {
+    width: 84px;
+    height: 84px;
+    border-radius: 12px;
+    background: rgba(12, 18, 30, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+}
+
+.potion-card__image img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.potion-card__title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #f6f8ff;
+}
+
+.potion-card__effect {
+    color: #9fc5ff;
+    font-size: 14px;
+}
+
+.potion-card__duration {
+    color: #c9d6ff;
+    font-size: 13px;
+}
+
+.potion-card__cost-title {
+    margin: 0;
+    font-size: 13px;
+    color: #91a9d9;
+}
+
+.potion-card__cost-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.potion-card__cost-item {
+    font-size: 13px;
+    color: #d6e3ff;
+    display: flex;
+    justify-content: space-between;
+}
+
+.potion-card__cost-item--insufficient {
+    color: #ff8b8b;
+}
+
+.potion-card__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+}
+
+.potion-card__action-button {
+    width: 100%;
     border: none;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;    
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    border-radius: 5px;
-    z-index: 900000000;
-    transition: background-color 0.3s, transform 0.3s;
-    position: absolute;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    background: linear-gradient(135deg, #4a7fff, #6fa6ff);
+    color: #0a0d15;
+    box-shadow: 0 8px 18px rgba(78, 127, 255, 0.45);
 }
 
-#cooldownButton1:hover {
-    background-color: #40927a;
-    transform: scale(1.05);
+.potion-card__action-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+    box-shadow: none;
+    background: linear-gradient(135deg, #37445e, #2a3447);
+    color: #a7b2c8;
 }
 
-#cooldownButton2 {
-    background-color: #4c90af;
-    color: white;
+.potion-card__action-button:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 26px rgba(78, 127, 255, 0.55);
+}
+
+.potion-card__inventory-count {
+    font-size: 12px;
+    color: #9fb4dd;
+}
+
+.potion-inventory {
+    list-style: none;
+    margin: 0;
+    padding: 12px 18px 18px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.potion-inventory__item {
+    background: linear-gradient(180deg, rgba(20, 25, 37, 0.92), rgba(12, 16, 25, 0.98));
+    border: 1px solid rgba(118, 169, 255, 0.25);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+}
+
+.potion-inventory__title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #f4f8ff;
+}
+
+.potion-inventory__image {
+    width: 78px;
+    height: 78px;
+    border-radius: 12px;
+    background: rgba(9, 13, 22, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.35);
+}
+
+.potion-inventory__image img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.potion-inventory__count {
+    font-size: 13px;
+    color: #cbd7f3;
+}
+
+.potion-inventory__actions {
+    width: 100%;
+}
+
+.potion-inventory__use {
+    width: 100%;
     border: none;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;    
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
-    border-radius: 5px;
-    z-index: 900000000;
-    transition: background-color 0.3s, transform 0.3s;
+    background: linear-gradient(135deg, #5bd0a4, #7fffd4);
+    color: #04201a;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 10px 24px rgba(91, 208, 164, 0.4);
+}
+
+.potion-inventory__use:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    box-shadow: none;
+    background: linear-gradient(135deg, #2f3f3b, #1f2a28);
+    color: #8aa7a0;
+}
+
+.potion-inventory__use:not(:disabled):hover {
+    transform: translateY(-1px);
+}
+
+.potion-spawn-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 100010;
+}
+
+.potion-spawn {
     position: absolute;
+    width: 96px;
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    border-radius: 16px;
+    background: rgba(15, 20, 32, 0.9);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-#cooldownButton2:hover {
-    background-color: #376a81;
-    transform: scale(1.05);
+.potion-spawn img {
+    max-width: 100%;
+    max-height: 100%;
+    pointer-events: none;
 }
 
-#countdownDisplay,
-.roll-cooldown-display {
+.potion-spawn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.55);
+}
+
+.buff-tray {
     position: fixed;
     right: 32px;
     bottom: 32px;
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 18px;
-    color: #f3f6ff;
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    background:
-        linear-gradient(180deg, rgba(26, 30, 40, 0.78), rgba(16, 18, 24, 0.88));
-    border: 1px solid rgba(118, 169, 255, 0.35);
-    border-radius: 14px;
-    box-shadow:
-        0 14px 30px rgba(0, 0, 0, 0.45),
-        inset 0 1px 0 rgba(170, 210, 255, 0.25);
-    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-end;
     z-index: 100020;
+}
+
+.buff-tray__empty {
+    padding: 12px 18px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(26, 30, 40, 0.78), rgba(16, 18, 24, 0.88));
+    border: 1px solid rgba(118, 169, 255, 0.25);
+    color: #b7c8ee;
+    font-size: 13px;
+}
+
+.buff-card { 
+    position: relative;
+    min-width: 180px;
+    padding: 14px 16px 16px;
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(26, 30, 40, 0.85), rgba(13, 16, 22, 0.95));
+    border: 1px solid rgba(118, 169, 255, 0.35);
+    box-shadow: 0 18px 34px rgba(0, 0, 0, 0.45);
+    display: grid;
+    gap: 8px;
+    justify-items: center;
+    text-align: center;
+}
+
+.buff-card--disabled {
+    opacity: 0.65;
+}
+
+.buff-card__timer {
+    font-size: 13px;
+    color: #dce7ff;
+    letter-spacing: 0.04em;
+}
+
+.buff-card__image {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    background: rgba(11, 16, 28, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.buff-card__image img {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.buff-card__label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #f2f6ff;
+}
+
+.buff-card__details {
+    font-size: 13px;
+    color: #9fb4dd;
+}
+
+.buff-card__disabled-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: rgba(10, 12, 18, 0.78);
+    color: rgba(255, 105, 105, 0.85);
+    font-size: 28px;
+    pointer-events: none;
+}
+
+.buff-tray__disabled-banner {
+    padding: 10px 16px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(44, 22, 22, 0.85), rgba(32, 16, 16, 0.92));
+    border: 1px solid rgba(255, 120, 120, 0.35);
+    color: #ffdede;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.buff-tray__disabled-banner i {
+    color: #ff9a9a;
+}
+
+@media (max-width: 768px) {
+    .potion-menu__panel {
+        width: 95vw;
+    }
+
+    .potion-menu__grid {
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .potion-inventory {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .buff-tray {
+        right: 16px;
+        bottom: 92px;
+    }
 }
 
 #countdownDisplay::before,
