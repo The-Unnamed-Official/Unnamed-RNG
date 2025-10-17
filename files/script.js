@@ -80,7 +80,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 100,
     durationSeconds: 180,
     craftCost: {
-      classes: { commonBgImg: 130, rareBgImg: 100, plabreBgImg: 50, wanspiBgImgBgImg: 20, curartBgImg: 10, shadBgImg: 2 },
+      classes: { commonBgImg: 130, rareBgImg: 100, plabreBgImg: 50, wanspiBgImg: 20, curartBgImg: 10, shadBgImg: 2 },
       titles: [],
     },
   },
