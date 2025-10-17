@@ -336,7 +336,7 @@ const POTION_DEFINITIONS = [
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
     craftCost: {
-      classes: { commonBgImg: 200, rareBgImg: 150, unstoppableBgImg: 100, fearBgImg: 1, lostsBgImg: 1 },
+      classes: { commonBgImg: 200, rareBgImg: 150, unstoppableBgImg: 50, fearBgImg: 1, lostsBgImg: 1 },
       titles: [],
       potions: { luckyPotion: 30, fortuneSpoid1: 3 },
     },
