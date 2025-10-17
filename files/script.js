@@ -2999,6 +2999,17 @@ function normalizeInventoryRecord(raw) {
     }
   }
 
+  if (typeof record.luckValue === "number" && Number.isFinite(record.luckValue)) {
+    const clamped = Math.max(0, record.luckValue);
+    if (clamped !== record.luckValue) {
+      record.luckValue = clamped;
+      mutated = true;
+    }
+  } else if (Object.prototype.hasOwnProperty.call(record, "luckValue")) {
+    delete record.luckValue;
+    mutated = true;
+  }
+
   const bucket = normalizeRarityBucket(record.rarityClass);
 
   if (bucket) {
@@ -15259,6 +15270,21 @@ function selectTitle(rarity) {
   return titles[Math.floor(Math.random() * titles.length)];
 }
 
+function getCurrentLuckValue() {
+  if (buffsDisabled) {
+    return 1;
+  }
+
+  const permanentPercent = getPermanentLuckBonusPercent();
+  const potionPercent = getActivePotionLuckBonusPercent();
+  const totalPercent =
+    (Number.isFinite(permanentPercent) ? permanentPercent : 0) +
+    (Number.isFinite(potionPercent) ? potionPercent : 0);
+
+  const luckValue = 1 + totalPercent / 100;
+  return luckValue > 0 ? luckValue : 0;
+}
+
 function addToInventory(title, rarityClass) {
   lastRollRarityClass = rarityClass || null;
   const rolledAt = typeof rollCount === "number"
@@ -15286,7 +15312,14 @@ function addToInventory(title, rarityClass) {
     }
   }
 
-  const { record: newRecord } = normalizeInventoryRecord({ title, rarityClass, rolledAt });
+  const luckValue = getCurrentLuckValue();
+
+  const { record: newRecord } = normalizeInventoryRecord({
+    title,
+    rarityClass,
+    rolledAt,
+    luckValue,
+  });
   if (!newRecord) {
     return false;
   }
@@ -16290,8 +16323,6 @@ function renderInventory() {
     const dropdownMenu = element.querySelector(".dropdown-menu");
     const rarityTextElement = element.querySelector(".rarity-text");
     const infoTitleElement = dropdownMenu?.querySelector(".info-title");
-    const infoSubElement = dropdownMenu?.querySelector(".info-sub");
-
     previousState.set(key, {
       dropdownOpen: Boolean(
         dropdownMenu && (dropdownMenu.classList.contains("open") || dropdownMenu.style.display === "block")
@@ -16299,11 +16330,8 @@ function renderInventory() {
       dropdownScrollTop: dropdownMenu ? dropdownMenu.scrollTop : 0,
       rarityLabel: rarityTextElement ? rarityTextElement.textContent : null,
       headerTitle: infoTitleElement ? infoTitleElement.textContent : null,
-      headerSubtitle: infoSubElement ? infoSubElement.textContent : null,
     });
   });
-
-  inventoryList.innerHTML = "";
 
   applyInventorySortModeToButtons();
 
@@ -16360,6 +16388,8 @@ function renderInventory() {
   const end = start + itemsPerPage;
   const paginatedEntries = sortedEntries.slice(start, end);
 
+  const fragment = document.createDocumentFragment();
+
   paginatedEntries.forEach(({ item, index: originalIndex }) => {
     const listItem = document.createElement("li");
     listItem.className = item.rarityClass || "";
@@ -16406,12 +16436,19 @@ function renderInventory() {
       ? (typeof formatRollCount === "function" ? formatRollCount(item.rolledAt) : item.rolledAt.toLocaleString())
       : "Unknown";
 
+    const luckValue = typeof item.luckValue === "number" && Number.isFinite(item.luckValue)
+      ? item.luckValue
+      : 1;
+    const formattedLuck = luckValue.toFixed(2);
+
     header.innerHTML = `
       <div class="info-title">${item.title}</div>
-      <div class="info-sub">Rolled at: ${rolledText}</div>
+      <div class="info-sub">
+        <span class="info-sub__rolled">Rolled at: ${rolledText}</span>
+        <span class="info-sub__luck">Luck: ${formattedLuck}</span>
+      </div>
     `;
     const headerTitleElement = header.querySelector(".info-title");
-    const headerSubtitleElement = header.querySelector(".info-sub");
     dropdownMenu.appendChild(header);
 
     // Divider
@@ -16496,9 +16533,6 @@ function renderInventory() {
       if (previous.headerTitle != null && headerTitleElement) {
         headerTitleElement.textContent = previous.headerTitle;
       }
-      if (previous.headerSubtitle != null && headerSubtitleElement) {
-        headerSubtitleElement.textContent = previous.headerSubtitle;
-      }
       if (previous.dropdownOpen && dropdownMenu) {
         dropdownMenu.style.display = "block";
         dropdownMenu.classList.add("open");
@@ -16509,8 +16543,10 @@ function renderInventory() {
       }
     }
 
-    inventoryList.appendChild(listItem);
+    fragment.appendChild(listItem);
   });
+
+  inventoryList.replaceChildren(fragment);
 
   updatePagination();
   checkAchievements();
