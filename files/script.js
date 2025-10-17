@@ -336,12 +336,9 @@ const POTION_DEFINITIONS = [
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
     craftCost: {
-      classes: { commonBgImg: 200, rareBgImg: 100 },
-      titles: [
-        { title: "Haunted Soul", count: 2 },
-        { title: "Ether Shift", count: 1 },
-      ],
-      potions: { luckyPotion: 20, fortuneSpoid1: 2 },
+      classes: { commonBgImg: 200, rareBgImg: 100, unstoppableBgImg: 100, fearBgImg: 1, lostsBgImg: 1 },
+      titles: [],
+      potions: { luckyPotion: 30, fortuneSpoid1: 3 },
     },
   },
   {
@@ -388,7 +385,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 65,
     durationSeconds: 180,
     craftCost: {
-      classes: { commonBgImg: 135, rareBgImg: 105, plabreBgImg: 55, unstoppableBgImg: 30, mysBgImg: 15, samuraiBgImg: 10, frightBgImg: 3 },
+      classes: { commonBgImg: 135, rareBgImg: 105, plabreBgImg: 55, unstoppableBgImg: 30, mysBgImg: 15, samuraiBgImg: 10 },
       titles: [],
     },
   },
