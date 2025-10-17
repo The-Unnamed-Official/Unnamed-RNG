@@ -5245,11 +5245,56 @@ body.flashing {
     max-height: 100%;
     object-fit: contain;
     pointer-events: none;
+    animation: potionSpawnIdle 6s ease-in-out infinite;
+    transform-origin: center;
 }
 
 .potion-spawn:hover {
     transform: translateY(-3px) scale(1.02);
     box-shadow: none;
+}
+
+.potion-spawn--collected {
+    pointer-events: none;
+}
+
+.potion-spawn--collected img {
+    animation: potionSpawnCollect 0.35s ease forwards;
+}
+
+@keyframes potionSpawnIdle {
+    0%, 100% {
+        transform: translateX(0) rotate(0deg);
+    }
+    50% {
+        transform: translateX(4px) rotate(1.5deg);
+    }
+}
+
+@keyframes potionSpawnCollect {
+    0% {
+        transform: scale(1) translateX(0);
+        opacity: 1;
+    }
+    60% {
+        transform: scale(1.15) translateX(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.6) translateX(0);
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .potion-spawn img {
+        animation: none;
+    }
+
+    .potion-spawn--collected img {
+        animation: none;
+        opacity: 0;
+    }
 }
 
 .buff-tray {
