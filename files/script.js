@@ -104,7 +104,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 200,
     durationSeconds: 360,
     craftCost: {
-      classes: { commonBgImg: 180, poweredBgImg: 130, flickerBgImg: 100, memoryBgImg: 30, oblBgImg: 20, froBgImg: 10, emerBgImg: 1 },
+      classes: { commonBgImg: 180, poweredBgImg: 130, flickerBgImg: 100, memBgImg: 30, oblBgImg: 20, froBgImg: 10, emerBgImg: 1 },
       titles: [],
     },
   },
