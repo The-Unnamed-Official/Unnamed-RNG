@@ -1047,6 +1047,36 @@ function isRarityClassAffectedByLuck(rarityClass) {
   return Boolean(bucket && bucket !== "under100");
 }
 
+function extractDisplayedOddsFromType(rarityType) {
+  if (typeof rarityType !== "string") {
+    return null;
+  }
+
+  const oddsMatch = rarityType.match(/\[1 in ([^\]]+)\]/i);
+  if (!oddsMatch) {
+    return null;
+  }
+
+  const numericMatch = oddsMatch[1].match(/[\d.,]+/);
+  if (!numericMatch) {
+    return null;
+  }
+
+  const normalized = numericMatch[0].replace(/,/g, "");
+  const parsed = parseFloat(normalized);
+
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function isRarityEligibleForLuck(rarityType, luckThreshold) {
+  const displayedOdds = extractDisplayedOddsFromType(rarityType);
+  if (!Number.isFinite(displayedOdds)) {
+    return true;
+  }
+
+  return displayedOdds >= luckThreshold;
+}
+
 function renderPotionCrafting() {
   const container = byId("potionCraftingList");
   if (!container) {
@@ -14670,11 +14700,20 @@ function rollRarity() {
   ];
 
   const luckMultiplier = 1 + getActiveLuckBonusPercent() / 100;
+  const luckThreshold = Math.max(1, luckMultiplier);
   const adjustedRarities = rarities.map((rarity) => {
     const affected = isRarityClassAffectedByLuck(rarity.class);
     const effectiveChance = rarity.chance * (affected ? luckMultiplier : 1);
     return { ...rarity, effectiveChance };
   });
+
+  let availableRarities = adjustedRarities.filter((rarity) =>
+    isRarityEligibleForLuck(rarity.type, luckThreshold)
+  );
+
+  if (!availableRarities.length) {
+    availableRarities = adjustedRarities;
+  }
 
   const glitchedRarity = {
     type: "Gl1tch3d [1 in 12,404/40,404th]",
@@ -14766,6 +14805,10 @@ function rollRarity() {
       continue;
     }
 
+    if (!isRarityEligibleForLuck(data.type, luckThreshold)) {
+      continue;
+    }
+
     const affected = isRarityClassAffectedByLuck(data.class);
     const adjustedChance = data.chance * (affected ? luckMultiplier : 1);
     const clampedChance = Math.min(1, adjustedChance);
@@ -14775,16 +14818,16 @@ function rollRarity() {
     }
   }
 
-  const total = adjustedRarities.reduce((sum, r) => sum + r.effectiveChance, 0);
+  const total = availableRarities.reduce((sum, r) => sum + r.effectiveChance, 0);
   let pick = Math.random() * total;
 
-  for (const r of adjustedRarities) {
+  for (const r of availableRarities) {
     if ((pick -= r.effectiveChance) <= 0) {
       return r;
     }
   }
 
-  return adjustedRarities[adjustedRarities.length - 1];
+  return availableRarities[availableRarities.length - 1];
 };
 
 function clickSound() {
