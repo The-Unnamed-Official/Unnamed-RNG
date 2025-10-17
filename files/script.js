@@ -1530,12 +1530,28 @@ function getPermanentAchievementBuffs() {
   return buffs;
 }
 
-function getActiveLuckBonusPercent() {
+function getActiveLuckPercentBreakdown() {
   if (buffsDisabled) {
-    return getActivePotionLuckBonusPercent(isBuffToggleExempt);
+    const potionPercent = getActivePotionLuckBonusPercent(isBuffToggleExempt);
+    return {
+      total: potionPercent,
+      permanent: 0,
+      potion: potionPercent,
+    };
   }
 
-  return getPermanentLuckBonusPercent() + getActivePotionLuckBonusPercent();
+  const permanentPercent = getPermanentLuckBonusPercent();
+  const potionPercent = getActivePotionLuckBonusPercent();
+
+  return {
+    total: permanentPercent + potionPercent,
+    permanent: permanentPercent,
+    potion: potionPercent,
+  };
+}
+
+function getActiveLuckBonusPercent() {
+  return getActiveLuckPercentBreakdown().total;
 }
 
 function getActiveSpeedBonusPercent() {
@@ -14975,11 +14991,18 @@ function rollRarity() {
     }
   ];
 
-  const activeLuckPercent = getActiveLuckBonusPercent();
+  const {
+    total: activeLuckPercent,
+    permanent: activePermanentLuckPercent,
+    potion: activePotionLuckPercent,
+  } = getActiveLuckPercentBreakdown();
   capturePendingRollLuckSnapshot(activeLuckPercent);
   const luckMultiplier = 1 + activeLuckPercent / 100;
   consumeSingleUseBuffs();
-  const luckThreshold = Math.max(1, activeLuckPercent);
+  const luckThreshold = computeLuckThreshold(
+    activePermanentLuckPercent,
+    activePotionLuckPercent,
+  );
   const adjustedRarities = rarities.map((rarity) => {
     const affected = isRarityClassAffectedByLuck(rarity.class);
     const effectiveChance = rarity.chance * (affected ? luckMultiplier : 1);
@@ -15290,6 +15313,19 @@ function computeLuckValueFromPercent(totalPercent) {
   const normalizedPercent = Number.isFinite(totalPercent) ? totalPercent : 0;
   const value = 1 + normalizedPercent / 100;
   return value > 0 ? value : 0;
+}
+
+function computeLuckThreshold(permanentPercent, potionPercent) {
+  const normalizedPermanent = Number.isFinite(permanentPercent)
+    ? Math.max(0, permanentPercent)
+    : 0;
+  const normalizedPotion = Number.isFinite(potionPercent) ? Math.max(0, potionPercent) : 0;
+
+  const permanentContribution = normalizedPermanent;
+  const potionContribution = normalizedPotion / 10;
+  const combined = permanentContribution + potionContribution;
+
+  return combined > 1 ? combined : 1;
 }
 
 function capturePendingRollLuckSnapshot(totalPercent) {
