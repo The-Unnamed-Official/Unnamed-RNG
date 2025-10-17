@@ -131,7 +131,7 @@ function positionBuffTooltip(event, card) {
     Math.min(viewportWidth - halfWidth - 8, anchorX)
   );
 
-  buffTooltipElement.style.left = `${clampedX}px`;
+  buffTooltipElement.style.left = `${clampedX - halfWidth}px`;
 
   const tooltipHeight = buffTooltipElement.offsetHeight;
   let top = cardRect.top - tooltipHeight - 14;
@@ -156,7 +156,7 @@ function showBuffTooltip(card, event) {
 
   buffTooltipNameElement.textContent = buffName;
   buffTooltipEffectElement.textContent = buffEffect;
-  buffTooltipTimerElement.textContent = buffDisabled === "true" ? `${buffTimer} (Paused)` : buffTimer;
+  buffTooltipTimerElement.textContent = buffDisabled === "true" ? `${buffTimer} (Disabled)` : buffTimer;
 
   buffTooltipEffectElement.className = "buff-tooltip__effect";
   const mappedClass = BUFF_TOOLTIP_EFFECT_CLASS_MAP[buffType];
@@ -1405,7 +1405,7 @@ function updateLuckStatDisplay() {
     if (potionTotal > 0) {
       let potionText = `Potions: ${formatPercentage(potionEffective, true)}`;
       if (buffsDisabled) {
-        potionText += " (paused)";
+        potionText += " (Disabled)";
       }
       parts.push(potionText);
     }
