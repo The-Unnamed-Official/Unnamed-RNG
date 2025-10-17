@@ -193,13 +193,18 @@
                 </div>
                 <div class="stats-body">
                     <div class="stats-overview">
-                        <div class="stat-card">
+                        <div class="stat-card stat-card--rolls">
                             <span class="stat-label">Total Rolls</span>
                             <span class="stat-value" id="rollCountDisplay1">NaN</span>
                         </div>
-                        <div class="stat-card">
+                        <div class="stat-card stat-card--playtime">
                             <span class="stat-label">Playtime</span>
                             <span class="stat-value stat-timer" id="timer">00:00:00</span>
+                        </div>
+                        <div class="stat-card stat-card--luck">
+                            <span class="stat-label">Luck Bonus</span>
+                            <span class="stat-value" id="luckStatValue">+0%</span>
+                            <span class="stat-card__hint" id="luckStatBreakdown">Permanent: +0%</span>
                         </div>
                     </div>
                 </div>
@@ -532,7 +537,6 @@
             <button id="achievementsButton" class="orange-button">Achievements</button>
             <button id="statsButton" class="orange-button">Stats</button>
             <button id="settingsButton" class="orange-button">Settings</button>
-            <button id="potionCraftingButton" class="orange-button">Potions</button>
             <button id="autoRollButton" class="toggle-button off">Auto Roll: Off</button>
         </div>
 
@@ -574,7 +578,10 @@
             </div>
         </div>
 
-        <button id="toggleInventoryBtn">Show Inventory</button>
+        <div class="inventory-controls" role="group" aria-label="Inventory controls">
+            <button id="toggleInventoryBtn" class="inventory-controls__button" type="button">Show Inventory</button>
+            <button id="potionCraftingButton" class="inventory-controls__button inventory-controls__button--accent" type="button">Potions</button>
+        </div>
 
         <div class="inventory">
             <div class="inventory-header">

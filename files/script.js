@@ -53,6 +53,32 @@ let buffTooltipTimerElement = null;
 let activeBuffTooltipCard = null;
 let lastBuffPointerPosition = null;
 
+function normalizeAchievementNameList(raw) {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+  return raw.filter((value) => typeof value === "string" && value.trim().length > 0);
+}
+
+const storedUnlockedAchievements = storage.get("unlockedAchievements", []);
+let unlockedAchievementsCache = new Set(normalizeAchievementNameList(storedUnlockedAchievements));
+
+const COLLECTOR_LUCK_TIERS = [
+  { name: "Achievement Enthusiast", value: 100 },
+  { name: "Nice...", value: 69 },
+  { name: "Ultimate Collector", value: 50 },
+  { name: "Achievement God", value: 33 },
+  { name: "Achievement Addict", value: 30 },
+  { name: "Achievement Hoarder", value: 20 },
+  { name: "Achievement Collector", value: 10 },
+];
+
+const COLLECTOR_SPEED_TIERS = [
+  { name: "Achievement Enthusiast", value: 100 },
+  { name: "Nice...", value: 69 },
+  { name: "Achievement God", value: 33 },
+];
+
 function ensureBuffTooltipElement() {
   if (buffTooltipElement) {
     return;
@@ -96,13 +122,13 @@ function positionBuffTooltip(event, card) {
 
   const cardRect = card.getBoundingClientRect();
   const viewportWidth = document.documentElement.clientWidth || window.innerWidth;
-  const pointerX = event ? event.clientX : cardRect.left + cardRect.width / 2;
+  const anchorX = cardRect.left + cardRect.width / 2;
 
   const tooltipWidth = buffTooltipElement.offsetWidth;
   const halfWidth = tooltipWidth / 2;
   const clampedX = Math.max(
     halfWidth + 8,
-    Math.min(viewportWidth - halfWidth - 8, pointerX)
+    Math.min(viewportWidth - halfWidth - 8, anchorX)
   );
 
   buffTooltipElement.style.left = `${clampedX}px`;
@@ -1239,24 +1265,142 @@ function pruneExpiredBuffs() {
   return changed;
 }
 
-function getActiveLuckBonusPercentRaw() {
+function getActivePotionLuckBonusPercent() {
   return activeBuffs
     .filter((buff) => buff.type === POTION_TYPES.LUCK)
     .reduce((total, buff) => total + (Number.isFinite(buff.effectPercent) ? buff.effectPercent : 0), 0);
 }
 
-function getActiveSpeedBonusPercentRaw() {
+function getActivePotionSpeedBonusPercent() {
   return activeBuffs
     .filter((buff) => buff.type === POTION_TYPES.SPEED)
     .reduce((total, buff) => total + (Number.isFinite(buff.effectPercent) ? buff.effectPercent : 0), 0);
 }
 
+function findHighestCollectorTier(tiers) {
+  if (!Array.isArray(tiers) || tiers.length === 0) {
+    return null;
+  }
+  for (const tier of tiers) {
+    if (tier && unlockedAchievementsCache.has(tier.name)) {
+      return tier;
+    }
+  }
+  return null;
+}
+
+function getPermanentLuckBonusTier() {
+  return findHighestCollectorTier(COLLECTOR_LUCK_TIERS);
+}
+
+function getPermanentSpeedBonusTier() {
+  return findHighestCollectorTier(COLLECTOR_SPEED_TIERS);
+}
+
+function getPermanentLuckBonusPercent() {
+  const tier = getPermanentLuckBonusTier();
+  return tier && Number.isFinite(tier.value) ? tier.value : 0;
+}
+
+function getPermanentSpeedBonusPercent() {
+  const tier = getPermanentSpeedBonusTier();
+  return tier && Number.isFinite(tier.value) ? tier.value : 0;
+}
+
+function getUnlockedAchievementsSnapshot() {
+  return new Set(unlockedAchievementsCache);
+}
+
+function setUnlockedAchievementsCache(unlocked) {
+  const normalized = normalizeAchievementNameList(Array.from(unlocked));
+  unlockedAchievementsCache = new Set(normalized);
+  handlePermanentBuffsChanged();
+}
+
+function getPermanentAchievementBuffs() {
+  const buffs = [];
+  const luckTier = getPermanentLuckBonusTier();
+  if (luckTier && Number.isFinite(luckTier.value) && luckTier.value > 0) {
+    buffs.push({
+      id: "permanent-luck",
+      name: luckTier.name,
+      type: POTION_TYPES.LUCK,
+      effectPercent: luckTier.value,
+      image: getBuffIconForType(POTION_TYPES.LUCK),
+      isPermanent: true,
+      disableWithToggle: false,
+    });
+  }
+
+  const speedTier = getPermanentSpeedBonusTier();
+  if (speedTier && Number.isFinite(speedTier.value) && speedTier.value > 0) {
+    buffs.push({
+      id: "permanent-speed",
+      name: speedTier.name,
+      type: POTION_TYPES.SPEED,
+      effectPercent: speedTier.value,
+      image: getBuffIconForType(POTION_TYPES.SPEED),
+      isPermanent: true,
+      disableWithToggle: false,
+    });
+  }
+
+  return buffs;
+}
+
 function getActiveLuckBonusPercent() {
-  return buffsDisabled ? 0 : getActiveLuckBonusPercentRaw();
+  const potionBonus = buffsDisabled ? 0 : getActivePotionLuckBonusPercent();
+  return getPermanentLuckBonusPercent() + potionBonus;
 }
 
 function getActiveSpeedBonusPercent() {
-  return buffsDisabled ? 0 : getActiveSpeedBonusPercentRaw();
+  const potionBonus = buffsDisabled ? 0 : getActivePotionSpeedBonusPercent();
+  return getPermanentSpeedBonusPercent() + potionBonus;
+}
+
+function formatBuffEffectValue(value) {
+  if (!Number.isFinite(value)) {
+    return "0";
+  }
+  return Number.isInteger(value) ? String(value) : value.toFixed(1);
+}
+
+function formatPercentage(value, includeSign = false) {
+  if (!Number.isFinite(value)) {
+    return includeSign ? "+0%" : "0%";
+  }
+  const formatted = Number.isInteger(value) ? value.toString() : value.toFixed(1);
+  if (includeSign) {
+    return `${value >= 0 ? "+" : ""}${formatted}%`;
+  }
+  return `${formatted}%`;
+}
+
+function updateLuckStatDisplay() {
+  const valueElement = byId("luckStatValue");
+  if (!valueElement) {
+    return;
+  }
+
+  const permanent = getPermanentLuckBonusPercent();
+  const potionTotal = getActivePotionLuckBonusPercent();
+  const potionEffective = buffsDisabled ? 0 : potionTotal;
+  const total = permanent + potionEffective;
+
+  valueElement.textContent = formatPercentage(total, true);
+
+  const breakdownElement = byId("luckStatBreakdown");
+  if (breakdownElement) {
+    const parts = [`Permanent: ${formatPercentage(permanent, true)}`];
+    if (potionTotal > 0) {
+      let potionText = `Potions: ${formatPercentage(potionEffective, true)}`;
+      if (buffsDisabled) {
+        potionText += " (paused)";
+      }
+      parts.push(potionText);
+    }
+    breakdownElement.textContent = parts.join(" • ");
+  }
 }
 
 function applySpeedBuffEffects() {
@@ -1286,73 +1430,108 @@ function formatBuffDuration(totalSeconds) {
 function renderBuffTray() {
   const tray = byId("buffTray");
   if (!tray) {
+    updateLuckStatDisplay();
     return;
   }
 
   hideBuffTooltip();
   tray.innerHTML = "";
 
-  if (!activeBuffs.length) {
+  const referenceTime = buffsDisabled && Number.isFinite(buffPauseStart)
+    ? buffPauseStart
+    : Date.now();
+
+  const potionBuffs = activeBuffs
+    .slice()
+    .sort((a, b) => a.expiresAt - b.expiresAt)
+    .map((buff) => {
+      const remainingSeconds = Math.max(0, Math.floor((buff.expiresAt - referenceTime) / 1000));
+      return {
+        id: buff.id,
+        name: buff.name,
+        type: buff.type,
+        effectPercent: buff.effectPercent,
+        image: buff.image,
+        remainingSeconds,
+        timerText: formatBuffDuration(remainingSeconds),
+        disableWithToggle: true,
+      };
+    });
+
+  const permanentBuffs = getPermanentAchievementBuffs().map((buff) => ({
+    ...buff,
+    remainingSeconds: null,
+    timerText: "Permanent",
+  }));
+
+  const buffsForDisplay = [...potionBuffs, ...permanentBuffs];
+
+  if (!buffsForDisplay.length) {
     tray.style.display = "none";
+    updateLuckStatDisplay();
     return;
   }
 
   tray.style.display = "flex";
-  const now = buffsDisabled && Number.isFinite(buffPauseStart)
-    ? buffPauseStart
-    : Date.now();
-  activeBuffs
-    .slice()
-    .sort((a, b) => a.expiresAt - b.expiresAt)
-    .forEach((buff) => {
-      const remainingSeconds = Math.max(0, Math.floor((buff.expiresAt - now) / 1000));
-      const card = document.createElement("div");
-      card.className = "buff-card";
-      if (buffsDisabled) {
-        card.classList.add("buff-card--disabled");
-      }
-      card.tabIndex = 0;
-      const icon = document.createElement("img");
-      icon.className = "buff-card__icon";
-      icon.src = getBuffIconForType(buff.type) || buff.image;
-      icon.alt = "";
 
-      const effect = document.createElement("span");
-      effect.className = "buff-card__effect";
-      effect.textContent = buff.type === POTION_TYPES.LUCK
-        ? `+${buff.effectPercent}% Luck`
-        : `+${buff.effectPercent}% Speed`;
+  buffsForDisplay.forEach((buff) => {
+    const card = document.createElement("div");
+    card.className = "buff-card";
+    const isDisabled = buff.disableWithToggle && buffsDisabled;
+    if (isDisabled) {
+      card.classList.add("buff-card--disabled");
+    }
+    card.tabIndex = 0;
 
-      const timer = document.createElement("span");
-      timer.className = "buff-card__timer";
-      timer.textContent = formatBuffDuration(remainingSeconds);
+    const icon = document.createElement("img");
+    icon.className = "buff-card__icon";
+    icon.src = getBuffIconForType(buff.type) || buff.image;
+    icon.alt = "";
 
-      card.dataset.buffName = buff.name;
-      card.dataset.buffEffect = effect.textContent;
-      card.dataset.buffTimer = timer.textContent;
-      card.dataset.buffType = buff.type;
-      card.dataset.buffDisabled = buffsDisabled ? "true" : "false";
+    const effect = document.createElement("span");
+    effect.className = "buff-card__effect";
+    const effectText = buff.type === POTION_TYPES.LUCK
+      ? `+${formatBuffEffectValue(buff.effectPercent)}% Luck`
+      : `+${formatBuffEffectValue(buff.effectPercent)}% Speed`;
+    effect.textContent = effectText;
 
-      card.setAttribute(
-        "aria-label",
-        `${buff.name}. ${effect.textContent}. ${timer.textContent}.`
-      );
-      card.setAttribute("role", "group");
-      card.setAttribute("aria-disabled", buffsDisabled ? "true" : "false");
+    const timer = document.createElement("span");
+    timer.className = "buff-card__timer";
+    const timerText = buff.timerText || (buff.remainingSeconds === null
+      ? "Permanent"
+      : formatBuffDuration(buff.remainingSeconds));
+    timer.textContent = timerText;
 
-      card.addEventListener("mouseenter", handleBuffCardPointerEnter);
-      card.addEventListener("mouseleave", handleBuffCardPointerLeave);
-      card.addEventListener("mousemove", handleBuffCardPointerMove);
-      card.addEventListener("focus", handleBuffCardFocus);
-      card.addEventListener("blur", handleBuffCardBlur);
+    const name = buff.name || "";
+    card.dataset.buffName = name;
+    card.dataset.buffEffect = effectText;
+    card.dataset.buffTimer = timerText;
+    card.dataset.buffType = buff.type;
+    card.dataset.buffDisabled = isDisabled ? "true" : "false";
 
-      card.appendChild(icon);
-      card.appendChild(effect);
-      card.appendChild(timer);
-      tray.appendChild(card);
-    });
+    card.setAttribute("aria-label", `${name}. ${effectText}. ${timerText}.`);
+    card.setAttribute("role", "group");
+    card.setAttribute("aria-disabled", isDisabled ? "true" : "false");
+
+    card.addEventListener("mouseenter", handleBuffCardPointerEnter);
+    card.addEventListener("mouseleave", handleBuffCardPointerLeave);
+    card.addEventListener("mousemove", handleBuffCardPointerMove);
+    card.addEventListener("focus", handleBuffCardFocus);
+    card.addEventListener("blur", handleBuffCardBlur);
+
+    card.appendChild(icon);
+    card.appendChild(effect);
+    card.appendChild(timer);
+    tray.appendChild(card);
+  });
 
   restoreBuffTooltipForPointer();
+  updateLuckStatDisplay();
+}
+
+function handlePermanentBuffsChanged() {
+  applySpeedBuffEffects();
+  renderBuffTray();
 }
 
 function refreshBuffEffects() {
@@ -3420,7 +3599,9 @@ function updateRollCount(increment = 1) {
 }
 
 function persistUnlockedAchievements(unlocked) {
-  storage.set("unlockedAchievements", Array.from(unlocked));
+  const normalized = normalizeAchievementNameList(Array.from(unlocked));
+  storage.set("unlockedAchievements", normalized);
+  setUnlockedAchievementsCache(normalized);
 }
 
 function unlockAchievement(name, unlocked) {
@@ -3433,7 +3614,7 @@ function unlockAchievement(name, unlocked) {
 }
 
 function checkAchievements(context = {}) {
-  const unlocked = new Set(storage.get("unlockedAchievements", []));
+  const unlocked = getUnlockedAchievementsSnapshot();
   const rarityBuckets = context && context.rarityBuckets instanceof Set
     ? context.rarityBuckets
     : new Set(storage.get("rolledRarityBuckets", []));
@@ -3566,7 +3747,7 @@ function showAchievementPopup(name) {
 }
 
 function updateAchievementsList() {
-  const unlocked = new Set(storage.get("unlockedAchievements", []));
+  const unlocked = getUnlockedAchievementsSnapshot();
   const stats = computeAchievementStats();
 
   ACHIEVEMENT_GROUP_STYLES.forEach(({ selector, unlocked: unlockedStyles }) => {
