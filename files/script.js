@@ -15321,11 +15321,10 @@ function computeLuckThreshold(permanentPercent, potionPercent) {
     : 0;
   const normalizedPotion = Number.isFinite(potionPercent) ? Math.max(0, potionPercent) : 0;
 
-  const permanentContribution = normalizedPermanent;
-  const potionContribution = normalizedPotion / 10;
-  const combined = permanentContribution + potionContribution;
+  const totalPercent = normalizedPermanent + normalizedPotion;
+  const threshold = computeLuckValueFromPercent(totalPercent);
 
-  return combined > 1 ? combined : 1;
+  return threshold >= 1 ? threshold : 1;
 }
 
 function capturePendingRollLuckSnapshot(totalPercent) {
