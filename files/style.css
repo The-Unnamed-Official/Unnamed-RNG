@@ -3415,7 +3415,7 @@ body.flashing {
     filter: drop-shadow(0 12px 18px rgba(10, 14, 30, 0.65));
     transition: transform 220ms ease, opacity 220ms ease, background-image 60ms linear;
     opacity: 0.96;
-    z-index: 0;
+    z-index: 1110;
     pointer-events: none;
 }
 
@@ -3433,6 +3433,7 @@ body.flashing {
     background-image: url("images/unnamed_pfp_deco_active.png");
     opacity: 1;
     transform: scale(1.02);
+    z-index: 1110;
 }
 
 .creator-card__meta {
