@@ -141,7 +141,19 @@
                                 <button id="toggleRollDisplayBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll &amp; Display</button>
                                 <button id="toggleRollHistoryBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll History</button>
                                 <button id="toggleReducedAnimationsBtn" class="settings-btn settings-btn--ghost" type="button">Reduce Animations</button>
-                                <button id="toggleBuffsBtn" class="settings-btn settings-btn--ghost" type="button">Disable Buffs</button>
+                                <div class="settings-switch" id="potionBuffsSwitch">
+                                    <label class="settings-switch__container" for="toggleBuffsSwitch">
+                                        <input type="checkbox" id="toggleBuffsSwitch" class="settings-switch__input" role="switch" aria-checked="true">
+                                        <span class="settings-switch__visual" aria-hidden="true">
+                                            <span class="settings-switch__track"></span>
+                                            <span class="settings-switch__thumb"></span>
+                                        </span>
+                                        <span class="settings-switch__text">
+                                            <span class="settings-switch__title">Potion Buffs</span>
+                                            <span class="settings-switch__status" id="toggleBuffsStatus">Enabled</span>
+                                        </span>
+                                    </label>
+                                </div>
                             </div>
                         </section>
 
@@ -498,15 +510,13 @@
         </div>
 
         <div id="potionCraftingMenu" class="potion-menu" style="display: none;">
-            <div class="potion-menu__panel">
-                <div class="potion-menu__header">
-                    <h3 class="dragTxt">Potion Workshop</h3>
-                    <button id="closePotionCrafting" class="potion-menu__close" type="button">Close</button>
-                </div>
-                <div class="potion-menu__body">
-                    <p class="potion-menu__description">Craft potion buffs by exchanging spare titles. Crafted potions are stored in your inventory under the Potions tab.</p>
-                    <div id="potionCraftingList" class="potion-menu__grid" role="list"></div>
-                </div>
+            <div class="potion-menu__header">
+                <h3 class="dragTxt">Potion Workshop</h3>
+                <button id="closePotionCrafting" class="potion-menu__close" type="button">Close</button>
+            </div>
+            <div class="potion-menu__body">
+                <p class="potion-menu__description">Craft potion buffs by exchanging spare titles. Crafted potions are stored in your inventory under the Potions tab.</p>
+                <div id="potionCraftingList" class="potion-menu__grid" role="list"></div>
             </div>
         </div>
 
