@@ -4498,6 +4498,15 @@ body.flashing {
     background-color: #bb4935;
 }
 
+#potionCraftingButton {
+    background-color: #ff6347;
+}
+
+#potionCraftingButton:hover,
+#potionCraftingButton:focus-visible {
+    background-color: #bb4935;
+}
+
 .inventory-controls {
     position: fixed;
     top: 20px;
@@ -4511,6 +4520,7 @@ body.flashing {
 .inventory-controls__button {
     border: none;
     border-radius: 6px;
+    right: -10px;
     padding: 10px 16px;
     font-weight: 600;
     letter-spacing: 0.03em;
@@ -4531,13 +4541,28 @@ body.flashing {
     outline-offset: 2px;
 }
 
-.inventory-controls__button.inventory-controls__button--accent {
-    background-color: #f6a429;
+.potion-controls__button {
+    border: none;
+    border-radius: 6px;
+    right: 280px;
+    padding: 10px 16px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0));
 }
 
-.inventory-controls__button.inventory-controls__button--accent:hover,
-.inventory-controls__button.inventory-controls__button--accent:focus-visible {
-    background-color: #d68c1c;
+.potion-controls__button:hover,
+.potion-controls__button:focus-visible {
+    transform: translateY(-2px);
+}
+
+.potion-controls__button:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
 }
 
 .pageButton {
