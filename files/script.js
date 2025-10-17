@@ -1045,12 +1045,11 @@ function renderBuffTray() {
   tray.innerHTML = "";
 
   if (!activeBuffs.length) {
-    const empty = document.createElement("div");
-    empty.className = "buff-tray__empty";
-    empty.textContent = "No active buffs";
-    tray.appendChild(empty);
+    tray.style.display = "none";
     return;
   }
+
+  tray.style.display = "flex";
 
   if (buffsDisabled) {
     const banner = document.createElement("div");
@@ -1186,17 +1185,23 @@ function setBuffsDisabled(next) {
   }
 
   refreshBuffEffects();
-  updateToggleBuffsButton();
+  updateBuffsSwitchControl();
 }
 
-function updateToggleBuffsButton() {
-  const button = byId("toggleBuffsBtn");
-  if (!button) {
+function updateBuffsSwitchControl() {
+  const input = byId("toggleBuffsSwitch");
+  const status = byId("toggleBuffsStatus");
+  if (!input || !status) {
     return;
   }
 
-  button.textContent = buffsDisabled ? "Enable Buffs" : "Disable Buffs";
-  button.setAttribute("aria-pressed", String(!buffsDisabled));
+  const enabled = !buffsDisabled;
+  if (input.checked !== enabled) {
+    input.checked = enabled;
+  }
+
+  input.setAttribute("aria-checked", String(enabled));
+  status.textContent = enabled ? "Enabled" : "Disabled";
 }
 
 function cancelPotionSpawn(potionId) {
@@ -1300,7 +1305,7 @@ function initializePotionFeatures() {
   persistActiveBuffs();
   renderPotionInventory();
   renderPotionCrafting();
-  updateToggleBuffsButton();
+  updateBuffsSwitchControl();
   refreshBuffEffects();
   startBuffTicker();
   cancelAllPotionSpawns();
@@ -14856,11 +14861,11 @@ function registerInterfaceToggleButtons() {
     });
   }
 
-  const toggleBuffsBtn = document.getElementById("toggleBuffsBtn");
-  if (toggleBuffsBtn) {
-    updateToggleBuffsButton();
-    toggleBuffsBtn.addEventListener("click", () => {
-      setBuffsDisabled(!buffsDisabled);
+  const toggleBuffsSwitch = document.getElementById("toggleBuffsSwitch");
+  if (toggleBuffsSwitch) {
+    updateBuffsSwitchControl();
+    toggleBuffsSwitch.addEventListener("change", () => {
+      setBuffsDisabled(!toggleBuffsSwitch.checked);
     });
   }
 }
@@ -16403,122 +16408,55 @@ function registerMenuDragHandlers() {
   const statsMenu = document.getElementById("statsMenu");
   const statsHeader = statsMenu?.querySelector(".stats-header");
   const statsDragHandle = statsMenu?.querySelector(".stats-menu__drag-handle");
-  const headerStats = statsMenu?.querySelector("h3");
   const potionMenu = document.getElementById("potionCraftingMenu");
   const potionHeader = potionMenu?.querySelector(".potion-menu__header");
-  let isDraggingSettings = false;
-  let isDraggingAchievements = false;
-  let isDraggingStats = false;
-  let isDraggingPotion = false;
-  let offsetX = 0;
-  let offsetY = 0;
-  let offsetXAchievements = 0;
-  let offsetYAchievements = 0;
-  let offsetXStats = 0;
-  let offsetYStats = 0;
-  let offsetXStyle = 0;
-  let offsetYStyle = 0;
-  let offsetXPotion = 0;
-  let offsetYPotion = 0;
+  const dragStates = [];
 
-  if (settingsHeader && settingsMenu) {
-    settingsHeader.addEventListener("mousedown", (event) => {
-      if (event.button !== 0 || event.target.closest(".settings-close-btn")) {
-        return;
-      }
+  function registerDraggableMenu(menu, handles, closeSelector) {
+    const dragHandles = (handles || []).filter(Boolean);
+    if (!menu || dragHandles.length === 0) {
+      return;
+    }
 
-      const rect = settingsMenu.getBoundingClientRect();
-      settingsMenu.style.left = `${rect.left}px`;
-      settingsMenu.style.top = `${rect.top}px`;
-      settingsMenu.style.transform = "none";
+    const state = {
+      menu,
+      handles: dragHandles,
+      closeSelector,
+      dragging: false,
+      offsetX: 0,
+      offsetY: 0,
+    };
 
-      offsetX = event.clientX - rect.left;
-      offsetY = event.clientY - rect.top;
-      isDraggingSettings = true;
-      settingsHeader.classList.add("is-dragging");
-      event.preventDefault();
+    dragHandles.forEach((handle) => {
+      handle.addEventListener("mousedown", (event) => {
+        if (event.button !== 0) {
+          return;
+        }
+
+        if (closeSelector && event.target.closest(closeSelector)) {
+          return;
+        }
+
+        const rect = menu.getBoundingClientRect();
+        menu.style.left = `${rect.left}px`;
+        menu.style.top = `${rect.top}px`;
+        menu.style.transform = "none";
+
+        state.offsetX = event.clientX - rect.left;
+        state.offsetY = event.clientY - rect.top;
+        state.dragging = true;
+        state.handles.forEach((dragHandle) => dragHandle.classList.add("is-dragging"));
+        event.preventDefault();
+      });
     });
+
+    dragStates.push(state);
   }
 
-  if (statsMenu && statsDragHandle) {
-    statsDragHandle.addEventListener("mousedown", (event) => {
-      if (event.button !== 0) {
-        return;
-      }
-
-      const rect = statsMenu.getBoundingClientRect();
-      statsMenu.style.left = `${rect.left}px`;
-      statsMenu.style.top = `${rect.top}px`;
-      statsMenu.style.transform = "none";
-
-      offsetXStyle = event.clientX - rect.left;
-      offsetYStyle = event.clientY - rect.top;
-    });
-  }
-
-  if (achievementsHeader && achievementsMenu) {
-    achievementsHeader.addEventListener("mousedown", (event) => {
-      if (event.button !== 0 || event.target.closest(".achievements-close-btn")) {
-        return;
-      }
-
-      const rect = achievementsMenu.getBoundingClientRect();
-      achievementsMenu.style.left = `${rect.left}px`;
-      achievementsMenu.style.top = `${rect.top}px`;
-      achievementsMenu.style.transform = "none";
-
-      offsetXAchievements = event.clientX - rect.left;
-      offsetYAchievements = event.clientY - rect.top;
-      isDraggingAchievements = true;
-      achievementsHeader.classList.add("is-dragging");
-      event.preventDefault();
-    });
-  }
-
-  if (potionHeader && potionMenu) {
-    potionHeader.addEventListener("mousedown", (event) => {
-      if (event.button !== 0 || event.target.closest(".potion-menu__close")) {
-        return;
-      }
-
-      const rect = potionMenu.getBoundingClientRect();
-      potionMenu.style.left = `${rect.left}px`;
-      potionMenu.style.top = `${rect.top}px`;
-      potionMenu.style.transform = "none";
-
-      offsetXPotion = event.clientX - rect.left;
-      offsetYPotion = event.clientY - rect.top;
-      isDraggingPotion = true;
-      potionHeader.classList.add("is-dragging");
-      event.preventDefault();
-    });
-  }
-
-  if (statsHeader && statsMenu) {
-    statsHeader.addEventListener("mousedown", (event) => {
-      if (event.button !== 0 || event.target.closest(".stats-close-btn")) {
-        return;
-      }
-
-      const rect = statsMenu.getBoundingClientRect();
-      statsMenu.style.left = `${rect.left}px`;
-      statsMenu.style.top = `${rect.top}px`;
-      statsMenu.style.transform = "none";
-
-      offsetXStats = event.clientX - rect.left;
-      offsetYStats = event.clientY - rect.top;
-      isDraggingStats = true;
-      statsHeader.classList.add("is-dragging");
-    });
-  }
-
-  if (headerStats && statsDragHandle) {
-    headerStats.addEventListener("mousedown", (event) => {
-      isDraggingStats = true;
-      statsDragHandle.classList.add("is-dragging");
-      event.preventDefault();
-    });
-  }
+  registerDraggableMenu(settingsMenu, [settingsHeader], ".settings-close-btn");
+  registerDraggableMenu(achievementsMenu, [achievementsHeader], ".achievements-close-btn");
+  registerDraggableMenu(statsMenu, [statsHeader, statsDragHandle], ".stats-close-btn");
+  registerDraggableMenu(potionMenu, [potionHeader], ".potion-menu__close");
 
   if (settingsMenu && settingsBody) {
     settingsMenu.addEventListener(
@@ -16551,48 +16489,25 @@ function registerMenuDragHandlers() {
   }
 
   document.addEventListener("mousemove", (event) => {
-    if (isDraggingSettings && settingsMenu) {
-      settingsMenu.style.left = `${event.clientX - offsetX}px`;
-      settingsMenu.style.top = `${event.clientY - offsetY}px`;
-    }
+    dragStates.forEach((state) => {
+      if (!state.dragging) {
+        return;
+      }
 
-    if (isDraggingAchievements && achievementsMenu) {
-      achievementsMenu.style.left = `${event.clientX - offsetXAchievements}px`;
-      achievementsMenu.style.top = `${event.clientY - offsetYAchievements}px`;
-    }
-
-    if (isDraggingStats && statsMenu) {
-      statsMenu.style.left = `${event.clientX - offsetXStats}px`;
-      statsMenu.style.top = `${event.clientY - offsetYStats}px`;
-    }
-
-    if (isDraggingPotion && potionMenu) {
-      potionMenu.style.left = `${event.clientX - offsetXPotion}px`;
-      potionMenu.style.top = `${event.clientY - offsetYPotion}px`;
-    }
+      state.menu.style.left = `${event.clientX - state.offsetX}px`;
+      state.menu.style.top = `${event.clientY - state.offsetY}px`;
+    });
   });
 
   document.addEventListener("mouseup", () => {
-    if (isDraggingSettings) {
-      isDraggingSettings = false;
-      settingsHeader?.classList.remove("is-dragging");
-    }
+    dragStates.forEach((state) => {
+      if (!state.dragging) {
+        return;
+      }
 
-    if (isDraggingAchievements) {
-      isDraggingAchievements = false;
-      achievementsHeader?.classList.remove("is-dragging");
-    }
-
-    if (isDraggingStats) {
-      isDraggingStats = false;
-      statsHeader?.classList.remove("is-dragging");
-      statsDragHandle?.classList.remove("is-dragging");
-    }
-
-    if (isDraggingPotion) {
-      isDraggingPotion = false;
-      potionHeader?.classList.remove("is-dragging");
-    }
+      state.dragging = false;
+      state.handles.forEach((dragHandle) => dragHandle.classList.remove("is-dragging"));
+    });
   });
 }
 

@@ -1815,6 +1815,136 @@ body {
     border-color: rgba(130, 180, 255, 0.2);
 }
 
+.settings-switch {
+    position: relative;
+    display: block;
+    width: 100%;
+    border: 1px solid rgba(120, 164, 255, 0.18);
+    border-radius: 14px;
+    background: rgba(12, 18, 32, 0.6);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.settings-switch:hover {
+    border-color: rgba(150, 192, 255, 0.4);
+    background: rgba(16, 24, 40, 0.72);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 10px 24px rgba(8, 12, 24, 0.45);
+}
+
+.settings-switch:focus-within {
+    border-color: rgba(150, 192, 255, 0.55);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 0 0 3px rgba(118, 169, 255, 0.25);
+}
+
+.settings-switch__container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 16px;
+    cursor: pointer;
+}
+
+.settings-switch__input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.settings-switch__visual {
+    position: relative;
+    flex: 0 0 auto;
+    width: 54px;
+    height: 30px;
+}
+
+.settings-switch__visual::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    transition: border-color 0.25s ease;
+}
+
+.settings-switch__track {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: rgba(110, 140, 200, 0.25);
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.settings-switch__thumb {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #f5f7ff 0%, #c9d6ff 100%);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(.25, .8, .25, 1), box-shadow 0.3s ease;
+}
+
+.settings-switch__input:focus-visible + .settings-switch__visual::after {
+    border-color: rgba(146, 186, 255, 0.65);
+}
+
+.settings-switch__input:checked + .settings-switch__visual .settings-switch__track {
+    background: linear-gradient(135deg, rgba(118, 194, 255, 0.8), rgba(122, 255, 210, 0.85));
+    box-shadow: inset 0 0 12px rgba(122, 204, 255, 0.45);
+}
+
+.settings-switch__input:checked + .settings-switch__visual .settings-switch__thumb {
+    transform: translateX(24px);
+    box-shadow: 0 10px 24px rgba(66, 200, 220, 0.45);
+}
+
+.settings-switch__input:not(:checked) + .settings-switch__visual .settings-switch__thumb {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+
+.settings-switch__text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+}
+
+.settings-switch__title {
+    font-size: 0.78rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(214, 224, 255, 0.86);
+    font-weight: 600;
+}
+
+.settings-switch__status {
+    font-size: 0.98rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: color 0.3s ease;
+}
+
+.settings-switch__input:checked ~ .settings-switch__text .settings-switch__status {
+    color: #9fffe0;
+}
+
+.settings-switch__input:not(:checked) ~ .settings-switch__text .settings-switch__status {
+    color: #ffb3b3;
+}
+
+.settings-switch__input:not(:checked) + .settings-switch__visual .settings-switch__track {
+    background: rgba(90, 105, 140, 0.3);
+}
+
+.settings-switch__input:not(:checked) + .settings-switch__visual .settings-switch__thumb {
+    background: linear-gradient(180deg, #d6d8e4 0%, #9aa3c6 100%);
+}
+
 .settings-chip-group {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -4732,50 +4862,70 @@ body.flashing {
 
 .potion-menu {
     position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(10, 14, 23, 0.78);
-    backdrop-filter: blur(6px);
-    z-index: 100030;
-}
-
-.potion-menu__panel {
-    width: min(960px, 90vw);
-    max-height: 90vh;
-    background: linear-gradient(180deg, rgba(26, 32, 46, 0.96), rgba(12, 15, 24, 0.98));
-    border: 1px solid rgba(118, 169, 255, 0.35);
-    border-radius: 18px;
-    box-shadow: 0 32px 60px rgba(0, 0, 0, 0.55);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     display: flex;
     flex-direction: column;
+    width: min(920px, calc(100vw - 32px));
+    max-height: min(88vh, 760px);
+    background:
+        linear-gradient(170deg, rgba(28, 34, 54, 0.88), rgba(12, 18, 32, 0.94)),
+        url(backgrounds/rng_master.png);
+    background-size: cover;
+    border: 1px solid rgba(118, 169, 255, 0.28);
+    border-radius: 18px;
+    box-shadow: 0 32px 60px rgba(0, 0, 0, 0.55);
+    color: #f2f6ff;
     overflow: hidden;
+    z-index: 100030;
 }
 
 .potion-menu__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 18px 24px;
-    background: rgba(17, 24, 38, 0.95);
-    border-bottom: 1px solid rgba(118, 169, 255, 0.25);
+    gap: 16px;
+    padding: 18px 24px 16px 24px;
+    background: rgba(10, 14, 26, 0.82);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(118, 169, 255, 0.2);
+    color: #ffffff;
+    cursor: grab;
+    user-select: none;
+    flex: 0 0 auto;
+    box-shadow: 0 8px 20px rgba(6, 10, 18, 0.55);
+}
+
+.potion-menu__header .dragTxt {
+    opacity: 0.9;
+    color: inherit;
+    font-size: 1.28rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.potion-menu__header.is-dragging {
+    cursor: grabbing;
 }
 
 .potion-menu__close {
-    background: none;
-    border: none;
-    color: #f6f8ff;
-    font-size: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    background: rgba(40, 62, 110, 0.55);
+    color: #f4f7ff;
+    padding: 9px 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
     cursor: pointer;
-    padding: 6px 12px;
-    border-radius: 8px;
-    transition: background-color 0.2s ease, transform 0.2s ease;
+    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
 }
 
 .potion-menu__close:hover {
-    background: rgba(118, 169, 255, 0.12);
     transform: translateY(-1px);
+    background: rgba(56, 86, 148, 0.75);
+    border-color: rgba(146, 186, 255, 0.55);
 }
 
 .potion-menu__body {
@@ -4783,6 +4933,8 @@ body.flashing {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: hidden;
 }
 
@@ -4799,6 +4951,9 @@ body.flashing {
     gap: 18px;
     overflow-y: auto;
     padding-bottom: 8px;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding-right: 4px;
 }
 
 .potion-card {
@@ -5125,8 +5280,8 @@ body.flashing {
 }
 
 @media (max-width: 768px) {
-    .potion-menu__panel {
-        width: 95vw;
+    .potion-menu {
+        width: min(95vw, 680px);
     }
 
     .potion-menu__grid {
@@ -5140,6 +5295,21 @@ body.flashing {
     .buff-tray {
         right: 16px;
         bottom: 92px;
+    }
+}
+
+@media (max-width: 540px) {
+    .potion-menu {
+        left: 50%;
+        top: 12px;
+        transform: translate(-50%, 0);
+        width: calc(100vw - 20px);
+        height: calc(100vh - 24px);
+        max-height: none;
+    }
+
+    .potion-menu__body {
+        padding: 20px;
     }
 }
 
