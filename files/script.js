@@ -44,7 +44,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 50,
     durationSeconds: 30,
     craftCost: {
-      classes: { commonBgImg: 50, rareBgImg: 30, plabreBgImg: 15, impossibleBgImg: 5 },
+      classes: { commonBgImg: 50, rareBgImg: 30, epicBgImg: 20, legendaryBgImg: 10 },
       titles: [],
     },
   },
@@ -56,7 +56,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 50,
     durationSeconds: 60,
     craftCost: {
-      classes: { commonBgImg: 75, rareBgImg: 45, plabreBgImg: 20, impossibleBgImg: 8 },
+      classes: { commonBgImg: 75, rareBgImg: 50, impossibleBgImg: 30, poweredBgImg: 15 },
       titles: [],
     },
   },
@@ -68,8 +68,8 @@ const POTION_DEFINITIONS = [
     effectPercent: 75,
     durationSeconds: 120,
     craftCost: {
-      classes: { commonBgImg: 90, rareBgImg: 60, plabreBgImg: 28, impossibleBgImg: 12 },
-      titles: [{ title: "Celestial Dawn", count: 1 }],
+      classes: { commonBgImg: 100, rareBgImg: 75, toxBgImg: 40, flickerBgImg: 20, spectralBgImg: 5 },
+      titles: [],
     },
   },
   {
@@ -80,8 +80,8 @@ const POTION_DEFINITIONS = [
     effectPercent: 100,
     durationSeconds: 180,
     craftCost: {
-      classes: { commonBgImg: 110, rareBgImg: 75, plabreBgImg: 35, impossibleBgImg: 16 },
-      titles: [{ title: "Celestial Chorus", count: 1 }],
+      classes: { commonBgImg: 130, rareBgImg: 100, plabreBgImg: 50, wanspiBgImgBgImg: 20, curartBgImg: 10, shadBgImg: 2 },
+      titles: [],
     },
   },
   {
@@ -89,11 +89,11 @@ const POTION_DEFINITIONS = [
     name: "Fortune Potion I",
     image: "files/images/Fortune1Potion.png",
     type: POTION_TYPES.LUCK,
-    effectPercent: 100,
+    effectPercent: 150,
     durationSeconds: 300,
     craftCost: {
-      classes: { commonBgImg: 140, rareBgImg: 90, plabreBgImg: 45, impossibleBgImg: 20 },
-      titles: [{ title: "『Equinox』", count: 1 }],
+      classes: { commonBgImg: 150, legendaryBgImg: 110, solarpowerBgImg: 90, belivBgImg: 50, unstoppableBgImg: 10, gargBgImg: 8, isekaiBgImg: 2, isekailofiBgImg: 1 },
+      titles: [],
     },
   },
   {
@@ -101,14 +101,11 @@ const POTION_DEFINITIONS = [
     name: "Fortune Potion II",
     image: "files/images/Fortune2Potion.png",
     type: POTION_TYPES.LUCK,
-    effectPercent: 125,
+    effectPercent: 200,
     durationSeconds: 360,
     craftCost: {
-      classes: { commonBgImg: 160, rareBgImg: 110, plabreBgImg: 55, impossibleBgImg: 24 },
-      titles: [
-        { title: "MythicWall", count: 1 },
-        { title: "The Void's Veil", count: 1 },
-      ],
+      classes: { commonBgImg: 180, poweredBgImg: 130, flickerBgImg: 100, memoryBgImg: 30, oblBgImg: 20, froBgImg: 10, emerBgImg: 1 },
+      titles: [],
     },
   },
   {
@@ -116,14 +113,11 @@ const POTION_DEFINITIONS = [
     name: "Fortune Potion III",
     image: "files/images/Fortune3Potion.png",
     type: POTION_TYPES.LUCK,
-    effectPercent: 150,
-    durationSeconds: 420,
+    effectPercent: 300,
+    durationSeconds: 510,
     craftCost: {
-      classes: { commonBgImg: 200, rareBgImg: 140, plabreBgImg: 70, impossibleBgImg: 30 },
-      titles: [
-        { title: "H1di", count: 1 },
-        { title: "Wailing Shade", count: 1 },
-      ],
+      classes: { commonBgImg: 250, legendaryBgImg: 180, plabreBgImg: 70, mysBgImg: 30, forgBgImg: 10, fearBgImg: 3 },
+      titles: [],
     },
   },
   {
@@ -134,7 +128,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 25,
     durationSeconds: 30,
     craftCost: {
-      classes: { commonBgImg: 50, rareBgImg: 30, plabreBgImg: 15, impossibleBgImg: 5 },
+      classes: { commonBgImg: 55, rareBgImg: 33, epicBgImg: 22, legendaryBgImg: 11 },
       titles: [],
     },
   },
@@ -146,7 +140,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 25,
     durationSeconds: 60,
     craftCost: {
-      classes: { commonBgImg: 75, rareBgImg: 45, plabreBgImg: 20, impossibleBgImg: 8 },
+      classes: { commonBgImg: 80, rareBgImg: 55, impossibleBgImg: 35, poweredBgImg: 20 },
       titles: [],
     },
   },
@@ -158,8 +152,8 @@ const POTION_DEFINITIONS = [
     effectPercent: 40,
     durationSeconds: 120,
     craftCost: {
-      classes: { commonBgImg: 90, rareBgImg: 60, plabreBgImg: 28, impossibleBgImg: 12 },
-      titles: [{ title: "Lightspeed", count: 1 }],
+      classes: { commonBgImg: 105, rareBgImg: 80, toxBgImg: 45, flickerBgImg: 25, spectralBgImg: 10 },
+      titles: [],
     },
   },
   {
@@ -170,8 +164,8 @@ const POTION_DEFINITIONS = [
     effectPercent: 65,
     durationSeconds: 180,
     craftCost: {
-      classes: { commonBgImg: 110, rareBgImg: 75, plabreBgImg: 35, impossibleBgImg: 16 },
-      titles: [{ title: "Hypernova", count: 1 }],
+      classes: { commonBgImg: 135, rareBgImg: 105, plabreBgImg: 55, mysBgImg: 15, samuraiBgImg: 10, frightBgImg: 3 },
+      titles: [],
     },
   },
   {
@@ -182,8 +176,8 @@ const POTION_DEFINITIONS = [
     effectPercent: 65,
     durationSeconds: 300,
     craftCost: {
-      classes: { commonBgImg: 140, rareBgImg: 90, plabreBgImg: 45, impossibleBgImg: 20 },
-      titles: [{ title: "Speed of Light", count: 1 }],
+      classes: { commonBgImg: 155, legendaryBgImg: 115, solarpowerBgImg: 95, belivBgImg: 55, unstoppableBgImg: 15, gargBgImg: 13, contBgImg: 5, lostsBgImg: 1 },
+      titles: [],
     },
   },
   {
@@ -191,14 +185,11 @@ const POTION_DEFINITIONS = [
     name: "Haste Potion II",
     image: "files/images/Haste2Potion.png",
     type: POTION_TYPES.SPEED,
-    effectPercent: 90,
-    durationSeconds: 360,
+    effectPercent: 100,
+    durationSeconds: 390,
     craftCost: {
-      classes: { commonBgImg: 160, rareBgImg: 110, plabreBgImg: 55, impossibleBgImg: 24 },
-      titles: [
-        { title: "Momentum", count: 1 },
-        { title: "Astrald", count: 1 },
-      ],
+      classes: { commonBgImg: 185, poweredBgImg: 135, flickerBgImg: 105, memoryBgImg: 30, oblBgImg: 20, froBgImg: 15, starfallBgImg: 2 },
+      titles: [],
     },
   },
   {
@@ -206,14 +197,11 @@ const POTION_DEFINITIONS = [
     name: "Haste Potion III",
     image: "files/images/Haste3Potion.png",
     type: POTION_TYPES.SPEED,
-    effectPercent: 120,
-    durationSeconds: 420,
+    effectPercent: 150,
+    durationSeconds: 540,
     craftCost: {
-      classes: { commonBgImg: 200, rareBgImg: 140, plabreBgImg: 70, impossibleBgImg: 30 },
-      titles: [
-        { title: "Celestial Chorus", count: 1 },
-        { title: "The Phantom Moon", count: 1 },
-      ],
+      classes: { commonBgImg: 252, legendaryBgImg: 181, plabreBgImg: 77, specBgImg: 30, phaBgImg: 10, nighBgImg: 2, voiBgImg: 1 },
+      titles: [],
     },
   },
 ];
