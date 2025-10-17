@@ -34,6 +34,12 @@ const POTION_TYPES = Object.freeze({
 const POTION_STORAGE_KEY = "craftedPotions";
 const ACTIVE_BUFFS_KEY = "activePotionBuffs";
 const BUFFS_DISABLED_KEY = "buffsDisabled";
+const BUFFS_PAUSE_TIMESTAMP_KEY = "buffsPausedAt";
+
+const BUFF_ICON_MAP = Object.freeze({
+  [POTION_TYPES.LUCK]: "files/images/LuckBuff.png",
+  [POTION_TYPES.SPEED]: "files/images/SpeedBuff.png",
+});
 
 const POTION_DEFINITIONS = [
   {
@@ -188,7 +194,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 100,
     durationSeconds: 390,
     craftCost: {
-      classes: { commonBgImg: 185, poweredBgImg: 135, flickerBgImg: 105, memoryBgImg: 30, oblBgImg: 20, froBgImg: 15, starfallBgImg: 2 },
+      classes: { commonBgImg: 185, poweredBgImg: 135, flickerBgImg: 105, memBgImg: 30, oblBgImg: 20, froBgImg: 15, starfallBgImg: 2 },
       titles: [],
     },
   },
@@ -212,12 +218,20 @@ const POTION_SPAWN_CONFIGS = [
     minDelayMs: 5 * 60 * 1000,
     maxDelayMs: 7 * 60 * 1000,
     lifespanMs: 45000,
+    rareSpawns: [
+      { potionId: "fortuneSpoid2", chance: 0.005 },
+      { potionId: "fortuneSpoid1", chance: 0.05 },
+    ],
   },
   {
     potionId: "speedPotion",
     minDelayMs: 5 * 60 * 1000,
     maxDelayMs: 7 * 60 * 1000,
     lifespanMs: 45000,
+    rareSpawns: [
+      { potionId: "hasteSpoid2", chance: 0.005 },
+      { potionId: "hasteSpoid1", chance: 0.05 },
+    ],
   },
 ];
 
@@ -225,10 +239,34 @@ const EQUINOX_RARITY_CLASS = "equinoxBgImg";
 let equinoxPulseActive = false;
 let pendingEquinoxPulseState = null;
 
+let buffsDisabled = Boolean(storage.get(BUFFS_DISABLED_KEY, false));
+let buffPauseStart = null;
+
+function syncBuffPauseState() {
+  const storedPauseTimestamp = storage.get(BUFFS_PAUSE_TIMESTAMP_KEY, null);
+  let parsedPause = Number.isFinite(storedPauseTimestamp) ? storedPauseTimestamp : null;
+
+  if (!buffsDisabled) {
+    if (parsedPause !== null) {
+      storage.remove(BUFFS_PAUSE_TIMESTAMP_KEY);
+    }
+    buffPauseStart = null;
+    return;
+  }
+
+  if (parsedPause === null) {
+    parsedPause = Date.now();
+    storage.set(BUFFS_PAUSE_TIMESTAMP_KEY, parsedPause);
+  }
+
+  buffPauseStart = parsedPause;
+}
+
+syncBuffPauseState();
+
 let potionInventory = normalizePotionInventory(storage.get(POTION_STORAGE_KEY, {}));
 let activeBuffs = normalizeActiveBuffs(storage.get(ACTIVE_BUFFS_KEY, []));
 let buffUpdateIntervalId = null;
-let buffsDisabled = Boolean(storage.get(BUFFS_DISABLED_KEY, false));
 const potionSpawnTimers = new Map();
 
 const REDUCED_ANIMATIONS_KEY = "reducedAnimationsEnabled";
@@ -514,8 +552,41 @@ const POTION_RARITY_LABELS = {
   epicBgImg: "Epic Titles",
   legendaryBgImg: "Legendary Titles",
   impossibleBgImg: "Impossible Titles",
+  poweredBgImg: "Powered Titles",
+  toxBgImg: "Toxic Titles",
+  flickerBgImg: "Flicker Titles",
+  solarpowerBgImg: "Solarpower Titles",
+  belivBgImg: "Believer Titles",
   plabreBgImg: "Planet Breaker Titles",
+  wanspiBgImg: "Wandering Spirit Titles",
+  spectralBgImg: "Spectral Whisper Titles",
+  memBgImg: "Memory Titles",
+  oblBgImg: "Oblivion Titles",
+  froBgImg: "Frozen Fate Titles",
+  mysBgImg: "Mysterious Echo Titles",
+  forgBgImg: "Forgotten Whisper Titles",
+  curartBgImg: "Cursed Artifact Titles",
+  shadBgImg: "Shadow Veil Titles",
+  fearBgImg: "Fear Titles",
+  unstoppableBgImg: "Unstoppable Titles",
+  gargBgImg: "Gargantua Titles",
+  isekaiBgImg: "Isekai Titles",
+  isekailofiBgImg: "Isekai ♫ Lo-Fi Titles",
+  emerBgImg: "Emergencies Titles",
+  contBgImg: "Contortions Titles",
+  lostsBgImg: "Lost Soul Titles",
+  samuraiBgImg: "Samurai Titles",
+  frightBgImg: "Fright Titles",
+  specBgImg: "Spectral Glare Titles",
+  phaBgImg: "Phantom Stride Titles",
+  starfallBgImg: "Starfall Titles",
+  nighBgImg: "Nightfall Titles",
+  voiBgImg: "Void Walker Titles",
 };
+
+function getBuffIconForType(type) {
+  return BUFF_ICON_MAP[type] || "";
+}
 
 function normalizePotionInventory(raw) {
   const result = {};
@@ -738,18 +809,28 @@ function formatPotionDuration(seconds) {
     return "0 seconds";
   }
 
-  if (seconds < 60) {
-    const value = Math.floor(seconds);
-    return `${value} ${value === 1 ? "second" : "seconds"}`;
+  const totalSeconds = Math.round(seconds);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const remainingSeconds = totalSeconds % 60;
+
+  const parts = [];
+  if (hours > 0) {
+    parts.push(`${hours} ${hours === 1 ? "hour" : "hours"}`);
+  }
+  if (minutes > 0) {
+    parts.push(`${minutes} ${minutes === 1 ? "minute" : "minutes"}`);
+  }
+  if (remainingSeconds > 0 || !parts.length) {
+    parts.push(`${remainingSeconds} ${remainingSeconds === 1 ? "second" : "seconds"}`);
   }
 
-  if (seconds % 60 === 0) {
-    const minutes = seconds / 60;
-    return `${minutes} ${minutes === 1 ? "minute" : "minutes"}`;
+  if (parts.length === 1) {
+    return parts[0];
   }
 
-  const minutes = (seconds / 60).toFixed(1);
-  return `${minutes} minutes`;
+  const last = parts.pop();
+  return `${parts.join(", ")} and ${last}`;
 }
 
 function isRarityClassAffectedByLuck(rarityClass) {
@@ -924,7 +1005,9 @@ function normalizeActiveBuffs(raw) {
     return [];
   }
 
-  const now = Date.now();
+  const pauseReference = buffsDisabled && Number.isFinite(buffPauseStart)
+    ? buffPauseStart
+    : Date.now();
   return raw
     .map((entry) => {
       if (!entry || typeof entry !== "object") {
@@ -937,7 +1020,7 @@ function normalizeActiveBuffs(raw) {
       }
 
       const expiresAt = Number.parseInt(entry.expiresAt, 10);
-      if (!Number.isFinite(expiresAt) || expiresAt <= now) {
+      if (!Number.isFinite(expiresAt) || expiresAt <= pauseReference) {
         return null;
       }
 
@@ -955,7 +1038,7 @@ function normalizeActiveBuffs(raw) {
         type: potion.type,
         effectPercent,
         name: entry.name || potion.name,
-        image: entry.image || potion.image,
+        image: getBuffIconForType(potion.type) || potion.image,
         expiresAt,
       };
     })
@@ -971,6 +1054,9 @@ function persistActiveBuffs() {
 }
 
 function pruneExpiredBuffs() {
+  if (buffsDisabled) {
+    return false;
+  }
   const now = Date.now();
   const filtered = activeBuffs.filter((buff) => Number.isFinite(buff.expiresAt) && buff.expiresAt > now);
   const changed = filtered.length !== activeBuffs.length;
@@ -1038,15 +1124,9 @@ function renderBuffTray() {
   }
 
   tray.style.display = "flex";
-
-  if (buffsDisabled) {
-    const banner = document.createElement("div");
-    banner.className = "buff-tray__disabled-banner";
-    banner.innerHTML = '<i class="fa-solid fa-ban" aria-hidden="true"></i><span>Buffs are disabled</span>';
-    tray.appendChild(banner);
-  }
-
-  const now = Date.now();
+  const now = buffsDisabled && Number.isFinite(buffPauseStart)
+    ? buffPauseStart
+    : Date.now();
   activeBuffs
     .slice()
     .sort((a, b) => a.expiresAt - b.expiresAt)
@@ -1057,41 +1137,26 @@ function renderBuffTray() {
       if (buffsDisabled) {
         card.classList.add("buff-card--disabled");
       }
+      const icon = document.createElement("img");
+      icon.className = "buff-card__icon";
+      icon.src = getBuffIconForType(buff.type) || buff.image;
+      icon.alt = "";
+
+      const effect = document.createElement("span");
+      effect.className = "buff-card__effect";
+      effect.textContent = buff.type === POTION_TYPES.LUCK
+        ? `+${buff.effectPercent}% Luck`
+        : `+${buff.effectPercent}% Speed`;
 
       const timer = document.createElement("span");
       timer.className = "buff-card__timer";
       timer.textContent = formatBuffDuration(remainingSeconds);
 
-      const imageWrapper = document.createElement("div");
-      imageWrapper.className = "buff-card__image";
-      const image = document.createElement("img");
-      image.src = buff.image;
-      image.alt = "";
-      imageWrapper.appendChild(image);
+      card.title = `${buff.name} • ${effect.textContent} • ${timer.textContent}`;
 
-      const label = document.createElement("div");
-      label.className = "buff-card__label";
-      label.textContent = buff.name;
-
-      const details = document.createElement("div");
-      details.className = "buff-card__details";
-      details.textContent = buff.type === POTION_TYPES.LUCK
-        ? `+${buff.effectPercent}% Luck`
-        : `+${buff.effectPercent}% Speed`;
-
+      card.appendChild(icon);
+      card.appendChild(effect);
       card.appendChild(timer);
-      card.appendChild(imageWrapper);
-      card.appendChild(label);
-      card.appendChild(details);
-
-      if (buffsDisabled) {
-        const disabledOverlay = document.createElement("div");
-        disabledOverlay.className = "buff-card__disabled-overlay";
-        disabledOverlay.setAttribute("aria-hidden", "true");
-        disabledOverlay.innerHTML = '<i class="fa-solid fa-ban" aria-hidden="true"></i>';
-        card.appendChild(disabledOverlay);
-      }
-
       tray.appendChild(card);
     });
 }
@@ -1143,14 +1208,33 @@ function activatePotionBuff(potion) {
     return;
   }
 
-  const expiresAt = Date.now() + potion.durationSeconds * 1000;
+  const now = Date.now();
+  const referenceTime = buffsDisabled && Number.isFinite(buffPauseStart)
+    ? buffPauseStart
+    : now;
+  const durationMs = potion.durationSeconds * 1000;
+  const icon = getBuffIconForType(potion.type) || potion.image;
+
+  const existing = activeBuffs.find((entry) => entry.potionId === potion.id);
+  if (existing) {
+    const baseExpiresAt = Math.max(existing.expiresAt || 0, referenceTime);
+    existing.expiresAt = baseExpiresAt + durationMs;
+    existing.effectPercent = potion.effectPercent;
+    existing.name = potion.name;
+    existing.image = icon;
+    persistActiveBuffs();
+    refreshBuffEffects();
+    return;
+  }
+
+  const expiresAt = referenceTime + durationMs;
   const buff = {
     id: `${potion.id}-${expiresAt}-${Math.random().toString(36).slice(2, 8)}`,
     potionId: potion.id,
     type: potion.type,
     effectPercent: potion.effectPercent,
     name: potion.name,
-    image: potion.image,
+    image: icon,
     expiresAt,
   };
 
@@ -1168,10 +1252,26 @@ function setBuffsDisabled(next) {
   buffsDisabled = desired;
   if (buffsDisabled) {
     storage.set(BUFFS_DISABLED_KEY, true);
+    buffPauseStart = Date.now();
+    storage.set(BUFFS_PAUSE_TIMESTAMP_KEY, buffPauseStart);
   } else {
     storage.remove(BUFFS_DISABLED_KEY);
+    if (Number.isFinite(buffPauseStart)) {
+      const pauseDuration = Date.now() - buffPauseStart;
+      if (pauseDuration > 0) {
+        activeBuffs.forEach((buff) => {
+          if (Number.isFinite(buff.expiresAt)) {
+            buff.expiresAt += pauseDuration;
+          }
+        });
+      }
+    }
+    buffPauseStart = null;
+    storage.remove(BUFFS_PAUSE_TIMESTAMP_KEY);
+    persistActiveBuffs();
   }
 
+  syncBuffPauseState();
   refreshBuffEffects();
   updateBuffsSwitchControl();
 }
@@ -1228,13 +1328,44 @@ function scheduleAllPotionSpawns() {
   POTION_SPAWN_CONFIGS.forEach((config) => schedulePotionSpawn(config));
 }
 
+function resolveSpawnPotionId(config) {
+  if (!config) {
+    return null;
+  }
+
+  const baseId = config.potionId;
+  const rarePool = Array.isArray(config.rareSpawns)
+    ? config.rareSpawns.filter((entry) => entry && entry.potionId && Number.isFinite(Number(entry.chance)))
+    : [];
+
+  if (!rarePool.length) {
+    return baseId;
+  }
+
+  const roll = Math.random();
+  let cumulative = 0;
+  for (const entry of rarePool) {
+    const chance = Number(entry.chance);
+    if (!Number.isFinite(chance) || chance <= 0) {
+      continue;
+    }
+    cumulative += chance;
+    if (roll < cumulative) {
+      return entry.potionId;
+    }
+  }
+
+  return baseId;
+}
+
 function spawnPotionPickup(config) {
   const layer = byId("potionSpawnLayer");
   if (!layer) {
     return;
   }
 
-  const potion = getPotionDefinition(config.potionId);
+  const spawnPotionId = resolveSpawnPotionId(config) || config.potionId;
+  const potion = getPotionDefinition(spawnPotionId);
   if (!potion) {
     return;
   }
@@ -1287,8 +1418,9 @@ function spawnPotionPickup(config) {
 
 function initializePotionFeatures() {
   potionInventory = normalizePotionInventory(storage.get(POTION_STORAGE_KEY, {}));
-  activeBuffs = normalizeActiveBuffs(storage.get(ACTIVE_BUFFS_KEY, []));
   buffsDisabled = Boolean(storage.get(BUFFS_DISABLED_KEY, false));
+  syncBuffPauseState();
+  activeBuffs = normalizeActiveBuffs(storage.get(ACTIVE_BUFFS_KEY, []));
   pruneExpiredBuffs();
   persistActiveBuffs();
   renderPotionInventory();
