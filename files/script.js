@@ -788,6 +788,7 @@ let skipCutscene10K = true;
 let skipCutscene100K = true;
 let skipCutscene1M = true;
 let skipCutsceneTranscendent = true;
+let skipCutsceneHalloween25 = true;
 let cooldownBuffActive = cooldownTime < BASE_COOLDOWN_TIME;
 let rollDisplayHiddenByUser = false;
 let cutsceneHidRollDisplay = false;
@@ -3190,6 +3191,12 @@ const CUTSCENE_SKIP_SETTINGS = [
     label: "Skip Transcendent Cutscenes",
     buttonId: "toggleCutsceneTranscendent",
   },
+  {
+    key: "skipCutsceneHalloween25",
+    labelId: "halloween25Txt",
+    label: "Skip Halloween 2025 Title Cutscenes",
+    buttonId: "toggleCutsceneHalloween25",
+  },
 ];
 
 const CUTSCENE_STATE_SETTERS = {
@@ -3198,6 +3205,7 @@ const CUTSCENE_STATE_SETTERS = {
   skipCutscene100K: (value) => { skipCutscene100K = value; },
   skipCutscene1M: (value) => { skipCutscene1M = value; },
   skipCutsceneTranscendent: (value) => { skipCutsceneTranscendent = value; },
+  skipCutsceneHalloween25: (value) => { skipCutsceneHalloween25 = value; },
 };
 
 const CUTSCENE_STATE_GETTERS = {
@@ -3206,6 +3214,7 @@ const CUTSCENE_STATE_GETTERS = {
   skipCutscene100K: () => skipCutscene100K,
   skipCutscene1M: () => skipCutscene1M,
   skipCutsceneTranscendent: () => skipCutsceneTranscendent,
+  skipCutsceneHalloween25: () => skipCutsceneHalloween25,
 };
 
 function updateCutsceneSkipDisplay(
@@ -9171,1033 +9180,1111 @@ function registerRollButtonHandler() {
         enableChange();
       }, 10750); // Wait for 10.75 seconds
     } else if (rarity.type === "The Scarecrow's Sigil [1 in 1,031]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-orange";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10000); // Stop after 10 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "🎃";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutsceneHalloween25) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          thescarecrowssigilAudio.play();
+        disableChange();
+
+        const container1 = document.getElementById("squareContainer");
+
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-orange";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        const squareInterval = setInterval(() => {
+          createSquare();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10000); // Stop after 10 seconds
+
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "🎃";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            thescarecrowssigilAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        thescarecrowssigilAudio.play();
+      }
     } else if (rarity.type === "Pumpkin Hollow [1 in 3,110]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-orange";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10000); // Stop after 10 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "orange-star";
-        star.innerHTML = "●";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "🎃";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutsceneHalloween25) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          pumpkinhollowAudio.play();
+        disableChange();
+
+        const container1 = document.getElementById("squareContainer");
+
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-orange";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        const squareInterval = setInterval(() => {
+          createSquare();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10000); // Stop after 10 seconds
+
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "orange-star";
+          star.innerHTML = "●";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "🎃";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            pumpkinhollowAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        pumpkinhollowAudio.play();
+      }
     } else if (rarity.type === "Hollow Hill Manor [1 in 10,031]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-blue";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      function createSquare2() {
-        const square = document.createElement("div");
-        square.className = "animated-square-cyan";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-        createSquare2();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10000); // Stop after 10 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "cyan-star";
-        star.innerHTML = "◌";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "blue-star";
-        star.innerHTML = "●";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "🎃";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "orange-star";
-        star.innerHTML = "▼";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutsceneHalloween25) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          hollowhillmanorAudio.play();
+        disableChange();
+
+        const container1 = document.getElementById("squareContainer");
+
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-cyan";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10000); // Stop after 10 seconds
+
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "cyan-star";
+          star.innerHTML = "◌";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "blue-star";
+          star.innerHTML = "●";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "🎃";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "orange-star";
+          star.innerHTML = "▼";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+    
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            hollowhillmanorAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        hollowhillmanorAudio.play();
+      }
     } else if (rarity.type === "The Phantom Moon [1 in 10,031]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-blue";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      function createSquare2() {
-        const square = document.createElement("div");
-        square.className = "animated-square-orange";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-        createSquare2();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10000); // Stop after 10 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "blue-star";
-        star.innerHTML = "●";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "orange-star";
-        star.innerHTML = "◉";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "🎃-star";
-        star.innerHTML = "*";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutsceneHalloween25) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          thephantommoonAudio.play();
+        disableChange();
+
+        const container1 = document.getElementById("squareContainer");
+
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-orange";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10000); // Stop after 10 seconds
+
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "blue-star";
+          star.innerHTML = "●";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "orange-star";
+          star.innerHTML = "◉";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "🎃-star";
+          star.innerHTML = "*";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+    
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            thephantommoonAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        thephantommoonAudio.play();
+      }
     } else if (rarity.type === "The Void's Veil [1 in 10,031]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-purple";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      function createSquare2() {
-        const square = document.createElement("div");
-        square.className = "animated-square-cyan";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-        createSquare2();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10000); // Stop after 10 seconds
-
-      const container = document.getElementById("starContainer");
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "cyan-star";
-        star.innerHTML = "◌";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "🎃";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "purple-star";
-        star.innerHTML = "<>";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutsceneHalloween25) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          thevoidsveilAudio.play();
+        disableChange();
+
+        const container1 = document.getElementById("squareContainer");
+
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-purple";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-cyan";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10000); // Stop after 10 seconds
+
+        const container = document.getElementById("starContainer");
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "cyan-star";
+          star.innerHTML = "◌";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "🎃";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "purple-star";
+          star.innerHTML = "<>";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+    
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            thevoidsveilAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        thevoidsveilAudio.play();
+      }
     } else if (rarity.type === "Wailing Shade [1 in 31,010]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-purple";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      function createSquare2() {
-        const square = document.createElement("div");
-        square.className = "animated-square-cyan";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      function createSquare3() {
-        const square = document.createElement("div");
-        square.className = "animated-square-blue";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-        createSquare2();
-        createSquare3();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10000); // Stop after 10 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "blue-star";
-        star.innerHTML = "▼";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "🎃";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "cyan-star";
-        star.innerHTML = "●";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutsceneHalloween25) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          wailingshadeAudio.play();
+        disableChange();
+
+        const container1 = document.getElementById("squareContainer");
+
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-purple";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-cyan";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        function createSquare3() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
+          createSquare3();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10000); // Stop after 10 seconds
+
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "blue-star";
+          star.innerHTML = "▼";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "🎃";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "cyan-star";
+          star.innerHTML = "●";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+    
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            wailingshadeAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        wailingshadeAudio.play();
+      }
     } else if (rarity.type === "Hellish Fire [1 in 6,666]") {
       if (skipCutscene10K) {
         document.body.className = "blackBg";
