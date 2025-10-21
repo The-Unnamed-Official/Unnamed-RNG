@@ -2399,6 +2399,144 @@ body {
     animation: spin1 9s linear infinite;
 }
 
+.descended-cutscene {
+    position: fixed;
+    inset: 0;
+    z-index: 200000;
+    pointer-events: none;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 180ms ease-out;
+}
+
+.descended-cutscene--visible {
+    opacity: 1;
+}
+
+.descended-cutscene__glitch,
+.descended-cutscene__pulse {
+    position: absolute;
+    inset: 0;
+}
+
+.descended-cutscene__glitch {
+    opacity: 0;
+    background: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.05) 0,
+        rgba(255, 255, 255, 0.05) 4px,
+        rgba(0, 0, 0, 0.4) 4px,
+        rgba(0, 0, 0, 0.4) 8px
+    );
+    mix-blend-mode: screen;
+    filter: contrast(140%);
+}
+
+.descended-cutscene__glitch::before,
+.descended-cutscene__glitch::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    mix-blend-mode: lighten;
+    opacity: 0.35;
+}
+
+.descended-cutscene__glitch::before {
+    transform: translate3d(-6px, 0, 0);
+    filter: hue-rotate(120deg);
+}
+
+.descended-cutscene__glitch::after {
+    transform: translate3d(6px, 0, 0);
+    filter: hue-rotate(-120deg);
+}
+
+.descended-cutscene--phase-glitch .descended-cutscene__glitch {
+    opacity: 1;
+    animation: descendedCutsceneGlitch 180ms steps(2, end) infinite;
+}
+
+@keyframes descendedCutsceneGlitch {
+    0%, 100% {
+        transform: translate3d(0, 0, 0);
+        clip-path: inset(0% 0 0% 0);
+    }
+    20% {
+        transform: translate3d(-4px, -2px, 0);
+        clip-path: inset(5% 0 40% 0);
+    }
+    40% {
+        transform: translate3d(3px, 2px, 0);
+        clip-path: inset(35% 0 5% 0);
+    }
+    60% {
+        transform: translate3d(-2px, 3px, 0);
+        clip-path: inset(10% 0 55% 0);
+    }
+    80% {
+        transform: translate3d(4px, -3px, 0);
+        clip-path: inset(25% 0 20% 0);
+    }
+}
+
+.descended-cutscene__pulse {
+    width: 30vmin;
+    height: 30vmin;
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0.6);
+    background: radial-gradient(circle, rgba(255, 64, 64, 0.95) 0%, rgba(128, 0, 0, 0.7) 55%, rgba(20, 0, 0, 0) 100%);
+    box-shadow: 0 0 50px rgba(200, 0, 0, 0.45);
+}
+
+.descended-cutscene--phase-pulse {
+    background: radial-gradient(circle at center, #2c0000 0%, #080000 100%);
+}
+
+.descended-cutscene--phase-pulse .descended-cutscene__pulse {
+    opacity: 1;
+    animation: descendedCutscenePulse 1s ease-in-out infinite;
+}
+
+@keyframes descendedCutscenePulse {
+    0%, 100% {
+        transform: scale(0.6);
+        box-shadow: 0 0 55px rgba(200, 0, 0, 0.35);
+    }
+    50% {
+        transform: scale(1);
+        box-shadow: 0 0 120px rgba(255, 0, 0, 0.55);
+    }
+}
+
+.descended-cutscene--phase-flash {
+    background: #ffffff;
+    animation: descendedCutsceneFlash 350ms ease-out forwards;
+}
+
+.descended-cutscene--phase-flash .descended-cutscene__glitch,
+.descended-cutscene--phase-flash .descended-cutscene__pulse {
+    opacity: 0;
+    animation: none;
+}
+
+@keyframes descendedCutsceneFlash {
+    0% {
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
 .cutsceneStarEaster {
     position: absolute;
     top: 30%;
