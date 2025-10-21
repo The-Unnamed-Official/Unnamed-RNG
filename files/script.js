@@ -46,6 +46,16 @@ const BUFF_TOOLTIP_EFFECT_CLASS_MAP = Object.freeze({
   [POTION_TYPES.SPEED]: "buff-tooltip__effect--speed",
 });
 
+const DESCENDED_TITLE_TYPE = "Descended Title [1 in ƐƐƐ]";
+const DESCENDED_TITLE_CLASS = "destitBgImg";
+const DESCENDED_POTION_ID = "decendentPotion";
+const DESCENDED_POTION_REWARD_CHANCE = 1 / 300;
+const DESCENDED_CUTSCENE_TIMINGS = Object.freeze({
+  GLITCH_MS: 1100,
+  FLASH_MS: 3300,
+  TOTAL_MS: 3500,
+});
+
 let buffTooltipElement = null;
 let buffTooltipNameElement = null;
 let buffTooltipEffectElement = null;
@@ -406,6 +416,31 @@ const POTION_DEFINITIONS = [
       },
       titles: [],
       potions: { luckyPotion: 75, fortuneSpoid1: 7, basicPotion: 2 },
+    },
+  },
+  {
+    id: DESCENDED_POTION_ID,
+    name: "Decendent Potion",
+    image: "files/images/DecendentPotion.png",
+    buffImage: "files/images/DecendentBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 50000,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next Roll",
+    consumeOnRoll: true,
+    disableWithToggle: true,
+    craftCost: {
+      classes: {
+        commonBgImg: 1000,
+        rareBgImg: 700,
+        legendaryBgImg: 200,
+        unstoppableBgImg: 70,
+        memBgImg: 30,
+        oblBgImg: 20,
+        mysBgImg: 15,
+      },
+      titles: [],
+      potions: { luckyPotion: 90, fortuneSpoid1: 2, fortuneSpoid2: 1, basicPotion: 2 },
     },
   },
   {
@@ -1908,6 +1943,37 @@ function usePotion(potionId) {
   renderPotionInventory();
   renderPotionCrafting();
   activatePotionBuff(potion);
+  if (potion.id === DESCENDED_POTION_ID) {
+    maybeGrantDescendedTitleFromPotion();
+  }
+}
+
+function maybeGrantDescendedTitleFromPotion() {
+  if (Math.random() >= DESCENDED_POTION_REWARD_CHANCE) {
+    return;
+  }
+
+  const rarity = {
+    type: DESCENDED_TITLE_TYPE,
+    class: DESCENDED_TITLE_CLASS,
+    titles: [DESCENDED_TITLE_TYPE],
+  };
+
+  playDescendedTitleCutscene({
+    title: DESCENDED_TITLE_TYPE,
+    rarity,
+    setPendingRarity: true,
+    onComplete: ({ container }) => {
+      addToInventory(DESCENDED_TITLE_TYPE, DESCENDED_TITLE_CLASS);
+      updateRollingHistory(DESCENDED_TITLE_TYPE, DESCENDED_TITLE_TYPE);
+      displayResult(DESCENDED_TITLE_TYPE, DESCENDED_TITLE_TYPE);
+      changeBackground(DESCENDED_TITLE_CLASS, DESCENDED_TITLE_TYPE, { force: true });
+      setRollButtonEnabled(true);
+      if (container) {
+        container.style.visibility = "visible";
+      }
+    },
+  });
 }
 
 function activatePotionBuff(potion) {
@@ -2705,6 +2771,92 @@ function hideRollDisplayForCutscene(container) {
   cutsceneHidRollDisplay = !rollDisplayHiddenByUser && wasVisible;
 
   container.style.visibility = "hidden";
+}
+
+function playDescendedTitleCutscene({
+  title = DESCENDED_TITLE_TYPE,
+  rarity = null,
+  titleContainer = null,
+  setPendingRarity = true,
+  onComplete = null,
+} = {}) {
+  const resolvedRarity = rarity || {
+    type: DESCENDED_TITLE_TYPE,
+    class: DESCENDED_TITLE_CLASS,
+    titles: [DESCENDED_TITLE_TYPE],
+  };
+
+  if (setPendingRarity || !pendingCutsceneRarity) {
+    pendingCutsceneRarity = resolvedRarity;
+  }
+
+  const container = titleContainer || document.querySelector(".container");
+  if (container) {
+    hideRollDisplayForCutscene(container);
+  }
+
+  setRollButtonEnabled(false);
+  disableChange();
+
+  if (typeof destitAudio !== "undefined" && destitAudio && typeof destitAudio.play === "function") {
+    try {
+      destitAudio.currentTime = 0;
+    } catch (error) {
+      /* no-op */
+    }
+    const playPromise = destitAudio.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {});
+    }
+  }
+
+  const overlay = document.createElement("div");
+  overlay.className = "descended-cutscene";
+  const glitchLayer = document.createElement("div");
+  glitchLayer.className = "descended-cutscene__glitch";
+  const pulseLayer = document.createElement("div");
+  pulseLayer.className = "descended-cutscene__pulse";
+  overlay.appendChild(glitchLayer);
+  overlay.appendChild(pulseLayer);
+  document.body.appendChild(overlay);
+
+  const timeouts = [];
+  const schedule = (callback, delay) => {
+    const id = setTimeout(callback, delay);
+    timeouts.push(id);
+    return id;
+  };
+
+  requestAnimationFrame(() => {
+    overlay.classList.add("descended-cutscene--visible", "descended-cutscene--phase-glitch");
+  });
+
+  schedule(() => {
+    overlay.classList.remove("descended-cutscene--phase-glitch");
+    overlay.classList.add("descended-cutscene--phase-pulse");
+  }, DESCENDED_CUTSCENE_TIMINGS.GLITCH_MS);
+
+  schedule(() => {
+    overlay.classList.remove("descended-cutscene--phase-pulse");
+    overlay.classList.add("descended-cutscene--phase-flash");
+  }, DESCENDED_CUTSCENE_TIMINGS.FLASH_MS);
+
+  const finalizeCutscene = () => {
+    timeouts.forEach(clearTimeout);
+    overlay.remove();
+
+    if (typeof onComplete === "function") {
+      try {
+        onComplete({ container, title, rarity: resolvedRarity });
+      } catch (error) {
+        console.error("Failed to complete Descended cutscene", error);
+      }
+    }
+
+    enableChange();
+  };
+
+  schedule(finalizeCutscene, DESCENDED_CUTSCENE_TIMINGS.TOTAL_MS);
 }
 
 const rarityCategories = {
@@ -5835,6 +5987,25 @@ function registerRollButtonHandler() {
         titleCont.style.visibility = "visible";
         mastermindAudio.play();
       }
+    } else if (rarity.type === DESCENDED_TITLE_TYPE) {
+      playDescendedTitleCutscene({
+        title,
+        rarity,
+        titleContainer: titleCont,
+        setPendingRarity: false,
+        onComplete: ({ container }) => {
+          addToInventory(title, rarity.class);
+          updateRollingHistory(title, rarity.type);
+          displayResult(title, rarity.type);
+          changeBackground(rarity.class, title, { force: true });
+          setRollButtonEnabled(true);
+          rollCount++;
+          rollCount1++;
+          if (container) {
+            container.style.visibility = "visible";
+          }
+        },
+      });
     } else if (rarity.type === "Gl1tch3d [1 in 12,404/40,404th]") {
       disableChange();
       startAnimationA2()
@@ -15397,7 +15568,9 @@ function openRollingSimulator() {
 }
 
 function selectTitle(rarity) {
-  const titles = rarity.titles;
+  const titles = Array.isArray(rarity?.titles) && rarity.titles.length
+    ? rarity.titles
+    : [rarity?.type || "Unknown Title"];
   return titles[Math.floor(Math.random() * titles.length)];
 }
 
