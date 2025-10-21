@@ -1947,12 +1947,9 @@ function usePotion(potionId) {
   renderPotionInventory();
   renderPotionCrafting();
   activatePotionBuff(potion);
-  if (potion.id === DESCENDED_POTION_ID) {
-    maybeGrantDescendedTitleFromPotion();
-  }
 }
 
-function maybeGrantDescendedTitleFromPotion() {
+function maybeGrantDescendedTitleFromBuff() {
   if (Math.random() >= DESCENDED_POTION_REWARD_CHANCE) {
     return;
   }
@@ -1977,6 +1974,23 @@ function maybeGrantDescendedTitleFromPotion() {
         container.style.visibility = "visible";
       }
     },
+  });
+}
+
+function shouldRollDescendedTitleThisRoll() {
+  return activeBuffs.some((buff) => {
+    if (!buff || buff.potionId !== DESCENDED_POTION_ID) {
+      return false;
+    }
+
+    if (buffsDisabled && !isBuffToggleExempt(buff)) {
+      return false;
+    }
+
+    const parsedUses = Number.parseInt(buff.usesRemaining, 10);
+    const usesRemaining = Number.isFinite(parsedUses) && parsedUses >= 1 ? parsedUses : 1;
+
+    return usesRemaining >= 1;
   });
 }
 
@@ -15279,7 +15293,11 @@ function rollRarity() {
   } = getActiveLuckPercentBreakdown();
   capturePendingRollLuckSnapshot(activeLuckPercent);
   const luckMultiplier = 1 + activeLuckPercent / 100;
+  const shouldRollDescendedTitle = shouldRollDescendedTitleThisRoll();
   consumeSingleUseBuffs();
+  if (shouldRollDescendedTitle) {
+    maybeGrantDescendedTitleFromBuff();
+  }
   const luckThreshold = computeLuckThreshold(
     activePermanentLuckPercent,
     activePotionLuckPercent,
