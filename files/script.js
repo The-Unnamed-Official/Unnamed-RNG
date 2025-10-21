@@ -5993,7 +5993,10 @@ function registerRollButtonHandler() {
             addToInventory(title, rarity.class);
             updateRollingHistory(title, rarity.type);
             displayResult(title, rarity.type);
-            changeBackground(rarity.class, title, { force: true });
+            changeBackground(rarity.class, title, {
+              force: true,
+              preservePendingAutoEquip: true,
+            });
             setRollButtonEnabled(true);
             rollCount++;
             rollCount1++;
@@ -19441,9 +19444,11 @@ function ensureBgStack() {
 }
 
 function changeBackground(rarityClass, itemTitle, options = {}) {
-  const force = typeof options === "object" && options !== null
-    ? Boolean(options.force)
-    : Boolean(options);
+  const normalizedOptions =
+    typeof options === "object" && options !== null ? options : { force: Boolean(options) };
+
+  const force = Boolean(normalizedOptions.force);
+  const preservePendingAutoEquip = Boolean(normalizedOptions.preservePendingAutoEquip);
 
   if (!force && (!isChangeEnabled || !lastRollPersisted)) {
     return;
@@ -19524,7 +19529,7 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
     if (force) {
       allowForcedAudioPlayback = previousForcedState;
     }
-    if (!force) {
+    if (!force || preservePendingAutoEquip) {
       applyPendingAutoEquip();
     } else {
       pendingAutoEquipRecord = null;
