@@ -48,7 +48,7 @@ const BUFF_TOOLTIP_EFFECT_CLASS_MAP = Object.freeze({
 
 const DESCENDED_TITLE_TYPE = "Descended Title [1 in ƐƐƐ]";
 const DESCENDED_TITLE_CLASS = "destitBgImg";
-const DESCENDED_POTION_ID = "decendentPotion";
+const DESCENDED_POTION_ID = "descendentPotion";
 const DESCENDED_POTION_REWARD_CHANCE = 1 / 333;
 const DESCENDED_CUTSCENE_TIMINGS = Object.freeze({
   GLITCH_MS: 1100,
@@ -420,9 +420,9 @@ const POTION_DEFINITIONS = [
   },
   {
     id: DESCENDED_POTION_ID,
-    name: "Decendent Potion",
-    image: "files/images/DecendentPotion.png",
-    buffImage: "files/images/DecendentBuff.png",
+    name: "Descendent Potion",
+    image: "files/images/DescendentPotion.png",
+    buffImage: "files/images/DescendentBuff.png",
     type: POTION_TYPES.LUCK,
     effectPercent: 50000,
     durationSeconds: 31536000,
