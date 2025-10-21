@@ -1299,7 +1299,8 @@ function renderPotionCrafting() {
     if (potion.id === DESCENDED_POTION_ID) {
       rewardNote = document.createElement("p");
       rewardNote.className = "potion-card__note";
-      rewardNote.textContent = "Also allows you to obtain [????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿] with chance of 1 in 333";
+      rewardNote.innerHTML =
+        'Also allows you to <strong>roll a title</strong> <span class="descendent-potion__title">[????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿]</span> with chance of 1 in 333';
     }
 
     const costTitle = document.createElement("p");
@@ -1464,7 +1465,8 @@ function renderPotionInventory() {
     if (potion.id === DESCENDED_POTION_ID) {
       inventoryRewardNote = document.createElement("p");
       inventoryRewardNote.className = "potion-inventory__note";
-      inventoryRewardNote.textContent = "Also allows you to obtain [????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿] with chance of 1 in 333";
+      inventoryRewardNote.innerHTML =
+        'Also allows you to <strong>roll a title</strong> <span class="descendent-potion__title">[????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿]</span> with chance of 1 in 333';
     }
 
     item.appendChild(infoHeader);
