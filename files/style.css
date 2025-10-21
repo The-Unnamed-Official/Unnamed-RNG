@@ -2487,11 +2487,11 @@ body {
 .descended-cutscene__pulse {
     width: 30vmin;
     height: 30vmin;
-    border-radius: 50%;
     opacity: 0;
-    transform: scale(0.6);
-    background: radial-gradient(circle, rgba(255, 64, 64, 0.95) 0%, rgba(128, 0, 0, 0.7) 55%, rgba(20, 0, 0, 0) 100%);
-    box-shadow: 0 0 50px rgba(200, 0, 0, 0.45);
+    background: url('images/cutscene_star_big.png') center/contain no-repeat;
+    transform-origin: center;
+    will-change: transform;
+    transition: opacity 180ms ease-out;
 }
 
 .descended-cutscene--phase-pulse {
@@ -2500,17 +2500,15 @@ body {
 
 .descended-cutscene--phase-pulse .descended-cutscene__pulse {
     opacity: 1;
-    animation: descendedCutscenePulse 1s ease-in-out infinite;
+    animation: descendedCutsceneStarSpin 0.2s linear infinite;
 }
 
-@keyframes descendedCutscenePulse {
-    0%, 100% {
-        transform: scale(0.6);
-        box-shadow: 0 0 55px rgba(200, 0, 0, 0.35);
+@keyframes descendedCutsceneStarSpin {
+    0% {
+        transform: scale(1) rotate(0deg);
     }
-    50% {
-        transform: scale(1);
-        box-shadow: 0 0 120px rgba(255, 0, 0, 0.55);
+    100% {
+        transform: scale(1) rotate(360deg);
     }
 }
 
