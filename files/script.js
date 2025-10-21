@@ -365,7 +365,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/BloodyPotion.png",
     buffImage: "files/images/BloodyBuff.png",
     type: POTION_TYPES.LUCK,
-    effectPercent: 10000,
+    effectPercent: 20000,
     durationSeconds: 31536000,
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
@@ -1208,8 +1208,8 @@ function renderPotionCrafting() {
     const effect = document.createElement("div");
     effect.className = "potion-card__effect";
     effect.textContent = potion.type === POTION_TYPES.LUCK
-      ? `+${potion.effectPercent}% Luck`
-      : `+${potion.effectPercent}% Speed`;
+      ? `${formatPercentage(potion.effectPercent, true)} Luck`
+      : `${formatPercentage(potion.effectPercent, true)} Speed`;
 
     const duration = document.createElement("div");
     duration.className = "potion-card__duration";
@@ -1768,8 +1768,8 @@ function renderBuffTray() {
     const effect = document.createElement("span");
     effect.className = "buff-card__effect";
     const effectText = buff.type === POTION_TYPES.LUCK
-      ? `+${formatBuffEffectValue(buff.effectPercent)}% Luck`
-      : `+${formatBuffEffectValue(buff.effectPercent)}% Speed`;
+      ? `${formatPercentage(buff.effectPercent, true)} Luck`
+      : `${formatPercentage(buff.effectPercent, true)} Speed`;
     effect.textContent = effectText;
 
     const timer = document.createElement("span");
