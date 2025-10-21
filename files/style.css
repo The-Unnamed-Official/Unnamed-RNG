@@ -2417,13 +2417,14 @@ body {
     opacity: 1;
 }
 
+
 .descended-cutscene__glitch,
 .descended-cutscene__pulse {
     position: absolute;
-    inset: 0;
 }
 
 .descended-cutscene__glitch {
+    inset: 0;
     opacity: 0;
     background: repeating-linear-gradient(
         90deg,
@@ -2485,13 +2486,17 @@ body {
 }
 
 .descended-cutscene__pulse {
-    width: 30vmin;
-    height: 30vmin;
+    --descended-cutscene-base-transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    width: min(50vmin, 420px);
+    height: min(50vmin, 420px);
     opacity: 0;
     background: url('images/cutscene_star_big.png') center/contain no-repeat;
     transform-origin: center;
     will-change: transform;
     transition: opacity 180ms ease-out;
+    transform: var(--descended-cutscene-base-transform, translate(-50%, -50%)) scale(1);
 }
 
 .descended-cutscene--phase-pulse {
@@ -2505,10 +2510,10 @@ body {
 
 @keyframes descendedCutsceneStarSpin {
     0% {
-        transform: scale(1) rotate(0deg);
+        transform: var(--descended-cutscene-base-transform, translate(-50%, -50%)) scale(1) rotate(0deg);
     }
     100% {
-        transform: scale(1) rotate(360deg);
+        transform: var(--descended-cutscene-base-transform, translate(-50%, -50%)) scale(1) rotate(360deg);
     }
 }
 
