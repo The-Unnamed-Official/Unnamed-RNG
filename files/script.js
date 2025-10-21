@@ -2657,7 +2657,8 @@ const RARITY_BUCKET_LABELS = {
   under100k: "Mastery",
   under1m: "Supreme",
   transcendent: "Transcendent",
-  special: "Special"
+  special: "Special",
+  theDescended: "The Descended",
 };
 
 // Update this set with the active event buckets (e.g., 'eventTitle') when seasonal events are running.
@@ -2988,7 +2989,9 @@ const rarityCategories = {
     "crazeBgImg",
     "shenviiBgImg",
     "glitchedBgImg",
-    "destitBgImg"
+  ],
+  theDescended: [
+    "destitBgImg",
   ],
 };
 
@@ -3014,6 +3017,7 @@ const RARITY_LABEL_CLASS_MAP = {
   esteggBgImg: "eventE25",
   estbunBgImg: "eventE25",
   fircraBgImg: "eventTitleNew25",
+  destitBgImg: "theDescended",
   pumpkinBgImg: "eventTitleHalloween24",
   norstaBgImg: "eventTitleXmas24",
   sanclaBgImg: "eventTitleXmas24",
@@ -3221,7 +3225,7 @@ function updateCutsceneSkipDisplay(
   }
 }
 
-const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "transcendent", "special"]);
+const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "transcendent", "special", "theDescended"]);
 
 function normalizeInventoryRecord(raw) {
   if (raw == null) {
@@ -15865,7 +15869,8 @@ function normalizeRarityBucket(rarityClass) {
   }
 
   if (cls === "special") return "special";
-  if (["under100", "under1k", "under10k", "under100k", "under1m", "transcendent", "special"].includes(cls)) {
+  if (cls === "theDescended") return "theDescended";
+  if (["under100", "under1k", "under10k", "under100k", "under1m", "transcendent", "special", "theDescended"].includes(cls)) {
     return cls;
   }
 
@@ -15886,6 +15891,7 @@ function normalizeRarityBucket(rarityClass) {
         normalizedLabel.startsWith("event") ||
         normalizedLabel === "transcendent" ||
         normalizedLabel === "special" ||
+        normalizedLabel === "theDescended" ||
         normalizedLabel.startsWith("under")
       ) {
         return normalizedLabel;
@@ -16539,7 +16545,7 @@ function getLockedItemsMap() {
 function getRaritySortRank(item) {
   const bucket = normalizeRarityBucket(item && item.rarityClass);
 
-  if (bucket === "special") {
+  if (bucket === "special" || bucket === "theDescended") {
     return 0;
   }
 
@@ -18722,6 +18728,7 @@ function registerRarityDeletionButtons() {
     ["deleteAllUnder1mButton", "under1m"],
     ["deleteAllTranscendentButton", "transcendent"],
     ["deleteAllSpecialButton", "special"],
+    ["deleteAllTheDescendedButton", "theDescended"],
   ];
 
   buttonMappings.forEach(([id, bucket]) => {
@@ -18833,13 +18840,13 @@ function getClassForRarity(rarity) {
       'Mastermind [110,010]': 'under1m',
       'Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]': 'under1m',
       "MythicWall [1 in 170,017]": 'under100k',
-      "The Scarecrow's Sigil [1 in 1,031]": 'eventHalloween25',
-      "Pumpkin Hollow [1 in 3,110]": 'eventHalloween25',
-      "Wailing Shade [1 in 31,010]": 'eventHalloween25',
-      "Hollow Hill Maner [1 in 10,031]": 'eventHalloween25',
-      "The Void's Veil [1 in 10,031]": 'eventHalloween25',
-      "The Phantom Moon [1 in 10,031]": 'eventHalloween25',
-      "Descended Title [1 in ƐƐƐ]": 'special'
+      "The Scarecrow's Sigil [1 in 1,031]": 'eventTitleHalloween25',
+      "Pumpkin Hollow [1 in 3,110]": 'eventTitleHalloween25',
+      "Wailing Shade [1 in 31,010]": 'eventTitleHalloween25',
+      "Hollow Hill Maner [1 in 10,031]": 'eventTitleHalloween25',
+      "The Void's Veil [1 in 10,031]": 'eventTitleHalloween25',
+      "The Phantom Moon [1 in 10,031]": 'eventTitleHalloween25',
+      "Descended Title [1 in ƐƐƐ]": 'theDescended'
   };
 
   return rarityClasses[rarity] || null;
@@ -19308,6 +19315,13 @@ document
   .getElementById("deleteAllDescendedTitleButton")
   .addEventListener("click", () => deleteAllByRarity("destitBgImg"));
 
+document
+  .getElementById("deleteAllTheDescendedButton")
+  .addEventListener("click", () => {
+    renderInventory();
+    deleteAllByRarity("destitBgImg");
+  });
+
 
 document
   .getElementById("deleteAllUnder1mButton")
@@ -19337,8 +19351,7 @@ document
       "msfuBgImg",
       "orbBgImg",
       'crazeBgImg',
-      'shenviiBgImg',
-      'destitBgImg'
+      'shenviiBgImg'
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
