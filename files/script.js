@@ -360,6 +360,30 @@ const POTION_DEFINITIONS = [
     },
   },
   {
+    id: "bloodyPotion",
+    name: "Bloody Potion",
+    image: "files/images/BloodyPotion.png",
+    buffImage: "files/images/BloodyBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 10000,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next Roll",
+    consumeOnRoll: true,
+    disableWithToggle: true,
+    craftCost: {
+      classes: {
+        commonBgImg: 800,
+        rareBgImg: 500,
+        unstoppableBgImg: 60,
+        fearBgImg: 5,
+        lostsBgImg: 5,
+        mysBgImg: 2,
+      },
+      titles: [],
+      potions: { decentPotion: 2, fortunePotion3: 1 },
+    },
+  },
+  {
     id: "speedPotion",
     name: "Speed Potion",
     image: "files/images/SpeedPotion.png",
@@ -1592,7 +1616,11 @@ function formatPercentage(value, includeSign = false) {
   if (!Number.isFinite(value)) {
     return includeSign ? "+0%" : "0%";
   }
-  const formatted = Number.isInteger(value) ? value.toString() : value.toFixed(1);
+  const useFraction = !Number.isInteger(value);
+  const formatted = value.toLocaleString("en-US", {
+    minimumFractionDigits: useFraction ? 1 : 0,
+    maximumFractionDigits: useFraction ? 1 : 0,
+  });
   if (includeSign) {
     return `${value >= 0 ? "+" : ""}${formatted}%`;
   }
