@@ -49,7 +49,7 @@ const BUFF_TOOLTIP_EFFECT_CLASS_MAP = Object.freeze({
 const DESCENDED_TITLE_TYPE = "Descended Title [1 in ƐƐƐ]";
 const DESCENDED_TITLE_CLASS = "destitBgImg";
 const DESCENDED_POTION_ID = "decendentPotion";
-const DESCENDED_POTION_REWARD_CHANCE = 1 / 300;
+const DESCENDED_POTION_REWARD_CHANCE = 1 / 333;
 const DESCENDED_CUTSCENE_TIMINGS = Object.freeze({
   GLITCH_MS: 1100,
   FLASH_MS: 3300,
