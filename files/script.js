@@ -1949,34 +1949,6 @@ function usePotion(potionId) {
   activatePotionBuff(potion);
 }
 
-function maybeGrantDescendedTitleFromBuff() {
-  if (Math.random() >= DESCENDED_POTION_REWARD_CHANCE) {
-    return;
-  }
-
-  const rarity = {
-    type: DESCENDED_TITLE_TYPE,
-    class: DESCENDED_TITLE_CLASS,
-    titles: [DESCENDED_TITLE_TYPE],
-  };
-
-  playDescendedTitleCutscene({
-    title: DESCENDED_TITLE_TYPE,
-    rarity,
-    setPendingRarity: true,
-    onComplete: ({ container }) => {
-      addToInventory(DESCENDED_TITLE_TYPE, DESCENDED_TITLE_CLASS);
-      updateRollingHistory(DESCENDED_TITLE_TYPE, DESCENDED_TITLE_TYPE);
-      displayResult(DESCENDED_TITLE_TYPE, DESCENDED_TITLE_TYPE);
-      changeBackground(DESCENDED_TITLE_CLASS, DESCENDED_TITLE_TYPE, { force: true });
-      setRollButtonEnabled(true);
-      if (container) {
-        container.style.visibility = "visible";
-      }
-    },
-  });
-}
-
 function shouldRollDescendedTitleThisRoll() {
   return activeBuffs.some((buff) => {
     if (!buff || buff.potionId !== DESCENDED_POTION_ID) {
@@ -2813,9 +2785,6 @@ function playDescendedTitleCutscene({
     hideRollDisplayForCutscene(container);
   }
 
-  setRollButtonEnabled(false);
-  disableChange();
-
   if (typeof destitAudio !== "undefined" && destitAudio && typeof destitAudio.play === "function") {
     try {
       destitAudio.currentTime = 0;
@@ -2865,7 +2834,10 @@ function playDescendedTitleCutscene({
 
     if (typeof onComplete === "function") {
       try {
-        onComplete({ container, title, rarity: resolvedRarity });
+        const handled = onComplete({ container, title, rarity: resolvedRarity });
+        if (handled === true) {
+          return;
+        }
       } catch (error) {
         console.error("Failed to complete Descended cutscene", error);
       }
@@ -6010,22 +5982,31 @@ function registerRollButtonHandler() {
         mastermindAudio.play();
       }
     } else if (rarity.type === DESCENDED_TITLE_TYPE) {
+      disableChange();
       playDescendedTitleCutscene({
         title,
         rarity,
         titleContainer: titleCont,
         setPendingRarity: false,
         onComplete: ({ container }) => {
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class, title, { force: true });
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          if (container) {
-            container.style.visibility = "visible";
+          try {
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class, title, { force: true });
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            if (container) {
+              container.style.visibility = "visible";
+            }
+          } catch (error) {
+            console.error("Failed to finalize Descended Title roll", error);
+          } finally {
+            enableChange();
           }
+
+          return true;
         },
       });
     } else if (rarity.type === "Gl1tch3d [1 in 12,404/40,404th]") {
@@ -15298,9 +15279,15 @@ function rollRarity() {
   capturePendingRollLuckSnapshot(activeLuckPercent);
   const luckMultiplier = 1 + activeLuckPercent / 100;
   const shouldRollDescendedTitle = shouldRollDescendedTitleThisRoll();
+  const rolledDescendedTitle =
+    shouldRollDescendedTitle && Math.random() < DESCENDED_POTION_REWARD_CHANCE;
   consumeSingleUseBuffs();
-  if (shouldRollDescendedTitle) {
-    maybeGrantDescendedTitleFromBuff();
+  if (rolledDescendedTitle) {
+    return {
+      type: DESCENDED_TITLE_TYPE,
+      class: DESCENDED_TITLE_CLASS,
+      titles: [DESCENDED_TITLE_TYPE],
+    };
   }
   const luckThreshold = computeLuckThreshold(
     activePermanentLuckPercent,
