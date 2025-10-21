@@ -773,6 +773,8 @@ let equippedItem = normalizeEquippedItemRecord(storage.get("equippedItem", null)
 let currentAudio = null;
 let isChangeEnabled = true;
 let autoRollInterval = null;
+let autoRollActive = false;
+let autoRollLastExecution = null;
 const AUTO_ROLL_UNLOCK_ROLLS = 1000;
 let audioVolume = 1;
 let rollAudioVolume = 1;
@@ -1764,6 +1766,10 @@ function applySpeedBuffEffects() {
     cooldownTime = BASE_COOLDOWN_TIME;
     cooldownBuffActive = false;
     recordRollCooldownDuration("default", BASE_COOLDOWN_TIME);
+  }
+
+  if (autoRollActive) {
+    scheduleAutoRollTick();
   }
 }
 
@@ -18174,7 +18180,7 @@ function initializeAutoRollControls() {
       return;
     }
 
-    if (autoRollInterval) {
+    if (autoRollActive) {
       stopAutoRoll();
     } else {
       startAutoRoll();
@@ -18191,14 +18197,72 @@ function initializeAutoRollControls() {
   updateAutoRollAvailability();
 }
 
-function startAutoRoll() {
-  if (!autoRollButtonElement || autoRollInterval || !isAutoRollUnlocked()) {
+function getRelativeTime() {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+  return Date.now();
+}
+
+function getAutoRollDelay() {
+  const baseCooldown = Number.isFinite(cooldownTime) ? cooldownTime : BASE_COOLDOWN_TIME;
+  const desiredDelay = Math.max(5, baseCooldown + 5);
+
+  if (autoRollLastExecution === null) {
+    return desiredDelay;
+  }
+
+  const elapsed = getRelativeTime() - autoRollLastExecution;
+  if (!Number.isFinite(elapsed)) {
+    return desiredDelay;
+  }
+
+  const remaining = desiredDelay - elapsed;
+  return Math.max(5, Math.round(remaining));
+}
+
+function scheduleAutoRollTick(delayOverride = null) {
+  if (!autoRollActive) {
     return;
   }
 
-  autoRollInterval = setInterval(() => {
-    document.getElementById("rollButton")?.click();
-  }, 400);
+  if (autoRollInterval) {
+    clearTimeout(autoRollInterval);
+    autoRollInterval = null;
+  }
+
+  const nextDelay = Number.isFinite(delayOverride) ? Math.max(5, Math.round(delayOverride)) : getAutoRollDelay();
+
+  autoRollInterval = setTimeout(() => {
+    autoRollInterval = null;
+
+    if (!autoRollActive) {
+      return;
+    }
+
+    const rollButton = document.getElementById("rollButton");
+    if (!rollButton || rollButton.disabled) {
+      scheduleAutoRollTick();
+      return;
+    }
+
+    rollButton.click();
+    autoRollLastExecution = getRelativeTime();
+
+    scheduleAutoRollTick();
+  }, nextDelay);
+}
+
+function startAutoRoll() {
+  if (!autoRollButtonElement || autoRollActive || !isAutoRollUnlocked()) {
+    return;
+  }
+
+  autoRollActive = true;
+  const baseCooldown = Number.isFinite(cooldownTime) ? cooldownTime : BASE_COOLDOWN_TIME;
+  const initialDesiredDelay = Math.max(5, baseCooldown + 5);
+  autoRollLastExecution = getRelativeTime() - initialDesiredDelay;
+  scheduleAutoRollTick(5);
   localStorage.setItem("autoRollEnabled", "true");
   updateAutoRollAvailability();
 }
@@ -18208,10 +18272,12 @@ function stopAutoRoll() {
     return;
   }
 
+  autoRollActive = false;
   if (autoRollInterval) {
-    clearInterval(autoRollInterval);
+    clearTimeout(autoRollInterval);
     autoRollInterval = null;
   }
+  autoRollLastExecution = null;
   localStorage.setItem("autoRollEnabled", "false");
   updateAutoRollAvailability();
 }
@@ -18236,9 +18302,11 @@ function updateAutoRollAvailability() {
   const unlocked = isAutoRollUnlocked();
   if (!unlocked) {
     if (autoRollInterval) {
-      clearInterval(autoRollInterval);
+      clearTimeout(autoRollInterval);
       autoRollInterval = null;
     }
+    autoRollActive = false;
+    autoRollLastExecution = null;
     button.disabled = true;
     button.classList.add("locked");
     button.classList.remove("on");
@@ -18250,7 +18318,7 @@ function updateAutoRollAvailability() {
 
   button.disabled = false;
   button.classList.remove("locked");
-  if (autoRollInterval) {
+  if (autoRollActive) {
     button.textContent = "Auto Roll: On";
     button.classList.add("on");
     button.classList.remove("off");
