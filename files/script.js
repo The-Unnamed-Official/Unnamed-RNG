@@ -46,12 +46,23 @@ const BUFF_TOOLTIP_EFFECT_CLASS_MAP = Object.freeze({
   [POTION_TYPES.SPEED]: "buff-tooltip__effect--speed",
 });
 
+const DESCENDED_TITLE_TYPE = "Descended Title [1 in ƐƐƐ]";
+const DESCENDED_TITLE_CLASS = "destitBgImg";
+const DESCENDED_POTION_ID = "descendentPotion";
+const DESCENDED_POTION_REWARD_CHANCE = 1 / 333;
+const DESCENDED_CUTSCENE_TIMINGS = Object.freeze({
+  GLITCH_MS: 1100,
+  FLASH_MS: 3300,
+  TOTAL_MS: 3500,
+});
+
 let buffTooltipElement = null;
 let buffTooltipNameElement = null;
 let buffTooltipEffectElement = null;
 let buffTooltipTimerElement = null;
 let activeBuffTooltipCard = null;
 let lastBuffPointerPosition = null;
+let inventoryListHandlersInitialized = false;
 
 function normalizeAchievementNameList(raw) {
   if (!Array.isArray(raw)) {
@@ -249,7 +260,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 50,
     durationSeconds: 30,
     craftCost: {
-      classes: { commonBgImg: 50, rareBgImg: 30, epicBgImg: 20, legendaryBgImg: 10, unstoppableBgImg: 1 },
+      classes: { commonBgImg: 30, rareBgImg: 20, epicBgImg: 10, legendaryBgImg: 5, unstoppableBgImg: 1 },
       titles: [],
     },
   },
@@ -356,7 +367,79 @@ const POTION_DEFINITIONS = [
     craftCost: {
       classes: { commonBgImg: 600, rareBgImg: 300, unstoppableBgImg: 35, fearBgImg: 2, lostsBgImg: 2 },
       titles: [],
-      potions: { luckyPotion: 40, fortuneSpoid1: 5 },
+      potions: { luckyPotion: 40, fortuneSpoid1: 4 },
+    },
+  },
+  {
+    id: "bloodyPotion",
+    name: "Bloody Potion",
+    image: "files/images/BloodyPotion.png",
+    buffImage: "files/images/BloodyBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 33333,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next Roll",
+    consumeOnRoll: true,
+    disableWithToggle: true,
+    eventExclusive: "Halloween Event Exclusive",
+    craftCost: {
+      classes: {
+        commonBgImg: 800,
+        rareBgImg: 500,
+        unstoppableBgImg: 45,
+        fearBgImg: 3,
+      },
+      titles: [],
+      potions: { luckyPotion: 50, fortuneSpoid1: 5, basicPotion: 1,  },
+    },
+  },
+  {
+    id: "pumpkinPotion",
+    name: "Pumpkin Potion",
+    image: "files/images/PumpkinPotion.png",
+    buffImage: "files/images/PumpkinBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 66666,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next Roll",
+    consumeOnRoll: true,
+    disableWithToggle: true,
+    eventExclusive: "Halloween Event Exclusive",
+    craftCost: {
+      classes: {
+        commonBgImg: 900,
+        rareBgImg: 600,
+        legendaryBgImg: 100,
+        unstoppableBgImg: 50,
+        fearBgImg: 4,
+      },
+      titles: [],
+      potions: { luckyPotion: 75, fortuneSpoid1: 7, basicPotion: 2 },
+    },
+  },
+  {
+    id: DESCENDED_POTION_ID,
+    name: "Descendent Potion",
+    image: "files/images/DescendentPotion.png",
+    buffImage: "files/images/DescendentBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 50000,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next Roll",
+    consumeOnRoll: true,
+    disableWithToggle: true,
+    craftCost: {
+      classes: {
+        commonBgImg: 1000,
+        rareBgImg: 700,
+        legendaryBgImg: 200,
+        unstoppableBgImg: 70,
+        memBgImg: 30,
+        oblBgImg: 20,
+        mysBgImg: 15,
+      },
+      titles: [],
+      potions: { luckyPotion: 90, fortuneSpoid1: 2, fortuneSpoid2: 1, basicPotion: 2 },
     },
   },
   {
@@ -689,6 +772,8 @@ let equippedItem = normalizeEquippedItemRecord(storage.get("equippedItem", null)
 let currentAudio = null;
 let isChangeEnabled = true;
 let autoRollInterval = null;
+let autoRollActive = false;
+let autoRollLastExecution = null;
 const AUTO_ROLL_UNLOCK_ROLLS = 1000;
 let audioVolume = 1;
 let rollAudioVolume = 1;
@@ -703,6 +788,7 @@ let skipCutscene10K = true;
 let skipCutscene100K = true;
 let skipCutscene1M = true;
 let skipCutsceneTranscendent = true;
+let skipCutsceneHalloween25 = true;
 let cooldownBuffActive = cooldownTime < BASE_COOLDOWN_TIME;
 let rollDisplayHiddenByUser = false;
 let cutsceneHidRollDisplay = false;
@@ -742,6 +828,8 @@ const rollCooldownDurationMap = new Map();
 let rollButtonDisableTimestamp = null;
 let rollButtonCooldownContext = "default";
 let rollButtonProgressArmed = false;
+let rollButtonManualCooldownUntil = 0;
+let rollButtonManualEnableTimeoutId = null;
 
 function recordRollCooldownDuration(context, duration) {
   if (typeof duration !== "number" || !Number.isFinite(duration) || duration <= 0) {
@@ -1164,6 +1252,7 @@ function renderPotionCrafting() {
     return;
   }
 
+  const previousScrollTop = container.scrollTop;
   container.innerHTML = "";
   const summary = summarizeInventoryForPotions();
 
@@ -1182,11 +1271,25 @@ function renderPotionCrafting() {
     title.className = "potion-card__title";
     title.textContent = potion.name;
 
+    let eventLabel = null;
+    if (typeof potion.eventExclusive === "string" && potion.eventExclusive.trim().length > 0) {
+      eventLabel = document.createElement("span");
+      eventLabel.className = "potion-card__event-label";
+      eventLabel.textContent = potion.eventExclusive;
+    }
+
+    const header = document.createElement("div");
+    header.className = "potion-card__header";
+    header.appendChild(title);
+    if (eventLabel) {
+      header.appendChild(eventLabel);
+    }
+
     const effect = document.createElement("div");
     effect.className = "potion-card__effect";
     effect.textContent = potion.type === POTION_TYPES.LUCK
-      ? `+${potion.effectPercent}% Luck`
-      : `+${potion.effectPercent}% Speed`;
+      ? `${formatPercentage(potion.effectPercent, true)} Luck`
+      : `${formatPercentage(potion.effectPercent, true)} Speed`;
 
     const duration = document.createElement("div");
     duration.className = "potion-card__duration";
@@ -1194,6 +1297,14 @@ function renderPotionCrafting() {
       ? potion.durationDisplay
       : `Duration: ${formatPotionDuration(potion.durationSeconds)}`;
     duration.textContent = durationText;
+
+    let rewardNote = null;
+    if (potion.id === DESCENDED_POTION_ID) {
+      rewardNote = document.createElement("p");
+      rewardNote.className = "potion-card__note";
+      rewardNote.innerHTML =
+        'Also allows you to <strong>roll a title</strong> <span class="descendent-potion__title">[????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿]</span> with chance of 1 in 333';
+    }
 
     const costTitle = document.createElement("p");
     costTitle.className = "potion-card__cost-title";
@@ -1280,15 +1391,23 @@ function renderPotionCrafting() {
     actions.appendChild(ownedLabel);
 
     card.appendChild(imageWrapper);
-    card.appendChild(title);
+    card.appendChild(header);
     card.appendChild(effect);
     card.appendChild(duration);
+    if (rewardNote) {
+      card.appendChild(rewardNote);
+    }
     card.appendChild(costTitle);
     card.appendChild(costList);
     card.appendChild(actions);
 
     container.appendChild(card);
   });
+
+  if (previousScrollTop > 0) {
+    const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+    container.scrollTop = Math.min(previousScrollTop, maxScrollTop);
+  }
 }
 
 function renderPotionInventory() {
@@ -1308,6 +1427,20 @@ function renderPotionInventory() {
     title.className = "potion-inventory__title";
     title.textContent = potion.name;
 
+    let inventoryEventLabel = null;
+    if (typeof potion.eventExclusive === "string" && potion.eventExclusive.trim().length > 0) {
+      inventoryEventLabel = document.createElement("span");
+      inventoryEventLabel.className = "potion-inventory__event-label";
+      inventoryEventLabel.textContent = potion.eventExclusive;
+    }
+
+    const infoHeader = document.createElement("div");
+    infoHeader.className = "potion-inventory__header";
+    infoHeader.appendChild(title);
+    if (inventoryEventLabel) {
+      infoHeader.appendChild(inventoryEventLabel);
+    }
+
     const imageWrapper = document.createElement("div");
     imageWrapper.className = "potion-inventory__image";
     const image = document.createElement("img");
@@ -1325,16 +1458,35 @@ function renderPotionInventory() {
     useButton.disabled = count <= 0;
     useButton.addEventListener("click", () => usePotion(potion.id));
 
+    const useAllButton = document.createElement("button");
+    useAllButton.className = "potion-inventory__use-all";
+    useAllButton.type = "button";
+    useAllButton.textContent = "Use All";
+    useAllButton.disabled = count <= 0;
+    useAllButton.addEventListener("click", () => useAllPotions(potion.id));
+
     actions.appendChild(useButton);
+    actions.appendChild(useAllButton);
 
     const countLabel = document.createElement("div");
     countLabel.className = "potion-inventory__count";
     countLabel.textContent = `In stock: ${count}`;
 
-    item.appendChild(title);
+    let inventoryRewardNote = null;
+    if (potion.id === DESCENDED_POTION_ID) {
+      inventoryRewardNote = document.createElement("p");
+      inventoryRewardNote.className = "potion-inventory__note";
+      inventoryRewardNote.innerHTML =
+        'Also allows you to <strong>roll a title</strong> <span class="descendent-potion__title">[????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿]</span> with chance of 1 in 333';
+    }
+
+    item.appendChild(infoHeader);
     item.appendChild(imageWrapper);
     item.appendChild(actions);
     item.appendChild(countLabel);
+    if (inventoryRewardNote) {
+      item.appendChild(inventoryRewardNote);
+    }
 
     list.appendChild(item);
   });
@@ -1592,7 +1744,11 @@ function formatPercentage(value, includeSign = false) {
   if (!Number.isFinite(value)) {
     return includeSign ? "+0%" : "0%";
   }
-  const formatted = Number.isInteger(value) ? value.toString() : value.toFixed(1);
+  const useFraction = !Number.isInteger(value);
+  const formatted = value.toLocaleString("en-US", {
+    minimumFractionDigits: useFraction ? 1 : 0,
+    maximumFractionDigits: useFraction ? 1 : 0,
+  });
   if (includeSign) {
     return `${value >= 0 ? "+" : ""}${formatted}%`;
   }
@@ -1648,6 +1804,10 @@ function applySpeedBuffEffects() {
     cooldownTime = BASE_COOLDOWN_TIME;
     cooldownBuffActive = false;
     recordRollCooldownDuration("default", BASE_COOLDOWN_TIME);
+  }
+
+  if (autoRollActive) {
+    scheduleAutoRollTick();
   }
 }
 
@@ -1741,8 +1901,8 @@ function renderBuffTray() {
     const effect = document.createElement("span");
     effect.className = "buff-card__effect";
     const effectText = buff.type === POTION_TYPES.LUCK
-      ? `+${formatBuffEffectValue(buff.effectPercent)}% Luck`
-      : `+${formatBuffEffectValue(buff.effectPercent)}% Speed`;
+      ? `${formatPercentage(buff.effectPercent, true)} Luck`
+      : `${formatPercentage(buff.effectPercent, true)} Speed`;
     effect.textContent = effectText;
 
     const timer = document.createElement("span");
@@ -1827,6 +1987,43 @@ function usePotion(potionId) {
   renderPotionInventory();
   renderPotionCrafting();
   activatePotionBuff(potion);
+}
+
+function useAllPotions(potionId) {
+  const available = getPotionCount(potionId);
+  if (available <= 0) {
+    return;
+  }
+
+  const potion = getPotionDefinition(potionId);
+  if (!potion) {
+    return;
+  }
+
+  adjustPotionCount(potionId, -available);
+  renderPotionInventory();
+  renderPotionCrafting();
+
+  for (let i = 0; i < available; i += 1) {
+    activatePotionBuff(potion);
+  }
+}
+
+function shouldRollDescendedTitleThisRoll() {
+  return activeBuffs.some((buff) => {
+    if (!buff || buff.potionId !== DESCENDED_POTION_ID) {
+      return false;
+    }
+
+    if (buffsDisabled && !isBuffToggleExempt(buff)) {
+      return false;
+    }
+
+    const parsedUses = Number.parseInt(buff.usesRemaining, 10);
+    const usesRemaining = Number.isFinite(parsedUses) && parsedUses >= 1 ? parsedUses : 1;
+
+    return usesRemaining >= 1;
+  });
 }
 
 function activatePotionBuff(potion) {
@@ -2464,7 +2661,8 @@ const STOPPABLE_AUDIO_IDS = [
   "thevoidsveilAudio",
   "thephantommoonAudio",
   "wailingshadeAudio",
-  "alienAudio"
+  "alienAudio",
+  "destitAudio"
 ];
 
 const STOPPABLE_AUDIO_SET = new Set(STOPPABLE_AUDIO_IDS);
@@ -2490,7 +2688,8 @@ const RARITY_BUCKET_LABELS = {
   under100k: "Mastery",
   under1m: "Supreme",
   transcendent: "Transcendent",
-  special: "Special"
+  special: "Special",
+  theDescended: "The Descended",
 };
 
 // Update this set with the active event buckets (e.g., 'eventTitle') when seasonal events are running.
@@ -2548,11 +2747,64 @@ HTMLMediaElement.prototype.play = function (...args) {
   return originalAudioPlay.apply(this, args);
 };
 
-function setRollButtonEnabled(enabled) {
+function setRollButtonEnabled(enabled, options = {}) {
   const button = document.getElementById("rollButton");
-  if (button) {
-    button.disabled = !enabled;
+  if (!button) {
+    return;
   }
+
+  const { force = false } = options;
+
+  if (!enabled) {
+    button.disabled = true;
+    if (!force) {
+      const baseDelay = getRollButtonCooldownDelay();
+      const now = typeof performance !== "undefined" && typeof performance.now === "function"
+        ? performance.now()
+        : Date.now();
+      rollButtonManualCooldownUntil = Math.max(
+        rollButtonManualCooldownUntil,
+        now + Math.max(0, baseDelay),
+      );
+    }
+
+    if (rollButtonManualEnableTimeoutId !== null) {
+      clearTimeout(rollButtonManualEnableTimeoutId);
+      rollButtonManualEnableTimeoutId = null;
+    }
+    return;
+  }
+
+  const now = typeof performance !== "undefined" && typeof performance.now === "function"
+    ? performance.now()
+    : Date.now();
+
+  if (!force && now < rollButtonManualCooldownUntil) {
+    const delay = Math.max(0, Math.round(rollButtonManualCooldownUntil - now));
+    if (rollButtonManualEnableTimeoutId !== null) {
+      clearTimeout(rollButtonManualEnableTimeoutId);
+    }
+    rollButtonManualEnableTimeoutId = setTimeout(() => {
+      rollButtonManualEnableTimeoutId = null;
+      setRollButtonEnabled(true, { force: true });
+    }, delay);
+    return;
+  }
+
+  rollButtonManualCooldownUntil = 0;
+  if (rollButtonManualEnableTimeoutId !== null) {
+    clearTimeout(rollButtonManualEnableTimeoutId);
+    rollButtonManualEnableTimeoutId = null;
+  }
+  button.disabled = false;
+}
+
+function getRollButtonCooldownDelay() {
+  if (Number.isFinite(cooldownTime) && cooldownTime >= 0) {
+    return cooldownTime;
+  }
+
+  return BASE_COOLDOWN_TIME;
 }
 
 function restoreRollDisplayAfterCutscene() {
@@ -2623,6 +2875,92 @@ function hideRollDisplayForCutscene(container) {
   cutsceneHidRollDisplay = !rollDisplayHiddenByUser && wasVisible;
 
   container.style.visibility = "hidden";
+}
+
+function playDescendedTitleCutscene({
+  title = DESCENDED_TITLE_TYPE,
+  rarity = null,
+  titleContainer = null,
+  setPendingRarity = true,
+  onComplete = null,
+} = {}) {
+  const resolvedRarity = rarity || {
+    type: DESCENDED_TITLE_TYPE,
+    class: DESCENDED_TITLE_CLASS,
+    titles: [DESCENDED_TITLE_TYPE],
+  };
+
+  if (setPendingRarity || !pendingCutsceneRarity) {
+    pendingCutsceneRarity = resolvedRarity;
+  }
+
+  const container = titleContainer || document.querySelector(".container");
+  if (container) {
+    hideRollDisplayForCutscene(container);
+  }
+
+  if (typeof destitAudio !== "undefined" && destitAudio && typeof destitAudio.play === "function") {
+    try {
+      destitAudio.currentTime = 0;
+    } catch (error) {
+      /* no-op */
+    }
+    const playPromise = destitAudio.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {});
+    }
+  }
+
+  const overlay = document.createElement("div");
+  overlay.className = "descended-cutscene";
+  const glitchLayer = document.createElement("div");
+  glitchLayer.className = "descended-cutscene__glitch";
+  const pulseLayer = document.createElement("div");
+  pulseLayer.className = "descended-cutscene__pulse";
+  overlay.appendChild(glitchLayer);
+  overlay.appendChild(pulseLayer);
+  document.body.appendChild(overlay);
+
+  const timeouts = [];
+  const schedule = (callback, delay) => {
+    const id = setTimeout(callback, delay);
+    timeouts.push(id);
+    return id;
+  };
+
+  requestAnimationFrame(() => {
+    overlay.classList.add("descended-cutscene--visible", "descended-cutscene--phase-glitch");
+  });
+
+  schedule(() => {
+    overlay.classList.remove("descended-cutscene--phase-glitch");
+    overlay.classList.add("descended-cutscene--phase-pulse");
+  }, DESCENDED_CUTSCENE_TIMINGS.GLITCH_MS);
+
+  schedule(() => {
+    overlay.classList.remove("descended-cutscene--phase-pulse");
+    overlay.classList.add("descended-cutscene--phase-flash");
+  }, DESCENDED_CUTSCENE_TIMINGS.FLASH_MS);
+
+  const finalizeCutscene = () => {
+    timeouts.forEach(clearTimeout);
+    overlay.remove();
+
+    if (typeof onComplete === "function") {
+      try {
+        const handled = onComplete({ container, title, rarity: resolvedRarity });
+        if (handled === true) {
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to complete Descended cutscene", error);
+      }
+    }
+
+    enableChange();
+  };
+
+  schedule(finalizeCutscene, DESCENDED_CUTSCENE_TIMINGS.TOTAL_MS);
 }
 
 const rarityCategories = {
@@ -2736,6 +3074,9 @@ const rarityCategories = {
     "shenviiBgImg",
     "glitchedBgImg",
   ],
+  theDescended: [
+    "destitBgImg",
+  ],
 };
 
 const RARITY_CLASS_BUCKET_MAP = Object.freeze(
@@ -2760,6 +3101,7 @@ const RARITY_LABEL_CLASS_MAP = {
   esteggBgImg: "eventE25",
   estbunBgImg: "eventE25",
   fircraBgImg: "eventTitleNew25",
+  destitBgImg: "theDescended",
   pumpkinBgImg: "eventTitleHalloween24",
   norstaBgImg: "eventTitleXmas24",
   sanclaBgImg: "eventTitleXmas24",
@@ -2932,6 +3274,12 @@ const CUTSCENE_SKIP_SETTINGS = [
     label: "Skip Transcendent Cutscenes",
     buttonId: "toggleCutsceneTranscendent",
   },
+  {
+    key: "skipCutsceneHalloween25",
+    labelId: "halloween25Txt",
+    label: "Skip Halloween 2025 Title Cutscenes",
+    buttonId: "toggleCutsceneHalloween25",
+  },
 ];
 
 const CUTSCENE_STATE_SETTERS = {
@@ -2940,6 +3288,7 @@ const CUTSCENE_STATE_SETTERS = {
   skipCutscene100K: (value) => { skipCutscene100K = value; },
   skipCutscene1M: (value) => { skipCutscene1M = value; },
   skipCutsceneTranscendent: (value) => { skipCutsceneTranscendent = value; },
+  skipCutsceneHalloween25: (value) => { skipCutsceneHalloween25 = value; },
 };
 
 const CUTSCENE_STATE_GETTERS = {
@@ -2948,6 +3297,7 @@ const CUTSCENE_STATE_GETTERS = {
   skipCutscene100K: () => skipCutscene100K,
   skipCutscene1M: () => skipCutscene1M,
   skipCutsceneTranscendent: () => skipCutsceneTranscendent,
+  skipCutsceneHalloween25: () => skipCutsceneHalloween25,
 };
 
 function updateCutsceneSkipDisplay(
@@ -2967,7 +3317,7 @@ function updateCutsceneSkipDisplay(
   }
 }
 
-const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "transcendent", "special"]);
+const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "transcendent", "special", "theDescended"]);
 
 function normalizeInventoryRecord(raw) {
   if (raw == null) {
@@ -3196,46 +3546,86 @@ const ACHIEVEMENTS = [
   { name: "No Unnamed?", count: 30303 },
   { name: "Calculated Chaos", count: 40000 },
   { name: "Beyond Luck", count: 50000 },
+  { name: "Precision Spinner", count: 75000 },
   { name: "Rolling machine", count: 100000 },
+  { name: "Rhythm of Fortune", count: 150000 },
   { name: "Your PC must be burning", count: 250000 },
+  { name: "Cascade of Clicks", count: 350000 },
   { name: "Half a million!1!!1", count: 500000 },
   { name: "Rolling Virtuoso", count: 750000 },
   { name: "One, Two.. ..One Million!", count: 1000000 },
+  { name: "Momentum Maestro", count: 1500000 },
   { name: "Millionaire Machine", count: 2000000 },
+  { name: "Probability Pioneer", count: 2500000 },
   { name: "Triple Threat Spinner", count: 3000000 },
+  { name: "Odds Overdrive", count: 4000000 },
   { name: "Momentum Master", count: 5000000 },
+  { name: "Luckstream Rider", count: 6000000 },
   { name: "Lucky Tenacity", count: 7500000 },
+  { name: "Rollstorm Chaser", count: 8500000 },
   { name: "No H1di?", count: 10000000 },
+  { name: "Quantum Quester", count: 12000000 },
   { name: "Breaking Reality", count: 15000000 },
+  { name: "Variance Vanquisher", count: 18000000 },
   { name: "Are you really doing this?", count: 25000000 },
+  { name: "Stochastic Sprinter", count: 27500000 },
   { name: "Multiversal Roller", count: 30000000 },
+  { name: "Threshold Tumbler", count: 35000000 },
   { name: "You have no limits...", count: 50000000 },
+  { name: "Cascade Commander", count: 60000000 },
   { name: "Anomaly Hunter", count: 75000000 },
   { name: "WHAT HAVE YOU DONE", count: 100000000 },
   { name: "Oddity Voyager", count: 150000000 },
+  { name: "Permutation Prodigy", count: 200000000 },
   { name: "Improbability Engine", count: 300000000 },
+  { name: "Destiny Defier", count: 400000000 },
   { name: "Beyond Imagination", count: 500000000 },
+  { name: "Entropy Challenger", count: 750000000 },
   { name: "AHHHHHHHHHHH", count: 1000000000 },
+  { name: "Randomness Ruler", count: 1500000000 },
   { name: "Worldshaper", count: 2500000000 },
+  { name: "Chance Chancellor", count: 3500000000 },
   { name: "Entropy Rewriter", count: 5000000000 },
+  { name: "Fate Fabricator", count: 7500000000 },
+  { name: "Reality Reforger", count: 12500000000 },
   { name: "RNG Architect", count: 25000000000 },
   // Playtime goals
   { name: "Just the beginning", timeCount: 0 },
+  { name: "Settling In", timeCount: 900 },
   { name: "Just Five More Minutes...", timeCount: 1800 },
+  { name: "Spin Session", timeCount: 2700 },
   { name: "This doesn't add up", timeCount: 3600 },
+  { name: "Roller Stretch", timeCount: 5400 },
   { name: "When does it end...", timeCount: 7200 },
+  { name: "Triple Hour Tour", timeCount: 10800 },
+  { name: "Marathon Warmup", timeCount: 14400 },
   { name: "Late Night Grinder", timeCount: 21600 },
+  { name: "Half-Day Hero", timeCount: 28800 },
   { name: "I swear I'm not addicted...", timeCount: 36000 },
+  { name: "Sunrise Sprint", timeCount: 43200 },
   { name: "Grass? What's that?", timeCount: 86400 },
+  { name: "Weekend Warmup", timeCount: 129600 },
   { name: "Unnamed's RNG biggest fan", timeCount: 172800 },
+  { name: "Marathon Weekend", timeCount: 259200 },
+  { name: "Four-Day Focus", timeCount: 345600 },
   { name: "Weekday Warrior", timeCount: 432000 },
+  { name: "Almost a Week", timeCount: 518400 },
   { name: "RNG is life!", timeCount: 604800 },
+  { name: "Double Week Drift", timeCount: 907200 },
   { name: "I. CAN'T. STOP", timeCount: 1209600 },
+  { name: "Three-Week Thrive", timeCount: 1814400 },
   { name: "No Lifer", timeCount: 2629800 },
+  { name: "Five-Week Fixture", timeCount: 3024000 },
+  { name: "Season Kickoff", timeCount: 4730400 },
   { name: "Are you okay?", timeCount: 5259600 },
+  { name: "Quarter-Year Quest", timeCount: 7884000 },
   { name: "Seasoned Grinder", timeCount: 9460800 },
+  { name: "Half-Year Hustle", timeCount: 12614400 },
   { name: "You are a True No Lifer", timeCount: 15778800 },
+  { name: "Three-Quarter Marathon", timeCount: 18921600 },
+  { name: "Nine-Month Nomad", timeCount: 25228800 },
   { name: "No one's getting this legit", timeCount: 31557600 },
+  { name: "Eighteen-Month Endurance", timeCount: 47304000 },
   { name: "Two Years Deep", timeCount: 63115200 },
   { name: "Triennial Tenacity", timeCount: 94672800 },
   { name: "Four-Year Fixture", timeCount: 126230400 },
@@ -3278,6 +3668,7 @@ const ACHIEVEMENTS = [
   { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]", requiredRarityClass: "polarrBgImg" },
   { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 170,017]", requiredRarityClass: "mythicwallBgImg" },
   { name: "Master of your Mind", requiredTitle: "Mastermind [1 in 110,010]", requiredRarityClass: "mastermindBgImg" },
+  { name: "The Descendant", requiredTitle: "Descended Title [1 in ƐƐƐ]", requiredRarityClass: "destitBgImg" },
   {
     name: "T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈",
     requiredTitle: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]",
@@ -3817,7 +4208,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (rollButton) {
-    setRollButtonEnabled(false);
+    setRollButtonEnabled(false, { force: true });
     setupRollButtonProgress(rollButton);
   }
 
@@ -4210,6 +4601,10 @@ function registerRollButtonHandler() {
       return;
     }
 
+    if (cutsceneActive || pendingCutsceneRarity || !isChangeEnabled) {
+      return;
+    }
+
   const rollDisplay = document.querySelector(".container");
   if (rollDisplay && !rollDisplayHiddenByUser && rollDisplay.style.visibility === "hidden") {
     rollDisplay.style.visibility = "visible";
@@ -4355,7 +4750,8 @@ function registerRollButtonHandler() {
     rarity.type === "The Phantom Moon [1 in 10,031]" ||
     rarity.type === "The Void's Veil [1 in 10,031]" ||
     rarity.type === "Wailing Shade [1 in 31,010]" ||
-    rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]"
+    rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" ||
+    rarity.type === "Descended Title [1 in ƐƐƐ]"
   ) {
     const resultContainer = byId("result");
     if (resultContainer) {
@@ -4369,6 +4765,8 @@ function registerRollButtonHandler() {
 
     if (rarity.type === "Fright [1 in 1,075]") {
       frightAudio.play();
+    } else if (rarity.type === "Descended Title [1 in ƐƐƐ]") {
+      destitAudio.play();
     } else if (rarity.type === "Gl1tch3d [1 in 12,404/40,404th]") {
       glitchedAudio.play();
     } else if (rarity.type === "Gargantua [1 in 143]") {
@@ -5748,6 +6146,37 @@ function registerRollButtonHandler() {
         titleCont.style.visibility = "visible";
         mastermindAudio.play();
       }
+    } else if (rarity.type === DESCENDED_TITLE_TYPE) {
+      disableChange();
+      playDescendedTitleCutscene({
+        title,
+        rarity,
+        titleContainer: titleCont,
+        setPendingRarity: false,
+        onComplete: ({ container }) => {
+          try {
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class, title, {
+              force: true,
+              preservePendingAutoEquip: true,
+            });
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            if (container) {
+              container.style.visibility = "visible";
+            }
+          } catch (error) {
+            console.error("Failed to finalize Descended Title roll", error);
+          } finally {
+            enableChange();
+          }
+
+          return true;
+        },
+      });
     } else if (rarity.type === "Gl1tch3d [1 in 12,404/40,404th]") {
       disableChange();
       startAnimationA2()
@@ -8874,1033 +9303,1111 @@ function registerRollButtonHandler() {
         enableChange();
       }, 10750); // Wait for 10.75 seconds
     } else if (rarity.type === "The Scarecrow's Sigil [1 in 1,031]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-orange";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10000); // Stop after 10 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "🎃";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutsceneHalloween25) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          thescarecrowssigilAudio.play();
+        disableChange();
+
+        const container1 = document.getElementById("squareContainer");
+
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-orange";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        const squareInterval = setInterval(() => {
+          createSquare();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10000); // Stop after 10 seconds
+
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "🎃";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            thescarecrowssigilAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        thescarecrowssigilAudio.play();
+      }
     } else if (rarity.type === "Pumpkin Hollow [1 in 3,110]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-orange";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10000); // Stop after 10 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "orange-star";
-        star.innerHTML = "●";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "🎃";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutsceneHalloween25) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          pumpkinhollowAudio.play();
+        disableChange();
+
+        const container1 = document.getElementById("squareContainer");
+
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-orange";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        const squareInterval = setInterval(() => {
+          createSquare();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10000); // Stop after 10 seconds
+
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "orange-star";
+          star.innerHTML = "●";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "🎃";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            pumpkinhollowAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        pumpkinhollowAudio.play();
+      }
     } else if (rarity.type === "Hollow Hill Manor [1 in 10,031]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-blue";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      function createSquare2() {
-        const square = document.createElement("div");
-        square.className = "animated-square-cyan";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-        createSquare2();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10000); // Stop after 10 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "cyan-star";
-        star.innerHTML = "◌";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "blue-star";
-        star.innerHTML = "●";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "🎃";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "orange-star";
-        star.innerHTML = "▼";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutsceneHalloween25) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          hollowhillmanorAudio.play();
+        disableChange();
+
+        const container1 = document.getElementById("squareContainer");
+
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-cyan";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10000); // Stop after 10 seconds
+
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "cyan-star";
+          star.innerHTML = "◌";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "blue-star";
+          star.innerHTML = "●";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "🎃";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "orange-star";
+          star.innerHTML = "▼";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+    
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            hollowhillmanorAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        hollowhillmanorAudio.play();
+      }
     } else if (rarity.type === "The Phantom Moon [1 in 10,031]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-blue";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      function createSquare2() {
-        const square = document.createElement("div");
-        square.className = "animated-square-orange";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-        createSquare2();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10000); // Stop after 10 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "blue-star";
-        star.innerHTML = "●";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "orange-star";
-        star.innerHTML = "◉";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "🎃-star";
-        star.innerHTML = "*";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutsceneHalloween25) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          thephantommoonAudio.play();
+        disableChange();
+
+        const container1 = document.getElementById("squareContainer");
+
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-orange";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10000); // Stop after 10 seconds
+
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "blue-star";
+          star.innerHTML = "●";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "orange-star";
+          star.innerHTML = "◉";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "🎃-star";
+          star.innerHTML = "*";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+    
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            thephantommoonAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        thephantommoonAudio.play();
+      }
     } else if (rarity.type === "The Void's Veil [1 in 10,031]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-purple";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      function createSquare2() {
-        const square = document.createElement("div");
-        square.className = "animated-square-cyan";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-        createSquare2();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10000); // Stop after 10 seconds
-
-      const container = document.getElementById("starContainer");
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "cyan-star";
-        star.innerHTML = "◌";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "🎃";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "purple-star";
-        star.innerHTML = "<>";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutsceneHalloween25) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          thevoidsveilAudio.play();
+        disableChange();
+
+        const container1 = document.getElementById("squareContainer");
+
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-purple";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-cyan";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10000); // Stop after 10 seconds
+
+        const container = document.getElementById("starContainer");
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "cyan-star";
+          star.innerHTML = "◌";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "🎃";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "purple-star";
+          star.innerHTML = "<>";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+    
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            thevoidsveilAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        thevoidsveilAudio.play();
+      }
     } else if (rarity.type === "Wailing Shade [1 in 31,010]") {
-      document.body.className = "blackBg";
-      disableChange();
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createSquare() {
-        const square = document.createElement("div");
-        square.className = "animated-square-purple";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      function createSquare2() {
-        const square = document.createElement("div");
-        square.className = "animated-square-cyan";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      function createSquare3() {
-        const square = document.createElement("div");
-        square.className = "animated-square-blue";
-
-        square.style.left = Math.random() * 100 + "vw";
-        square.style.top = Math.random() * 100 + "vh";
-
-        container1.appendChild(square);
-
-        square.addEventListener("animationend", () => {
-          square.remove();
-        });
-      }
-
-      const squareInterval = setInterval(() => {
-        createSquare();
-        createSquare2();
-        createSquare3();
-      }, 100);
-
-      setTimeout(() => {
-        clearInterval(squareInterval);
-      }, 10000); // Stop after 10 seconds
-
-      const container = document.getElementById("starContainer");
-
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "blue-star";
-        star.innerHTML = "▼";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "white-star";
-        star.innerHTML = "🎃";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      for (let i = 0; i < 133; i++) {
-        const star = document.createElement("span");
-        star.className = "cyan-star";
-        star.innerHTML = "●";
-
-        star.style.left = Math.random() * 100 + "vw";
-
-        const randomX = (Math.random() - 0.25) * 20 + "vw";
-        star.style.setProperty("--randomX", randomX);
-
-        const randomRotation = (Math.random() - 0.5) * 720 + "deg";
-        star.style.setProperty("--randomRotation", randomRotation);
-
-        star.style.animationDelay = i * 0.08 + "s";
-
-        container.appendChild(star);
-
-        star.addEventListener("animationend", () => {
-          star.remove();
-        });
-      }
-      
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 7500);
-    
-      setTimeout(function () {
+      if (skipCutsceneHalloween25) {
         document.body.className = "blackBg";
-      }, 7750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 8500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 8750);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 9500);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10000);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10100);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10175);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10250);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10325);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10400);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10475);
-    
-      setTimeout(function () {
-        document.body.className = "whiteFlash";
-      }, 10550);
-    
-      setTimeout(function () {
-        document.body.className = "blackBg";
-      }, 10625);
-    
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
-          titleCont.style.visibility = "visible";
-          wailingshadeAudio.play();
+        disableChange();
+
+        const container1 = document.getElementById("squareContainer");
+
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-purple";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-cyan";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        function createSquare3() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+
+          container1.appendChild(square);
+
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
+          createSquare3();
         }, 100);
-        enableChange();
-      }, 10750); // Wait for 10.75 seconds
+
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 10000); // Stop after 10 seconds
+
+        const container = document.getElementById("starContainer");
+
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "blue-star";
+          star.innerHTML = "▼";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "white-star";
+          star.innerHTML = "🎃";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+          star.className = "cyan-star";
+          star.innerHTML = "●";
+
+          star.style.left = Math.random() * 100 + "vw";
+
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+
+          star.style.animationDelay = i * 0.08 + "s";
+
+          container.appendChild(star);
+
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+    
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+    
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+    
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            wailingshadeAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        wailingshadeAudio.play();
+      }
     } else if (rarity.type === "Hellish Fire [1 in 6,666]") {
       if (skipCutscene10K) {
         document.body.className = "blackBg";
@@ -15017,7 +15524,17 @@ function rollRarity() {
   } = getActiveLuckPercentBreakdown();
   capturePendingRollLuckSnapshot(activeLuckPercent);
   const luckMultiplier = 1 + activeLuckPercent / 100;
+  const shouldRollDescendedTitle = shouldRollDescendedTitleThisRoll();
+  const rolledDescendedTitle =
+    shouldRollDescendedTitle && Math.random() < DESCENDED_POTION_REWARD_CHANCE;
   consumeSingleUseBuffs();
+  if (rolledDescendedTitle) {
+    return {
+      type: DESCENDED_TITLE_TYPE,
+      class: DESCENDED_TITLE_CLASS,
+      titles: [DESCENDED_TITLE_TYPE],
+    };
+  }
   const luckThreshold = computeLuckThreshold(
     activePermanentLuckPercent,
     activePotionLuckPercent,
@@ -15310,7 +15827,9 @@ function openRollingSimulator() {
 }
 
 function selectTitle(rarity) {
-  const titles = rarity.titles;
+  const titles = Array.isArray(rarity?.titles) && rarity.titles.length
+    ? rarity.titles
+    : [rarity?.type || "Unknown Title"];
   return titles[Math.floor(Math.random() * titles.length)];
 }
 
@@ -15560,7 +16079,8 @@ function normalizeRarityBucket(rarityClass) {
   }
 
   if (cls === "special") return "special";
-  if (["under100", "under1k", "under10k", "under100k", "under1m", "transcendent", "special"].includes(cls)) {
+  if (cls === "theDescended") return "theDescended";
+  if (["under100", "under1k", "under10k", "under100k", "under1m", "transcendent", "special", "theDescended"].includes(cls)) {
     return cls;
   }
 
@@ -15581,6 +16101,7 @@ function normalizeRarityBucket(rarityClass) {
         normalizedLabel.startsWith("event") ||
         normalizedLabel === "transcendent" ||
         normalizedLabel === "special" ||
+        normalizedLabel === "theDescended" ||
         normalizedLabel.startsWith("under")
       ) {
         return normalizedLabel;
@@ -15950,6 +16471,7 @@ const backgroundDetails = {
   thescarecrowssigilBgImg: { image: "files/backgrounds/thescarecrowssigil.gif", audio: "thescarecrowssigilAudio" },
   thevoidsveilBgImg: { image: "files/backgrounds/thevoidsveil.gif", audio: "thevoidsveilAudio" },
   wailingshadeBgImg: { image: "files/backgrounds/wailingshade.gif", audio: "wailingshadeAudio" },
+  destitBgImg: { image: "files/backgrounds/destit.png", audio: "destitAudio" },
   froBgImg: { image: "files/backgrounds/fro.png", audio: "froAudio" },
   mysBgImg: { image: "files/backgrounds/mys.png", audio: "mysAudio" },
   forgBgImg: { image: "files/backgrounds/forg.png", audio: "forgAudio" },
@@ -16233,7 +16755,7 @@ function getLockedItemsMap() {
 function getRaritySortRank(item) {
   const bucket = normalizeRarityBucket(item && item.rarityClass);
 
-  if (bucket === "special") {
+  if (bucket === "special" || bucket === "theDescended") {
     return 0;
   }
 
@@ -16383,11 +16905,292 @@ function getInventoryItemKey(item, index) {
   return `idx-${index}`;
 }
 
+function closeOtherDropdownMenus(exceptKey = null) {
+  document.querySelectorAll(".dropdown-menu.open").forEach((menu) => {
+    if (exceptKey && menu.dataset.itemKey === exceptKey) {
+      return;
+    }
+
+    menu.style.display = "none";
+    menu.classList.remove("open");
+    const parentItem = menu.closest(".inventory-item");
+    if (parentItem) {
+      parentItem.classList.remove("inventory-item--menu-open");
+    }
+  });
+}
+
+function ensureInventoryListHandlers() {
+  if (inventoryListHandlersInitialized) {
+    return;
+  }
+
+  const inventoryList = document.getElementById("inventoryList");
+  if (!inventoryList) {
+    return;
+  }
+
+  const handleDropdownToggle = (toggleElement) => {
+    const listItem = toggleElement.closest(".inventory-item");
+    if (!listItem) {
+      return;
+    }
+
+    const dropdownMenu = toggleElement.querySelector(".dropdown-menu");
+    if (!dropdownMenu) {
+      return;
+    }
+
+    const willOpen = dropdownMenu.style.display !== "block";
+    closeOtherDropdownMenus(willOpen ? dropdownMenu.dataset.itemKey || null : null);
+
+    dropdownMenu.style.display = willOpen ? "block" : "none";
+    dropdownMenu.classList.toggle("open", willOpen);
+    listItem.classList.toggle("inventory-item--menu-open", willOpen);
+  };
+
+  const handleInventoryAction = (button, event) => {
+    const action = button.dataset.action;
+    if (!action) {
+      return;
+    }
+
+    const listItem = button.closest(".inventory-item");
+    if (!listItem) {
+      return;
+    }
+
+    if (action === "equip-toggle") {
+      event.stopPropagation();
+      if (cutsceneActive) {
+        return;
+      }
+
+      const index = Number.parseInt(button.dataset.absoluteIndex, 10);
+      const item = Number.isFinite(index) ? inventory[index] : null;
+      if (!item) {
+        return;
+      }
+
+      if (isItemCurrentlyEquipped(item)) {
+        unequipItem();
+      } else {
+        equipItem(item);
+      }
+      return;
+    }
+
+    if (action === "delete") {
+      event.stopPropagation();
+      if (cutsceneActive || listItem.dataset.locked === "true") {
+        return;
+      }
+
+      const index = Number.parseInt(button.dataset.absoluteIndex, 10);
+      if (Number.isFinite(index)) {
+        deleteFromInventory(index);
+      }
+      return;
+    }
+
+    if (action === "lock-toggle") {
+      event.stopPropagation();
+      const title = listItem.dataset.itemTitle || "";
+      toggleLock(title, listItem, button);
+    }
+  };
+
+  inventoryList.addEventListener("click", (event) => {
+    const actionButton = event.target.closest("[data-action]");
+    if (actionButton && inventoryList.contains(actionButton)) {
+      handleInventoryAction(actionButton, event);
+      return;
+    }
+
+    if (event.target.closest(".dropdown-menu")) {
+      return;
+    }
+
+    const toggleElement = event.target.closest(".burger-bar");
+    if (toggleElement && inventoryList.contains(toggleElement)) {
+      event.stopPropagation();
+      handleDropdownToggle(toggleElement);
+    }
+  });
+
+  inventoryListHandlersInitialized = true;
+}
+
+function buildInventoryListItem(existingElement, item, originalIndex, lockedItems, previousStateEntry) {
+  const itemKey = getInventoryItemKey(item, originalIndex);
+  const bucket = normalizeRarityBucket(item.rarityClass);
+  const locked = Boolean(lockedItems && lockedItems[item.title]);
+  const isEquipped = isItemCurrentlyEquipped(item);
+  const rolledText = typeof item.rolledAt === "number"
+    ? (typeof formatRollCount === "function" ? formatRollCount(item.rolledAt) : item.rolledAt.toLocaleString())
+    : "Unknown";
+  const luckValue = typeof item.luckValue === "number" && Number.isFinite(item.luckValue)
+    ? item.luckValue
+    : 1;
+  const formattedLuck = luckValue.toFixed(2);
+
+  const rarityLabelClasses = getLabelClassForRarity(item.rarityClass, bucket);
+
+  const listItem = existingElement || document.createElement("li");
+  listItem.className = item.rarityClass || "";
+  listItem.classList.add("inventory-item");
+  listItem.dataset.itemKey = itemKey;
+  listItem.dataset.absoluteIndex = String(originalIndex);
+  listItem.dataset.itemTitle = item.title;
+  listItem.dataset.locked = locked ? "true" : "false";
+  listItem.dataset.equipped = isEquipped ? "true" : "false";
+
+  if (bucket) {
+    listItem.dataset.bucket = bucket;
+  } else {
+    delete listItem.dataset.bucket;
+  }
+
+  listItem.classList.toggle("inventory-item--equipped", Boolean(isEquipped));
+
+  let itemTitle = listItem.querySelector(".rarity-text");
+  let rarityText = listItem.querySelector(".inventory-item__rarity");
+  let burgerBar = listItem.querySelector(".burger-bar");
+  let dropdownMenu = burgerBar ? burgerBar.querySelector(".dropdown-menu") : null;
+
+  if (!itemTitle) {
+    itemTitle = document.createElement("span");
+    itemTitle.className = "rarity-text";
+    listItem.appendChild(itemTitle);
+  }
+
+  if (!rarityText) {
+    rarityText = document.createElement("span");
+    rarityText.className = "inventory-item__rarity";
+    listItem.appendChild(rarityText);
+  }
+
+  if (!burgerBar) {
+    burgerBar = document.createElement("div");
+    burgerBar.className = "burger-bar";
+    burgerBar.textContent = "☰";
+    listItem.appendChild(burgerBar);
+  }
+
+  if (!dropdownMenu) {
+    dropdownMenu = document.createElement("div");
+    dropdownMenu.className = "dropdown-menu";
+    dropdownMenu.style.display = "none";
+    dropdownMenu.dataset.itemKey = itemKey;
+    burgerBar.appendChild(dropdownMenu);
+
+    const header = document.createElement("div");
+    header.className = "dropdown-header";
+    header.innerHTML = `
+      <div class="info-title"></div>
+      <div class="info-sub">
+        <span class="info-sub__rolled"></span>
+        <span class="info-sub__luck"></span>
+      </div>
+    `;
+    dropdownMenu.appendChild(header);
+
+    const divider = document.createElement("div");
+    divider.className = "dropdown-divider";
+    dropdownMenu.appendChild(divider);
+
+    const equipButton = document.createElement("button");
+    equipButton.className = "dropdown-item";
+    equipButton.dataset.action = "equip-toggle";
+    dropdownMenu.appendChild(equipButton);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "dropdown-item danger";
+    deleteButton.dataset.action = "delete";
+    dropdownMenu.appendChild(deleteButton);
+
+    const lockButton = document.createElement("button");
+    lockButton.dataset.action = "lock-toggle";
+    dropdownMenu.appendChild(lockButton);
+  }
+
+  const defaultTitle = item.title.toUpperCase();
+  itemTitle.className = "rarity-text";
+  if (rarityLabelClasses.length) {
+    itemTitle.classList.add(...rarityLabelClasses);
+  }
+
+  if (previousStateEntry && typeof previousStateEntry.rarityLabel === "string") {
+    itemTitle.textContent = previousStateEntry.rarityLabel;
+  } else if (!itemTitle.textContent || !existingElement) {
+    itemTitle.textContent = defaultTitle;
+  }
+
+  const headerTitleElement = dropdownMenu.querySelector(".info-title");
+  if (headerTitleElement) {
+    if (previousStateEntry && previousStateEntry.headerTitle != null) {
+      headerTitleElement.textContent = previousStateEntry.headerTitle;
+    } else {
+      headerTitleElement.textContent = item.title;
+    }
+  }
+
+  const rolledElement = dropdownMenu.querySelector(".info-sub__rolled");
+  if (rolledElement) {
+    rolledElement.textContent = `Rolled at: ${rolledText}`;
+  }
+
+  const luckElement = dropdownMenu.querySelector(".info-sub__luck");
+  if (luckElement) {
+    luckElement.textContent = `Luck: ${formattedLuck}`;
+  }
+
+  dropdownMenu.dataset.itemKey = itemKey;
+
+  const equipButton = dropdownMenu.querySelector('[data-action="equip-toggle"]');
+  if (equipButton) {
+    equipButton.dataset.absoluteIndex = String(originalIndex);
+    equipButton.textContent = isEquipped ? "Unequip" : "Equip";
+    equipButton.classList.toggle("dropdown-item--unequip", Boolean(isEquipped));
+    setEquipToggleButtonDisabled(equipButton, cutsceneActive);
+  }
+
+  const deleteButton = dropdownMenu.querySelector('[data-action="delete"]');
+  if (deleteButton) {
+    deleteButton.dataset.absoluteIndex = String(originalIndex);
+    deleteButton.textContent = "Delete";
+    setInventoryDeleteButtonDisabled(deleteButton, cutsceneActive);
+  }
+
+  const lockButton = dropdownMenu.querySelector('[data-action="lock-toggle"]');
+  if (lockButton) {
+    lockButton.textContent = locked ? "Unlock" : "Lock";
+    lockButton.style.backgroundColor = locked ? "darkgray" : "";
+  }
+
+  if (previousStateEntry && previousStateEntry.dropdownOpen) {
+    dropdownMenu.style.display = "block";
+    dropdownMenu.classList.add("open");
+    listItem.classList.add("inventory-item--menu-open");
+    if (typeof previousStateEntry.dropdownScrollTop === "number" && previousStateEntry.dropdownScrollTop > 0) {
+      dropdownMenu.scrollTop = previousStateEntry.dropdownScrollTop;
+    }
+  } else {
+    dropdownMenu.style.display = "none";
+    dropdownMenu.classList.remove("open");
+    listItem.classList.remove("inventory-item--menu-open");
+  }
+
+  return listItem;
+}
+
 function renderInventory() {
   const inventoryList = document.getElementById("inventoryList");
   if (!inventoryList) {
     return;
   }
+
+  ensureInventoryListHandlers();
 
   const previousState = new Map();
   inventoryList.querySelectorAll(".inventory-item").forEach((element) => {
@@ -16464,165 +17267,37 @@ function renderInventory() {
   const end = start + itemsPerPage;
   const paginatedEntries = sortedEntries.slice(start, end);
 
-  const fragment = document.createDocumentFragment();
-
-  paginatedEntries.forEach(({ item, index: originalIndex }) => {
-    const listItem = document.createElement("li");
-    listItem.className = item.rarityClass || "";
-    listItem.classList.add("inventory-item");
-    listItem.dataset.locked = lockedItems[item.title] ? "true" : "false";
-    const itemKey = getInventoryItemKey(item, originalIndex);
-    listItem.dataset.itemKey = itemKey;
-    const bucket = normalizeRarityBucket(item.rarityClass);
-    if (bucket) {
-      listItem.dataset.bucket = bucket;
+  const existingElements = new Map();
+  inventoryList.querySelectorAll(".inventory-item").forEach((element) => {
+    const key = element.dataset.itemKey;
+    if (key) {
+      existingElements.set(key, element);
     }
-
-    const isEquipped = isItemCurrentlyEquipped(item);
-    listItem.dataset.equipped = isEquipped ? "true" : "false";
-    listItem.classList.toggle("inventory-item--equipped", Boolean(isEquipped));
-
-    const itemTitle = document.createElement("span");
-    itemTitle.className = "rarity-text";
-    itemTitle.textContent = item.title.toUpperCase();
-    const labelClasses = getLabelClassForRarity(item.rarityClass, bucket);
-    if (labelClasses.length) {
-      itemTitle.classList.add(...labelClasses);
-    }
-
-    const rarityText = document.createElement("span");
-    listItem.appendChild(itemTitle);
-    listItem.appendChild(rarityText);
-
-    const burgerBar = document.createElement("div");
-    burgerBar.className = "burger-bar";
-    burgerBar.innerHTML = "☰";
-
-    const dropdownMenu = document.createElement("div");
-    dropdownMenu.className = "dropdown-menu";
-    dropdownMenu.style.display = "none";
-    dropdownMenu.dataset.itemKey = itemKey;
-
-    // HEADER: aura title + rolled-at line
-    const header = document.createElement("div");
-    header.className = "dropdown-header";
-
-    // prefer your formatter if present, else fallback
-    const rolledText = typeof item.rolledAt === "number"
-      ? (typeof formatRollCount === "function" ? formatRollCount(item.rolledAt) : item.rolledAt.toLocaleString())
-      : "Unknown";
-
-    const luckValue = typeof item.luckValue === "number" && Number.isFinite(item.luckValue)
-      ? item.luckValue
-      : 1;
-    const formattedLuck = luckValue.toFixed(2);
-
-    header.innerHTML = `
-      <div class="info-title">${item.title}</div>
-      <div class="info-sub">
-        <span class="info-sub__rolled">Rolled at: ${rolledText}</span>
-        <span class="info-sub__luck">Luck: ${formattedLuck}</span>
-      </div>
-    `;
-    const headerTitleElement = header.querySelector(".info-title");
-    dropdownMenu.appendChild(header);
-
-    // Divider
-    const divider = document.createElement("div");
-    divider.className = "dropdown-divider";
-    dropdownMenu.appendChild(divider);
-    
-    const equipButton = document.createElement("button");
-    equipButton.className = "dropdown-item";
-    equipButton.dataset.action = "equip-toggle";
-    equipButton.textContent = isEquipped ? "Unequip" : "Equip";
-    equipButton.classList.toggle("dropdown-item--unequip", Boolean(isEquipped));
-    setEquipToggleButtonDisabled(equipButton, cutsceneActive);
-    equipButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      if (cutsceneActive) {
-        return;
-      }
-      if (isItemCurrentlyEquipped(item)) {
-        unequipItem();
-      } else {
-        equipItem(item);
-      }
-    });
-
-    const deleteButton = document.createElement("button");
-    deleteButton.className = "dropdown-item danger";
-    deleteButton.dataset.action = "delete";
-    deleteButton.textContent = "Delete";
-    setInventoryDeleteButtonDisabled(deleteButton, cutsceneActive);
-    deleteButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      if (cutsceneActive) {
-        return;
-      }
-      if (listItem.dataset.locked !== "true") {
-        deleteFromInventory(originalIndex);
-      }
-    });
-
-    const lockButton = document.createElement("button");
-    lockButton.textContent = listItem.dataset.locked === "true" ? "Unlock" : "Lock";
-    lockButton.style.backgroundColor = listItem.dataset.locked === "true" ? "darkgray" : "";
-    lockButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      toggleLock(item.title, listItem, lockButton);
-    });
-
-    dropdownMenu.appendChild(equipButton);
-    dropdownMenu.appendChild(deleteButton);
-    dropdownMenu.appendChild(lockButton);
-    burgerBar.appendChild(dropdownMenu);
-    listItem.appendChild(burgerBar);
-
-    burgerBar.addEventListener("click", (event) => {
-      event.stopPropagation();
-
-      // Close other menus
-      document.querySelectorAll(".dropdown-menu").forEach(m => {
-        if (m !== dropdownMenu) {
-          m.style.display = "none";
-          m.classList.remove("open");
-          const parentItem = m.closest(".inventory-item");
-          if (parentItem) {
-            parentItem.classList.remove("inventory-item--menu-open");
-          }
-        }
-      });
-
-      // Toggle this one
-      const willOpen = dropdownMenu.style.display !== "block";
-      dropdownMenu.style.display = willOpen ? "block" : "none";
-      dropdownMenu.classList.toggle("open", willOpen);
-      listItem.classList.toggle("inventory-item--menu-open", willOpen);
-    });
-
-    const previous = previousState.get(itemKey);
-    if (previous) {
-      if (typeof previous.rarityLabel === "string" && previous.rarityLabel.length) {
-        itemTitle.textContent = previous.rarityLabel;
-      }
-      if (previous.headerTitle != null && headerTitleElement) {
-        headerTitleElement.textContent = previous.headerTitle;
-      }
-      if (previous.dropdownOpen && dropdownMenu) {
-        dropdownMenu.style.display = "block";
-        dropdownMenu.classList.add("open");
-        listItem.classList.add("inventory-item--menu-open");
-        if (typeof previous.dropdownScrollTop === "number" && previous.dropdownScrollTop > 0) {
-          dropdownMenu.scrollTop = previous.dropdownScrollTop;
-        }
-      }
-    }
-
-    fragment.appendChild(listItem);
   });
 
-  inventoryList.replaceChildren(fragment);
+  const newOrder = [];
+
+  paginatedEntries.forEach(({ item, index: originalIndex }) => {
+    const itemKey = getInventoryItemKey(item, originalIndex);
+    const previous = previousState.get(itemKey);
+    const existingElement = existingElements.get(itemKey) || null;
+    const listItem = buildInventoryListItem(existingElement, item, originalIndex, lockedItems, previous);
+    existingElements.delete(itemKey);
+    newOrder.push(listItem);
+  });
+
+  existingElements.forEach((element) => {
+    element.remove();
+  });
+
+  let anchor = inventoryList.firstChild;
+  newOrder.forEach((element) => {
+    if (element === anchor) {
+      anchor = anchor ? anchor.nextSibling : null;
+      return;
+    }
+    inventoryList.insertBefore(element, anchor);
+  });
 
   updatePagination();
   checkAchievements();
@@ -17913,7 +18588,7 @@ function initializeAutoRollControls() {
       return;
     }
 
-    if (autoRollInterval) {
+    if (autoRollActive) {
       stopAutoRoll();
     } else {
       startAutoRoll();
@@ -17930,14 +18605,72 @@ function initializeAutoRollControls() {
   updateAutoRollAvailability();
 }
 
-function startAutoRoll() {
-  if (!autoRollButtonElement || autoRollInterval || !isAutoRollUnlocked()) {
+function getRelativeTime() {
+  if (typeof performance !== "undefined" && typeof performance.now === "function") {
+    return performance.now();
+  }
+  return Date.now();
+}
+
+function getAutoRollDelay() {
+  const baseCooldown = Number.isFinite(cooldownTime) ? cooldownTime : BASE_COOLDOWN_TIME;
+  const desiredDelay = Math.max(5, baseCooldown + 5);
+
+  if (autoRollLastExecution === null) {
+    return desiredDelay;
+  }
+
+  const elapsed = getRelativeTime() - autoRollLastExecution;
+  if (!Number.isFinite(elapsed)) {
+    return desiredDelay;
+  }
+
+  const remaining = desiredDelay - elapsed;
+  return Math.max(5, Math.round(remaining));
+}
+
+function scheduleAutoRollTick(delayOverride = null) {
+  if (!autoRollActive) {
     return;
   }
 
-  autoRollInterval = setInterval(() => {
-    document.getElementById("rollButton")?.click();
-  }, 400);
+  if (autoRollInterval) {
+    clearTimeout(autoRollInterval);
+    autoRollInterval = null;
+  }
+
+  const nextDelay = Number.isFinite(delayOverride) ? Math.max(5, Math.round(delayOverride)) : getAutoRollDelay();
+
+  autoRollInterval = setTimeout(() => {
+    autoRollInterval = null;
+
+    if (!autoRollActive) {
+      return;
+    }
+
+    const rollButton = document.getElementById("rollButton");
+    if (!rollButton || rollButton.disabled) {
+      scheduleAutoRollTick();
+      return;
+    }
+
+    rollButton.click();
+    autoRollLastExecution = getRelativeTime();
+
+    scheduleAutoRollTick();
+  }, nextDelay);
+}
+
+function startAutoRoll() {
+  if (!autoRollButtonElement || autoRollActive || !isAutoRollUnlocked()) {
+    return;
+  }
+
+  autoRollActive = true;
+  const baseCooldown = Number.isFinite(cooldownTime) ? cooldownTime : BASE_COOLDOWN_TIME;
+  const initialDesiredDelay = Math.max(5, baseCooldown + 5);
+  autoRollLastExecution = getRelativeTime() - initialDesiredDelay;
+  scheduleAutoRollTick(5);
   localStorage.setItem("autoRollEnabled", "true");
   updateAutoRollAvailability();
 }
@@ -17947,10 +18680,12 @@ function stopAutoRoll() {
     return;
   }
 
+  autoRollActive = false;
   if (autoRollInterval) {
-    clearInterval(autoRollInterval);
+    clearTimeout(autoRollInterval);
     autoRollInterval = null;
   }
+  autoRollLastExecution = null;
   localStorage.setItem("autoRollEnabled", "false");
   updateAutoRollAvailability();
 }
@@ -17975,9 +18710,11 @@ function updateAutoRollAvailability() {
   const unlocked = isAutoRollUnlocked();
   if (!unlocked) {
     if (autoRollInterval) {
-      clearInterval(autoRollInterval);
+      clearTimeout(autoRollInterval);
       autoRollInterval = null;
     }
+    autoRollActive = false;
+    autoRollLastExecution = null;
     button.disabled = true;
     button.classList.add("locked");
     button.classList.remove("on");
@@ -17989,7 +18726,7 @@ function updateAutoRollAvailability() {
 
   button.disabled = false;
   button.classList.remove("locked");
-  if (autoRollInterval) {
+  if (autoRollActive) {
     button.textContent = "Auto Roll: On";
     button.classList.add("on");
     button.classList.remove("off");
@@ -18201,6 +18938,7 @@ function registerRarityDeletionButtons() {
     ["deleteAllUnder1mButton", "under1m"],
     ["deleteAllTranscendentButton", "transcendent"],
     ["deleteAllSpecialButton", "special"],
+    ["deleteAllTheDescendedButton", "theDescended"],
   ];
 
   buttonMappings.forEach(([id, bucket]) => {
@@ -18271,13 +19009,13 @@ function getClassForRarity(rarity) {
       'Experiment [1 in 100,000/10th]': 'special',
       'Abomination [1 in 1,000,000/20th]': 'special',
       'Iridocyclitis Veil [1 in 5,000/50th]': 'special',
-      'Cursed Mirage [1 in 11,000]': 'under100k',
+      'Cursed Mirage [1 in 11,111]': 'cursedmirageBgImg',
       'Celestial Dawn [1 in 12,000]': 'under100k',
       'Blodhest [1 in 25,252]': 'under100k',
       'Unnamed [1 in 30,303]': 'under100k',
       "Fate's Requiem [1 in 15,000]": 'under100k',
       'Eonbreak [1 in 20,000]': 'under100k',
-      'Overture  [1 in 25,641]': 'under100k',
+      'Overture [1 in 25,641]': 'under100k',
       'HARV [1 in 33,333]': 'under100k',
       "Devil's Heart [1 in 66,666]": 'under100k',
       'Arcane Pulse [1 in 77,777]': 'under100k',
@@ -18287,7 +19025,7 @@ function getClassForRarity(rarity) {
       'H1di [1 in 9,890,089]': 'transcendent',
       'BlindGT [1 in 2,000,000/15th]': 'special',
       'MSFU [1 in 333/333rd]': 'special',
-      'Orb [1 in 55,555/30th]': 'special',
+      'ORB [1 in 55,555/30th]': 'special',
       'Tuon [1 in 50,000]': 'under100k',
       'Heart [1 in ♡♡♡]': 'eventV25',
       'Unfair [1 in ###]': 'under100k',
@@ -18309,15 +19047,16 @@ function getClassForRarity(rarity) {
       'Astrald [1 in 100,000]': 'under1m',
       'Nebula [1 in 62,500]': 'under100k',
       'Gl1tch3d [1 in 12,404/40,404th]': 'special',
-      'Mastermind [110,010]': 'under1m',
+      'Mastermind [1 in 110,010]': 'under1m',
       'Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]': 'under1m',
       "MythicWall [1 in 170,017]": 'under100k',
-      "The Scarecrow's Sigil [1 in 1,031]": 'eventHalloween25',
-      "Pumpkin Hollow [1 in 3,110]": 'eventHalloween25',
-      "Wailing Shade [1 in 31,010]": 'eventHalloween25',
-      "Hollow Hill Maner [1 in 10,031]": 'eventHalloween25',
-      "The Void's Veil [1 in 10,031]": 'eventHalloween25',
-      "The Phantom Moon [1 in 10,031]": 'eventHalloween25',
+      "The Scarecrow's Sigil [1 in 1,031]": 'eventTitleHalloween25',
+      "Pumpkin Hollow [1 in 3,110]": 'eventTitleHalloween25',
+      "Wailing Shade [1 in 31,010]": 'eventTitleHalloween25',
+      "Hollow Hill Manor [1 in 10,031]": 'eventTitleHalloween25',
+      "The Void's Veil [1 in 10,031]": 'eventTitleHalloween25',
+      "The Phantom Moon [1 in 10,031]": 'eventTitleHalloween25',
+      "Descended Title [1 in ƐƐƐ]": 'theDescended'
   };
 
   return rarityClasses[rarity] || null;
@@ -18782,6 +19521,16 @@ document
 document
   .getElementById("deleteAllNebulaButton")
   .addEventListener("click", () => deleteAllByRarity("nebulaBgImg"));
+document
+  .getElementById("deleteAllDescendedTitleButton")
+  .addEventListener("click", () => deleteAllByRarity("destitBgImg"));
+
+document
+  .getElementById("deleteAllTheDescendedButton")
+  .addEventListener("click", () => {
+    renderInventory();
+    deleteAllByRarity("destitBgImg");
+  });
 
 
 document
@@ -18812,7 +19561,7 @@ document
       "msfuBgImg",
       "orbBgImg",
       'crazeBgImg',
-      'shenviiBgImg',
+      'shenviiBgImg'
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
@@ -19100,9 +19849,11 @@ function ensureBgStack() {
 }
 
 function changeBackground(rarityClass, itemTitle, options = {}) {
-  const force = typeof options === "object" && options !== null
-    ? Boolean(options.force)
-    : Boolean(options);
+  const normalizedOptions =
+    typeof options === "object" && options !== null ? options : { force: Boolean(options) };
+
+  const force = Boolean(normalizedOptions.force);
+  const preservePendingAutoEquip = Boolean(normalizedOptions.preservePendingAutoEquip);
 
   if (!force && (!isChangeEnabled || !lastRollPersisted)) {
     return;
@@ -19183,7 +19934,7 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
     if (force) {
       allowForcedAudioPlayback = previousForcedState;
     }
-    if (!force) {
+    if (!force || preservePendingAutoEquip) {
       applyPendingAutoEquip();
     } else {
       pendingAutoEquipRecord = null;

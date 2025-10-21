@@ -977,6 +977,15 @@ body.equinox-pulse-active :is(
   border-radius: 0;
 }
 
+#historyList li .history-entry-text.cursedmirageBgImg {
+  background: linear-gradient(135deg, #6b21a8 0%, #0f172a 45%, #0f766e 100%);
+  background-size: 240% 240%;
+  animation: gradient-shift 8s ease infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* Use the same sheen animation keyframes as the main container */
 @keyframes containerSheen {
   0%   { transform: translateX(-120%); }
@@ -1321,6 +1330,10 @@ body {
 
 .roll-result-card--special {
   --roll-card-accent: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.1));
+}
+
+.roll-result-card--theDescended {
+  --roll-card-accent: linear-gradient(135deg, rgba(255, 26, 26, 0.18), rgba(0, 0, 0, 0.35));
 }
 
 @media (max-width: 520px) {
@@ -2399,6 +2412,147 @@ body {
     animation: spin1 9s linear infinite;
 }
 
+.descended-cutscene {
+    position: fixed;
+    inset: 0;
+    z-index: 200000;
+    pointer-events: none;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 180ms ease-out;
+}
+
+.descended-cutscene--visible {
+    opacity: 1;
+}
+
+
+.descended-cutscene__glitch,
+.descended-cutscene__pulse {
+    position: absolute;
+}
+
+.descended-cutscene__glitch {
+    inset: 0;
+    opacity: 0;
+    background: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.05) 0,
+        rgba(255, 255, 255, 0.05) 4px,
+        rgba(0, 0, 0, 0.4) 4px,
+        rgba(0, 0, 0, 0.4) 8px
+    );
+    mix-blend-mode: screen;
+    filter: contrast(140%);
+}
+
+.descended-cutscene__glitch::before,
+.descended-cutscene__glitch::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    mix-blend-mode: lighten;
+    opacity: 0.35;
+}
+
+.descended-cutscene__glitch::before {
+    transform: translate3d(-6px, 0, 0);
+    filter: hue-rotate(120deg);
+}
+
+.descended-cutscene__glitch::after {
+    transform: translate3d(6px, 0, 0);
+    filter: hue-rotate(-120deg);
+}
+
+.descended-cutscene--phase-glitch .descended-cutscene__glitch {
+    opacity: 1;
+    animation: descendedCutsceneGlitch 180ms steps(2, end) infinite;
+}
+
+@keyframes descendedCutsceneGlitch {
+    0%, 100% {
+        transform: translate3d(0, 0, 0);
+        clip-path: inset(0% 0 0% 0);
+    }
+    20% {
+        transform: translate3d(-4px, -2px, 0);
+        clip-path: inset(5% 0 40% 0);
+    }
+    40% {
+        transform: translate3d(3px, 2px, 0);
+        clip-path: inset(35% 0 5% 0);
+    }
+    60% {
+        transform: translate3d(-2px, 3px, 0);
+        clip-path: inset(10% 0 55% 0);
+    }
+    80% {
+        transform: translate3d(4px, -3px, 0);
+        clip-path: inset(25% 0 20% 0);
+    }
+}
+
+.descended-cutscene__pulse {
+    --descended-cutscene-base-transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    width: min(50vmin, 420px);
+    height: min(50vmin, 420px);
+    opacity: 0;
+    background: url('images/cutscene_star_big.png') center/contain no-repeat;
+    transform-origin: center;
+    will-change: transform;
+    transition: opacity 180ms ease-out;
+    transform: var(--descended-cutscene-base-transform, translate(-50%, -50%)) scale(1);
+}
+
+.descended-cutscene--phase-pulse {
+    background: radial-gradient(circle at center, #2c0000 0%, #080000 100%);
+}
+
+.descended-cutscene--phase-pulse .descended-cutscene__pulse {
+    opacity: 1;
+    animation: descendedCutsceneStarSpin 0.2s linear infinite;
+}
+
+@keyframes descendedCutsceneStarSpin {
+    0% {
+        transform: var(--descended-cutscene-base-transform, translate(-50%, -50%)) scale(1) rotate(0deg);
+    }
+    100% {
+        transform: var(--descended-cutscene-base-transform, translate(-50%, -50%)) scale(1) rotate(360deg);
+    }
+}
+
+.descended-cutscene--phase-flash {
+    background: #ffffff;
+    animation: descendedCutsceneFlash 350ms ease-out forwards;
+}
+
+.descended-cutscene--phase-flash .descended-cutscene__glitch,
+.descended-cutscene--phase-flash .descended-cutscene__pulse {
+    opacity: 0;
+    animation: none;
+}
+
+@keyframes descendedCutsceneFlash {
+    0% {
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
 .cutsceneStarEaster {
     position: absolute;
     top: 30%;
@@ -2985,6 +3139,12 @@ body {
 
 .abysBgImg {
     background: url(backgrounds/abys.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.destitBgImg {
+    background: url(backgrounds/destit.png);
     background-size: cover;
     object-fit: contain;
 }
@@ -4730,6 +4890,22 @@ body.flashing {
     animation: levitate 1s ease-out forwards, fade 1s ease-out forwards;
 }
 
+.glitch-dark-red-star {
+    position: absolute;
+    font-size: 33px;
+    color: darkred;
+    opacity: 1;
+    animation: levitate 1s ease-out forwards, fade 1s ease-out forwards;
+}
+
+.glitch-black-star {
+    position: absolute;
+    font-size: 33px;
+    color: black;
+    opacity: 1;
+    animation: levitate 1s ease-out forwards, fade 1s ease-out forwards;
+}
+
 .black-star {
     position: absolute;
     font-size: 33px;
@@ -5058,6 +5234,28 @@ body.flashing {
     color: #f6f8ff;
 }
 
+.potion-card__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.potion-card__event-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255, 124, 76, 0.16);
+    color: #ffb37c;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 1px solid rgba(255, 124, 76, 0.35);
+}
+
 .potion-card__effect {
     color: #9fc5ff;
     font-size: 14px;
@@ -5066,6 +5264,46 @@ body.flashing {
 .potion-card__duration {
     color: #c9d6ff;
     font-size: 13px;
+}
+
+.potion-card__note {
+    margin: 0;
+    font-size: 12px;
+    color: #d6e3ff;
+}
+
+.descendent-potion__title {
+    display: inline-block;
+    color: #8b0000;
+    background: linear-gradient(120deg, #ff1a1a, #8b0000, #000000);
+    background-size: 200% 200%;
+    animation: descendent-potion-title-glow 4s ease-in-out infinite;
+}
+
+@supports (-webkit-background-clip: text) {
+    .descendent-potion__title {
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+}
+
+@supports (background-clip: text) {
+    .descendent-potion__title {
+        background-clip: text;
+        color: transparent;
+    }
+}
+
+@keyframes descendent-potion-title-glow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
 }
 
 .potion-card__cost-title {
@@ -5161,6 +5399,29 @@ body.flashing {
     color: #f4f8ff;
 }
 
+.potion-inventory__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.potion-inventory__event-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    background: rgba(255, 124, 76, 0.16);
+    color: #ffb37c;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border: 1px solid rgba(255, 124, 76, 0.35);
+}
+
 .potion-inventory__image {
     width: 78px;
     height: 78px;
@@ -5182,11 +5443,21 @@ body.flashing {
     color: #cbd7f3;
 }
 
-.potion-inventory__actions {
-    width: 100%;
+.potion-inventory__note {
+    margin: 0;
+    font-size: 12px;
+    color: #d6e3ff;
 }
 
-.potion-inventory__use {
+.potion-inventory__actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.potion-inventory__use,
+.potion-inventory__use-all {
     width: 100%;
     border: none;
     border-radius: 10px;
@@ -5194,13 +5465,23 @@ body.flashing {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.potion-inventory__use {
     background: linear-gradient(135deg, #5bd0a4, #7fffd4);
     color: #04201a;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 10px 24px rgba(91, 208, 164, 0.4);
 }
 
-.potion-inventory__use:disabled {
+.potion-inventory__use-all {
+    background: linear-gradient(135deg, #7aa2ff, #9bd4ff);
+    color: #06163a;
+    box-shadow: 0 10px 24px rgba(122, 162, 255, 0.35);
+}
+
+.potion-inventory__use:disabled,
+.potion-inventory__use-all:disabled {
     cursor: not-allowed;
     opacity: 0.5;
     box-shadow: none;
@@ -5208,7 +5489,8 @@ body.flashing {
     color: #8aa7a0;
 }
 
-.potion-inventory__use:not(:disabled):hover {
+.potion-inventory__use:not(:disabled):hover,
+.potion-inventory__use-all:not(:disabled):hover {
     transform: translateY(-1px);
 }
 
@@ -5308,11 +5590,11 @@ body.flashing {
 .buff-tray {
     position: fixed;
     right: 32px;
-    bottom: 32px;
+    bottom: 20px;
     display: flex;
     flex-direction: row-reverse;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     align-items: flex-end;
     justify-content: flex-end;
     z-index: 100020;
@@ -5322,7 +5604,7 @@ body.flashing {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
     padding: 0;
     background: none;
@@ -5350,27 +5632,27 @@ body.flashing {
 }
 
 .buff-card__icon {
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
     display: block;
     object-fit: contain;
     background: rgba(0, 0, 0, 0.67);
-    border-radius: 12px;
-    padding: 4px;
+    border-radius: 10px;
+    padding: 3px;
     box-sizing: border-box;
     z-index: 200;
     cursor: pointer;
 }
 
 .buff-card__effect {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: #f2f6ff;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .buff-card__timer {
-    font-size: 11px;
+    font-size: 10px;
     color: #dce7ff;
     letter-spacing: 0.04em;
 }
@@ -5470,7 +5752,7 @@ body.flashing {
 
     .buff-tray {
         right: 16px;
-        bottom: 92px;
+        bottom: 76px;
     }
 }
 
@@ -5746,10 +6028,23 @@ body.flashing {
     color: #90ee90;
 }
 
+.event-halloween25 {
+    color: #fb923c;
+}
+
 .special {
     background: radial-gradient(#ffffff, #000000);
     background-size: 300%;
     animation: gradient-shift2 8.75s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.theDescended {
+    background: linear-gradient(90deg, #ff1a1a, #7f0000, #000000, #7f0000, #ff1a1a);
+    background-size: 300% 300%;
+    animation: the-descended-gradient 1.25s linear infinite;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -5893,6 +6188,18 @@ body.flashing {
     }
     100% {
         background-position: 0% 80%;
+    }
+}
+
+@keyframes the-descended-gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
     }
 }
 
@@ -6633,6 +6940,7 @@ body.flashing {
 .cutsceneSkipBtb[data-tier="mastery"] { --chip-accent: #facc15; }
 .cutsceneSkipBtb[data-tier="supreme"] { --chip-accent: #fb7185; }
 .cutsceneSkipBtb[data-tier="transcendent"] { --chip-accent: #5ae9ff; }
+.cutsceneSkipBtb[data-tier="event-halloween25"] { --chip-accent: #fb923c; }
 
 #statsMenu {
     position: fixed;
