@@ -356,7 +356,7 @@ const POTION_DEFINITIONS = [
     craftCost: {
       classes: { commonBgImg: 600, rareBgImg: 300, unstoppableBgImg: 35, fearBgImg: 2, lostsBgImg: 2 },
       titles: [],
-      potions: { luckyPotion: 40, fortuneSpoid1: 5 },
+      potions: { luckyPotion: 40, fortuneSpoid1: 4 },
     },
   },
   {
@@ -374,13 +374,12 @@ const POTION_DEFINITIONS = [
       classes: {
         commonBgImg: 800,
         rareBgImg: 500,
-        unstoppableBgImg: 60,
-        fearBgImg: 5,
-        lostsBgImg: 5,
-        mysBgImg: 2,
+        unstoppableBgImg: 45,
+        frightBgImg: 2,
+        fearBgImg: 2,
       },
       titles: [],
-      potions: { decentPotion: 2, fortunePotion3: 1 },
+      potions: { luckyPotion: 50, fortuneSpoid1: 5, basicPotion: 1,  },
     },
   },
   {
