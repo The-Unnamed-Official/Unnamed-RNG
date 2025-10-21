@@ -62,6 +62,7 @@ let buffTooltipEffectElement = null;
 let buffTooltipTimerElement = null;
 let activeBuffTooltipCard = null;
 let lastBuffPointerPosition = null;
+let inventoryListHandlersInitialized = false;
 
 function normalizeAchievementNameList(raw) {
   if (!Array.isArray(raw)) {
@@ -16660,11 +16661,292 @@ function getInventoryItemKey(item, index) {
   return `idx-${index}`;
 }
 
+function closeOtherDropdownMenus(exceptKey = null) {
+  document.querySelectorAll(".dropdown-menu.open").forEach((menu) => {
+    if (exceptKey && menu.dataset.itemKey === exceptKey) {
+      return;
+    }
+
+    menu.style.display = "none";
+    menu.classList.remove("open");
+    const parentItem = menu.closest(".inventory-item");
+    if (parentItem) {
+      parentItem.classList.remove("inventory-item--menu-open");
+    }
+  });
+}
+
+function ensureInventoryListHandlers() {
+  if (inventoryListHandlersInitialized) {
+    return;
+  }
+
+  const inventoryList = document.getElementById("inventoryList");
+  if (!inventoryList) {
+    return;
+  }
+
+  const handleDropdownToggle = (toggleElement) => {
+    const listItem = toggleElement.closest(".inventory-item");
+    if (!listItem) {
+      return;
+    }
+
+    const dropdownMenu = toggleElement.querySelector(".dropdown-menu");
+    if (!dropdownMenu) {
+      return;
+    }
+
+    const willOpen = dropdownMenu.style.display !== "block";
+    closeOtherDropdownMenus(willOpen ? dropdownMenu.dataset.itemKey || null : null);
+
+    dropdownMenu.style.display = willOpen ? "block" : "none";
+    dropdownMenu.classList.toggle("open", willOpen);
+    listItem.classList.toggle("inventory-item--menu-open", willOpen);
+  };
+
+  const handleInventoryAction = (button, event) => {
+    const action = button.dataset.action;
+    if (!action) {
+      return;
+    }
+
+    const listItem = button.closest(".inventory-item");
+    if (!listItem) {
+      return;
+    }
+
+    if (action === "equip-toggle") {
+      event.stopPropagation();
+      if (cutsceneActive) {
+        return;
+      }
+
+      const index = Number.parseInt(button.dataset.absoluteIndex, 10);
+      const item = Number.isFinite(index) ? inventory[index] : null;
+      if (!item) {
+        return;
+      }
+
+      if (isItemCurrentlyEquipped(item)) {
+        unequipItem();
+      } else {
+        equipItem(item);
+      }
+      return;
+    }
+
+    if (action === "delete") {
+      event.stopPropagation();
+      if (cutsceneActive || listItem.dataset.locked === "true") {
+        return;
+      }
+
+      const index = Number.parseInt(button.dataset.absoluteIndex, 10);
+      if (Number.isFinite(index)) {
+        deleteFromInventory(index);
+      }
+      return;
+    }
+
+    if (action === "lock-toggle") {
+      event.stopPropagation();
+      const title = listItem.dataset.itemTitle || "";
+      toggleLock(title, listItem, button);
+    }
+  };
+
+  inventoryList.addEventListener("click", (event) => {
+    const actionButton = event.target.closest("[data-action]");
+    if (actionButton && inventoryList.contains(actionButton)) {
+      handleInventoryAction(actionButton, event);
+      return;
+    }
+
+    if (event.target.closest(".dropdown-menu")) {
+      return;
+    }
+
+    const toggleElement = event.target.closest(".burger-bar");
+    if (toggleElement && inventoryList.contains(toggleElement)) {
+      event.stopPropagation();
+      handleDropdownToggle(toggleElement);
+    }
+  });
+
+  inventoryListHandlersInitialized = true;
+}
+
+function buildInventoryListItem(existingElement, item, originalIndex, lockedItems, previousStateEntry) {
+  const itemKey = getInventoryItemKey(item, originalIndex);
+  const bucket = normalizeRarityBucket(item.rarityClass);
+  const locked = Boolean(lockedItems && lockedItems[item.title]);
+  const isEquipped = isItemCurrentlyEquipped(item);
+  const rolledText = typeof item.rolledAt === "number"
+    ? (typeof formatRollCount === "function" ? formatRollCount(item.rolledAt) : item.rolledAt.toLocaleString())
+    : "Unknown";
+  const luckValue = typeof item.luckValue === "number" && Number.isFinite(item.luckValue)
+    ? item.luckValue
+    : 1;
+  const formattedLuck = luckValue.toFixed(2);
+
+  const rarityLabelClasses = getLabelClassForRarity(item.rarityClass, bucket);
+
+  const listItem = existingElement || document.createElement("li");
+  listItem.className = item.rarityClass || "";
+  listItem.classList.add("inventory-item");
+  listItem.dataset.itemKey = itemKey;
+  listItem.dataset.absoluteIndex = String(originalIndex);
+  listItem.dataset.itemTitle = item.title;
+  listItem.dataset.locked = locked ? "true" : "false";
+  listItem.dataset.equipped = isEquipped ? "true" : "false";
+
+  if (bucket) {
+    listItem.dataset.bucket = bucket;
+  } else {
+    delete listItem.dataset.bucket;
+  }
+
+  listItem.classList.toggle("inventory-item--equipped", Boolean(isEquipped));
+
+  let itemTitle = listItem.querySelector(".rarity-text");
+  let rarityText = listItem.querySelector(".inventory-item__rarity");
+  let burgerBar = listItem.querySelector(".burger-bar");
+  let dropdownMenu = burgerBar ? burgerBar.querySelector(".dropdown-menu") : null;
+
+  if (!itemTitle) {
+    itemTitle = document.createElement("span");
+    itemTitle.className = "rarity-text";
+    listItem.appendChild(itemTitle);
+  }
+
+  if (!rarityText) {
+    rarityText = document.createElement("span");
+    rarityText.className = "inventory-item__rarity";
+    listItem.appendChild(rarityText);
+  }
+
+  if (!burgerBar) {
+    burgerBar = document.createElement("div");
+    burgerBar.className = "burger-bar";
+    burgerBar.textContent = "☰";
+    listItem.appendChild(burgerBar);
+  }
+
+  if (!dropdownMenu) {
+    dropdownMenu = document.createElement("div");
+    dropdownMenu.className = "dropdown-menu";
+    dropdownMenu.style.display = "none";
+    dropdownMenu.dataset.itemKey = itemKey;
+    burgerBar.appendChild(dropdownMenu);
+
+    const header = document.createElement("div");
+    header.className = "dropdown-header";
+    header.innerHTML = `
+      <div class="info-title"></div>
+      <div class="info-sub">
+        <span class="info-sub__rolled"></span>
+        <span class="info-sub__luck"></span>
+      </div>
+    `;
+    dropdownMenu.appendChild(header);
+
+    const divider = document.createElement("div");
+    divider.className = "dropdown-divider";
+    dropdownMenu.appendChild(divider);
+
+    const equipButton = document.createElement("button");
+    equipButton.className = "dropdown-item";
+    equipButton.dataset.action = "equip-toggle";
+    dropdownMenu.appendChild(equipButton);
+
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "dropdown-item danger";
+    deleteButton.dataset.action = "delete";
+    dropdownMenu.appendChild(deleteButton);
+
+    const lockButton = document.createElement("button");
+    lockButton.dataset.action = "lock-toggle";
+    dropdownMenu.appendChild(lockButton);
+  }
+
+  const defaultTitle = item.title.toUpperCase();
+  itemTitle.className = "rarity-text";
+  if (rarityLabelClasses.length) {
+    itemTitle.classList.add(...rarityLabelClasses);
+  }
+
+  if (previousStateEntry && typeof previousStateEntry.rarityLabel === "string") {
+    itemTitle.textContent = previousStateEntry.rarityLabel;
+  } else if (!itemTitle.textContent || !existingElement) {
+    itemTitle.textContent = defaultTitle;
+  }
+
+  const headerTitleElement = dropdownMenu.querySelector(".info-title");
+  if (headerTitleElement) {
+    if (previousStateEntry && previousStateEntry.headerTitle != null) {
+      headerTitleElement.textContent = previousStateEntry.headerTitle;
+    } else {
+      headerTitleElement.textContent = item.title;
+    }
+  }
+
+  const rolledElement = dropdownMenu.querySelector(".info-sub__rolled");
+  if (rolledElement) {
+    rolledElement.textContent = `Rolled at: ${rolledText}`;
+  }
+
+  const luckElement = dropdownMenu.querySelector(".info-sub__luck");
+  if (luckElement) {
+    luckElement.textContent = `Luck: ${formattedLuck}`;
+  }
+
+  dropdownMenu.dataset.itemKey = itemKey;
+
+  const equipButton = dropdownMenu.querySelector('[data-action="equip-toggle"]');
+  if (equipButton) {
+    equipButton.dataset.absoluteIndex = String(originalIndex);
+    equipButton.textContent = isEquipped ? "Unequip" : "Equip";
+    equipButton.classList.toggle("dropdown-item--unequip", Boolean(isEquipped));
+    setEquipToggleButtonDisabled(equipButton, cutsceneActive);
+  }
+
+  const deleteButton = dropdownMenu.querySelector('[data-action="delete"]');
+  if (deleteButton) {
+    deleteButton.dataset.absoluteIndex = String(originalIndex);
+    deleteButton.textContent = "Delete";
+    setInventoryDeleteButtonDisabled(deleteButton, cutsceneActive);
+  }
+
+  const lockButton = dropdownMenu.querySelector('[data-action="lock-toggle"]');
+  if (lockButton) {
+    lockButton.textContent = locked ? "Unlock" : "Lock";
+    lockButton.style.backgroundColor = locked ? "darkgray" : "";
+  }
+
+  if (previousStateEntry && previousStateEntry.dropdownOpen) {
+    dropdownMenu.style.display = "block";
+    dropdownMenu.classList.add("open");
+    listItem.classList.add("inventory-item--menu-open");
+    if (typeof previousStateEntry.dropdownScrollTop === "number" && previousStateEntry.dropdownScrollTop > 0) {
+      dropdownMenu.scrollTop = previousStateEntry.dropdownScrollTop;
+    }
+  } else {
+    dropdownMenu.style.display = "none";
+    dropdownMenu.classList.remove("open");
+    listItem.classList.remove("inventory-item--menu-open");
+  }
+
+  return listItem;
+}
+
 function renderInventory() {
   const inventoryList = document.getElementById("inventoryList");
   if (!inventoryList) {
     return;
   }
+
+  ensureInventoryListHandlers();
 
   const previousState = new Map();
   inventoryList.querySelectorAll(".inventory-item").forEach((element) => {
@@ -16741,165 +17023,37 @@ function renderInventory() {
   const end = start + itemsPerPage;
   const paginatedEntries = sortedEntries.slice(start, end);
 
-  const fragment = document.createDocumentFragment();
-
-  paginatedEntries.forEach(({ item, index: originalIndex }) => {
-    const listItem = document.createElement("li");
-    listItem.className = item.rarityClass || "";
-    listItem.classList.add("inventory-item");
-    listItem.dataset.locked = lockedItems[item.title] ? "true" : "false";
-    const itemKey = getInventoryItemKey(item, originalIndex);
-    listItem.dataset.itemKey = itemKey;
-    const bucket = normalizeRarityBucket(item.rarityClass);
-    if (bucket) {
-      listItem.dataset.bucket = bucket;
+  const existingElements = new Map();
+  inventoryList.querySelectorAll(".inventory-item").forEach((element) => {
+    const key = element.dataset.itemKey;
+    if (key) {
+      existingElements.set(key, element);
     }
-
-    const isEquipped = isItemCurrentlyEquipped(item);
-    listItem.dataset.equipped = isEquipped ? "true" : "false";
-    listItem.classList.toggle("inventory-item--equipped", Boolean(isEquipped));
-
-    const itemTitle = document.createElement("span");
-    itemTitle.className = "rarity-text";
-    itemTitle.textContent = item.title.toUpperCase();
-    const labelClasses = getLabelClassForRarity(item.rarityClass, bucket);
-    if (labelClasses.length) {
-      itemTitle.classList.add(...labelClasses);
-    }
-
-    const rarityText = document.createElement("span");
-    listItem.appendChild(itemTitle);
-    listItem.appendChild(rarityText);
-
-    const burgerBar = document.createElement("div");
-    burgerBar.className = "burger-bar";
-    burgerBar.innerHTML = "☰";
-
-    const dropdownMenu = document.createElement("div");
-    dropdownMenu.className = "dropdown-menu";
-    dropdownMenu.style.display = "none";
-    dropdownMenu.dataset.itemKey = itemKey;
-
-    // HEADER: aura title + rolled-at line
-    const header = document.createElement("div");
-    header.className = "dropdown-header";
-
-    // prefer your formatter if present, else fallback
-    const rolledText = typeof item.rolledAt === "number"
-      ? (typeof formatRollCount === "function" ? formatRollCount(item.rolledAt) : item.rolledAt.toLocaleString())
-      : "Unknown";
-
-    const luckValue = typeof item.luckValue === "number" && Number.isFinite(item.luckValue)
-      ? item.luckValue
-      : 1;
-    const formattedLuck = luckValue.toFixed(2);
-
-    header.innerHTML = `
-      <div class="info-title">${item.title}</div>
-      <div class="info-sub">
-        <span class="info-sub__rolled">Rolled at: ${rolledText}</span>
-        <span class="info-sub__luck">Luck: ${formattedLuck}</span>
-      </div>
-    `;
-    const headerTitleElement = header.querySelector(".info-title");
-    dropdownMenu.appendChild(header);
-
-    // Divider
-    const divider = document.createElement("div");
-    divider.className = "dropdown-divider";
-    dropdownMenu.appendChild(divider);
-    
-    const equipButton = document.createElement("button");
-    equipButton.className = "dropdown-item";
-    equipButton.dataset.action = "equip-toggle";
-    equipButton.textContent = isEquipped ? "Unequip" : "Equip";
-    equipButton.classList.toggle("dropdown-item--unequip", Boolean(isEquipped));
-    setEquipToggleButtonDisabled(equipButton, cutsceneActive);
-    equipButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      if (cutsceneActive) {
-        return;
-      }
-      if (isItemCurrentlyEquipped(item)) {
-        unequipItem();
-      } else {
-        equipItem(item);
-      }
-    });
-
-    const deleteButton = document.createElement("button");
-    deleteButton.className = "dropdown-item danger";
-    deleteButton.dataset.action = "delete";
-    deleteButton.textContent = "Delete";
-    setInventoryDeleteButtonDisabled(deleteButton, cutsceneActive);
-    deleteButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      if (cutsceneActive) {
-        return;
-      }
-      if (listItem.dataset.locked !== "true") {
-        deleteFromInventory(originalIndex);
-      }
-    });
-
-    const lockButton = document.createElement("button");
-    lockButton.textContent = listItem.dataset.locked === "true" ? "Unlock" : "Lock";
-    lockButton.style.backgroundColor = listItem.dataset.locked === "true" ? "darkgray" : "";
-    lockButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      toggleLock(item.title, listItem, lockButton);
-    });
-
-    dropdownMenu.appendChild(equipButton);
-    dropdownMenu.appendChild(deleteButton);
-    dropdownMenu.appendChild(lockButton);
-    burgerBar.appendChild(dropdownMenu);
-    listItem.appendChild(burgerBar);
-
-    burgerBar.addEventListener("click", (event) => {
-      event.stopPropagation();
-
-      // Close other menus
-      document.querySelectorAll(".dropdown-menu").forEach(m => {
-        if (m !== dropdownMenu) {
-          m.style.display = "none";
-          m.classList.remove("open");
-          const parentItem = m.closest(".inventory-item");
-          if (parentItem) {
-            parentItem.classList.remove("inventory-item--menu-open");
-          }
-        }
-      });
-
-      // Toggle this one
-      const willOpen = dropdownMenu.style.display !== "block";
-      dropdownMenu.style.display = willOpen ? "block" : "none";
-      dropdownMenu.classList.toggle("open", willOpen);
-      listItem.classList.toggle("inventory-item--menu-open", willOpen);
-    });
-
-    const previous = previousState.get(itemKey);
-    if (previous) {
-      if (typeof previous.rarityLabel === "string" && previous.rarityLabel.length) {
-        itemTitle.textContent = previous.rarityLabel;
-      }
-      if (previous.headerTitle != null && headerTitleElement) {
-        headerTitleElement.textContent = previous.headerTitle;
-      }
-      if (previous.dropdownOpen && dropdownMenu) {
-        dropdownMenu.style.display = "block";
-        dropdownMenu.classList.add("open");
-        listItem.classList.add("inventory-item--menu-open");
-        if (typeof previous.dropdownScrollTop === "number" && previous.dropdownScrollTop > 0) {
-          dropdownMenu.scrollTop = previous.dropdownScrollTop;
-        }
-      }
-    }
-
-    fragment.appendChild(listItem);
   });
 
-  inventoryList.replaceChildren(fragment);
+  const newOrder = [];
+
+  paginatedEntries.forEach(({ item, index: originalIndex }) => {
+    const itemKey = getInventoryItemKey(item, originalIndex);
+    const previous = previousState.get(itemKey);
+    const existingElement = existingElements.get(itemKey) || null;
+    const listItem = buildInventoryListItem(existingElement, item, originalIndex, lockedItems, previous);
+    existingElements.delete(itemKey);
+    newOrder.push(listItem);
+  });
+
+  existingElements.forEach((element) => {
+    element.remove();
+  });
+
+  let anchor = inventoryList.firstChild;
+  newOrder.forEach((element) => {
+    if (element === anchor) {
+      anchor = anchor ? anchor.nextSibling : null;
+      return;
+    }
+    inventoryList.insertBefore(element, anchor);
+  });
 
   updatePagination();
   checkAchievements();
