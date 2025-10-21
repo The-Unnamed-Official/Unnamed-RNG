@@ -5253,6 +5253,12 @@ body.flashing {
     font-size: 13px;
 }
 
+.potion-card__note {
+    margin: 0;
+    font-size: 12px;
+    color: #d6e3ff;
+}
+
 .potion-card__cost-title {
     margin: 0;
     font-size: 13px;
@@ -5388,6 +5394,12 @@ body.flashing {
 .potion-inventory__count {
     font-size: 13px;
     color: #cbd7f3;
+}
+
+.potion-inventory__note {
+    margin: 0;
+    font-size: 12px;
+    color: #d6e3ff;
 }
 
 .potion-inventory__actions {

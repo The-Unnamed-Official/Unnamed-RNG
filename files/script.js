@@ -1294,6 +1294,13 @@ function renderPotionCrafting() {
       : `Duration: ${formatPotionDuration(potion.durationSeconds)}`;
     duration.textContent = durationText;
 
+    let rewardNote = null;
+    if (potion.id === DESCENDED_POTION_ID) {
+      rewardNote = document.createElement("p");
+      rewardNote.className = "potion-card__note";
+      rewardNote.textContent = "Also allows you to obtain [????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿] with chance of 1 in 333";
+    }
+
     const costTitle = document.createElement("p");
     costTitle.className = "potion-card__cost-title";
     costTitle.textContent = "Required Ingredients";
@@ -1382,6 +1389,9 @@ function renderPotionCrafting() {
     card.appendChild(header);
     card.appendChild(effect);
     card.appendChild(duration);
+    if (rewardNote) {
+      card.appendChild(rewardNote);
+    }
     card.appendChild(costTitle);
     card.appendChild(costList);
     card.appendChild(actions);
@@ -1444,10 +1454,20 @@ function renderPotionInventory() {
     countLabel.className = "potion-inventory__count";
     countLabel.textContent = `In stock: ${count}`;
 
+    let inventoryRewardNote = null;
+    if (potion.id === DESCENDED_POTION_ID) {
+      inventoryRewardNote = document.createElement("p");
+      inventoryRewardNote.className = "potion-inventory__note";
+      inventoryRewardNote.textContent = "Also allows you to obtain [????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿] with chance of 1 in 333";
+    }
+
     item.appendChild(infoHeader);
     item.appendChild(imageWrapper);
     item.appendChild(actions);
     item.appendChild(countLabel);
+    if (inventoryRewardNote) {
+      item.appendChild(inventoryRewardNote);
+    }
 
     list.appendChild(item);
   });
