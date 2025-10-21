@@ -5442,9 +5442,13 @@ body.flashing {
 
 .potion-inventory__actions {
     width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
 }
 
-.potion-inventory__use {
+.potion-inventory__use,
+.potion-inventory__use-all {
     width: 100%;
     border: none;
     border-radius: 10px;
@@ -5452,13 +5456,23 @@ body.flashing {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.potion-inventory__use {
     background: linear-gradient(135deg, #5bd0a4, #7fffd4);
     color: #04201a;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 10px 24px rgba(91, 208, 164, 0.4);
 }
 
-.potion-inventory__use:disabled {
+.potion-inventory__use-all {
+    background: linear-gradient(135deg, #7aa2ff, #9bd4ff);
+    color: #06163a;
+    box-shadow: 0 10px 24px rgba(122, 162, 255, 0.35);
+}
+
+.potion-inventory__use:disabled,
+.potion-inventory__use-all:disabled {
     cursor: not-allowed;
     opacity: 0.5;
     box-shadow: none;
@@ -5466,7 +5480,8 @@ body.flashing {
     color: #8aa7a0;
 }
 
-.potion-inventory__use:not(:disabled):hover {
+.potion-inventory__use:not(:disabled):hover,
+.potion-inventory__use-all:not(:disabled):hover {
     transform: translateY(-1px);
 }
 

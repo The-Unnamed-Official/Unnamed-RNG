@@ -828,6 +828,8 @@ const rollCooldownDurationMap = new Map();
 let rollButtonDisableTimestamp = null;
 let rollButtonCooldownContext = "default";
 let rollButtonProgressArmed = false;
+let rollButtonManualCooldownUntil = 0;
+let rollButtonManualEnableTimeoutId = null;
 
 function recordRollCooldownDuration(context, duration) {
   if (typeof duration !== "number" || !Number.isFinite(duration) || duration <= 0) {
@@ -1456,7 +1458,15 @@ function renderPotionInventory() {
     useButton.disabled = count <= 0;
     useButton.addEventListener("click", () => usePotion(potion.id));
 
+    const useAllButton = document.createElement("button");
+    useAllButton.className = "potion-inventory__use-all";
+    useAllButton.type = "button";
+    useAllButton.textContent = "Use All";
+    useAllButton.disabled = count <= 0;
+    useAllButton.addEventListener("click", () => useAllPotions(potion.id));
+
     actions.appendChild(useButton);
+    actions.appendChild(useAllButton);
 
     const countLabel = document.createElement("div");
     countLabel.className = "potion-inventory__count";
@@ -1977,6 +1987,26 @@ function usePotion(potionId) {
   renderPotionInventory();
   renderPotionCrafting();
   activatePotionBuff(potion);
+}
+
+function useAllPotions(potionId) {
+  const available = getPotionCount(potionId);
+  if (available <= 0) {
+    return;
+  }
+
+  const potion = getPotionDefinition(potionId);
+  if (!potion) {
+    return;
+  }
+
+  adjustPotionCount(potionId, -available);
+  renderPotionInventory();
+  renderPotionCrafting();
+
+  for (let i = 0; i < available; i += 1) {
+    activatePotionBuff(potion);
+  }
 }
 
 function shouldRollDescendedTitleThisRoll() {
@@ -2717,11 +2747,64 @@ HTMLMediaElement.prototype.play = function (...args) {
   return originalAudioPlay.apply(this, args);
 };
 
-function setRollButtonEnabled(enabled) {
+function setRollButtonEnabled(enabled, options = {}) {
   const button = document.getElementById("rollButton");
-  if (button) {
-    button.disabled = !enabled;
+  if (!button) {
+    return;
   }
+
+  const { force = false } = options;
+
+  if (!enabled) {
+    button.disabled = true;
+    if (!force) {
+      const baseDelay = getRollButtonCooldownDelay();
+      const now = typeof performance !== "undefined" && typeof performance.now === "function"
+        ? performance.now()
+        : Date.now();
+      rollButtonManualCooldownUntil = Math.max(
+        rollButtonManualCooldownUntil,
+        now + Math.max(0, baseDelay),
+      );
+    }
+
+    if (rollButtonManualEnableTimeoutId !== null) {
+      clearTimeout(rollButtonManualEnableTimeoutId);
+      rollButtonManualEnableTimeoutId = null;
+    }
+    return;
+  }
+
+  const now = typeof performance !== "undefined" && typeof performance.now === "function"
+    ? performance.now()
+    : Date.now();
+
+  if (!force && now < rollButtonManualCooldownUntil) {
+    const delay = Math.max(0, Math.round(rollButtonManualCooldownUntil - now));
+    if (rollButtonManualEnableTimeoutId !== null) {
+      clearTimeout(rollButtonManualEnableTimeoutId);
+    }
+    rollButtonManualEnableTimeoutId = setTimeout(() => {
+      rollButtonManualEnableTimeoutId = null;
+      setRollButtonEnabled(true, { force: true });
+    }, delay);
+    return;
+  }
+
+  rollButtonManualCooldownUntil = 0;
+  if (rollButtonManualEnableTimeoutId !== null) {
+    clearTimeout(rollButtonManualEnableTimeoutId);
+    rollButtonManualEnableTimeoutId = null;
+  }
+  button.disabled = false;
+}
+
+function getRollButtonCooldownDelay() {
+  if (Number.isFinite(cooldownTime) && cooldownTime >= 0) {
+    return cooldownTime;
+  }
+
+  return BASE_COOLDOWN_TIME;
 }
 
 function restoreRollDisplayAfterCutscene() {
@@ -4085,7 +4168,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (rollButton) {
-    setRollButtonEnabled(false);
+    setRollButtonEnabled(false, { force: true });
     setupRollButtonProgress(rollButton);
   }
 
@@ -18886,13 +18969,13 @@ function getClassForRarity(rarity) {
       'Experiment [1 in 100,000/10th]': 'special',
       'Abomination [1 in 1,000,000/20th]': 'special',
       'Iridocyclitis Veil [1 in 5,000/50th]': 'special',
-      'Cursed Mirage [1 in 11,000]': 'under100k',
+      'Cursed Mirage [1 in 11,111]': 'under100k',
       'Celestial Dawn [1 in 12,000]': 'under100k',
       'Blodhest [1 in 25,252]': 'under100k',
       'Unnamed [1 in 30,303]': 'under100k',
       "Fate's Requiem [1 in 15,000]": 'under100k',
       'Eonbreak [1 in 20,000]': 'under100k',
-      'Overture  [1 in 25,641]': 'under100k',
+      'Overture [1 in 25,641]': 'under100k',
       'HARV [1 in 33,333]': 'under100k',
       "Devil's Heart [1 in 66,666]": 'under100k',
       'Arcane Pulse [1 in 77,777]': 'under100k',
@@ -18902,7 +18985,7 @@ function getClassForRarity(rarity) {
       'H1di [1 in 9,890,089]': 'transcendent',
       'BlindGT [1 in 2,000,000/15th]': 'special',
       'MSFU [1 in 333/333rd]': 'special',
-      'Orb [1 in 55,555/30th]': 'special',
+      'ORB [1 in 55,555/30th]': 'special',
       'Tuon [1 in 50,000]': 'under100k',
       'Heart [1 in ♡♡♡]': 'eventV25',
       'Unfair [1 in ###]': 'under100k',
@@ -18924,13 +19007,13 @@ function getClassForRarity(rarity) {
       'Astrald [1 in 100,000]': 'under1m',
       'Nebula [1 in 62,500]': 'under100k',
       'Gl1tch3d [1 in 12,404/40,404th]': 'special',
-      'Mastermind [110,010]': 'under1m',
+      'Mastermind [1 in 110,010]': 'under1m',
       'Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]': 'under1m',
       "MythicWall [1 in 170,017]": 'under100k',
       "The Scarecrow's Sigil [1 in 1,031]": 'eventTitleHalloween25',
       "Pumpkin Hollow [1 in 3,110]": 'eventTitleHalloween25',
       "Wailing Shade [1 in 31,010]": 'eventTitleHalloween25',
-      "Hollow Hill Maner [1 in 10,031]": 'eventTitleHalloween25',
+      "Hollow Hill Manor [1 in 10,031]": 'eventTitleHalloween25',
       "The Void's Veil [1 in 10,031]": 'eventTitleHalloween25',
       "The Phantom Moon [1 in 10,031]": 'eventTitleHalloween25',
       "Descended Title [1 in ƐƐƐ]": 'theDescended'
