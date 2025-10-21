@@ -1249,6 +1249,7 @@ function renderPotionCrafting() {
     return;
   }
 
+  const previousScrollTop = container.scrollTop;
   container.innerHTML = "";
   const summary = summarizeInventoryForPotions();
 
@@ -1398,6 +1399,11 @@ function renderPotionCrafting() {
 
     container.appendChild(card);
   });
+
+  if (previousScrollTop > 0) {
+    const maxScrollTop = Math.max(0, container.scrollHeight - container.clientHeight);
+    container.scrollTop = Math.min(previousScrollTop, maxScrollTop);
+  }
 }
 
 function renderPotionInventory() {
