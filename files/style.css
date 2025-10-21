@@ -5259,6 +5259,40 @@ body.flashing {
     color: #d6e3ff;
 }
 
+.descendent-potion__title {
+    display: inline-block;
+    color: #8b0000;
+    background: linear-gradient(120deg, #ff1a1a, #8b0000, #000000);
+    background-size: 200% 200%;
+    animation: descendent-potion-title-glow 4s ease-in-out infinite;
+}
+
+@supports (-webkit-background-clip: text) {
+    .descendent-potion__title {
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+}
+
+@supports (background-clip: text) {
+    .descendent-potion__title {
+        background-clip: text;
+        color: transparent;
+    }
+}
+
+@keyframes descendent-potion-title-glow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
 .potion-card__cost-title {
     margin: 0;
     font-size: 13px;
