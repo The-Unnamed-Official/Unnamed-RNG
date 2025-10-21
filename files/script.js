@@ -249,7 +249,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 50,
     durationSeconds: 30,
     craftCost: {
-      classes: { commonBgImg: 50, rareBgImg: 30, epicBgImg: 20, legendaryBgImg: 10, unstoppableBgImg: 1 },
+      classes: { commonBgImg: 30, rareBgImg: 20, epicBgImg: 10, legendaryBgImg: 5, unstoppableBgImg: 1 },
       titles: [],
     },
   },
