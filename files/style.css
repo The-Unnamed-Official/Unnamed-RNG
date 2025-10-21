@@ -6004,6 +6004,10 @@ body.flashing {
     color: #90ee90;
 }
 
+.event-halloween25 {
+    color: #fb923c;
+}
+
 .special {
     background: radial-gradient(#ffffff, #000000);
     background-size: 300%;
@@ -6912,6 +6916,7 @@ body.flashing {
 .cutsceneSkipBtb[data-tier="mastery"] { --chip-accent: #facc15; }
 .cutsceneSkipBtb[data-tier="supreme"] { --chip-accent: #fb7185; }
 .cutsceneSkipBtb[data-tier="transcendent"] { --chip-accent: #5ae9ff; }
+.cutsceneSkipBtb[data-tier="event-halloween25"] { --chip-accent: #fb923c; }
 
 #statsMenu {
     position: fixed;
