@@ -1323,6 +1323,10 @@ body {
   --roll-card-accent: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.1));
 }
 
+.roll-result-card--theDescended {
+  --roll-card-accent: linear-gradient(135deg, rgba(255, 26, 26, 0.18), rgba(0, 0, 0, 0.35));
+}
+
 @media (max-width: 520px) {
   .roll-result-card {
     padding: 18px 18px 20px;
@@ -6009,6 +6013,15 @@ body.flashing {
     color: transparent;
 }
 
+.theDescended {
+    background: linear-gradient(90deg, #ff1a1a, #7f0000, #000000, #7f0000, #ff1a1a);
+    background-size: 300% 300%;
+    animation: the-descended-gradient 1.25s linear infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
 .under100k {
     background: radial-gradient(#ffdae0, #349b6e);
     background-size: 300%;
@@ -6147,6 +6160,18 @@ body.flashing {
     }
     100% {
         background-position: 0% 80%;
+    }
+}
+
+@keyframes the-descended-gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
     }
 }
 
