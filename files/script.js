@@ -370,6 +370,7 @@ const POTION_DEFINITIONS = [
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
     disableWithToggle: true,
+    eventExclusive: "Halloween Event Exclusive",
     craftCost: {
       classes: {
         commonBgImg: 800,
@@ -393,6 +394,7 @@ const POTION_DEFINITIONS = [
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
     disableWithToggle: true,
+    eventExclusive: "Halloween Event Exclusive",
     craftCost: {
       classes: {
         commonBgImg: 900,
@@ -1229,6 +1231,20 @@ function renderPotionCrafting() {
     title.className = "potion-card__title";
     title.textContent = potion.name;
 
+    let eventLabel = null;
+    if (typeof potion.eventExclusive === "string" && potion.eventExclusive.trim().length > 0) {
+      eventLabel = document.createElement("span");
+      eventLabel.className = "potion-card__event-label";
+      eventLabel.textContent = potion.eventExclusive;
+    }
+
+    const header = document.createElement("div");
+    header.className = "potion-card__header";
+    header.appendChild(title);
+    if (eventLabel) {
+      header.appendChild(eventLabel);
+    }
+
     const effect = document.createElement("div");
     effect.className = "potion-card__effect";
     effect.textContent = potion.type === POTION_TYPES.LUCK
@@ -1327,7 +1343,7 @@ function renderPotionCrafting() {
     actions.appendChild(ownedLabel);
 
     card.appendChild(imageWrapper);
-    card.appendChild(title);
+    card.appendChild(header);
     card.appendChild(effect);
     card.appendChild(duration);
     card.appendChild(costTitle);
@@ -1355,6 +1371,20 @@ function renderPotionInventory() {
     title.className = "potion-inventory__title";
     title.textContent = potion.name;
 
+    let inventoryEventLabel = null;
+    if (typeof potion.eventExclusive === "string" && potion.eventExclusive.trim().length > 0) {
+      inventoryEventLabel = document.createElement("span");
+      inventoryEventLabel.className = "potion-inventory__event-label";
+      inventoryEventLabel.textContent = potion.eventExclusive;
+    }
+
+    const infoHeader = document.createElement("div");
+    infoHeader.className = "potion-inventory__header";
+    infoHeader.appendChild(title);
+    if (inventoryEventLabel) {
+      infoHeader.appendChild(inventoryEventLabel);
+    }
+
     const imageWrapper = document.createElement("div");
     imageWrapper.className = "potion-inventory__image";
     const image = document.createElement("img");
@@ -1378,7 +1408,7 @@ function renderPotionInventory() {
     countLabel.className = "potion-inventory__count";
     countLabel.textContent = `In stock: ${count}`;
 
-    item.appendChild(title);
+    item.appendChild(infoHeader);
     item.appendChild(imageWrapper);
     item.appendChild(actions);
     item.appendChild(countLabel);
