@@ -977,6 +977,15 @@ body.equinox-pulse-active :is(
   border-radius: 0;
 }
 
+#historyList li .history-entry-text.cursedmirageBgImg {
+  background: linear-gradient(135deg, #6b21a8 0%, #0f172a 45%, #0f766e 100%);
+  background-size: 240% 240%;
+  animation: gradient-shift 8s ease infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* Use the same sheen animation keyframes as the main container */
 @keyframes containerSheen {
   0%   { transform: translateX(-120%); }

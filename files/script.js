@@ -18969,7 +18969,7 @@ function getClassForRarity(rarity) {
       'Experiment [1 in 100,000/10th]': 'special',
       'Abomination [1 in 1,000,000/20th]': 'special',
       'Iridocyclitis Veil [1 in 5,000/50th]': 'special',
-      'Cursed Mirage [1 in 11,111]': 'under100k',
+      'Cursed Mirage [1 in 11,111]': 'cursedmirageBgImg',
       'Celestial Dawn [1 in 12,000]': 'under100k',
       'Blodhest [1 in 25,252]': 'under100k',
       'Unnamed [1 in 30,303]': 'under100k',
