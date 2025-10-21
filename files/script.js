@@ -4464,6 +4464,10 @@ function registerRollButtonHandler() {
       return;
     }
 
+    if (cutsceneActive || pendingCutsceneRarity || !isChangeEnabled) {
+      return;
+    }
+
   const rollDisplay = document.querySelector(".container");
   if (rollDisplay && !rollDisplayHiddenByUser && rollDisplay.style.visibility === "hidden") {
     rollDisplay.style.visibility = "visible";
