@@ -2989,6 +2989,12 @@ body {
     object-fit: contain;
 }
 
+.destitBgImg {
+    background: url(backgrounds/destit.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 .darBgImg {
     background: url(backgrounds/dar.png);
     background-size: cover;
@@ -4726,6 +4732,22 @@ body.flashing {
     position: absolute;
     font-size: 33px;
     color: red;
+    opacity: 1;
+    animation: levitate 1s ease-out forwards, fade 1s ease-out forwards;
+}
+
+.glitch-dark-red-star {
+    position: absolute;
+    font-size: 33px;
+    color: darkred;
+    opacity: 1;
+    animation: levitate 1s ease-out forwards, fade 1s ease-out forwards;
+}
+
+.glitch-black-star {
+    position: absolute;
+    font-size: 33px;
+    color: black;
     opacity: 1;
     animation: levitate 1s ease-out forwards, fade 1s ease-out forwards;
 }

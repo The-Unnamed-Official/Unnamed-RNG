@@ -2545,7 +2545,8 @@ const STOPPABLE_AUDIO_IDS = [
   "thevoidsveilAudio",
   "thephantommoonAudio",
   "wailingshadeAudio",
-  "alienAudio"
+  "alienAudio",
+  "destitAudio"
 ];
 
 const STOPPABLE_AUDIO_SET = new Set(STOPPABLE_AUDIO_IDS);
@@ -2816,6 +2817,7 @@ const rarityCategories = {
     "crazeBgImg",
     "shenviiBgImg",
     "glitchedBgImg",
+    "destitBgImg"
   ],
 };
 
@@ -3359,6 +3361,7 @@ const ACHIEVEMENTS = [
   { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]", requiredRarityClass: "polarrBgImg" },
   { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 170,017]", requiredRarityClass: "mythicwallBgImg" },
   { name: "Master of your Mind", requiredTitle: "Mastermind [1 in 110,010]", requiredRarityClass: "mastermindBgImg" },
+  { name: "The Descendant", requiredTitle: "Descended Title [1 in ƐƐƐ]", requiredRarityClass: "destitBgImg" },
   {
     name: "T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈",
     requiredTitle: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]",
@@ -4436,7 +4439,8 @@ function registerRollButtonHandler() {
     rarity.type === "The Phantom Moon [1 in 10,031]" ||
     rarity.type === "The Void's Veil [1 in 10,031]" ||
     rarity.type === "Wailing Shade [1 in 31,010]" ||
-    rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]"
+    rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" ||
+    rarity.type === "Descended Title [1 in ƐƐƐ]"
   ) {
     const resultContainer = byId("result");
     if (resultContainer) {
@@ -4450,6 +4454,8 @@ function registerRollButtonHandler() {
 
     if (rarity.type === "Fright [1 in 1,075]") {
       frightAudio.play();
+    } else if (rarity.type === "Descended Title [1 in ƐƐƐ]") {
+      destitAudio.play();
     } else if (rarity.type === "Gl1tch3d [1 in 12,404/40,404th]") {
       glitchedAudio.play();
     } else if (rarity.type === "Gargantua [1 in 143]") {
@@ -16031,6 +16037,7 @@ const backgroundDetails = {
   thescarecrowssigilBgImg: { image: "files/backgrounds/thescarecrowssigil.gif", audio: "thescarecrowssigilAudio" },
   thevoidsveilBgImg: { image: "files/backgrounds/thevoidsveil.gif", audio: "thevoidsveilAudio" },
   wailingshadeBgImg: { image: "files/backgrounds/wailingshade.gif", audio: "wailingshadeAudio" },
+  destitBgImg: { image: "files/backgrounds/destit.gif", audio: "destitAudio" },
   froBgImg: { image: "files/backgrounds/fro.png", audio: "froAudio" },
   mysBgImg: { image: "files/backgrounds/mys.png", audio: "mysAudio" },
   forgBgImg: { image: "files/backgrounds/forg.png", audio: "forgAudio" },
@@ -18399,6 +18406,7 @@ function getClassForRarity(rarity) {
       "Hollow Hill Maner [1 in 10,031]": 'eventHalloween25',
       "The Void's Veil [1 in 10,031]": 'eventHalloween25',
       "The Phantom Moon [1 in 10,031]": 'eventHalloween25',
+      "Descended Title [1 in ƐƐƐ]": 'special'
   };
 
   return rarityClasses[rarity] || null;
@@ -18863,6 +18871,9 @@ document
 document
   .getElementById("deleteAllNebulaButton")
   .addEventListener("click", () => deleteAllByRarity("nebulaBgImg"));
+document
+  .getElementById("deleteAllDescendedTitleButton")
+  .addEventListener("click", () => deleteAllByRarity("destitBgImg"));
 
 
 document
@@ -18894,6 +18905,7 @@ document
       "orbBgImg",
       'crazeBgImg',
       'shenviiBgImg',
+      'destitBgImg'
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
