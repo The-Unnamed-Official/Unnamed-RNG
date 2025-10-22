@@ -315,7 +315,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 50,
     durationSeconds: 60,
     craftCost: {
-      classes: { commonBgImg: 75, rareBgImg: 50, impossibleBgImg: 30, poweredBgImg: 15, unstoppableBgImg: 5 },
+      classes: { commonBgImg: 50, rareBgImg: 35, impossibleBgImg: 20, poweredBgImg: 10, unstoppableBgImg: 2 },
       titles: [],
     },
   },
@@ -327,7 +327,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 75,
     durationSeconds: 120,
     craftCost: {
-      classes: { commonBgImg: 100, rareBgImg: 75, toxBgImg: 40, flickerBgImg: 20, unstoppableBgImg: 10, spectralBgImg: 5 },
+      classes: { commonBgImg: 80, rareBgImg: 60, toxBgImg: 35, flickerBgImg: 20, unstoppableBgImg: 5, spectralBgImg: 1 },
       titles: [],
     },
   },
@@ -339,7 +339,7 @@ const POTION_DEFINITIONS = [
     effectPercent: 100,
     durationSeconds: 180,
     craftCost: {
-      classes: { commonBgImg: 130, rareBgImg: 100, plabreBgImg: 50, unstoppableBgImg: 20, wanspiBgImg: 20, curartBgImg: 10, shadBgImg: 2 },
+      classes: { commonBgImg: 120, rareBgImg: 90, plabreBgImg: 30, unstoppableBgImg: 10, wanspiBgImg: 8, curartBgImg: 6, shadBgImg: 2 },
       titles: [],
     },
   },
