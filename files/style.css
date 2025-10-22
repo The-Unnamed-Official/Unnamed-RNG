@@ -977,6 +977,15 @@ body.equinox-pulse-active :is(
   border-radius: 0;
 }
 
+#historyList li .history-entry-text.cursedmirageBgImg {
+  background: linear-gradient(135deg, #6b21a8 0%, #0f172a 45%, #0f766e 100%);
+  background-size: 240% 240%;
+  animation: gradient-shift 8s ease infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* Use the same sheen animation keyframes as the main container */
 @keyframes containerSheen {
   0%   { transform: translateX(-120%); }
@@ -1321,6 +1330,10 @@ body {
 
 .roll-result-card--special {
   --roll-card-accent: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(0, 0, 0, 0.1));
+}
+
+.roll-result-card--theDescended {
+  --roll-card-accent: linear-gradient(135deg, rgba(255, 26, 26, 0.18), rgba(0, 0, 0, 0.35));
 }
 
 @media (max-width: 520px) {
@@ -5253,6 +5266,46 @@ body.flashing {
     font-size: 13px;
 }
 
+.potion-card__note {
+    margin: 0;
+    font-size: 12px;
+    color: #d6e3ff;
+}
+
+.descendent-potion__title {
+    display: inline-block;
+    color: #8b0000;
+    background: linear-gradient(120deg, #ff1a1a, #8b0000, #000000);
+    background-size: 200% 200%;
+    animation: descendent-potion-title-glow 4s ease-in-out infinite;
+}
+
+@supports (-webkit-background-clip: text) {
+    .descendent-potion__title {
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+}
+
+@supports (background-clip: text) {
+    .descendent-potion__title {
+        background-clip: text;
+        color: transparent;
+    }
+}
+
+@keyframes descendent-potion-title-glow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
 .potion-card__cost-title {
     margin: 0;
     font-size: 13px;
@@ -5390,11 +5443,21 @@ body.flashing {
     color: #cbd7f3;
 }
 
-.potion-inventory__actions {
-    width: 100%;
+.potion-inventory__note {
+    margin: 0;
+    font-size: 12px;
+    color: #d6e3ff;
 }
 
-.potion-inventory__use {
+.potion-inventory__actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.potion-inventory__use,
+.potion-inventory__use-all {
     width: 100%;
     border: none;
     border-radius: 10px;
@@ -5402,13 +5465,23 @@ body.flashing {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.potion-inventory__use {
     background: linear-gradient(135deg, #5bd0a4, #7fffd4);
     color: #04201a;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: 0 10px 24px rgba(91, 208, 164, 0.4);
 }
 
-.potion-inventory__use:disabled {
+.potion-inventory__use-all {
+    background: linear-gradient(135deg, #7aa2ff, #9bd4ff);
+    color: #06163a;
+    box-shadow: 0 10px 24px rgba(122, 162, 255, 0.35);
+}
+
+.potion-inventory__use:disabled,
+.potion-inventory__use-all:disabled {
     cursor: not-allowed;
     opacity: 0.5;
     box-shadow: none;
@@ -5416,7 +5489,8 @@ body.flashing {
     color: #8aa7a0;
 }
 
-.potion-inventory__use:not(:disabled):hover {
+.potion-inventory__use:not(:disabled):hover,
+.potion-inventory__use-all:not(:disabled):hover {
     transform: translateY(-1px);
 }
 
@@ -5516,11 +5590,11 @@ body.flashing {
 .buff-tray {
     position: fixed;
     right: 32px;
-    bottom: 32px;
+    bottom: 20px;
     display: flex;
     flex-direction: row-reverse;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     align-items: flex-end;
     justify-content: flex-end;
     z-index: 100020;
@@ -5530,7 +5604,7 @@ body.flashing {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
     min-width: 0;
     padding: 0;
     background: none;
@@ -5558,27 +5632,27 @@ body.flashing {
 }
 
 .buff-card__icon {
-    width: 64px;
-    height: 64px;
+    width: 56px;
+    height: 56px;
     display: block;
     object-fit: contain;
     background: rgba(0, 0, 0, 0.67);
-    border-radius: 12px;
-    padding: 4px;
+    border-radius: 10px;
+    padding: 3px;
     box-sizing: border-box;
     z-index: 200;
     cursor: pointer;
 }
 
 .buff-card__effect {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: #f2f6ff;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .buff-card__timer {
-    font-size: 11px;
+    font-size: 10px;
     color: #dce7ff;
     letter-spacing: 0.04em;
 }
@@ -5678,7 +5752,7 @@ body.flashing {
 
     .buff-tray {
         right: 16px;
-        bottom: 92px;
+        bottom: 76px;
     }
 }
 
@@ -5954,10 +6028,23 @@ body.flashing {
     color: #90ee90;
 }
 
+.event-halloween25 {
+    color: #fb923c;
+}
+
 .special {
     background: radial-gradient(#ffffff, #000000);
     background-size: 300%;
     animation: gradient-shift2 8.75s ease infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.theDescended {
+    background: linear-gradient(90deg, #ff1a1a, #7f0000, #000000, #7f0000, #ff1a1a);
+    background-size: 300% 300%;
+    animation: the-descended-gradient 1.25s linear infinite;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -6101,6 +6188,18 @@ body.flashing {
     }
     100% {
         background-position: 0% 80%;
+    }
+}
+
+@keyframes the-descended-gradient {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
     }
 }
 
@@ -6841,6 +6940,7 @@ body.flashing {
 .cutsceneSkipBtb[data-tier="mastery"] { --chip-accent: #facc15; }
 .cutsceneSkipBtb[data-tier="supreme"] { --chip-accent: #fb7185; }
 .cutsceneSkipBtb[data-tier="transcendent"] { --chip-accent: #5ae9ff; }
+.cutsceneSkipBtb[data-tier="event-halloween25"] { --chip-accent: #fb923c; }
 
 #statsMenu {
     position: fixed;
