@@ -52,6 +52,7 @@ const UNKNOWN_TITLE_TYPE = "UnKnOwN [1 in ᔦᔦᔦ]";
 const UNKNOWN_TITLE_CLASS = "unknownBgImg";
 const DESCENDED_POTION_ID = "descendentPotion";
 const DESCENDED_POTION_REWARD_CHANCE = 1 / 333;
+const UNKNOWN_TITLE_REWARD_CHANCE = 1 / 444;
 const DESCENDED_CUTSCENE_TIMINGS = Object.freeze({
   GLITCH_MS: 1100,
   FLASH_MS: 3300,
@@ -1344,7 +1345,7 @@ function renderPotionCrafting() {
       rewardNote = document.createElement("p");
       rewardNote.className = "potion-card__note";
       rewardNote.innerHTML =
-        'Also allows you to <strong>roll a title</strong> <span class="descendent-potion__title">[????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿]</span> with chance of 1 in 333';
+        'Also allows you to <strong>roll a title</strong> <span class="descendent-potion__title">[????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿]</span> with chances of 1 in 333 or 1 in 444';
     }
 
     const costTitle = document.createElement("p");
@@ -1518,7 +1519,7 @@ function renderPotionInventory() {
       inventoryRewardNote = document.createElement("p");
       inventoryRewardNote.className = "potion-inventory__note";
       inventoryRewardNote.innerHTML =
-        'Also allows you to <strong>roll a title</strong> <span class="descendent-potion__title">[????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿]</span> with chance of 1 in 333';
+        'Also allows you to <strong>roll a title</strong> <span class="descendent-potion__title">[????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿]</span> with chances of 1 in 333 or 1 in 444';
     }
 
     item.appendChild(infoHeader);
@@ -15648,13 +15649,24 @@ function rollRarity() {
   capturePendingRollLuckSnapshot(activeLuckPercent);
   const luckMultiplier = 1 + activeLuckPercent / 100;
   const shouldRollDescendedTitle = shouldRollDescendedTitleThisRoll();
-  const rolledDescendedTitle =
-    shouldRollDescendedTitle && Math.random() < DESCENDED_POTION_REWARD_CHANCE;
+  let rolledDescendedDefinition = null;
+
+  if (shouldRollDescendedTitle) {
+    const roll = Math.random();
+    const defaultDescendedDefinition =
+      getDescendedDefinitionByType(DESCENDED_TITLE_TYPE) ||
+      DESCENDED_TITLE_DEFINITIONS[0] ||
+      null;
+    if (roll < UNKNOWN_TITLE_REWARD_CHANCE) {
+      rolledDescendedDefinition =
+        getDescendedDefinitionByType(UNKNOWN_TITLE_TYPE) || defaultDescendedDefinition;
+    } else if (roll < UNKNOWN_TITLE_REWARD_CHANCE + DESCENDED_POTION_REWARD_CHANCE) {
+      rolledDescendedDefinition = defaultDescendedDefinition;
+    }
+  }
   consumeSingleUseBuffs();
-  if (rolledDescendedTitle) {
-    const randomIndex = Math.floor(Math.random() * DESCENDED_TITLE_DEFINITIONS.length);
-    const definition = DESCENDED_TITLE_DEFINITIONS[randomIndex] || null;
-    return createDescendedRarityPayload(definition);
+  if (rolledDescendedDefinition) {
+    return createDescendedRarityPayload(rolledDescendedDefinition);
   }
   const luckThreshold = computeLuckThreshold(
     activePermanentLuckPercent,
