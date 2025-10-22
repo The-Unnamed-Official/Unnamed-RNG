@@ -2553,6 +2553,164 @@ body {
     }
 }
 
+.unknown-cutscene {
+    position: fixed;
+    inset: 0;
+    z-index: 200000;
+    pointer-events: none;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 120ms ease-out;
+}
+
+.unknown-cutscene::before,
+.unknown-cutscene::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.unknown-cutscene::before {
+    background: linear-gradient(
+            rgba(255, 255, 255, 0.08) 0,
+            rgba(255, 255, 255, 0.08) 2px,
+            rgba(0, 0, 0, 0) 2px,
+            rgba(0, 0, 0, 0) 4px
+    );
+    background-size: 100% 4px;
+    mix-blend-mode: screen;
+    opacity: 0.6;
+    animation: unknownCutsceneScan 1.8s linear infinite;
+}
+
+.unknown-cutscene::after {
+    background: radial-gradient(circle at center, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.8) 100%);
+    opacity: 0.8;
+}
+
+.unknown-cutscene--visible {
+    opacity: 1;
+}
+
+.unknown-cutscene__static {
+    position: absolute;
+    inset: -20%;
+    background: repeating-linear-gradient(
+            0deg,
+            rgba(255, 255, 255, 0.18) 0,
+            rgba(255, 255, 255, 0.18) 1px,
+            rgba(0, 0, 0, 0.18) 1px,
+            rgba(0, 0, 0, 0.18) 2px
+    );
+    mix-blend-mode: screen;
+    filter: contrast(170%) brightness(1.4);
+    animation: unknownCutsceneStatic 90ms steps(2, end) infinite;
+}
+
+.unknown-cutscene__static::before,
+.unknown-cutscene__static::after {
+    content: "";
+    position: absolute;
+    inset: -10%;
+    background: repeating-linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.15) 0,
+            rgba(255, 255, 255, 0.15) 2px,
+            rgba(0, 0, 0, 0.15) 2px,
+            rgba(0, 0, 0, 0.15) 4px
+    );
+    opacity: 0.45;
+    mix-blend-mode: screen;
+}
+
+.unknown-cutscene__static::before {
+    animation: unknownCutsceneStatic 120ms steps(2, end) infinite;
+}
+
+.unknown-cutscene__static::after {
+    animation: unknownCutsceneStaticOffset 150ms steps(3, end) infinite;
+}
+
+.unknown-cutscene__glow {
+    position: absolute;
+    inset: -5%;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, rgba(0, 0, 0, 0.8) 80%);
+    mix-blend-mode: screen;
+    opacity: 0.35;
+    animation: unknownCutsceneGlow 1.4s ease-in-out infinite alternate;
+}
+
+.unknown-cutscene--fade-out {
+    animation: unknownCutsceneFade 600ms ease-in forwards;
+}
+
+.unknown-cutscene--fade-out .unknown-cutscene__static {
+    animation-duration: 160ms;
+    opacity: 0.35;
+}
+
+@keyframes unknownCutsceneStatic {
+    0% {
+        transform: translate3d(0, 0, 0);
+    }
+    25% {
+        transform: translate3d(-12px, 6px, 0);
+    }
+    50% {
+        transform: translate3d(8px, -10px, 0);
+    }
+    75% {
+        transform: translate3d(-4px, 4px, 0);
+    }
+    100% {
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes unknownCutsceneStaticOffset {
+    0% {
+        transform: translate3d(5px, -8px, 0);
+    }
+    50% {
+        transform: translate3d(-7px, 11px, 0);
+    }
+    100% {
+        transform: translate3d(5px, -8px, 0);
+    }
+}
+
+@keyframes unknownCutsceneGlow {
+    0% {
+        opacity: 0.25;
+    }
+    100% {
+        opacity: 0.5;
+    }
+}
+
+@keyframes unknownCutsceneFade {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes unknownCutsceneScan {
+    0% {
+        transform: translateY(-100%);
+    }
+    100% {
+        transform: translateY(100%);
+    }
+}
+
 .cutsceneStarEaster {
     position: absolute;
     top: 30%;
@@ -3145,6 +3303,12 @@ body {
 
 .destitBgImg {
     background: url(backgrounds/destit.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.unknownBgImg {
+    background: url(backgrounds/unknown.png);
     background-size: cover;
     object-fit: contain;
 }
