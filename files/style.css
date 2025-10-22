@@ -5470,6 +5470,40 @@ body.flashing {
     }
 }
 
+.descendent-potion__title__unknown {
+    display: inline-block;
+    color: #444444;
+    background: linear-gradient(120deg, #888888, #444444, #000000);
+    background-size: 200% 200%;
+    animation: descendent-potion-title-glow 4s ease-in-out infinite;
+}
+
+@supports (-webkit-background-clip: text) {
+    .descendent-potion__title__unknown {
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+}
+
+@supports (background-clip: text) {
+    .descendent-potion__title__unknown {
+        background-clip: text;
+        color: transparent;
+    }
+}
+
+@keyframes descendent-potion-title-unknown-glow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
 .potion-card__cost-title {
     margin: 0;
     font-size: 13px;

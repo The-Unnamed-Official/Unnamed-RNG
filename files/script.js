@@ -1346,7 +1346,7 @@ function renderPotionCrafting() {
       rewardNote = document.createElement("p");
       rewardNote.className = "potion-card__note";
       rewardNote.innerHTML =
-        'Also allows you to <strong>roll a title</strong> <span class="descendent-potion__title">[????̷̝̣͂?̸̺̦̊?̸̘̰̈́̿¿¿¿]</span> with chances of 1 in 333 or 1 in 444';
+        'Also allows you to <strong>roll 2 titles</strong> <span class="descendent-potion__title">[????̸̺̦̊?̸̘̰̈́̿¿¿¿]</span> with chances of 1 in ƐƐƐ and <span class="descendent-potion__title__unknown">[¿¿?̸̘̰̈́̿¿??]</span> with chances of 1 in ᔦᔦᔦ';
     }
 
     const costTitle = document.createElement("p");
