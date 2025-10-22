@@ -315,8 +315,9 @@ const POTION_DEFINITIONS = [
     effectPercent: 50,
     durationSeconds: 60,
     craftCost: {
-      classes: { commonBgImg: 75, rareBgImg: 50, impossibleBgImg: 30, poweredBgImg: 15, unstoppableBgImg: 5 },
+      classes: { commonBgImg: 50, rareBgImg: 35, impossibleBgImg: 20, poweredBgImg: 10, unstoppableBgImg: 2 },
       titles: [],
+      potions: { luckyPotion: 2 },
     },
   },
   {
@@ -327,8 +328,9 @@ const POTION_DEFINITIONS = [
     effectPercent: 75,
     durationSeconds: 120,
     craftCost: {
-      classes: { commonBgImg: 100, rareBgImg: 75, toxBgImg: 40, flickerBgImg: 20, unstoppableBgImg: 10, spectralBgImg: 5 },
+      classes: { commonBgImg: 80, rareBgImg: 60, toxBgImg: 35, flickerBgImg: 15, unstoppableBgImg: 5, spectralBgImg: 1 },
       titles: [],
+      potions: { luckyPotion: 3 },
     },
   },
   {
@@ -339,8 +341,9 @@ const POTION_DEFINITIONS = [
     effectPercent: 100,
     durationSeconds: 180,
     craftCost: {
-      classes: { commonBgImg: 130, rareBgImg: 100, plabreBgImg: 50, unstoppableBgImg: 20, wanspiBgImg: 20, curartBgImg: 10, shadBgImg: 2 },
+      classes: { commonBgImg: 110, rareBgImg: 85, plabreBgImg: 30, unstoppableBgImg: 10, wanspiBgImg: 8, curartBgImg: 6, shadBgImg: 1 },
       titles: [],
+      potions: { luckyPotion: 4 },
     },
   },
   {
@@ -351,8 +354,9 @@ const POTION_DEFINITIONS = [
     effectPercent: 150,
     durationSeconds: 300,
     craftCost: {
-      classes: { commonBgImg: 150, legendaryBgImg: 110, solarpowerBgImg: 90, belivBgImg: 50, unstoppableBgImg: 10, gargBgImg: 8, isekaiBgImg: 2, isekailofiBgImg: 1 },
+      classes: { commonBgImg: 135, legendaryBgImg: 100, solarpowerBgImg: 80, belivBgImg: 45, unstoppableBgImg: 10, gargBgImg: 8, memBgImg: 5, isekaiBgImg: 2 },
       titles: [],
+      potions: { luckyPotion: 8 },
     },
   },
   {
@@ -363,8 +367,9 @@ const POTION_DEFINITIONS = [
     effectPercent: 200,
     durationSeconds: 360,
     craftCost: {
-      classes: { commonBgImg: 180, poweredBgImg: 130, flickerBgImg: 100, unstoppableBgImg: 30, memBgImg: 30, oblBgImg: 20, froBgImg: 10, emerBgImg: 1 },
+      classes: { commonBgImg: 150, poweredBgImg: 110, flickerBgImg: 90, unstoppableBgImg: 20, memBgImg: 15, oblBgImg: 11, froBgImg: 7, isekailofiBgImg: 1  },
       titles: [],
+      potions: { luckyPotion: 12, fortuneSpoid1: 1 },
     },
   },
   {
@@ -375,8 +380,9 @@ const POTION_DEFINITIONS = [
     effectPercent: 300,
     durationSeconds: 510,
     craftCost: {
-      classes: { commonBgImg: 250, legendaryBgImg: 180, plabreBgImg: 70, unstoppableBgImg: 45, mysBgImg: 30, forgBgImg: 10, fearBgImg: 3 },
+      classes: { commonBgImg: 190, legendaryBgImg: 160, plabreBgImg: 65, unstoppableBgImg: 30, mysBgImg: 20, forgBgImg: 8, fearBgImg: 2 },
       titles: [],
+      potions: { luckyPotion: 18, fortuneSpoid1: 2, fortuneSpoid2: 1 },
     },
   },
   {
