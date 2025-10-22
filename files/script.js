@@ -48,6 +48,8 @@ const BUFF_TOOLTIP_EFFECT_CLASS_MAP = Object.freeze({
 
 const DESCENDED_TITLE_TYPE = "Descended Title [1 in ƐƐƐ]";
 const DESCENDED_TITLE_CLASS = "destitBgImg";
+const UNKNOWN_TITLE_TYPE = "UnKnOwN [1 in ᔦᔦᔦ]";
+const UNKNOWN_TITLE_CLASS = "unknownBgImg";
 const DESCENDED_POTION_ID = "descendentPotion";
 const DESCENDED_POTION_REWARD_CHANCE = 1 / 333;
 const DESCENDED_CUTSCENE_TIMINGS = Object.freeze({
@@ -55,6 +57,45 @@ const DESCENDED_CUTSCENE_TIMINGS = Object.freeze({
   FLASH_MS: 3300,
   TOTAL_MS: 3500,
 });
+const DESCENDED_TITLE_DEFINITIONS = Object.freeze([
+  Object.freeze({ type: DESCENDED_TITLE_TYPE, class: DESCENDED_TITLE_CLASS }),
+  Object.freeze({ type: UNKNOWN_TITLE_TYPE, class: UNKNOWN_TITLE_CLASS }),
+]);
+const DESCENDED_TITLE_TYPE_SET = new Set(
+  DESCENDED_TITLE_DEFINITIONS.map((definition) => definition.type)
+);
+const DESCENDED_TITLE_CLASS_SET = new Set(
+  DESCENDED_TITLE_DEFINITIONS.map((definition) => definition.class)
+);
+const UNKNOWN_CUTSCENE_TIMINGS = Object.freeze({
+  FADE_OUT_MS: 4400,
+  TOTAL_MS: 5000,
+});
+
+function isDescendedTitleType(type) {
+  return DESCENDED_TITLE_TYPE_SET.has(type);
+}
+
+function getDescendedDefinitionByType(type) {
+  return DESCENDED_TITLE_DEFINITIONS.find((definition) => definition.type === type) || null;
+}
+
+function createDescendedRarityPayload(definition = null) {
+  const resolvedDefinition = definition || DESCENDED_TITLE_DEFINITIONS[0];
+  if (!resolvedDefinition) {
+    return {
+      type: DESCENDED_TITLE_TYPE,
+      class: DESCENDED_TITLE_CLASS,
+      titles: [DESCENDED_TITLE_TYPE],
+    };
+  }
+
+  return {
+    type: resolvedDefinition.type,
+    class: resolvedDefinition.class,
+    titles: [resolvedDefinition.type],
+  };
+}
 
 let buffTooltipElement = null;
 let buffTooltipNameElement = null;
@@ -2662,7 +2703,8 @@ const STOPPABLE_AUDIO_IDS = [
   "thephantommoonAudio",
   "wailingshadeAudio",
   "alienAudio",
-  "destitAudio"
+  "destitAudio",
+  "unknownAudio"
 ];
 
 const STOPPABLE_AUDIO_SET = new Set(STOPPABLE_AUDIO_IDS);
@@ -2884,11 +2926,7 @@ function playDescendedTitleCutscene({
   setPendingRarity = true,
   onComplete = null,
 } = {}) {
-  const resolvedRarity = rarity || {
-    type: DESCENDED_TITLE_TYPE,
-    class: DESCENDED_TITLE_CLASS,
-    titles: [DESCENDED_TITLE_TYPE],
-  };
+  const resolvedRarity = rarity || createDescendedRarityPayload();
 
   if (setPendingRarity || !pendingCutsceneRarity) {
     pendingCutsceneRarity = resolvedRarity;
@@ -2961,6 +2999,82 @@ function playDescendedTitleCutscene({
   };
 
   schedule(finalizeCutscene, DESCENDED_CUTSCENE_TIMINGS.TOTAL_MS);
+}
+
+function playUnknownTitleCutscene({
+  title = UNKNOWN_TITLE_TYPE,
+  rarity = null,
+  titleContainer = null,
+  setPendingRarity = true,
+  onComplete = null,
+} = {}) {
+  const resolvedRarity = rarity || createDescendedRarityPayload(getDescendedDefinitionByType(UNKNOWN_TITLE_TYPE));
+
+  if (setPendingRarity || !pendingCutsceneRarity) {
+    pendingCutsceneRarity = resolvedRarity;
+  }
+
+  const container = titleContainer || document.querySelector(".container");
+  if (container) {
+    hideRollDisplayForCutscene(container);
+  }
+
+  if (typeof unknownAudio !== "undefined" && unknownAudio && typeof unknownAudio.play === "function") {
+    try {
+      unknownAudio.currentTime = 0;
+    } catch (error) {
+      /* no-op */
+    }
+    const playPromise = unknownAudio.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {});
+    }
+  }
+
+  const overlay = document.createElement("div");
+  overlay.className = "unknown-cutscene";
+  const staticLayer = document.createElement("div");
+  staticLayer.className = "unknown-cutscene__static";
+  const glowLayer = document.createElement("div");
+  glowLayer.className = "unknown-cutscene__glow";
+  overlay.appendChild(staticLayer);
+  overlay.appendChild(glowLayer);
+  document.body.appendChild(overlay);
+
+  const timeouts = [];
+  const schedule = (callback, delay) => {
+    const id = setTimeout(callback, delay);
+    timeouts.push(id);
+    return id;
+  };
+
+  requestAnimationFrame(() => {
+    overlay.classList.add("unknown-cutscene--visible");
+  });
+
+  schedule(() => {
+    overlay.classList.add("unknown-cutscene--fade-out");
+  }, UNKNOWN_CUTSCENE_TIMINGS.FADE_OUT_MS);
+
+  const finalizeCutscene = () => {
+    timeouts.forEach(clearTimeout);
+    overlay.remove();
+
+    if (typeof onComplete === "function") {
+      try {
+        const handled = onComplete({ container, title, rarity: resolvedRarity });
+        if (handled === true) {
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to complete Unknown cutscene", error);
+      }
+    }
+
+    enableChange();
+  };
+
+  schedule(finalizeCutscene, UNKNOWN_CUTSCENE_TIMINGS.TOTAL_MS);
 }
 
 const rarityCategories = {
@@ -3076,6 +3190,7 @@ const rarityCategories = {
   ],
   theDescended: [
     "destitBgImg",
+    "unknownBgImg",
   ],
 };
 
@@ -3102,6 +3217,7 @@ const RARITY_LABEL_CLASS_MAP = {
   estbunBgImg: "eventE25",
   fircraBgImg: "eventTitleNew25",
   destitBgImg: "theDescended",
+  unknownBgImg: "theDescended",
   pumpkinBgImg: "eventTitleHalloween24",
   norstaBgImg: "eventTitleXmas24",
   sanclaBgImg: "eventTitleXmas24",
@@ -4751,7 +4867,7 @@ function registerRollButtonHandler() {
     rarity.type === "The Void's Veil [1 in 10,031]" ||
     rarity.type === "Wailing Shade [1 in 31,010]" ||
     rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" ||
-    rarity.type === "Descended Title [1 in ƐƐƐ]"
+    isDescendedTitleType(rarity.type)
   ) {
     const resultContainer = byId("result");
     if (resultContainer) {
@@ -4765,8 +4881,12 @@ function registerRollButtonHandler() {
 
     if (rarity.type === "Fright [1 in 1,075]") {
       frightAudio.play();
-    } else if (rarity.type === "Descended Title [1 in ƐƐƐ]") {
-      destitAudio.play();
+    } else if (isDescendedTitleType(rarity.type)) {
+      if (rarity.type === UNKNOWN_TITLE_TYPE) {
+        unknownAudio.play();
+      } else {
+        destitAudio.play();
+      }
     } else if (rarity.type === "Gl1tch3d [1 in 12,404/40,404th]") {
       glitchedAudio.play();
     } else if (rarity.type === "Gargantua [1 in 143]") {
@@ -6146,9 +6266,12 @@ function registerRollButtonHandler() {
         titleCont.style.visibility = "visible";
         mastermindAudio.play();
       }
-    } else if (rarity.type === DESCENDED_TITLE_TYPE) {
+    } else if (isDescendedTitleType(rarity.type)) {
       disableChange();
-      playDescendedTitleCutscene({
+      const cutscenePlayer = rarity.type === UNKNOWN_TITLE_TYPE
+        ? playUnknownTitleCutscene
+        : playDescendedTitleCutscene;
+      cutscenePlayer({
         title,
         rarity,
         titleContainer: titleCont,
@@ -15529,11 +15652,9 @@ function rollRarity() {
     shouldRollDescendedTitle && Math.random() < DESCENDED_POTION_REWARD_CHANCE;
   consumeSingleUseBuffs();
   if (rolledDescendedTitle) {
-    return {
-      type: DESCENDED_TITLE_TYPE,
-      class: DESCENDED_TITLE_CLASS,
-      titles: [DESCENDED_TITLE_TYPE],
-    };
+    const randomIndex = Math.floor(Math.random() * DESCENDED_TITLE_DEFINITIONS.length);
+    const definition = DESCENDED_TITLE_DEFINITIONS[randomIndex] || null;
+    return createDescendedRarityPayload(definition);
   }
   const luckThreshold = computeLuckThreshold(
     activePermanentLuckPercent,
@@ -16472,6 +16593,7 @@ const backgroundDetails = {
   thevoidsveilBgImg: { image: "files/backgrounds/thevoidsveil.gif", audio: "thevoidsveilAudio" },
   wailingshadeBgImg: { image: "files/backgrounds/wailingshade.gif", audio: "wailingshadeAudio" },
   destitBgImg: { image: "files/backgrounds/destit.png", audio: "destitAudio" },
+  unknownBgImg: { image: "files/backgrounds/unknown.png", audio: "unknownAudio" },
   froBgImg: { image: "files/backgrounds/fro.png", audio: "froAudio" },
   mysBgImg: { image: "files/backgrounds/mys.png", audio: "mysAudio" },
   forgBgImg: { image: "files/backgrounds/forg.png", audio: "forgAudio" },
@@ -19056,7 +19178,8 @@ function getClassForRarity(rarity) {
       "Hollow Hill Manor [1 in 10,031]": 'eventTitleHalloween25',
       "The Void's Veil [1 in 10,031]": 'eventTitleHalloween25',
       "The Phantom Moon [1 in 10,031]": 'eventTitleHalloween25',
-      "Descended Title [1 in ƐƐƐ]": 'theDescended'
+      "Descended Title [1 in ƐƐƐ]": 'theDescended',
+      "UnKnOwN [1 in ᔦᔦᔦ]": 'theDescended'
   };
 
   return rarityClasses[rarity] || null;
@@ -19526,10 +19649,16 @@ document
   .addEventListener("click", () => deleteAllByRarity("destitBgImg"));
 
 document
+  .getElementById("deleteAllUnknownTitleButton")
+  .addEventListener("click", () => deleteAllByRarity("unknownBgImg"));
+
+document
   .getElementById("deleteAllTheDescendedButton")
   .addEventListener("click", () => {
     renderInventory();
-    deleteAllByRarity("destitBgImg");
+    DESCENDED_TITLE_CLASS_SET.forEach((rarityClass) => {
+      deleteAllByRarity(rarityClass);
+    });
   });
 
 
