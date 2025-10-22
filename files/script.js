@@ -72,6 +72,7 @@ const UNKNOWN_CUTSCENE_TIMINGS = Object.freeze({
   FADE_OUT_MS: 4400,
   TOTAL_MS: 5000,
 });
+const UNKNOWN_CUTSCENE_AUDIO_LEAD_MS = 4000;
 
 function isDescendedTitleType(type) {
   return DESCENDED_TITLE_TYPE_SET.has(type);
@@ -2589,6 +2590,7 @@ let autoRollButtonElement = null;
 const STOPPABLE_AUDIO_IDS = [
   "suspenseAudio",
   "expOpeningAudio",
+  "unknownCutsceneAudio",
   "geezerSuspenceAudio",
   "polarrSuspenceAudio",
   "scareSuspenceAudio",
@@ -2721,6 +2723,7 @@ const CUTSCENE_VOLUME_AUDIO_IDS = new Set([
   "bigSuspenceAudio",
   "hugeSuspenceAudio",
   "expOpeningAudio",
+  "unknownCutsceneAudio",
 ]);
 const CUTSCENE_AUDIO_PLAYBACK_DELAY_MS = 100;
 
@@ -3020,16 +3023,84 @@ function playUnknownTitleCutscene({
     hideRollDisplayForCutscene(container);
   }
 
-  if (typeof unknownAudio !== "undefined" && unknownAudio && typeof unknownAudio.play === "function") {
+  const timeouts = [];
+  const schedule = (callback, delay) => {
+    const id = setTimeout(callback, delay);
+    timeouts.push(id);
+    return id;
+  };
+
+  const cutsceneAudioElement = getAudioElement("unknownCutsceneAudio");
+  const loopAudioElement = getAudioElement("unknownAudio");
+  let loopAudioStarted = false;
+
+  const stopCutsceneAudio = () => {
+    if (!cutsceneAudioElement) {
+      return;
+    }
+
+    if (typeof cutsceneAudioElement.pause === "function") {
+      cutsceneAudioElement.pause();
+    }
+
     try {
-      unknownAudio.currentTime = 0;
+      cutsceneAudioElement.currentTime = 0;
     } catch (error) {
       /* no-op */
     }
-    const playPromise = unknownAudio.play();
+  };
+
+  const playLoopAudio = () => {
+    if (!loopAudioElement || typeof loopAudioElement.play !== "function") {
+      return;
+    }
+
+    try {
+      loopAudioElement.currentTime = 0;
+    } catch (error) {
+      /* no-op */
+    }
+
+    loopAudioElement.volume = getEffectiveVolumeForAudioId(loopAudioElement.id || "unknownAudio");
+
+    const playPromise = loopAudioElement.play();
     if (playPromise && typeof playPromise.catch === "function") {
       playPromise.catch(() => {});
     }
+  };
+
+  const startLoopAudio = () => {
+    if (loopAudioStarted) {
+      return;
+    }
+
+    loopAudioStarted = true;
+    stopCutsceneAudio();
+    playLoopAudio();
+  };
+
+  if (cutsceneAudioElement && typeof cutsceneAudioElement.play === "function") {
+    try {
+      cutsceneAudioElement.currentTime = 0;
+    } catch (error) {
+      /* no-op */
+    }
+
+    cutsceneAudioElement.volume = getEffectiveVolumeForAudioId(
+      cutsceneAudioElement.id || "unknownCutsceneAudio"
+    );
+
+    const playPromise = cutsceneAudioElement.play();
+    const loopTimeoutId = schedule(startLoopAudio, UNKNOWN_CUTSCENE_AUDIO_LEAD_MS);
+
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(() => {
+        clearTimeout(loopTimeoutId);
+        startLoopAudio();
+      });
+    }
+  } else {
+    startLoopAudio();
   }
 
   const overlay = document.createElement("div");
@@ -3042,13 +3113,6 @@ function playUnknownTitleCutscene({
   overlay.appendChild(glowLayer);
   document.body.appendChild(overlay);
 
-  const timeouts = [];
-  const schedule = (callback, delay) => {
-    const id = setTimeout(callback, delay);
-    timeouts.push(id);
-    return id;
-  };
-
   requestAnimationFrame(() => {
     overlay.classList.add("unknown-cutscene--visible");
   });
@@ -3060,6 +3124,9 @@ function playUnknownTitleCutscene({
   const finalizeCutscene = () => {
     timeouts.forEach(clearTimeout);
     overlay.remove();
+
+    stopCutsceneAudio();
+    startLoopAudio();
 
     if (typeof onComplete === "function") {
       try {
