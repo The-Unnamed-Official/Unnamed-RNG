@@ -576,6 +576,39 @@
             </div>
         </div>
 
+        <div
+            id="potionTransactionDialog"
+            class="potion-transaction-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="potionTransactionDialogTitle"
+            aria-describedby="potionTransactionDialogMessage potionTransactionDialogSummary"
+            aria-hidden="true"
+            tabindex="-1"
+        >
+            <div class="potion-transaction-dialog__card" role="document">
+                <h4 id="potionTransactionDialogTitle" class="potion-transaction-dialog__title">Confirm Purchase</h4>
+                <p id="potionTransactionDialogMessage" class="potion-transaction-dialog__message"></p>
+                <p id="potionTransactionDialogSummary" class="potion-transaction-dialog__summary"></p>
+                <div class="potion-transaction-dialog__actions">
+                    <button
+                        id="potionTransactionDialogCancel"
+                        class="potion-transaction-dialog__button potion-transaction-dialog__button--cancel"
+                        type="button"
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        id="potionTransactionDialogConfirm"
+                        class="potion-transaction-dialog__button potion-transaction-dialog__button--confirm"
+                        type="button"
+                    >
+                        Confirm Purchase
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="historySection" id="rollingHistory">
             <h3>Rolling History</h3>
             <ul id="historyList"></ul>
