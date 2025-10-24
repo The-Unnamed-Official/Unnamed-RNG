@@ -577,6 +577,63 @@ const POTION_DEFINITIONS = [
   },
 ];
 
+const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
+  Object.freeze({
+    id: "potionTransactionStarter",
+    name: "Supporter Starter Bundle",
+    priceUsd: 1,
+    description: "Jump-start your potion reserves with a massive infusion of core brews.",
+    rewards: Object.freeze({
+      potions: Object.freeze({
+        luckyPotion: 5000,
+        basicPotion: 1000,
+        decentPotion: 500,
+      }),
+    }),
+  }),
+  Object.freeze({
+    id: "potionTransactionDescended",
+    name: "Descended Power Bundle",
+    priceUsd: 2,
+    description: "Secure a stockpile of top-tier Halloween brews for your next session.",
+    rewards: Object.freeze({
+      potions: Object.freeze({
+        [DESCENDED_POTION_ID]: 500,
+        bloodyPotion: 200,
+        pumpkinPotion: 150,
+      }),
+    }),
+  }),
+]);
+
+const POTION_TRANSACTION_CHECKOUT_URLS = Object.freeze({
+  potionTransactionStarter: "https://buy.stripe.com/28EeVfd6Z4J1dHN2VK3AY00",
+  potionTransactionDescended: "https://buy.stripe.com/9B69AV0kd3EXdHN53S3AY01",
+});
+
+const PENDING_POTION_TRANSACTION_STORAGE_KEY = "pendingPotionTransactionId";
+
+const USD_CURRENCY_FORMATTER =
+  typeof Intl !== "undefined" && typeof Intl.NumberFormat === "function"
+    ? new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    : null;
+
+let potionTransactionStatusTimeoutId = null;
+let potionTransactionStatusPollIntervalId = null;
+let potionTransactionDialogElement = null;
+let potionTransactionDialogMessageElement = null;
+let potionTransactionDialogSummaryElement = null;
+let potionTransactionDialogConfirmButton = null;
+let potionTransactionDialogPreviousFocus = null;
+let pendingPotionTransaction = null;
+let potionTransactionDialogKeyHandlerRegistered = false;
+let hasShownPotionTransactionPopupReminder = false;
+
 const POTION_SPAWN_CONFIGS = [
   {
     potionId: "luckyPotion",
@@ -1293,6 +1350,608 @@ function isRarityEligibleForLuck(rarityType, luckThreshold) {
   }
 
   return displayedOdds >= luckThreshold;
+}
+
+function formatUsd(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) {
+    return "$0.00";
+  }
+
+  if (USD_CURRENCY_FORMATTER) {
+    try {
+      return USD_CURRENCY_FORMATTER.format(number);
+    } catch (error) {
+      /* no-op */
+    }
+  }
+
+  return `$${number.toFixed(2)}`;
+}
+
+function formatPotionRewardSummary(rewards) {
+  if (!Array.isArray(rewards) || rewards.length === 0) {
+    return "";
+  }
+
+  if (rewards.length === 1) {
+    return rewards[0];
+  }
+
+  if (rewards.length === 2) {
+    return `${rewards[0]} and ${rewards[1]}`;
+  }
+
+  const head = rewards.slice(0, -1).join(", ");
+  return `${head}, and ${rewards[rewards.length - 1]}`;
+}
+
+function isPotionTransactionDialogVisible() {
+  return (
+    potionTransactionDialogElement &&
+    potionTransactionDialogElement.classList.contains("potion-transaction-dialog--visible")
+  );
+}
+
+function closePotionTransactionDialog() {
+  if (!potionTransactionDialogElement) {
+    return;
+  }
+
+  potionTransactionDialogElement.classList.remove("potion-transaction-dialog--visible");
+  potionTransactionDialogElement.setAttribute("aria-hidden", "true");
+
+  if (potionTransactionDialogMessageElement) {
+    potionTransactionDialogMessageElement.textContent = "";
+  }
+
+  if (potionTransactionDialogSummaryElement) {
+    potionTransactionDialogSummaryElement.textContent = "";
+  }
+
+  if (
+    potionTransactionDialogPreviousFocus &&
+    typeof potionTransactionDialogPreviousFocus.focus === "function"
+  ) {
+    try {
+      potionTransactionDialogPreviousFocus.focus();
+    } catch (error) {
+      /* no-op */
+    }
+  }
+
+  potionTransactionDialogPreviousFocus = null;
+}
+
+function cancelPotionTransactionDialog() {
+  const hadPending = Boolean(pendingPotionTransaction);
+  pendingPotionTransaction = null;
+  closePotionTransactionDialog();
+
+  if (hadPending) {
+    showPotionTransactionStatus("Purchase cancelled.");
+  }
+}
+
+function showPotionTransactionConfirmation(transaction, showPopupReminder = false) {
+  if (!transaction) {
+    return;
+  }
+
+  const priceLabel = formatUsd(transaction.priceUsd);
+  const messageText = showPopupReminder
+    ? `Please allow pop-ups in your browser so the secure checkout can open. Continue to purchase ${transaction.name} for ${priceLabel}?`
+    : `Purchase ${transaction.name} for ${priceLabel}?`;
+
+  if (!potionTransactionDialogElement || !potionTransactionDialogConfirmButton) {
+    const confirmed = confirm(messageText);
+    if (!confirmed) {
+      showPotionTransactionStatus("Purchase cancelled.");
+      return;
+    }
+
+    redirectToPotionTransactionCheckout(transaction);
+    return;
+  }
+
+  pendingPotionTransaction = transaction;
+
+  const activeElement = document.activeElement;
+  potionTransactionDialogPreviousFocus =
+    activeElement && typeof activeElement.focus === "function" ? activeElement : null;
+
+  if (potionTransactionDialogMessageElement) {
+    potionTransactionDialogMessageElement.textContent = messageText;
+  }
+
+  if (potionTransactionDialogSummaryElement) {
+    const potionRewards = (transaction.rewards && transaction.rewards.potions) || {};
+    const rewardDescriptions = [];
+
+    Object.entries(potionRewards).forEach(([potionId, amount]) => {
+      const quantity = Math.max(0, Math.trunc(Number(amount)));
+      if (quantity <= 0) {
+        return;
+      }
+
+      const potionDefinition = getPotionDefinition(potionId);
+      const potionName = potionDefinition ? potionDefinition.name : potionId;
+      rewardDescriptions.push(`${quantity.toLocaleString()} × ${potionName}`);
+    });
+
+    if (rewardDescriptions.length > 0) {
+      potionTransactionDialogSummaryElement.textContent = `This will add ${formatPotionRewardSummary(
+        rewardDescriptions
+      )} to your inventory.`;
+    } else {
+      potionTransactionDialogSummaryElement.textContent = "";
+    }
+  }
+
+  potionTransactionDialogElement.setAttribute("aria-hidden", "false");
+  potionTransactionDialogElement.classList.add("potion-transaction-dialog--visible");
+
+  if (potionTransactionDialogConfirmButton) {
+    potionTransactionDialogConfirmButton.focus();
+  }
+}
+
+function setupPotionTransactionDialog() {
+  if (potionTransactionDialogElement) {
+    return;
+  }
+
+  const dialog = byId("potionTransactionDialog");
+  const message = byId("potionTransactionDialogMessage");
+  const summary = byId("potionTransactionDialogSummary");
+  const confirmButton = byId("potionTransactionDialogConfirm");
+  const cancelButton = byId("potionTransactionDialogCancel");
+
+  if (!dialog || !confirmButton || !cancelButton) {
+    return;
+  }
+
+  potionTransactionDialogElement = dialog;
+  potionTransactionDialogMessageElement = message || null;
+  potionTransactionDialogSummaryElement = summary || null;
+  potionTransactionDialogConfirmButton = confirmButton;
+
+  cancelButton.addEventListener("click", () => {
+    cancelPotionTransactionDialog();
+  });
+
+  confirmButton.addEventListener("click", () => {
+    if (!pendingPotionTransaction) {
+      closePotionTransactionDialog();
+      return;
+    }
+
+    const transaction = pendingPotionTransaction;
+    pendingPotionTransaction = null;
+    closePotionTransactionDialog();
+    redirectToPotionTransactionCheckout(transaction);
+  });
+
+  dialog.addEventListener("click", (event) => {
+    if (event.target === dialog) {
+      cancelPotionTransactionDialog();
+    }
+  });
+
+  if (!potionTransactionDialogKeyHandlerRegistered) {
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && isPotionTransactionDialogVisible()) {
+        event.preventDefault();
+        cancelPotionTransactionDialog();
+      }
+    });
+    potionTransactionDialogKeyHandlerRegistered = true;
+  }
+}
+
+function showPotionTransactionStatus(message, variant = "info") {
+  const status = byId("potionTransactionStatus");
+  if (!status) {
+    return;
+  }
+
+  status.textContent = message;
+  status.setAttribute("aria-hidden", "false");
+  status.classList.remove(
+    "potion-transaction-status--success",
+    "potion-transaction-status--error"
+  );
+
+  if (variant === "success") {
+    status.classList.add("potion-transaction-status--success");
+  } else if (variant === "error") {
+    status.classList.add("potion-transaction-status--error");
+  }
+
+  status.classList.add("potion-transaction-status--visible");
+
+  if (potionTransactionStatusTimeoutId) {
+    clearTimeout(potionTransactionStatusTimeoutId);
+  }
+
+  potionTransactionStatusTimeoutId = setTimeout(() => {
+    status.classList.remove(
+      "potion-transaction-status--visible",
+      "potion-transaction-status--success",
+      "potion-transaction-status--error"
+    );
+    status.textContent = "";
+    status.setAttribute("aria-hidden", "true");
+    potionTransactionStatusTimeoutId = null;
+  }, 5000);
+}
+
+function processPotionTransaction(transaction) {
+  if (!transaction) {
+    return;
+  }
+
+  const grantedRewards = [];
+  const potionRewards = transaction.rewards?.potions || {};
+
+  Object.entries(potionRewards).forEach(([potionId, amount]) => {
+    const quantity = Math.max(0, Math.trunc(Number(amount)));
+    if (quantity <= 0) {
+      return;
+    }
+
+    const potion = getPotionDefinition(potionId);
+    adjustPotionCount(potionId, quantity);
+
+    const potionName = potion ? potion.name : potionId;
+    grantedRewards.push(`${quantity.toLocaleString()} × ${potionName}`);
+  });
+
+  renderPotionInventory();
+  renderPotionCrafting();
+
+  if (grantedRewards.length > 0) {
+    showPotionTransactionStatus(
+      `Purchase successful! Added ${formatPotionRewardSummary(grantedRewards)} to your inventory.`,
+      "success"
+    );
+  } else {
+    showPotionTransactionStatus("Purchase processed.");
+  }
+}
+
+function getPotionTransactionCheckoutUrl(transactionId) {
+  if (!transactionId) {
+    return null;
+  }
+
+  return POTION_TRANSACTION_CHECKOUT_URLS[transactionId] || null;
+}
+
+function startPotionTransactionStatusPolling() {
+  if (typeof window === "undefined" || typeof window.setInterval !== "function") {
+    return;
+  }
+
+  if (potionTransactionStatusPollIntervalId !== null) {
+    return;
+  }
+
+  potionTransactionStatusPollIntervalId = window.setInterval(() => {
+    try {
+      handlePotionTransactionCheckoutReturn();
+    } catch (error) {
+      console.warn("Failed to refresh checkout status.", error);
+    }
+  }, 10_000);
+}
+
+function stopPotionTransactionStatusPolling() {
+  if (
+    typeof window === "undefined" ||
+    typeof window.clearInterval !== "function" ||
+    potionTransactionStatusPollIntervalId === null
+  ) {
+    return;
+  }
+
+  window.clearInterval(potionTransactionStatusPollIntervalId);
+  potionTransactionStatusPollIntervalId = null;
+}
+
+function setPendingPotionTransactionId(transactionId) {
+  if (typeof transactionId !== "string" || !transactionId) {
+    storage.remove(PENDING_POTION_TRANSACTION_STORAGE_KEY);
+    stopPotionTransactionStatusPolling();
+    return;
+  }
+
+  storage.set(PENDING_POTION_TRANSACTION_STORAGE_KEY, transactionId);
+  startPotionTransactionStatusPolling();
+}
+
+function clearPendingPotionTransactionId() {
+  storage.remove(PENDING_POTION_TRANSACTION_STORAGE_KEY);
+  stopPotionTransactionStatusPolling();
+}
+
+function buildCheckoutUrl(baseUrl, transactionId) {
+  if (typeof baseUrl !== "string" || !baseUrl) {
+    return null;
+  }
+
+  try {
+    const url = new URL(baseUrl);
+    if (transactionId) {
+      url.searchParams.set("client_reference_id", transactionId);
+    }
+    return url.toString();
+  } catch (error) {
+    return baseUrl;
+  }
+}
+
+function redirectToPotionTransactionCheckout(transaction) {
+  if (!transaction) {
+    showPotionTransactionStatus("Unable to process that transaction right now.", "error");
+    return;
+  }
+
+  const checkoutUrl = buildCheckoutUrl(
+    getPotionTransactionCheckoutUrl(transaction.id),
+    transaction.id,
+  );
+
+  if (!checkoutUrl) {
+    showPotionTransactionStatus("Checkout is currently unavailable.", "error");
+    return;
+  }
+
+  setPendingPotionTransactionId(transaction.id);
+  showPotionTransactionStatus("Opening secure checkout in a new tab...");
+
+  let checkoutWindow = null;
+  try {
+    checkoutWindow = window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+  } catch (error) {
+    console.warn("Failed to open checkout in a new tab.", error);
+  }
+
+  if (checkoutWindow) {
+    try {
+      checkoutWindow.opener = null;
+    } catch (error) {}
+
+    if (typeof checkoutWindow.focus === "function") {
+      try {
+        checkoutWindow.focus();
+      } catch (error) {}
+    }
+
+    return;
+  }
+
+  showPotionTransactionStatus(
+    "Please allow pop-ups for this site to open the secure checkout.",
+    "error",
+  );
+}
+
+function normalizeStripeCheckoutStatus(params) {
+  const successIndicators = new Set(["success", "true", "1", "paid", "completed"]);
+  const cancelledIndicators = new Set(["cancel", "cancelled", "canceled", "0", "false"]);
+
+  const statusCandidates = [
+    params.get("stripeStatus"),
+    params.get("stripe_status"),
+    params.get("paymentStatus"),
+    params.get("payment_status"),
+    params.get("success"),
+    params.get("checkout_status"),
+  ];
+
+  for (const candidate of statusCandidates) {
+    if (typeof candidate !== "string") {
+      continue;
+    }
+
+    const normalized = candidate.trim().toLowerCase();
+    if (successIndicators.has(normalized)) {
+      return "success";
+    }
+
+    if (cancelledIndicators.has(normalized)) {
+      return "cancel";
+    }
+  }
+
+  if (params.has("canceled") || params.has("cancelled")) {
+    return "cancel";
+  }
+
+  if (params.has("stripe_success")) {
+    return "success";
+  }
+
+  if (params.has("stripe_cancel")) {
+    return "cancel";
+  }
+
+  return null;
+}
+
+function resolveTransactionIdFromParams(params) {
+  const candidateKeys = [
+    "potionTransactionId",
+    "transaction",
+    "bundle",
+    "bundleId",
+    "client_reference_id",
+  ];
+
+  for (const key of candidateKeys) {
+    const value = params.get(key);
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return null;
+}
+
+function handlePotionTransactionCheckoutReturn() {
+  if (typeof window === "undefined" || typeof window.location === "undefined") {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search || "");
+  if (!params.toString()) {
+    return;
+  }
+
+  const status = normalizeStripeCheckoutStatus(params);
+  if (!status) {
+    return;
+  }
+
+  const storedPendingId = storage.get(PENDING_POTION_TRANSACTION_STORAGE_KEY, null);
+  let transactionId = resolveTransactionIdFromParams(params);
+
+  if (!transactionId && typeof storedPendingId === "string" && storedPendingId) {
+    transactionId = storedPendingId;
+  }
+
+  if (status === "cancel") {
+    if (transactionId && transactionId === storedPendingId) {
+      clearPendingPotionTransactionId();
+    }
+    showPotionTransactionStatus("Checkout cancelled.");
+    if (window.history && typeof window.history.replaceState === "function") {
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    }
+    return;
+  }
+
+  if (status !== "success") {
+    return;
+  }
+
+  const transactionDefinition = POTION_TRANSACTION_DEFINITIONS.find(
+    (definition) => definition.id === transactionId,
+  );
+
+  if (!transactionDefinition) {
+    showPotionTransactionStatus(
+      "Payment succeeded, but we couldn't match the purchased bundle. Please contact support.",
+      "error",
+    );
+    clearPendingPotionTransactionId();
+    if (window.history && typeof window.history.replaceState === "function") {
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    }
+    return;
+  }
+
+  processPotionTransaction(transactionDefinition);
+  clearPendingPotionTransactionId();
+  if (window.history && typeof window.history.replaceState === "function") {
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+  }
+}
+
+function purchasePotionTransaction(transactionId) {
+  const transaction = POTION_TRANSACTION_DEFINITIONS.find(
+    (entry) => entry.id === transactionId
+  );
+  if (!transaction) {
+    showPotionTransactionStatus("Unable to process that transaction right now.", "error");
+    return;
+  }
+
+  const shouldShowPopupReminder = !hasShownPotionTransactionPopupReminder;
+  if (!hasShownPotionTransactionPopupReminder) {
+    hasShownPotionTransactionPopupReminder = true;
+  }
+
+  showPotionTransactionConfirmation(transaction, shouldShowPopupReminder);
+}
+
+function renderPotionTransactions() {
+  const container = byId("potionTransactionList");
+  if (!container) {
+    return;
+  }
+
+  container.innerHTML = "";
+
+  POTION_TRANSACTION_DEFINITIONS.forEach((transaction) => {
+    const card = document.createElement("article");
+    card.className = "potion-transaction-card";
+    card.setAttribute("role", "listitem");
+
+    const header = document.createElement("div");
+    header.className = "potion-transaction-card__header";
+
+    const title = document.createElement("h4");
+    title.className = "potion-transaction-card__title";
+    title.textContent = transaction.name;
+
+    const price = document.createElement("span");
+    price.className = "potion-transaction-card__price";
+    price.textContent = formatUsd(transaction.priceUsd);
+
+    header.appendChild(title);
+    header.appendChild(price);
+    card.appendChild(header);
+
+    if (typeof transaction.description === "string" && transaction.description.trim()) {
+      const description = document.createElement("p");
+      description.className = "potion-transaction-card__description";
+      description.textContent = transaction.description;
+      card.appendChild(description);
+    }
+
+    const rewardsList = document.createElement("ul");
+    rewardsList.className = "potion-transaction-card__rewards";
+
+    const potionRewards = transaction.rewards?.potions || {};
+    Object.entries(potionRewards).forEach(([potionId, amount]) => {
+      const quantity = Math.max(0, Math.trunc(Number(amount)));
+      if (quantity <= 0) {
+        return;
+      }
+
+      const potion = getPotionDefinition(potionId);
+
+      const rewardItem = document.createElement("li");
+      rewardItem.className = "potion-transaction-card__reward";
+
+      const image = document.createElement("img");
+      image.className = "potion-transaction-card__reward-image";
+      image.src = potion && typeof potion.image === "string" ? potion.image : "";
+      image.alt = potion ? potion.name : potionId;
+      image.loading = "lazy";
+
+      const label = document.createElement("span");
+      label.className = "potion-transaction-card__reward-label";
+      label.textContent = `${quantity.toLocaleString()} × ${potion ? potion.name : potionId}`;
+
+      rewardItem.appendChild(image);
+      rewardItem.appendChild(label);
+      rewardsList.appendChild(rewardItem);
+    });
+
+    card.appendChild(rewardsList);
+
+    const actionButton = document.createElement("button");
+    actionButton.type = "button";
+    actionButton.className = "potion-transaction-card__action";
+    actionButton.textContent = `Purchase for ${formatUsd(transaction.priceUsd)}`;
+    actionButton.addEventListener("click", () => purchasePotionTransaction(transaction.id));
+
+    card.appendChild(actionButton);
+    container.appendChild(card);
+  });
 }
 
 function renderPotionCrafting() {
@@ -2376,6 +3035,7 @@ function spawnPotionPickup(config) {
 }
 
 function initializePotionFeatures() {
+  setupPotionTransactionDialog();
   potionInventory = normalizePotionInventory(storage.get(POTION_STORAGE_KEY, {}));
   buffsDisabled = Boolean(storage.get(BUFFS_DISABLED_KEY, false));
   syncBuffPauseState();
@@ -2383,6 +3043,7 @@ function initializePotionFeatures() {
   pruneExpiredBuffs();
   persistActiveBuffs();
   renderPotionInventory();
+  renderPotionTransactions();
   renderPotionCrafting();
   updateBuffsSwitchControl();
   refreshBuffEffects();
@@ -4385,6 +5046,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadingScreen = byId("loadingScreen");
   const menuScreen = byId("menuScreen");
   const loadingText = loadingScreen ? loadingScreen.querySelector(".loadTxt") : null;
+
+  handlePotionTransactionCheckoutReturn();
+  const storedPendingTransactionId = storage.get(
+    PENDING_POTION_TRANSACTION_STORAGE_KEY,
+    null,
+  );
+  if (typeof storedPendingTransactionId === "string" && storedPendingTransactionId) {
+    startPotionTransactionStatusPolling();
+  }
 
   initEventCountdown();
 
