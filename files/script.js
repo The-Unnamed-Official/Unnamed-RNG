@@ -632,7 +632,21 @@ let potionTransactionDialogConfirmButton = null;
 let potionTransactionDialogPreviousFocus = null;
 let pendingPotionTransaction = null;
 let potionTransactionDialogKeyHandlerRegistered = false;
-let hasShownPotionTransactionPopupReminder = false;
+const POTION_TRANSACTION_POPUP_REMINDER_STORAGE_KEY =
+  "potionTransactionPopupReminderDismissed";
+
+let hasDismissedPotionTransactionPopupReminder = Boolean(
+  storage.get(POTION_TRANSACTION_POPUP_REMINDER_STORAGE_KEY, false)
+);
+
+function markPotionTransactionPopupReminderDismissed() {
+  if (hasDismissedPotionTransactionPopupReminder) {
+    return;
+  }
+
+  hasDismissedPotionTransactionPopupReminder = true;
+  storage.set(POTION_TRANSACTION_POPUP_REMINDER_STORAGE_KEY, true);
+}
 
 const POTION_SPAWN_CONFIGS = [
   {
@@ -1450,6 +1464,7 @@ function showPotionTransactionConfirmation(transaction, showPopupReminder = fals
       return;
     }
 
+    markPotionTransactionPopupReminderDismissed();
     redirectToPotionTransactionCheckout(transaction);
     return;
   }
@@ -1529,6 +1544,7 @@ function setupPotionTransactionDialog() {
     const transaction = pendingPotionTransaction;
     pendingPotionTransaction = null;
     closePotionTransactionDialog();
+    markPotionTransactionPopupReminderDismissed();
     redirectToPotionTransactionCheckout(transaction);
   });
 
@@ -1868,10 +1884,7 @@ function purchasePotionTransaction(transactionId) {
     return;
   }
 
-  const shouldShowPopupReminder = !hasShownPotionTransactionPopupReminder;
-  if (!hasShownPotionTransactionPopupReminder) {
-    hasShownPotionTransactionPopupReminder = true;
-  }
+  const shouldShowPopupReminder = !hasDismissedPotionTransactionPopupReminder;
 
   showPotionTransactionConfirmation(transaction, shouldShowPopupReminder);
 }
