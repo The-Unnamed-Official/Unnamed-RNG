@@ -585,6 +585,7 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     description: "Jump-start your potion reserves with a massive infusion of core brews.",
     rewards: Object.freeze({
       potions: Object.freeze({
+        luckyPotion: 5000,
         basicPotion: 1000,
         decentPotion: 500,
       }),
