@@ -1727,13 +1727,10 @@ function redirectToPotionTransactionCheckout(transaction) {
     return;
   }
 
-  showPotionTransactionStatus("Opening checkout in this tab instead...");
-
-  try {
-    window.location.assign(checkoutUrl);
-  } catch (error) {
-    showPotionTransactionStatus("Failed to open checkout page.", "error");
-  }
+  showPotionTransactionStatus(
+    "Please allow pop-ups for this site to open the secure checkout.",
+    "error",
+  );
 }
 
 function normalizeStripeCheckoutStatus(params) {
