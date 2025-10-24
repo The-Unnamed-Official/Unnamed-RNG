@@ -606,6 +606,13 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
   }),
 ]);
 
+const POTION_TRANSACTION_CHECKOUT_URLS = Object.freeze({
+  potionTransactionStarter: "https://buy.stripe.com/28EeVfd6Z4J1dHN2VK3AY00",
+  potionTransactionDescended: "https://buy.stripe.com/9B69AV0kd3EXdHN53S3AY01",
+});
+
+const PENDING_POTION_TRANSACTION_STORAGE_KEY = "pendingPotionTransactionId";
+
 const USD_CURRENCY_FORMATTER =
   typeof Intl !== "undefined" && typeof Intl.NumberFormat === "function"
     ? new Intl.NumberFormat("en-US", {
@@ -1438,7 +1445,7 @@ function showPotionTransactionConfirmation(transaction) {
       return;
     }
 
-    processPotionTransaction(transaction);
+    redirectToPotionTransactionCheckout(transaction);
     return;
   }
 
@@ -1517,7 +1524,7 @@ function setupPotionTransactionDialog() {
     const transaction = pendingPotionTransaction;
     pendingPotionTransaction = null;
     closePotionTransactionDialog();
-    processPotionTransaction(transaction);
+    redirectToPotionTransactionCheckout(transaction);
   });
 
   dialog.addEventListener("click", (event) => {
@@ -1605,6 +1612,191 @@ function processPotionTransaction(transaction) {
     );
   } else {
     showPotionTransactionStatus("Purchase processed.");
+  }
+}
+
+function getPotionTransactionCheckoutUrl(transactionId) {
+  if (!transactionId) {
+    return null;
+  }
+
+  return POTION_TRANSACTION_CHECKOUT_URLS[transactionId] || null;
+}
+
+function setPendingPotionTransactionId(transactionId) {
+  if (typeof transactionId !== "string" || !transactionId) {
+    storage.remove(PENDING_POTION_TRANSACTION_STORAGE_KEY);
+    return;
+  }
+
+  storage.set(PENDING_POTION_TRANSACTION_STORAGE_KEY, transactionId);
+}
+
+function clearPendingPotionTransactionId() {
+  storage.remove(PENDING_POTION_TRANSACTION_STORAGE_KEY);
+}
+
+function buildCheckoutUrl(baseUrl, transactionId) {
+  if (typeof baseUrl !== "string" || !baseUrl) {
+    return null;
+  }
+
+  try {
+    const url = new URL(baseUrl);
+    if (transactionId) {
+      url.searchParams.set("client_reference_id", transactionId);
+    }
+    return url.toString();
+  } catch (error) {
+    return baseUrl;
+  }
+}
+
+function redirectToPotionTransactionCheckout(transaction) {
+  if (!transaction) {
+    showPotionTransactionStatus("Unable to process that transaction right now.", "error");
+    return;
+  }
+
+  const checkoutUrl = buildCheckoutUrl(
+    getPotionTransactionCheckoutUrl(transaction.id),
+    transaction.id,
+  );
+
+  if (!checkoutUrl) {
+    showPotionTransactionStatus("Checkout is currently unavailable.", "error");
+    return;
+  }
+
+  setPendingPotionTransactionId(transaction.id);
+  showPotionTransactionStatus("Redirecting to secure checkout...");
+
+  try {
+    window.location.assign(checkoutUrl);
+  } catch (error) {
+    showPotionTransactionStatus("Failed to open checkout page.", "error");
+  }
+}
+
+function normalizeStripeCheckoutStatus(params) {
+  const successIndicators = new Set(["success", "true", "1", "paid", "completed"]);
+  const cancelledIndicators = new Set(["cancel", "cancelled", "canceled", "0", "false"]);
+
+  const statusCandidates = [
+    params.get("stripeStatus"),
+    params.get("stripe_status"),
+    params.get("paymentStatus"),
+    params.get("payment_status"),
+    params.get("success"),
+    params.get("checkout_status"),
+  ];
+
+  for (const candidate of statusCandidates) {
+    if (typeof candidate !== "string") {
+      continue;
+    }
+
+    const normalized = candidate.trim().toLowerCase();
+    if (successIndicators.has(normalized)) {
+      return "success";
+    }
+
+    if (cancelledIndicators.has(normalized)) {
+      return "cancel";
+    }
+  }
+
+  if (params.has("canceled") || params.has("cancelled")) {
+    return "cancel";
+  }
+
+  if (params.has("stripe_success")) {
+    return "success";
+  }
+
+  if (params.has("stripe_cancel")) {
+    return "cancel";
+  }
+
+  return null;
+}
+
+function resolveTransactionIdFromParams(params) {
+  const candidateKeys = [
+    "potionTransactionId",
+    "transaction",
+    "bundle",
+    "bundleId",
+    "client_reference_id",
+  ];
+
+  for (const key of candidateKeys) {
+    const value = params.get(key);
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return null;
+}
+
+function handlePotionTransactionCheckoutReturn() {
+  if (typeof window === "undefined" || typeof window.location === "undefined") {
+    return;
+  }
+
+  const params = new URLSearchParams(window.location.search || "");
+  if (!params.toString()) {
+    return;
+  }
+
+  const status = normalizeStripeCheckoutStatus(params);
+  if (!status) {
+    return;
+  }
+
+  const storedPendingId = storage.get(PENDING_POTION_TRANSACTION_STORAGE_KEY, null);
+  let transactionId = resolveTransactionIdFromParams(params);
+
+  if (!transactionId && typeof storedPendingId === "string" && storedPendingId) {
+    transactionId = storedPendingId;
+  }
+
+  if (status === "cancel") {
+    if (transactionId && transactionId === storedPendingId) {
+      clearPendingPotionTransactionId();
+    }
+    showPotionTransactionStatus("Checkout cancelled.");
+    if (window.history && typeof window.history.replaceState === "function") {
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    }
+    return;
+  }
+
+  if (status !== "success") {
+    return;
+  }
+
+  const transactionDefinition = POTION_TRANSACTION_DEFINITIONS.find(
+    (definition) => definition.id === transactionId,
+  );
+
+  if (!transactionDefinition) {
+    showPotionTransactionStatus(
+      "Payment succeeded, but we couldn't match the purchased bundle. Please contact support.",
+      "error",
+    );
+    clearPendingPotionTransactionId();
+    if (window.history && typeof window.history.replaceState === "function") {
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    }
+    return;
+  }
+
+  processPotionTransaction(transactionDefinition);
+  clearPendingPotionTransactionId();
+  if (window.history && typeof window.history.replaceState === "function") {
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
   }
 }
 
@@ -4790,6 +4982,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadingScreen = byId("loadingScreen");
   const menuScreen = byId("menuScreen");
   const loadingText = loadingScreen ? loadingScreen.querySelector(".loadTxt") : null;
+
+  handlePotionTransactionCheckoutReturn();
 
   initEventCountdown();
 
