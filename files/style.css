@@ -5351,6 +5351,160 @@ body.flashing {
     opacity: 0.85;
 }
 
+.potion-menu__section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+    background: rgba(16, 24, 43, 0.6);
+    border: 1px solid rgba(118, 169, 255, 0.18);
+    border-radius: 14px;
+}
+
+.potion-menu__section-header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.potion-menu__section-title {
+    margin: 0;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #f5f8ff;
+}
+
+.potion-menu__section-subtitle {
+    margin: 0;
+    font-size: 0.9rem;
+    color: rgba(224, 232, 255, 0.85);
+}
+
+.potion-transaction-status {
+    display: none;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(118, 169, 255, 0.25);
+    background: rgba(32, 48, 82, 0.55);
+    color: #ecf1ff;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    box-shadow: inset 0 1px 0 rgba(174, 207, 255, 0.12);
+}
+
+.potion-transaction-status--visible {
+    display: block;
+}
+
+.potion-transaction-status--success {
+    border-color: rgba(110, 214, 164, 0.55);
+    background: rgba(26, 60, 46, 0.65);
+    color: #dff9e9;
+}
+
+.potion-transaction-status--error {
+    border-color: rgba(244, 140, 140, 0.55);
+    background: rgba(78, 26, 33, 0.65);
+    color: #ffe6e6;
+}
+
+.potion-transaction-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.potion-transaction-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(118, 169, 255, 0.3);
+    background: linear-gradient(180deg, rgba(20, 28, 45, 0.92), rgba(16, 20, 34, 0.96));
+    box-shadow: inset 0 1px 0 rgba(174, 207, 255, 0.18);
+}
+
+.potion-transaction-card__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+}
+
+.potion-transaction-card__title {
+    margin: 0;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #f5f8ff;
+}
+
+.potion-transaction-card__price {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #9ec8ff;
+}
+
+.potion-transaction-card__description {
+    margin: 0;
+    font-size: 0.9rem;
+    color: rgba(224, 232, 255, 0.85);
+}
+
+.potion-transaction-card__rewards {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.potion-transaction-card__reward {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(118, 169, 255, 0.18);
+    background: rgba(18, 26, 46, 0.75);
+}
+
+.potion-transaction-card__reward-image {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.potion-transaction-card__reward-label {
+    font-size: 0.92rem;
+    color: #f2f6ff;
+}
+
+.potion-transaction-card__action {
+    margin-top: 4px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(146, 186, 255, 0.45);
+    background: linear-gradient(90deg, rgba(40, 78, 146, 0.75), rgba(73, 118, 197, 0.85));
+    color: #f7fbff;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.potion-transaction-card__action:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+.potion-transaction-card__action:active {
+    transform: translateY(0);
+}
+
 .potion-menu__grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -5942,6 +6096,10 @@ body.flashing {
 
     .potion-menu__grid {
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .potion-transaction-list {
+        grid-template-columns: 1fr;
     }
 
     .potion-inventory {
