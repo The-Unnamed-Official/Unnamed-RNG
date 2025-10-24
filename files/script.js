@@ -632,6 +632,7 @@ let potionTransactionDialogConfirmButton = null;
 let potionTransactionDialogPreviousFocus = null;
 let pendingPotionTransaction = null;
 let potionTransactionDialogKeyHandlerRegistered = false;
+let hasShownPotionTransactionPopupReminder = false;
 
 const POTION_SPAWN_CONFIGS = [
   {
@@ -1432,15 +1433,18 @@ function cancelPotionTransactionDialog() {
   }
 }
 
-function showPotionTransactionConfirmation(transaction) {
+function showPotionTransactionConfirmation(transaction, showPopupReminder = false) {
   if (!transaction) {
     return;
   }
 
   const priceLabel = formatUsd(transaction.priceUsd);
+  const messageText = showPopupReminder
+    ? `Please allow pop-ups in your browser so the secure checkout can open. Continue to purchase ${transaction.name} for ${priceLabel}?`
+    : `Purchase ${transaction.name} for ${priceLabel}?`;
 
   if (!potionTransactionDialogElement || !potionTransactionDialogConfirmButton) {
-    const confirmed = confirm(`Purchase ${transaction.name} for ${priceLabel}?`);
+    const confirmed = confirm(messageText);
     if (!confirmed) {
       showPotionTransactionStatus("Purchase cancelled.");
       return;
@@ -1457,7 +1461,7 @@ function showPotionTransactionConfirmation(transaction) {
     activeElement && typeof activeElement.focus === "function" ? activeElement : null;
 
   if (potionTransactionDialogMessageElement) {
-    potionTransactionDialogMessageElement.textContent = `Purchase ${transaction.name} for ${priceLabel}?`;
+    potionTransactionDialogMessageElement.textContent = messageText;
   }
 
   if (potionTransactionDialogSummaryElement) {
@@ -1864,7 +1868,12 @@ function purchasePotionTransaction(transactionId) {
     return;
   }
 
-  showPotionTransactionConfirmation(transaction);
+  const shouldShowPopupReminder = !hasShownPotionTransactionPopupReminder;
+  if (!hasShownPotionTransactionPopupReminder) {
+    hasShownPotionTransactionPopupReminder = true;
+  }
+
+  showPotionTransactionConfirmation(transaction, shouldShowPopupReminder);
 }
 
 function renderPotionTransactions() {
