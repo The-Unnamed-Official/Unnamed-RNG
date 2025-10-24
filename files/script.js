@@ -624,6 +624,7 @@ const USD_CURRENCY_FORMATTER =
     : null;
 
 let potionTransactionStatusTimeoutId = null;
+let potionTransactionStatusPollIntervalId = null;
 let potionTransactionDialogElement = null;
 let potionTransactionDialogMessageElement = null;
 let potionTransactionDialogSummaryElement = null;
@@ -1623,17 +1624,51 @@ function getPotionTransactionCheckoutUrl(transactionId) {
   return POTION_TRANSACTION_CHECKOUT_URLS[transactionId] || null;
 }
 
+function startPotionTransactionStatusPolling() {
+  if (typeof window === "undefined" || typeof window.setInterval !== "function") {
+    return;
+  }
+
+  if (potionTransactionStatusPollIntervalId !== null) {
+    return;
+  }
+
+  potionTransactionStatusPollIntervalId = window.setInterval(() => {
+    try {
+      handlePotionTransactionCheckoutReturn();
+    } catch (error) {
+      console.warn("Failed to refresh checkout status.", error);
+    }
+  }, 10_000);
+}
+
+function stopPotionTransactionStatusPolling() {
+  if (
+    typeof window === "undefined" ||
+    typeof window.clearInterval !== "function" ||
+    potionTransactionStatusPollIntervalId === null
+  ) {
+    return;
+  }
+
+  window.clearInterval(potionTransactionStatusPollIntervalId);
+  potionTransactionStatusPollIntervalId = null;
+}
+
 function setPendingPotionTransactionId(transactionId) {
   if (typeof transactionId !== "string" || !transactionId) {
     storage.remove(PENDING_POTION_TRANSACTION_STORAGE_KEY);
+    stopPotionTransactionStatusPolling();
     return;
   }
 
   storage.set(PENDING_POTION_TRANSACTION_STORAGE_KEY, transactionId);
+  startPotionTransactionStatusPolling();
 }
 
 function clearPendingPotionTransactionId() {
   storage.remove(PENDING_POTION_TRANSACTION_STORAGE_KEY);
+  stopPotionTransactionStatusPolling();
 }
 
 function buildCheckoutUrl(baseUrl, transactionId) {
@@ -1669,7 +1704,30 @@ function redirectToPotionTransactionCheckout(transaction) {
   }
 
   setPendingPotionTransactionId(transaction.id);
-  showPotionTransactionStatus("Redirecting to secure checkout...");
+  showPotionTransactionStatus("Opening secure checkout in a new tab...");
+
+  let checkoutWindow = null;
+  try {
+    checkoutWindow = window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+  } catch (error) {
+    console.warn("Failed to open checkout in a new tab.", error);
+  }
+
+  if (checkoutWindow) {
+    try {
+      checkoutWindow.opener = null;
+    } catch (error) {}
+
+    if (typeof checkoutWindow.focus === "function") {
+      try {
+        checkoutWindow.focus();
+      } catch (error) {}
+    }
+
+    return;
+  }
+
+  showPotionTransactionStatus("Opening checkout in this tab instead...");
 
   try {
     window.location.assign(checkoutUrl);
@@ -4984,6 +5042,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadingText = loadingScreen ? loadingScreen.querySelector(".loadTxt") : null;
 
   handlePotionTransactionCheckoutReturn();
+  const storedPendingTransactionId = storage.get(
+    PENDING_POTION_TRANSACTION_STORAGE_KEY,
+    null,
+  );
+  if (typeof storedPendingTransactionId === "string" && storedPendingTransactionId) {
+    startPotionTransactionStatusPolling();
+  }
 
   initEventCountdown();
 
