@@ -632,6 +632,21 @@ let potionTransactionDialogConfirmButton = null;
 let potionTransactionDialogPreviousFocus = null;
 let pendingPotionTransaction = null;
 let potionTransactionDialogKeyHandlerRegistered = false;
+const POTION_TRANSACTION_POPUP_REMINDER_STORAGE_KEY =
+  "potionTransactionPopupReminderDismissed";
+
+let hasDismissedPotionTransactionPopupReminder = Boolean(
+  storage.get(POTION_TRANSACTION_POPUP_REMINDER_STORAGE_KEY, false)
+);
+
+function markPotionTransactionPopupReminderDismissed() {
+  if (hasDismissedPotionTransactionPopupReminder) {
+    return;
+  }
+
+  hasDismissedPotionTransactionPopupReminder = true;
+  storage.set(POTION_TRANSACTION_POPUP_REMINDER_STORAGE_KEY, true);
+}
 
 const POTION_SPAWN_CONFIGS = [
   {
@@ -1432,20 +1447,24 @@ function cancelPotionTransactionDialog() {
   }
 }
 
-function showPotionTransactionConfirmation(transaction) {
+function showPotionTransactionConfirmation(transaction, showPopupReminder = false) {
   if (!transaction) {
     return;
   }
 
   const priceLabel = formatUsd(transaction.priceUsd);
+  const messageText = showPopupReminder
+    ? `Please allow pop-ups in your browser so the secure checkout can open. Continue to purchase ${transaction.name} for ${priceLabel}?`
+    : `Purchase ${transaction.name} for ${priceLabel}?`;
 
   if (!potionTransactionDialogElement || !potionTransactionDialogConfirmButton) {
-    const confirmed = confirm(`Purchase ${transaction.name} for ${priceLabel}?`);
+    const confirmed = confirm(messageText);
     if (!confirmed) {
       showPotionTransactionStatus("Purchase cancelled.");
       return;
     }
 
+    markPotionTransactionPopupReminderDismissed();
     redirectToPotionTransactionCheckout(transaction);
     return;
   }
@@ -1457,7 +1476,7 @@ function showPotionTransactionConfirmation(transaction) {
     activeElement && typeof activeElement.focus === "function" ? activeElement : null;
 
   if (potionTransactionDialogMessageElement) {
-    potionTransactionDialogMessageElement.textContent = `Purchase ${transaction.name} for ${priceLabel}?`;
+    potionTransactionDialogMessageElement.textContent = messageText;
   }
 
   if (potionTransactionDialogSummaryElement) {
@@ -1525,6 +1544,7 @@ function setupPotionTransactionDialog() {
     const transaction = pendingPotionTransaction;
     pendingPotionTransaction = null;
     closePotionTransactionDialog();
+    markPotionTransactionPopupReminderDismissed();
     redirectToPotionTransactionCheckout(transaction);
   });
 
@@ -1864,7 +1884,9 @@ function purchasePotionTransaction(transactionId) {
     return;
   }
 
-  showPotionTransactionConfirmation(transaction);
+  const shouldShowPopupReminder = !hasDismissedPotionTransactionPopupReminder;
+
+  showPotionTransactionConfirmation(transaction, shouldShowPopupReminder);
 }
 
 function renderPotionTransactions() {
