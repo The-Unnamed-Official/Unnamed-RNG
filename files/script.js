@@ -1668,40 +1668,12 @@ function closePotionTransactionCheckout({ notify = false } = {}) {
   activePotionTransactionCheckoutId = null;
 }
 
-function canEmbedCheckoutUrl(checkoutUrl) {
+function openPotionTransactionCheckout(transaction, checkoutUrl) {
   if (typeof checkoutUrl !== "string" || !checkoutUrl) {
     return false;
   }
 
-  try {
-    const url = new URL(checkoutUrl);
-    const hostname = (url.hostname || "").toLowerCase();
-
-    if (
-      hostname.endsWith("buy.stripe.com") ||
-      hostname.endsWith("checkout.stripe.com") ||
-      hostname.endsWith("stripe.com")
-    ) {
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-function openPotionTransactionCheckout(transaction, checkoutUrl) {
-  if (
-    !potionTransactionCheckoutElement ||
-    !potionTransactionCheckoutFrame ||
-    typeof checkoutUrl !== "string" ||
-    !checkoutUrl
-  ) {
-    return false;
-  }
-
-  if (!canEmbedCheckoutUrl(checkoutUrl)) {
+  if (!potionTransactionCheckoutElement || !potionTransactionCheckoutFrame) {
     return false;
   }
 
@@ -16867,12 +16839,6 @@ function rollRarity() {
       titles: ["Astrald RED"],
     },
     {
-      type: "Qbear [1 in 35,555]",
-      class: "qbearBgImg",
-      chance: 0.00281254394,
-      titles: ["Qbear", "Risky Gato", "Samurai Gato", "Gato: Wew"],
-    },
-    {
       type: "Light [1 in 29,979]",
       class: "lightBgImg",
       chance: 0.0033356683,
@@ -18664,6 +18630,52 @@ function buildInventoryListItem(existingElement, item, originalIndex, lockedItem
   return listItem;
 }
 
+function getInventorySearchCandidates(item) {
+  if (!item || typeof item !== "object") {
+    return [];
+  }
+
+  const seen = new Set();
+  const candidates = [];
+
+  const addCandidate = (value) => {
+    if (typeof value !== "string") {
+      return;
+    }
+
+    const normalized = value.trim().toLowerCase();
+    if (!normalized || seen.has(normalized)) {
+      return;
+    }
+
+    seen.add(normalized);
+    candidates.push(normalized);
+  };
+
+  const addTitleCandidates = (value) => {
+    if (typeof value !== "string") {
+      return;
+    }
+
+    addCandidate(value);
+
+    const bracketIndex = value.indexOf("[");
+    if (bracketIndex > 0) {
+      addCandidate(value.slice(0, bracketIndex));
+    }
+
+    const withoutBrackets = value.replace(/\[[^\]]*\]/g, "");
+    if (withoutBrackets !== value) {
+      addCandidate(withoutBrackets);
+    }
+  };
+
+  addTitleCandidates(item.title);
+  addTitleCandidates(item.displayTitle);
+
+  return candidates;
+}
+
 function renderInventory() {
   const inventoryList = document.getElementById("inventoryList");
   if (!inventoryList) {
@@ -18743,16 +18755,9 @@ function renderInventory() {
           return false;
         }
 
-        const title = typeof item.title === "string" ? item.title.toLowerCase() : "";
-        if (title.includes(normalizedQuery)) {
-          return true;
-        }
-
-        if (typeof item.displayTitle === "string") {
-          return item.displayTitle.toLowerCase().includes(normalizedQuery);
-        }
-
-        return false;
+        return getInventorySearchCandidates(item).some((candidate) =>
+          candidate.includes(normalizedQuery),
+        );
       })
     : sortedEntries;
 
