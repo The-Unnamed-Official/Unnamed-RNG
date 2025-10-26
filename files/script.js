@@ -623,10 +623,8 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
       "Celebrate Halloween with a terrifyingly generous stash of frightening brews and rare drops.",
     rewards: Object.freeze({
       potions: Object.freeze({
-        [DESCENDED_POTION_ID]: 420,
-        bloodyPotion: 180,
-        pumpkinPotion: 180,
-        fortuneSpoid2: 25,
+        bloodyPotion: 50,
+        pumpkinPotion: 30,
       }),
     }),
     bannerImage: "files/images/halloweenBundleBanner.png",
