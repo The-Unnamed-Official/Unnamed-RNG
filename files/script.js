@@ -1666,6 +1666,29 @@ function closePotionTransactionCheckout({ notify = false } = {}) {
   activePotionTransactionCheckoutId = null;
 }
 
+function canEmbedCheckoutUrl(checkoutUrl) {
+  if (typeof checkoutUrl !== "string" || !checkoutUrl) {
+    return false;
+  }
+
+  try {
+    const url = new URL(checkoutUrl);
+    const hostname = (url.hostname || "").toLowerCase();
+
+    if (
+      hostname.endsWith("buy.stripe.com") ||
+      hostname.endsWith("checkout.stripe.com") ||
+      hostname.endsWith("stripe.com")
+    ) {
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 function openPotionTransactionCheckout(transaction, checkoutUrl) {
   if (
     !potionTransactionCheckoutElement ||
@@ -1673,6 +1696,10 @@ function openPotionTransactionCheckout(transaction, checkoutUrl) {
     typeof checkoutUrl !== "string" ||
     !checkoutUrl
   ) {
+    return false;
+  }
+
+  if (!canEmbedCheckoutUrl(checkoutUrl)) {
     return false;
   }
 
@@ -2405,6 +2432,7 @@ function renderPotionTransactions() {
     card.setAttribute("role", "listitem");
     if (state?.limitReached) {
       card.classList.add("potion-transaction-card--disabled");
+      card.setAttribute("aria-disabled", "true");
     }
 
     if (typeof transaction.bannerImage === "string" && transaction.bannerImage.trim()) {
@@ -2519,8 +2547,10 @@ function renderPotionTransactions() {
     actionButton.textContent = state?.actionLabel || `Purchase for ${formatUsd(transaction.priceUsd)}`;
     if (state?.actionDisabled) {
       actionButton.disabled = true;
+      actionButton.setAttribute("aria-disabled", "true");
+    } else {
+      actionButton.addEventListener("click", () => purchasePotionTransaction(transaction.id));
     }
-    actionButton.addEventListener("click", () => purchasePotionTransaction(transaction.id));
 
     card.appendChild(actionButton);
     container.appendChild(card);
