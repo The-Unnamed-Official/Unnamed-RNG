@@ -1729,12 +1729,27 @@ function setupPotionTransactionCheckout() {
     }
 
     let frameUrl = "";
+
     try {
-      frameUrl = frame.contentWindow && frame.contentWindow.location
-        ? frame.contentWindow.location.href
-        : "";
+      if (frame.contentWindow && frame.contentWindow.location) {
+        frameUrl = frame.contentWindow.location.href || "";
+      }
     } catch (error) {
-      return;
+      /* Cross-origin navigation – fall back to the frame src attribute. */
+    }
+
+    if (!frameUrl) {
+      const rawSrc = frame.getAttribute("src") || frame.src || "";
+
+      if (typeof rawSrc === "string" && rawSrc) {
+        try {
+          const base =
+            typeof window !== "undefined" && window.location ? window.location.href : undefined;
+          frameUrl = base ? new URL(rawSrc, base).toString() : new URL(rawSrc).toString();
+        } catch (error) {
+          frameUrl = rawSrc;
+        }
+      }
     }
 
     if (!frameUrl) {
