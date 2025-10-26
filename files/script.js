@@ -582,13 +582,23 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     id: "potionTransactionStarter",
     name: "Supporter Starter Bundle",
     priceUsd: 1,
-    description: "Jump-start your potion reserves with a massive infusion of core brews.",
+    description:
+      "Jump-start your potion reserves with a massive infusion of core brews. Limited-time offer: your first purchase this week is free!",
     rewards: Object.freeze({
       potions: Object.freeze({
         luckyPotion: 1000,
         basicPotion: 500,
         decentPotion: 300,
       }),
+    }),
+    bannerImage: "files/images/supportBundleBanner.png",
+    promotion: Object.freeze({
+      maxUses: 1,
+      checkoutUrl: "https://buy.stripe.com/9B6fZj8QJfnF7jp2VK3AY02",
+      priceLabel: "Free (Limited Week)",
+      actionLabel: "Claim for Free",
+      badgeText: "First purchase free!",
+      usedBadgeText: "Free claim used",
     }),
   }),
   Object.freeze({
@@ -603,13 +613,214 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
         pumpkinPotion: 80,
       }),
     }),
+    bannerImage: "files/images/DescendedBundleBanner.png",
+  }),
+  Object.freeze({
+    id: "potionTransactionHalloweenFrights",
+    name: "Halloween Frights Bundle",
+    priceUsd: 3,
+    description:
+      "Celebrate Halloween with a terrifyingly generous stash of frightening brews and rare drops.",
+    rewards: Object.freeze({
+      potions: Object.freeze({
+        [DESCENDED_POTION_ID]: 420,
+        bloodyPotion: 180,
+        pumpkinPotion: 180,
+        fortuneSpoid2: 25,
+      }),
+    }),
+    bannerImage: "files/images/halloweenBundleBanner.png",
+    maxPurchases: 2,
+    limitLabel: "Max 2 purchases",
+    limitReachedActionLabel: "Limit Reached",
   }),
 ]);
 
 const POTION_TRANSACTION_CHECKOUT_URLS = Object.freeze({
   potionTransactionStarter: "https://buy.stripe.com/28EeVfd6Z4J1dHN2VK3AY00",
   potionTransactionDescended: "https://buy.stripe.com/9B69AV0kd3EXdHN53S3AY01",
+  potionTransactionHalloweenFrights: "https://buy.stripe.com/6oU6oJeb33EX5bh0NC3AY03",
 });
+
+const POTION_TRANSACTION_PURCHASE_COUNTS_KEY = "potionTransactionPurchaseCounts";
+
+function normalizePotionTransactionPurchaseCounts(raw) {
+  if (!raw || typeof raw !== "object") {
+    return {};
+  }
+
+  const normalized = {};
+
+  Object.entries(raw).forEach(([transactionId, value]) => {
+    if (typeof transactionId !== "string" || !transactionId) {
+      return;
+    }
+
+    const parsed = Math.max(0, Math.trunc(Number(value)));
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      return;
+    }
+
+    normalized[transactionId] = parsed;
+  });
+
+  return normalized;
+}
+
+let potionTransactionPurchaseCounts = normalizePotionTransactionPurchaseCounts(
+  storage.get(POTION_TRANSACTION_PURCHASE_COUNTS_KEY, {}),
+);
+
+function writePotionTransactionPurchaseCounts(nextCounts) {
+  const payload = normalizePotionTransactionPurchaseCounts(nextCounts);
+  potionTransactionPurchaseCounts = payload;
+  if (Object.keys(payload).length > 0) {
+    storage.set(POTION_TRANSACTION_PURCHASE_COUNTS_KEY, payload);
+  } else {
+    storage.remove(POTION_TRANSACTION_PURCHASE_COUNTS_KEY);
+  }
+}
+
+function getPotionTransactionPurchaseCount(transactionId) {
+  if (typeof transactionId !== "string" || !transactionId) {
+    return 0;
+  }
+
+  return potionTransactionPurchaseCounts[transactionId] || 0;
+}
+
+function setPotionTransactionPurchaseCount(transactionId, count) {
+  if (typeof transactionId !== "string" || !transactionId) {
+    return;
+  }
+
+  const parsed = Math.max(0, Math.trunc(Number(count)));
+  if (!Number.isFinite(parsed)) {
+    return;
+  }
+
+  const nextCounts = { ...potionTransactionPurchaseCounts };
+  if (parsed <= 0) {
+    delete nextCounts[transactionId];
+  } else {
+    nextCounts[transactionId] = parsed;
+  }
+
+  writePotionTransactionPurchaseCounts(nextCounts);
+}
+
+function incrementPotionTransactionPurchaseCount(transactionId) {
+  if (typeof transactionId !== "string" || !transactionId) {
+    return;
+  }
+
+  const current = getPotionTransactionPurchaseCount(transactionId);
+  setPotionTransactionPurchaseCount(transactionId, current + 1);
+}
+
+function getPotionTransactionDefinition(transactionId) {
+  if (typeof transactionId !== "string" || !transactionId) {
+    return null;
+  }
+
+  return (
+    POTION_TRANSACTION_DEFINITIONS.find((definition) => definition.id === transactionId) || null
+  );
+}
+
+function getPotionTransactionBaseCheckoutUrl(transactionId) {
+  if (typeof transactionId !== "string" || !transactionId) {
+    return null;
+  }
+
+  return POTION_TRANSACTION_CHECKOUT_URLS[transactionId] || null;
+}
+
+function getPotionTransactionState(transaction) {
+  if (!transaction || typeof transaction.id !== "string") {
+    return null;
+  }
+
+  const purchaseCount = getPotionTransactionPurchaseCount(transaction.id);
+  const maxPurchasesRaw = transaction.maxPurchases;
+  const maxPurchases = Number.isFinite(maxPurchasesRaw)
+    ? Math.max(0, Math.trunc(maxPurchasesRaw))
+    : null;
+  const remainingPurchases =
+    maxPurchases !== null ? Math.max(0, maxPurchases - purchaseCount) : null;
+  const limitReached = Boolean(remainingPurchases !== null && remainingPurchases <= 0);
+
+  const promotion = transaction.promotion || null;
+  const promoMaxUses = promotion && Number.isFinite(promotion.maxUses)
+    ? Math.max(0, Math.trunc(promotion.maxUses))
+    : 0;
+  const promoActive = Boolean(
+    promotion && purchaseCount < promoMaxUses && typeof promotion.checkoutUrl === "string"
+  );
+
+  let basePriceLabel = "";
+  if (typeof transaction.priceDisplay === "string" && transaction.priceDisplay.trim()) {
+    basePriceLabel = transaction.priceDisplay.trim();
+  } else if (Number.isFinite(transaction.priceUsd)) {
+    basePriceLabel = formatUsd(transaction.priceUsd);
+  }
+  if (!basePriceLabel) {
+    basePriceLabel = "See checkout";
+  }
+
+  const priceLabel = promoActive
+    ? promotion.priceLabel || "Free"
+    : basePriceLabel;
+
+  const checkoutUrl = promoActive
+    ? promotion.checkoutUrl || null
+    : transaction.checkoutUrl || getPotionTransactionBaseCheckoutUrl(transaction.id);
+
+  const actionLabel = limitReached
+    ? transaction.limitReachedActionLabel || "Limit Reached"
+    : promoActive
+    ? promotion.actionLabel || `Claim for ${priceLabel}`
+    : transaction.actionLabel || `Purchase for ${priceLabel}`;
+
+  const badges = [];
+
+  if (maxPurchases !== null) {
+    const limitText =
+      typeof transaction.limitLabel === "string" && transaction.limitLabel.trim()
+        ? transaction.limitLabel.trim()
+        : "Limited stock";
+    const counterText = `${remainingPurchases}/${maxPurchases} left`;
+    badges.push({ type: "limit", text: limitText, counterText });
+  }
+
+  if (promotion) {
+    if (promoActive && typeof promotion.badgeText === "string" && promotion.badgeText.trim()) {
+      badges.push({ type: "promo", text: promotion.badgeText.trim() });
+    } else if (
+      !promoActive &&
+      purchaseCount > 0 &&
+      typeof promotion.usedBadgeText === "string" &&
+      promotion.usedBadgeText.trim()
+    ) {
+      badges.push({ type: "promo", text: promotion.usedBadgeText.trim() });
+    }
+  }
+
+  const actionDisabled = limitReached || !checkoutUrl;
+
+  return {
+    purchaseCount,
+    maxPurchases,
+    remainingPurchases,
+    limitReached,
+    promoActive,
+    priceLabel,
+    checkoutUrl,
+    actionLabel,
+    actionDisabled,
+    badges,
+  };
+}
 
 const PENDING_POTION_TRANSACTION_STORAGE_KEY = "pendingPotionTransactionId";
 
@@ -1447,15 +1658,24 @@ function cancelPotionTransactionDialog() {
   }
 }
 
-function showPotionTransactionConfirmation(transaction, showPopupReminder = false) {
+function showPotionTransactionConfirmation(transaction, state = null, showPopupReminder = false) {
   if (!transaction) {
     return;
   }
 
-  const priceLabel = formatUsd(transaction.priceUsd);
+  const resolvedState =
+    state && typeof state === "object" ? state : getPotionTransactionState(transaction);
+
+  if (!resolvedState) {
+    showPotionTransactionStatus("Unable to process that transaction right now.", "error");
+    return;
+  }
+
+  const priceLabel = resolvedState.priceLabel || formatUsd(transaction.priceUsd);
+  const actionVerb = resolvedState.promoActive ? "Claim" : "Purchase";
   const messageText = showPopupReminder
-    ? `Please allow pop-ups in your browser so the secure checkout can open. Continue to purchase ${transaction.name} for ${priceLabel}?`
-    : `Purchase ${transaction.name} for ${priceLabel}?`;
+    ? `Please allow pop-ups in your browser so the secure checkout can open. Continue to ${actionVerb.toLowerCase()} ${transaction.name} for ${priceLabel}?`
+    : `${actionVerb} ${transaction.name} for ${priceLabel}?`;
 
   if (!potionTransactionDialogElement || !potionTransactionDialogConfirmButton) {
     const confirmed = confirm(messageText);
@@ -1465,11 +1685,11 @@ function showPotionTransactionConfirmation(transaction, showPopupReminder = fals
     }
 
     markPotionTransactionPopupReminderDismissed();
-    redirectToPotionTransactionCheckout(transaction);
+    redirectToPotionTransactionCheckout(transaction, resolvedState);
     return;
   }
 
-  pendingPotionTransaction = transaction;
+  pendingPotionTransaction = { transaction, state: resolvedState };
 
   const activeElement = document.activeElement;
   potionTransactionDialogPreviousFocus =
@@ -1541,11 +1761,29 @@ function setupPotionTransactionDialog() {
       return;
     }
 
-    const transaction = pendingPotionTransaction;
+    const pending = pendingPotionTransaction;
     pendingPotionTransaction = null;
     closePotionTransactionDialog();
     markPotionTransactionPopupReminderDismissed();
-    redirectToPotionTransactionCheckout(transaction);
+
+    let transaction = pending;
+    let state = null;
+
+    if (pending && typeof pending === "object") {
+      if (pending.transaction) {
+        transaction = pending.transaction;
+      }
+      if (pending.state) {
+        state = pending.state;
+      }
+    }
+
+    if (!transaction) {
+      showPotionTransactionStatus("Unable to process that transaction right now.", "error");
+      return;
+    }
+
+    redirectToPotionTransactionCheckout(transaction, state);
   });
 
   dialog.addEventListener("click", (event) => {
@@ -1623,25 +1861,53 @@ function processPotionTransaction(transaction) {
     grantedRewards.push(`${quantity.toLocaleString()} × ${potionName}`);
   });
 
+  if (typeof transaction.id === "string" && transaction.id) {
+    incrementPotionTransactionPurchaseCount(transaction.id);
+  }
+
   renderPotionInventory();
   renderPotionCrafting();
+  renderPotionTransactions();
+
+  const updatedState = getPotionTransactionState(transaction);
 
   if (grantedRewards.length > 0) {
-    showPotionTransactionStatus(
-      `Purchase successful! Added ${formatPotionRewardSummary(grantedRewards)} to your inventory.`,
-      "success"
-    );
+    let message = `Purchase successful! Added ${formatPotionRewardSummary(grantedRewards)} to your inventory.`;
+    if (
+      updatedState &&
+      updatedState.maxPurchases !== null &&
+      Number.isFinite(updatedState.maxPurchases) &&
+      Number.isFinite(updatedState.remainingPurchases)
+    ) {
+      message += ` (${updatedState.remainingPurchases}/${updatedState.maxPurchases} left)`;
+    }
+    showPotionTransactionStatus(message, "success");
   } else {
-    showPotionTransactionStatus("Purchase processed.");
+    let message = "Purchase processed.";
+    if (
+      updatedState &&
+      updatedState.maxPurchases !== null &&
+      Number.isFinite(updatedState.maxPurchases) &&
+      Number.isFinite(updatedState.remainingPurchases)
+    ) {
+      message += ` (${updatedState.remainingPurchases}/${updatedState.maxPurchases} left)`;
+    }
+    showPotionTransactionStatus(message);
   }
 }
 
 function getPotionTransactionCheckoutUrl(transactionId) {
-  if (!transactionId) {
+  if (typeof transactionId !== "string" || !transactionId) {
     return null;
   }
 
-  return POTION_TRANSACTION_CHECKOUT_URLS[transactionId] || null;
+  const transaction = getPotionTransactionDefinition(transactionId);
+  if (!transaction) {
+    return null;
+  }
+
+  const state = getPotionTransactionState(transaction);
+  return state ? state.checkoutUrl : null;
 }
 
 function startPotionTransactionStatusPolling() {
@@ -1707,16 +1973,28 @@ function buildCheckoutUrl(baseUrl, transactionId) {
   }
 }
 
-function redirectToPotionTransactionCheckout(transaction) {
+function redirectToPotionTransactionCheckout(transaction, stateOverride = null) {
   if (!transaction) {
     showPotionTransactionStatus("Unable to process that transaction right now.", "error");
     return;
   }
 
-  const checkoutUrl = buildCheckoutUrl(
-    getPotionTransactionCheckoutUrl(transaction.id),
-    transaction.id,
-  );
+  let state = getPotionTransactionState(transaction);
+  if (!state && stateOverride && typeof stateOverride === "object") {
+    state = stateOverride;
+  }
+
+  if (!state) {
+    showPotionTransactionStatus("Unable to process that transaction right now.", "error");
+    return;
+  }
+
+  if (state.limitReached) {
+    showPotionTransactionStatus("You've reached the purchase limit for this bundle.", "error");
+    return;
+  }
+
+  const checkoutUrl = buildCheckoutUrl(state.checkoutUrl, transaction.id);
 
   if (!checkoutUrl) {
     showPotionTransactionStatus("Checkout is currently unavailable.", "error");
@@ -1876,17 +2154,31 @@ function handlePotionTransactionCheckoutReturn() {
 }
 
 function purchasePotionTransaction(transactionId) {
-  const transaction = POTION_TRANSACTION_DEFINITIONS.find(
-    (entry) => entry.id === transactionId
-  );
+  const transaction = getPotionTransactionDefinition(transactionId);
   if (!transaction) {
     showPotionTransactionStatus("Unable to process that transaction right now.", "error");
     return;
   }
 
+  const state = getPotionTransactionState(transaction);
+  if (!state) {
+    showPotionTransactionStatus("Unable to process that transaction right now.", "error");
+    return;
+  }
+
+  if (state.limitReached) {
+    showPotionTransactionStatus("You've reached the purchase limit for this bundle.", "error");
+    return;
+  }
+
+  if (!state.checkoutUrl) {
+    showPotionTransactionStatus("Checkout is currently unavailable.", "error");
+    return;
+  }
+
   const shouldShowPopupReminder = !hasDismissedPotionTransactionPopupReminder;
 
-  showPotionTransactionConfirmation(transaction, shouldShowPopupReminder);
+  showPotionTransactionConfirmation(transaction, state, shouldShowPopupReminder);
 }
 
 function renderPotionTransactions() {
@@ -1898,9 +2190,25 @@ function renderPotionTransactions() {
   container.innerHTML = "";
 
   POTION_TRANSACTION_DEFINITIONS.forEach((transaction) => {
+    const state = getPotionTransactionState(transaction);
+
     const card = document.createElement("article");
     card.className = "potion-transaction-card";
     card.setAttribute("role", "listitem");
+    if (state?.limitReached) {
+      card.classList.add("potion-transaction-card--disabled");
+    }
+
+    if (typeof transaction.bannerImage === "string" && transaction.bannerImage.trim()) {
+      const banner = document.createElement("div");
+      banner.className = "potion-transaction-card__banner";
+      const bannerImage = document.createElement("img");
+      bannerImage.src = transaction.bannerImage;
+      bannerImage.alt = "";
+      bannerImage.loading = "lazy";
+      banner.appendChild(bannerImage);
+      card.appendChild(banner);
+    }
 
     const header = document.createElement("div");
     header.className = "potion-transaction-card__header";
@@ -1911,11 +2219,52 @@ function renderPotionTransactions() {
 
     const price = document.createElement("span");
     price.className = "potion-transaction-card__price";
-    price.textContent = formatUsd(transaction.priceUsd);
+    price.textContent = state?.priceLabel || formatUsd(transaction.priceUsd);
 
     header.appendChild(title);
     header.appendChild(price);
     card.appendChild(header);
+
+    if (state && Array.isArray(state.badges) && state.badges.length > 0) {
+      const badgesContainer = document.createElement("div");
+      badgesContainer.className = "potion-transaction-card__badges";
+
+      state.badges.forEach((badge) => {
+        if (!badge || typeof badge.text !== "string" || !badge.text.trim()) {
+          return;
+        }
+
+        const badgeElement = document.createElement("span");
+        let badgeClassName = "potion-transaction-card__badge";
+        if (badge.type) {
+          badgeClassName += ` potion-transaction-card__badge--${badge.type}`;
+        }
+        badgeElement.className = badgeClassName;
+
+        const badgeLabel = document.createElement("span");
+        badgeLabel.textContent = badge.text.trim();
+        badgeElement.appendChild(badgeLabel);
+
+        if (badge.counterText) {
+          const separator = document.createElement("span");
+          separator.textContent = " • ";
+          separator.setAttribute("aria-hidden", "true");
+
+          const counter = document.createElement("span");
+          counter.className = "potion-transaction-card__badge-counter";
+          counter.textContent = badge.counterText;
+
+          badgeElement.appendChild(separator);
+          badgeElement.appendChild(counter);
+        }
+
+        badgesContainer.appendChild(badgeElement);
+      });
+
+      if (badgesContainer.children.length > 0) {
+        card.appendChild(badgesContainer);
+      }
+    }
 
     if (typeof transaction.description === "string" && transaction.description.trim()) {
       const description = document.createElement("p");
@@ -1959,7 +2308,10 @@ function renderPotionTransactions() {
     const actionButton = document.createElement("button");
     actionButton.type = "button";
     actionButton.className = "potion-transaction-card__action";
-    actionButton.textContent = `Purchase for ${formatUsd(transaction.priceUsd)}`;
+    actionButton.textContent = state?.actionLabel || `Purchase for ${formatUsd(transaction.priceUsd)}`;
+    if (state?.actionDisabled) {
+      actionButton.disabled = true;
+    }
     actionButton.addEventListener("click", () => purchasePotionTransaction(transaction.id));
 
     card.appendChild(actionButton);
