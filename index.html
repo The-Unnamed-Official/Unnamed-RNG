@@ -611,6 +611,41 @@
             </div>
         </div>
 
+        <div
+            id="potionTransactionCheckout"
+            class="potion-transaction-checkout"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="potionTransactionCheckoutTitle"
+            aria-hidden="true"
+            tabindex="-1"
+        >
+            <div class="potion-transaction-checkout__card" role="document">
+                <div class="potion-transaction-checkout__header">
+                    <h4 id="potionTransactionCheckoutTitle" class="potion-transaction-checkout__title">
+                        Secure Checkout
+                    </h4>
+                    <button
+                        id="potionTransactionCheckoutClose"
+                        class="potion-transaction-checkout__close"
+                        type="button"
+                        aria-label="Close checkout"
+                    >
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="potion-transaction-checkout__body">
+                    <iframe
+                        id="potionTransactionCheckoutFrame"
+                        class="potion-transaction-checkout__frame"
+                        title="Potion transaction checkout"
+                        src="about:blank"
+                        loading="lazy"
+                    ></iframe>
+                </div>
+            </div>
+        </div>
+
         <div class="historySection" id="rollingHistory">
             <h3>Rolling History</h3>
             <ul id="historyList"></ul>
