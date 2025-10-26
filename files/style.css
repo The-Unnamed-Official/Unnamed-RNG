@@ -5440,9 +5440,9 @@ body.flashing {
 .potion-transaction-status {
     display: none;
     position: fixed;
-    top: 50%;
+    top: clamp(32px, 12vh, 160px);
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%);
     z-index: 100060;
     width: min(90vw, 420px);
     padding: 14px 18px;
