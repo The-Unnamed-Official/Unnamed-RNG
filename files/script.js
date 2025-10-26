@@ -1691,18 +1691,38 @@ function canEmbedCheckoutUrl(checkoutUrl) {
   }
 }
 
-function openPotionTransactionCheckout(transaction, checkoutUrl) {
-  if (
-    !potionTransactionCheckoutElement ||
-    !potionTransactionCheckoutFrame ||
-    typeof checkoutUrl !== "string" ||
-    !checkoutUrl
-  ) {
+function openPotionTransactionInNewTab(checkoutUrl) {
+  if (typeof checkoutUrl !== "string" || !checkoutUrl) {
     return false;
   }
 
-  if (!canEmbedCheckoutUrl(checkoutUrl)) {
+  if (typeof window === "undefined" || typeof window.open !== "function") {
     return false;
+  }
+
+  try {
+    const newWindow = window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+    if (newWindow && typeof newWindow.focus === "function") {
+      try {
+        newWindow.focus();
+      } catch (error) {
+        /* no-op */
+      }
+    }
+    return Boolean(newWindow);
+  } catch (error) {
+    console.warn("Failed to open checkout window.", error);
+    return false;
+  }
+}
+
+function openPotionTransactionCheckout(transaction, checkoutUrl) {
+  if (typeof checkoutUrl !== "string" || !checkoutUrl) {
+    return false;
+  }
+
+  if (!canEmbedCheckoutUrl(checkoutUrl) || !potionTransactionCheckoutElement || !potionTransactionCheckoutFrame) {
+    return openPotionTransactionInNewTab(checkoutUrl);
   }
 
   const activeElement = document.activeElement;
@@ -18664,6 +18684,52 @@ function buildInventoryListItem(existingElement, item, originalIndex, lockedItem
   return listItem;
 }
 
+function getInventorySearchCandidates(item) {
+  if (!item || typeof item !== "object") {
+    return [];
+  }
+
+  const seen = new Set();
+  const candidates = [];
+
+  const addCandidate = (value) => {
+    if (typeof value !== "string") {
+      return;
+    }
+
+    const normalized = value.trim().toLowerCase();
+    if (!normalized || seen.has(normalized)) {
+      return;
+    }
+
+    seen.add(normalized);
+    candidates.push(normalized);
+  };
+
+  const addTitleCandidates = (value) => {
+    if (typeof value !== "string") {
+      return;
+    }
+
+    addCandidate(value);
+
+    const bracketIndex = value.indexOf("[");
+    if (bracketIndex > 0) {
+      addCandidate(value.slice(0, bracketIndex));
+    }
+
+    const withoutBrackets = value.replace(/\[[^\]]*\]/g, "");
+    if (withoutBrackets !== value) {
+      addCandidate(withoutBrackets);
+    }
+  };
+
+  addTitleCandidates(item.title);
+  addTitleCandidates(item.displayTitle);
+
+  return candidates;
+}
+
 function renderInventory() {
   const inventoryList = document.getElementById("inventoryList");
   if (!inventoryList) {
@@ -18743,16 +18809,9 @@ function renderInventory() {
           return false;
         }
 
-        const title = typeof item.title === "string" ? item.title.toLowerCase() : "";
-        if (title.includes(normalizedQuery)) {
-          return true;
-        }
-
-        if (typeof item.displayTitle === "string") {
-          return item.displayTitle.toLowerCase().includes(normalizedQuery);
-        }
-
-        return false;
+        return getInventorySearchCandidates(item).some((candidate) =>
+          candidate.includes(normalizedQuery),
+        );
       })
     : sortedEntries;
 
