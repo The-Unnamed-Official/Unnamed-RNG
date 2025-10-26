@@ -4269,6 +4269,51 @@ body.flashing {
   outline-color: rgba(255, 205, 141, 0.95);
 }
 
+.inventory-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 6px 12px 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(140deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+}
+
+.inventory-search__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+}
+
+.inventory-search__input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0, 0, 0, 0.35);
+  color: #ffffff;
+  font-size: 14px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.inventory-search__input::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+.inventory-search__input:focus-visible {
+  outline: none;
+  border-color: rgba(255, 205, 141, 0.85);
+  box-shadow: 0 0 0 3px rgba(255, 205, 141, 0.25);
+  background: rgba(0, 0, 0, 0.45);
+}
+
 .inventory-tab {
   flex: 1;
   padding: 10px 12px;
