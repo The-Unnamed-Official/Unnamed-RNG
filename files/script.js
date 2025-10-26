@@ -1082,6 +1082,8 @@ function initEventCountdown() {
 let inventory = [];
 let currentPage = 1;
 const itemsPerPage = 10;
+let inventorySearchQuery = "";
+let filteredInventoryLength = 0;
 const INVENTORY_SORT_MODES = Object.freeze({
   DEFAULT: "default",
   LOCKED: "locked",
@@ -4661,6 +4663,7 @@ function initializeAfterStart() {
   registerResponsiveHandlers();
   setupInventoryTabs();
   setupInventorySortControls();
+  setupInventorySearchControls();
   registerMenuDragHandlers();
   enhanceInventoryDeleteButtons();
   setupAudioControls();
@@ -18342,6 +18345,23 @@ function setupInventorySortControls() {
   applyInventorySortModeToButtons();
 }
 
+function setupInventorySearchControls() {
+  const searchInput = document.getElementById("inventorySearchInput");
+  if (!searchInput) {
+    return;
+  }
+
+  const handleInput = (event) => {
+    const value = typeof event.target.value === "string" ? event.target.value : "";
+    inventorySearchQuery = value;
+    currentPage = 1;
+    renderInventory();
+  };
+
+  searchInput.addEventListener("input", handleInput);
+  searchInput.addEventListener("search", handleInput);
+}
+
 function disableChange() {
   isChangeEnabled = false;
   cutsceneActive = true;
@@ -18716,8 +18736,29 @@ function renderInventory() {
 
   const lockedItems = getLockedItemsMap();
   const sortedEntries = getSortedInventoryEntries(lockedItems);
-  const totalItems = sortedEntries.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+  const normalizedQuery = (inventorySearchQuery || "").trim().toLowerCase();
+  const filteredEntries = normalizedQuery
+    ? sortedEntries.filter(({ item }) => {
+        if (!item) {
+          return false;
+        }
+
+        const title = typeof item.title === "string" ? item.title.toLowerCase() : "";
+        if (title.includes(normalizedQuery)) {
+          return true;
+        }
+
+        if (typeof item.displayTitle === "string") {
+          return item.displayTitle.toLowerCase().includes(normalizedQuery);
+        }
+
+        return false;
+      })
+    : sortedEntries;
+
+  filteredInventoryLength = filteredEntries.length;
+
+  const totalPages = Math.max(1, Math.ceil(filteredInventoryLength / itemsPerPage));
 
   if (currentPage > totalPages) {
     currentPage = totalPages;
@@ -18725,7 +18766,7 @@ function renderInventory() {
 
   const start = (currentPage - 1) * itemsPerPage;
   const end = start + itemsPerPage;
-  const paginatedEntries = sortedEntries.slice(start, end);
+  const paginatedEntries = filteredEntries.slice(start, end);
 
   const existingElements = new Map();
   inventoryList.querySelectorAll(".inventory-item").forEach((element) => {
@@ -18894,7 +18935,7 @@ function updatePagination() {
   const nextPageButton = document.getElementById("nextPageButton");
   const lastPageButton = document.getElementById("lastPageButton");
 
-  const totalPages = Math.max(1, Math.ceil(inventory.length / itemsPerPage));
+  const totalPages = Math.max(1, Math.ceil(filteredInventoryLength / itemsPerPage));
   pageNumber.textContent = `Page ${currentPage} of ${totalPages}`;
 
   backPageButton.disabled = currentPage === 1;
@@ -18918,7 +18959,7 @@ function prevPage() {
 }
 
 function nextPage() {
-  const totalPages = Math.ceil(inventory.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredInventoryLength / itemsPerPage));
   if (currentPage < totalPages) {
     currentPage++;
     renderInventory();
@@ -18926,7 +18967,7 @@ function nextPage() {
 }
 
 function lastPage() {
-  const totalPages = Math.ceil(inventory.length / itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredInventoryLength / itemsPerPage));
   if (currentPage < totalPages) {
     currentPage = totalPages;
     renderInventory();
