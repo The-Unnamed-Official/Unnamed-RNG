@@ -5886,6 +5886,7 @@ body.flashing {
 @supports (-webkit-background-clip: text) {
     .descendent-potion__title {
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 }
@@ -5916,10 +5917,10 @@ body.flashing {
     background-size: 200% 200%;
     animation: descendent-potion-title-glow 4s ease-in-out infinite;
 }
-
 @supports (-webkit-background-clip: text) {
     .descendent-potion__title__unknown {
         -webkit-background-clip: text;
+        background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 }
