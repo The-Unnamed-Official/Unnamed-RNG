@@ -5344,6 +5344,17 @@ body.flashing {
     overflow: hidden;
 }
 
+.potion-menu__scroll {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-gutter: stable both-edges;
+}
+
 .potion-menu__description {
     color: #e0e8ff;
     margin: 0;
@@ -5531,6 +5542,59 @@ body.flashing {
     box-shadow: inset 0 1px 0 rgba(174, 207, 255, 0.18);
 }
 
+.potion-transaction-card--disabled {
+    opacity: 0.6;
+}
+
+.potion-transaction-card__banner {
+    margin: -18px -18px 0 -18px;
+    border-radius: 14px 14px 0 0;
+    overflow: hidden;
+    border: 1px solid rgba(118, 169, 255, 0.18);
+}
+
+.potion-transaction-card__banner img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.potion-transaction-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.potion-transaction-card__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+}
+
+.potion-transaction-card__badge--limit {
+    background: rgba(255, 138, 101, 0.16);
+    border-color: rgba(255, 152, 120, 0.35);
+    color: #ffc7b0;
+}
+
+.potion-transaction-card__badge--promo {
+    background: rgba(123, 213, 128, 0.16);
+    border-color: rgba(148, 255, 170, 0.35);
+    color: #c9f7ce;
+}
+
+.potion-transaction-card__badge-counter {
+    font-variant-numeric: tabular-nums;
+}
+
 .potion-transaction-card__header {
     display: flex;
     justify-content: space-between;
@@ -5610,15 +5674,28 @@ body.flashing {
     transform: translateY(0);
 }
 
+.potion-transaction-card__action:disabled,
+.potion-transaction-card__action[disabled] {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+    background: rgba(44, 63, 101, 0.65);
+    border-color: rgba(118, 169, 255, 0.2);
+    color: rgba(245, 248, 255, 0.65);
+    box-shadow: none;
+}
+
+.potion-transaction-card__action:disabled:hover,
+.potion-transaction-card__action[disabled]:hover {
+    transform: none;
+    box-shadow: none;
+}
+
 .potion-menu__grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 18px;
-    overflow-y: auto;
     padding-bottom: 8px;
-    flex: 1 1 auto;
-    min-height: 0;
-    padding-right: 4px;
 }
 
 .potion-card {

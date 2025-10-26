@@ -564,15 +564,17 @@
             </div>
             <div class="potion-menu__body">
                 <p class="potion-menu__description">Craft potion buffs by exchanging spare titles. Crafted potions are stored in your inventory under the Potions tab.</p>
-                <div class="potion-menu__section">
-                    <div class="potion-menu__section-header">
-                        <h4 class="potion-menu__section-title">Potion Transactions</h4>
-                        <p class="potion-menu__section-subtitle">Support the game and instantly stock up on large potion bundles.</p>
+                <div class="potion-menu__scroll">
+                    <div class="potion-menu__section">
+                        <div class="potion-menu__section-header">
+                            <h4 class="potion-menu__section-title">Potion Transactions</h4>
+                            <p class="potion-menu__section-subtitle">Support the game and instantly stock up on large potion bundles.</p>
+                        </div>
+                        <p id="potionTransactionStatus" class="potion-transaction-status" role="status" aria-live="polite" aria-hidden="true"></p>
+                        <div id="potionTransactionList" class="potion-transaction-list" role="list"></div>
                     </div>
-                    <p id="potionTransactionStatus" class="potion-transaction-status" role="status" aria-live="polite" aria-hidden="true"></p>
-                    <div id="potionTransactionList" class="potion-transaction-list" role="list"></div>
+                    <div id="potionCraftingList" class="potion-menu__grid" role="list"></div>
                 </div>
-                <div id="potionCraftingList" class="potion-menu__grid" role="list"></div>
             </div>
         </div>
 
