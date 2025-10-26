@@ -1811,7 +1811,7 @@ function showPotionTransactionConfirmation(transaction, state = null, showPopupR
   const priceLabel = resolvedState.priceLabel || formatUsd(transaction.priceUsd);
   const actionVerb = resolvedState.promoActive ? "Claim" : "Purchase";
   const messageText = showPopupReminder
-    ? `Continue to ${actionVerb.toLowerCase()} ${transaction.name} for ${priceLabel} in the secure checkout? If your browser opens a new tab instead, please allow it so the checkout can load.`
+    ? `Continue to ${actionVerb.toLowerCase()} ${transaction.name} for ${priceLabel} in the secure checkout?`
     : `${actionVerb} ${transaction.name} for ${priceLabel}?`;
 
   if (!potionTransactionDialogElement || !potionTransactionDialogConfirmButton) {
@@ -2155,31 +2155,9 @@ function redirectToPotionTransactionCheckout(transaction, stateOverride = null) 
     return;
   }
 
-  showPotionTransactionStatus("Opening secure checkout in a new tab...");
-
-  let checkoutWindow = null;
-  try {
-    checkoutWindow = window.open(checkoutUrl, "_blank", "noopener,noreferrer");
-  } catch (error) {
-    console.warn("Failed to open checkout in a new tab.", error);
-  }
-
-  if (checkoutWindow) {
-    try {
-      checkoutWindow.opener = null;
-    } catch (error) {}
-
-    if (typeof checkoutWindow.focus === "function") {
-      try {
-        checkoutWindow.focus();
-      } catch (error) {}
-    }
-
-    return;
-  }
-
+  clearPendingPotionTransactionId();
   showPotionTransactionStatus(
-    "Please allow pop-ups for this site to open the secure checkout.",
+    "We couldn't open the secure checkout. Please try again in a moment.",
     "error",
   );
 }
@@ -2405,6 +2383,7 @@ function renderPotionTransactions() {
     card.setAttribute("role", "listitem");
     if (state?.limitReached) {
       card.classList.add("potion-transaction-card--disabled");
+      card.setAttribute("aria-disabled", "true");
     }
 
     if (typeof transaction.bannerImage === "string" && transaction.bannerImage.trim()) {
@@ -2519,8 +2498,10 @@ function renderPotionTransactions() {
     actionButton.textContent = state?.actionLabel || `Purchase for ${formatUsd(transaction.priceUsd)}`;
     if (state?.actionDisabled) {
       actionButton.disabled = true;
+      actionButton.setAttribute("aria-disabled", "true");
+    } else {
+      actionButton.addEventListener("click", () => purchasePotionTransaction(transaction.id));
     }
-    actionButton.addEventListener("click", () => purchasePotionTransaction(transaction.id));
 
     card.appendChild(actionButton);
     container.appendChild(card);
