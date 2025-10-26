@@ -2042,6 +2042,8 @@ function normalizeStripeCheckoutStatus(params) {
     params.get("payment_status"),
     params.get("success"),
     params.get("checkout_status"),
+    params.get("redirect_status"),
+    params.get("status"),
   ];
 
   for (const candidate of statusCandidates) {
@@ -2069,6 +2071,20 @@ function normalizeStripeCheckoutStatus(params) {
 
   if (params.has("stripe_cancel")) {
     return "cancel";
+  }
+
+  if (params.has("session_id")) {
+    const redirectStatus = params.get("redirect_status");
+    if (typeof redirectStatus === "string") {
+      const normalized = redirectStatus.trim().toLowerCase();
+      if (cancelledIndicators.has(normalized) || normalized === "failed") {
+        return "cancel";
+      }
+    }
+
+    if (!params.has("canceled") && !params.has("cancelled")) {
+      return "success";
+    }
   }
 
   return null;
