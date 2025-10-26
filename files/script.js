@@ -2252,12 +2252,45 @@ function redirectToPotionTransactionCheckout(transaction, stateOverride = null) 
 
   setPendingPotionTransactionId(transaction.id);
 
-  if (openPotionTransactionCheckout(transaction, checkoutUrl)) {
-    showPotionTransactionStatus("Opening secure checkout...");
+  let checkoutWindow = null;
+  let openedNewTab = false;
+
+  if (typeof window !== "undefined" && typeof window.open === "function") {
+    try {
+      checkoutWindow = window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      checkoutWindow = null;
+    }
+
+    if (checkoutWindow) {
+      openedNewTab = true;
+      try {
+        if (typeof checkoutWindow.focus === "function") {
+          checkoutWindow.focus();
+        }
+      } catch (error) {
+        /* no-op */
+      }
+    }
+  }
+
+  if (openedNewTab) {
+    showPotionTransactionStatus("Secure checkout opened in a new tab.");
     return;
   }
 
+  if (typeof window !== "undefined") {
+    try {
+      window.location.assign(checkoutUrl);
+      showPotionTransactionStatus("Redirecting to secure checkout...");
+      return;
+    } catch (error) {
+      /* no-op */
+    }
+  }
+
   clearPendingPotionTransactionId();
+
   showPotionTransactionStatus(
     "We couldn't open the secure checkout. Please try again in a moment.",
     "error",
