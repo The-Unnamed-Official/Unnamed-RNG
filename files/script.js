@@ -855,9 +855,9 @@ const POTION_TRANSACTION_POPUP_REMINDER_STORAGE_KEY =
   "potionTransactionPopupReminderDismissed";
 
 const POTION_TRANSACTION_CHECKOUT_SUPPORT_DEFAULT_MESSAGE =
-  "If the secure checkout doesn't load here, use the button below to open it in a new tab.";
-const POTION_TRANSACTION_CHECKOUT_SUPPORT_OPENED_MESSAGE =
-  "We've opened the secure checkout in a new browser tab. If it didn't appear, use the button below.";
+  "If the secure checkout doesn't load here, use the button below to reload it.";
+const POTION_TRANSACTION_CHECKOUT_SUPPORT_RELOADED_MESSAGE =
+  "We've reloaded the secure checkout embed. If it's still not visible, try again in a moment.";
 
 let hasDismissedPotionTransactionPopupReminder = Boolean(
   storage.get(POTION_TRANSACTION_POPUP_REMINDER_STORAGE_KEY, false)
@@ -1642,12 +1642,6 @@ function isPotionTransactionDialogVisible() {
   );
 }
 
-function attemptOpenPotionTransactionCheckoutWindow(url) {
-  if (typeof window === "undefined" || typeof window.open !== "function") {
-    return false;
-  }
-}
-
 function resetPotionTransactionCheckoutSupportMessage() {
   if (potionTransactionCheckoutSupportElement) {
     potionTransactionCheckoutSupportElement.textContent =
@@ -1655,25 +1649,31 @@ function resetPotionTransactionCheckoutSupportMessage() {
   }
 
   if (potionTransactionCheckoutLinkElement) {
+    potionTransactionCheckoutLinkElement.disabled = true;
     potionTransactionCheckoutLinkElement.setAttribute("aria-disabled", "true");
     potionTransactionCheckoutLinkElement.setAttribute("tabindex", "-1");
-    potionTransactionCheckoutLinkElement.removeAttribute("href");
   }
 
   activePotionTransactionCheckoutUrl = null;
 }
 
-function updatePotionTransactionCheckoutSupport(url, openedInNewTab = false) {
+function updatePotionTransactionCheckoutSupport(url, reloaded = false) {
   if (potionTransactionCheckoutSupportElement) {
-    potionTransactionCheckoutSupportElement.textContent = openedInNewTab
-      ? POTION_TRANSACTION_CHECKOUT_SUPPORT_OPENED_MESSAGE
+    potionTransactionCheckoutSupportElement.textContent = reloaded
+      ? POTION_TRANSACTION_CHECKOUT_SUPPORT_RELOADED_MESSAGE
       : POTION_TRANSACTION_CHECKOUT_SUPPORT_DEFAULT_MESSAGE;
   }
 
   if (potionTransactionCheckoutLinkElement) {
-    potionTransactionCheckoutLinkElement.href = url;
-    potionTransactionCheckoutLinkElement.removeAttribute("aria-disabled");
-    potionTransactionCheckoutLinkElement.removeAttribute("tabindex");
+    if (url) {
+      potionTransactionCheckoutLinkElement.disabled = false;
+      potionTransactionCheckoutLinkElement.removeAttribute("aria-disabled");
+      potionTransactionCheckoutLinkElement.removeAttribute("tabindex");
+    } else {
+      potionTransactionCheckoutLinkElement.disabled = true;
+      potionTransactionCheckoutLinkElement.setAttribute("aria-disabled", "true");
+      potionTransactionCheckoutLinkElement.setAttribute("tabindex", "-1");
+    }
   }
 
   activePotionTransactionCheckoutUrl = url;
@@ -1732,8 +1732,7 @@ function openPotionTransactionCheckout(transaction, checkoutUrl) {
     ? transaction.id
     : null;
 
-  const openedInNewTab = attemptOpenPotionTransactionCheckoutWindow(checkoutUrl);
-  updatePotionTransactionCheckoutSupport(checkoutUrl, openedInNewTab);
+  updatePotionTransactionCheckoutSupport(checkoutUrl, false);
 
   potionTransactionCheckoutElement.setAttribute("aria-hidden", "false");
   potionTransactionCheckoutElement.classList.add("potion-transaction-checkout--visible");
@@ -1775,12 +1774,32 @@ function setupPotionTransactionCheckout() {
 
   if (supportLink) {
     supportLink.addEventListener("click", (event) => {
-      if (!activePotionTransactionCheckoutUrl) {
-        event.preventDefault();
+      if (!activePotionTransactionCheckoutUrl || !potionTransactionCheckoutFrame) {
         return;
       }
 
-      updatePotionTransactionCheckoutSupport(activePotionTransactionCheckoutUrl, true);
+      event.preventDefault();
+
+      const url = activePotionTransactionCheckoutUrl;
+      const checkoutFrame = potionTransactionCheckoutFrame;
+
+      try {
+        checkoutFrame.src = "about:blank";
+      } catch (error) {
+        /* no-op */
+      }
+
+      const reloadFrame = () => {
+        checkoutFrame.src = url;
+      };
+
+      if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+        window.requestAnimationFrame(reloadFrame);
+      } else {
+        setTimeout(reloadFrame, 0);
+      }
+
+      updatePotionTransactionCheckoutSupport(url, true);
     });
   }
 
