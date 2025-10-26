@@ -408,7 +408,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/DecentPotion.png",
     buffImage: "files/images/DecentBuff.png",
     type: POTION_TYPES.LUCK,
-    effectPercent: 12000,
+    effectPercent: 32000,
     durationSeconds: 31536000,
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
