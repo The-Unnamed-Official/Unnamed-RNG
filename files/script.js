@@ -16867,12 +16867,6 @@ function rollRarity() {
       titles: ["Astrald RED"],
     },
     {
-      type: "Qbear [1 in 35,555]",
-      class: "qbearBgImg",
-      chance: 0.00281254394,
-      titles: ["Qbear", "Risky Gato", "Samurai Gato", "Gato: Wew"],
-    },
-    {
       type: "Light [1 in 29,979]",
       class: "lightBgImg",
       chance: 0.0033356683,
