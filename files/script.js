@@ -821,6 +821,8 @@ function getPotionTransactionState(transaction) {
 }
 
 const PENDING_POTION_TRANSACTION_STORAGE_KEY = "pendingPotionTransactionId";
+const PENDING_POTION_TRANSACTION_METADATA_KEY = "pendingPotionTransactionMeta";
+const PENDING_POTION_TRANSACTION_MAX_AGE_MS = 15 * 60 * 1000;
 
 const USD_CURRENCY_FORMATTER =
   typeof Intl !== "undefined" && typeof Intl.NumberFormat === "function"
@@ -1944,19 +1946,36 @@ function stopPotionTransactionStatusPolling() {
   potionTransactionStatusPollIntervalId = null;
 }
 
-function setPendingPotionTransactionId(transactionId) {
+function setPendingPotionTransactionId(transactionId, metadata = null) {
   if (typeof transactionId !== "string" || !transactionId) {
     storage.remove(PENDING_POTION_TRANSACTION_STORAGE_KEY);
+    storage.remove(PENDING_POTION_TRANSACTION_METADATA_KEY);
     stopPotionTransactionStatusPolling();
     return;
   }
 
   storage.set(PENDING_POTION_TRANSACTION_STORAGE_KEY, transactionId);
+  const normalizedMetadata = (() => {
+    const base = metadata && typeof metadata === "object" ? metadata : {};
+    const payload = {
+      transactionId,
+      startedAt: Date.now(),
+      checkoutUrl:
+        typeof base.checkoutUrl === "string" && base.checkoutUrl
+          ? base.checkoutUrl
+          : null,
+    };
+
+    return payload;
+  })();
+
+  storage.set(PENDING_POTION_TRANSACTION_METADATA_KEY, normalizedMetadata);
   startPotionTransactionStatusPolling();
 }
 
 function clearPendingPotionTransactionId() {
   storage.remove(PENDING_POTION_TRANSACTION_STORAGE_KEY);
+  storage.remove(PENDING_POTION_TRANSACTION_METADATA_KEY);
   stopPotionTransactionStatusPolling();
 }
 
@@ -2004,7 +2023,7 @@ function redirectToPotionTransactionCheckout(transaction, stateOverride = null) 
     return;
   }
 
-  setPendingPotionTransactionId(transaction.id);
+  setPendingPotionTransactionId(transaction.id, { checkoutUrl });
 
   if (
     typeof window !== "undefined" &&
@@ -2178,8 +2197,35 @@ function handlePotionTransactionCheckoutReturn(sourceUrl = null, options = {}) {
   }
 
   const storedPendingId = storage.get(PENDING_POTION_TRANSACTION_STORAGE_KEY, null);
+  const pendingMetadata = storage.get(PENDING_POTION_TRANSACTION_METADATA_KEY, null);
   if (typeof storedPendingId !== "string" || !storedPendingId) {
     return null;
+  }
+
+  if (!pendingMetadata || pendingMetadata.transactionId !== storedPendingId) {
+    return null;
+  }
+
+  const pendingStartedAt = Number(pendingMetadata.startedAt);
+  if (
+    !Number.isFinite(pendingStartedAt) ||
+    pendingStartedAt <= 0 ||
+    Date.now() - pendingStartedAt > PENDING_POTION_TRANSACTION_MAX_AGE_MS
+  ) {
+    showPotionTransactionStatus(
+      "Your checkout session expired. Please try the purchase again to receive your items.",
+      "error",
+    );
+    clearPendingPotionTransactionId();
+    if (
+      !suppressHistoryReset &&
+      typeof window !== "undefined" &&
+      window.history &&
+      typeof window.history.replaceState === "function"
+    ) {
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    }
+    return "error";
   }
 
   let transactionId = resolveTransactionIdFromParams(params);
@@ -2213,7 +2259,39 @@ function handlePotionTransactionCheckoutReturn(sourceUrl = null, options = {}) {
   }
 
   const sessionId = resolveStripeCheckoutSessionId(params);
+  let allowWithoutSessionId = false;
+
   if (!isLikelyStripeSessionId(sessionId)) {
+    const cameFromStripeCheckout = (() => {
+      if (typeof document === "undefined") {
+        return false;
+      }
+
+      const referrer = document.referrer || "";
+      if (referrer.includes("checkout.stripe.com")) {
+        return true;
+      }
+
+      return false;
+    })();
+
+    const attemptedStripeCheckoutUrl =
+      pendingMetadata && typeof pendingMetadata.checkoutUrl === "string"
+        ? pendingMetadata.checkoutUrl
+        : "";
+
+    if (cameFromStripeCheckout || attemptedStripeCheckoutUrl.includes("stripe.com")) {
+      allowWithoutSessionId = true;
+    }
+  }
+
+  if (!isLikelyStripeSessionId(sessionId) && allowWithoutSessionId) {
+    console.warn(
+      "Stripe checkout return missing session identifier. Proceeding based on pending checkout metadata.",
+    );
+  }
+
+  if (!isLikelyStripeSessionId(sessionId) && !allowWithoutSessionId) {
     showPotionTransactionStatus(
       "We couldn't verify the purchase with Stripe. Please complete the checkout to receive your items.",
       "error",
