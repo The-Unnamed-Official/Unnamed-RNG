@@ -5673,6 +5673,57 @@ body.flashing {
     background: rgba(8, 12, 24, 0.9);
 }
 
+.potion-transaction-checkout__support {
+    padding: 18px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    border-top: 1px solid rgba(118, 169, 255, 0.18);
+    background: linear-gradient(180deg, rgba(14, 22, 40, 0.95), rgba(10, 16, 30, 0.97));
+}
+
+.potion-transaction-checkout__support-text {
+    margin: 0;
+    color: rgba(229, 236, 255, 0.92);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.potion-transaction-checkout__support-link {
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(118, 169, 255, 0.5);
+    background: rgba(20, 30, 54, 0.9);
+    color: #f5f8ff;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-decoration: none;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+}
+
+.potion-transaction-checkout__support-link:hover,
+.potion-transaction-checkout__support-link:focus-visible {
+    transform: translateY(-1px);
+    background: rgba(34, 52, 82, 0.95);
+    border-color: rgba(146, 186, 255, 0.6);
+    box-shadow: 0 8px 18px rgba(60, 141, 255, 0.25);
+    outline: none;
+}
+
+.potion-transaction-checkout__support-link[aria-disabled="true"] {
+    pointer-events: none;
+    opacity: 0.55;
+    transform: none;
+    box-shadow: none;
+}
+
 .potion-transaction-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
