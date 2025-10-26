@@ -301,7 +301,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/LuckyPotion.png",
     type: POTION_TYPES.LUCK,
     effectPercent: 50,
-    durationSeconds: 30,
+    durationSeconds: 60,
     craftCost: {
       classes: { commonBgImg: 30, rareBgImg: 20, epicBgImg: 10, legendaryBgImg: 5, unstoppableBgImg: 1 },
       titles: [],
@@ -313,7 +313,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/Fortune1Spoid.png",
     type: POTION_TYPES.LUCK,
     effectPercent: 50,
-    durationSeconds: 60,
+    durationSeconds: 120,
     craftCost: {
       classes: { commonBgImg: 50, rareBgImg: 35, impossibleBgImg: 20, poweredBgImg: 10, unstoppableBgImg: 2 },
       titles: [],
@@ -326,7 +326,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/Fortune2Spoid.png",
     type: POTION_TYPES.LUCK,
     effectPercent: 75,
-    durationSeconds: 120,
+    durationSeconds: 240,
     craftCost: {
       classes: { commonBgImg: 80, rareBgImg: 60, toxBgImg: 35, flickerBgImg: 15, unstoppableBgImg: 5, spectralBgImg: 1 },
       titles: [],
@@ -339,7 +339,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/Fortune3spoid.png",
     type: POTION_TYPES.LUCK,
     effectPercent: 100,
-    durationSeconds: 180,
+    durationSeconds: 300,
     craftCost: {
       classes: { commonBgImg: 110, rareBgImg: 85, plabreBgImg: 30, unstoppableBgImg: 10, wanspiBgImg: 8, curartBgImg: 6, shadBgImg: 1 },
       titles: [],
@@ -365,7 +365,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/Fortune2Potion.png",
     type: POTION_TYPES.LUCK,
     effectPercent: 200,
-    durationSeconds: 360,
+    durationSeconds: 420,
     craftCost: {
       classes: { commonBgImg: 150, poweredBgImg: 110, flickerBgImg: 90, unstoppableBgImg: 20, memBgImg: 15, oblBgImg: 11, froBgImg: 7, isekailofiBgImg: 1  },
       titles: [],
@@ -378,7 +378,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/Fortune3Potion.png",
     type: POTION_TYPES.LUCK,
     effectPercent: 300,
-    durationSeconds: 510,
+    durationSeconds: 540,
     craftCost: {
       classes: { commonBgImg: 190, legendaryBgImg: 160, plabreBgImg: 65, unstoppableBgImg: 30, mysBgImg: 20, forgBgImg: 8, fearBgImg: 2 },
       titles: [],
@@ -391,7 +391,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/BasicPotion.png",
     buffImage: "files/images/BasicBuff.png",
     type: POTION_TYPES.LUCK,
-    effectPercent: 1000,
+    effectPercent: 5000,
     durationSeconds: 31536000,
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
@@ -408,7 +408,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/DecentPotion.png",
     buffImage: "files/images/DecentBuff.png",
     type: POTION_TYPES.LUCK,
-    effectPercent: 5200,
+    effectPercent: 12000,
     durationSeconds: 31536000,
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
@@ -425,7 +425,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/BloodyPotion.png",
     buffImage: "files/images/BloodyBuff.png",
     type: POTION_TYPES.LUCK,
-    effectPercent: 33333,
+    effectPercent: 66666,
     durationSeconds: 31536000,
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
@@ -448,7 +448,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/PumpkinPotion.png",
     buffImage: "files/images/PumpkinBuff.png",
     type: POTION_TYPES.LUCK,
-    effectPercent: 66666,
+    effectPercent: 333333,
     durationSeconds: 31536000,
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
@@ -472,7 +472,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/DescendentPotion.png",
     buffImage: "files/images/DescendentBuff.png",
     type: POTION_TYPES.LUCK,
-    effectPercent: 50000,
+    effectPercent: 500000,
     durationSeconds: 31536000,
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
@@ -497,7 +497,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/SpeedPotion.png",
     type: POTION_TYPES.SPEED,
     effectPercent: 25,
-    durationSeconds: 30,
+    durationSeconds: 60,
     craftCost: {
       classes: { commonBgImg: 55, rareBgImg: 33, epicBgImg: 22, legendaryBgImg: 11, unstoppableBgImg: 4 },
       titles: [],
@@ -509,7 +509,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/Haste1Spoid.png",
     type: POTION_TYPES.SPEED,
     effectPercent: 25,
-    durationSeconds: 60,
+    durationSeconds: 120,
     craftCost: {
       classes: { commonBgImg: 80, rareBgImg: 55, impossibleBgImg: 35, poweredBgImg: 20, unstoppableBgImg: 9 },
       titles: [],
@@ -521,7 +521,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/Haste2Spoid.png",
     type: POTION_TYPES.SPEED,
     effectPercent: 40,
-    durationSeconds: 120,
+    durationSeconds: 180,
     craftCost: {
       classes: { commonBgImg: 105, rareBgImg: 80, toxBgImg: 45, flickerBgImg: 25, unstoppableBgImg: 14, spectralBgImg: 10 },
       titles: [],
@@ -533,7 +533,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/Haste3spoid.png",
     type: POTION_TYPES.SPEED,
     effectPercent: 65,
-    durationSeconds: 180,
+    durationSeconds: 240,
     craftCost: {
       classes: { commonBgImg: 135, rareBgImg: 105, plabreBgImg: 55, unstoppableBgImg: 24, mysBgImg: 15, samuraiBgImg: 10 },
       titles: [],
@@ -545,7 +545,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/Haste1Potion.png",
     type: POTION_TYPES.SPEED,
     effectPercent: 65,
-    durationSeconds: 300,
+    durationSeconds: 360,
     craftCost: {
       classes: { commonBgImg: 155, legendaryBgImg: 115, solarpowerBgImg: 95, belivBgImg: 55, unstoppableBgImg: 14, gargBgImg: 13, contBgImg: 5, lostsBgImg: 1 },
       titles: [],
@@ -557,7 +557,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/Haste2Potion.png",
     type: POTION_TYPES.SPEED,
     effectPercent: 100,
-    durationSeconds: 390,
+    durationSeconds: 420,
     craftCost: {
       classes: { commonBgImg: 185, poweredBgImg: 135, flickerBgImg: 105, unstoppableBgImg: 29, memBgImg: 30, oblBgImg: 20, froBgImg: 15, starfallBgImg: 2 },
       titles: [],
@@ -569,7 +569,7 @@ const POTION_DEFINITIONS = [
     image: "files/images/Haste3Potion.png",
     type: POTION_TYPES.SPEED,
     effectPercent: 150,
-    durationSeconds: 540,
+    durationSeconds: 600,
     craftCost: {
       classes: { commonBgImg: 252, legendaryBgImg: 181, plabreBgImg: 77, unstoppableBgImg: 49, specBgImg: 30, phaBgImg: 10, nighBgImg: 2, voiBgImg: 1 },
       titles: [],
@@ -585,9 +585,9 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     description: "Jump-start your potion reserves with a massive infusion of core brews.",
     rewards: Object.freeze({
       potions: Object.freeze({
-        luckyPotion: 5000,
-        basicPotion: 1000,
-        decentPotion: 500,
+        luckyPotion: 1000,
+        basicPotion: 500,
+        decentPotion: 300,
       }),
     }),
   }),
@@ -598,9 +598,9 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     description: "Secure a stockpile of top-tier Halloween brews for your next session.",
     rewards: Object.freeze({
       potions: Object.freeze({
-        [DESCENDED_POTION_ID]: 500,
-        bloodyPotion: 200,
-        pumpkinPotion: 150,
+        [DESCENDED_POTION_ID]: 300,
+        bloodyPotion: 100,
+        pumpkinPotion: 80,
       }),
     }),
   }),
