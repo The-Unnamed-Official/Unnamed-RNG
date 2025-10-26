@@ -608,7 +608,7 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     description: "Secure a stockpile of top-tier Halloween brews for your next session.",
     rewards: Object.freeze({
       potions: Object.freeze({
-        [DESCENDED_POTION_ID]: 300,
+        [DESCENDED_POTION_ID]: 500,
         bloodyPotion: 100,
         pumpkinPotion: 80,
       }),
