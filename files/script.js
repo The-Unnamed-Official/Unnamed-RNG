@@ -1646,13 +1646,6 @@ function attemptOpenPotionTransactionCheckoutWindow(url) {
   if (typeof window === "undefined" || typeof window.open !== "function") {
     return false;
   }
-
-  try {
-    const popup = window.open(url, "_blank", "noopener,noreferrer");
-    return Boolean(popup);
-  } catch (error) {
-    return false;
-  }
 }
 
 function resetPotionTransactionCheckoutSupportMessage() {
