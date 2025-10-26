@@ -613,12 +613,12 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
         pumpkinPotion: 80,
       }),
     }),
-    bannerImage: "files/images/DescendedBundleBanner.png",
+    bannerImage: "files/images/descendedBundleBanner.png",
   }),
   Object.freeze({
     id: "potionTransactionHalloweenFrights",
     name: "Halloween Frights Bundle",
-    priceUsd: 3,
+    priceUsd: 0.3,
     description:
       "Celebrate Halloween with a terrifyingly generous stash of frightening brews and rare drops.",
     rewards: Object.freeze({
