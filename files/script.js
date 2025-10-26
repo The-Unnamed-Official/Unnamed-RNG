@@ -843,21 +843,8 @@ let potionTransactionDialogConfirmButton = null;
 let potionTransactionDialogPreviousFocus = null;
 let pendingPotionTransaction = null;
 let potionTransactionDialogKeyHandlerRegistered = false;
-let potionTransactionCheckoutElement = null;
-let potionTransactionCheckoutFrame = null;
-let potionTransactionCheckoutCloseButton = null;
-let potionTransactionCheckoutSupportElement = null;
-let potionTransactionCheckoutLinkElement = null;
-let potionTransactionCheckoutPreviousFocus = null;
-let activePotionTransactionCheckoutId = null;
-let activePotionTransactionCheckoutUrl = null;
 const POTION_TRANSACTION_POPUP_REMINDER_STORAGE_KEY =
   "potionTransactionPopupReminderDismissed";
-
-const POTION_TRANSACTION_CHECKOUT_SUPPORT_DEFAULT_MESSAGE =
-  "If the secure checkout doesn't load here, use the button below to reload it.";
-const POTION_TRANSACTION_CHECKOUT_SUPPORT_RELOADED_MESSAGE =
-  "We've reloaded the secure checkout embed. If it's still not visible, try again in a moment.";
 
 let hasDismissedPotionTransactionPopupReminder = Boolean(
   storage.get(POTION_TRANSACTION_POPUP_REMINDER_STORAGE_KEY, false)
@@ -1626,237 +1613,12 @@ function formatPotionRewardSummary(rewards) {
   return `${head}, and ${rewards[rewards.length - 1]}`;
 }
 
-function isPotionTransactionCheckoutVisible() {
-  return (
-    potionTransactionCheckoutElement &&
-    potionTransactionCheckoutElement.classList.contains(
-      "potion-transaction-checkout--visible",
-    )
-  );
-}
-
 function isPotionTransactionDialogVisible() {
   return (
     potionTransactionDialogElement &&
     potionTransactionDialogElement.classList.contains("potion-transaction-dialog--visible")
   );
 }
-
-function resetPotionTransactionCheckoutSupportMessage() {
-  if (potionTransactionCheckoutSupportElement) {
-    potionTransactionCheckoutSupportElement.textContent =
-      POTION_TRANSACTION_CHECKOUT_SUPPORT_DEFAULT_MESSAGE;
-  }
-
-  if (potionTransactionCheckoutLinkElement) {
-    potionTransactionCheckoutLinkElement.disabled = true;
-    potionTransactionCheckoutLinkElement.setAttribute("aria-disabled", "true");
-    potionTransactionCheckoutLinkElement.setAttribute("tabindex", "-1");
-  }
-
-  activePotionTransactionCheckoutUrl = null;
-}
-
-function updatePotionTransactionCheckoutSupport(url, reloaded = false) {
-  if (potionTransactionCheckoutSupportElement) {
-    potionTransactionCheckoutSupportElement.textContent = reloaded
-      ? POTION_TRANSACTION_CHECKOUT_SUPPORT_RELOADED_MESSAGE
-      : POTION_TRANSACTION_CHECKOUT_SUPPORT_DEFAULT_MESSAGE;
-  }
-
-  if (potionTransactionCheckoutLinkElement) {
-    if (url) {
-      potionTransactionCheckoutLinkElement.disabled = false;
-      potionTransactionCheckoutLinkElement.removeAttribute("aria-disabled");
-      potionTransactionCheckoutLinkElement.removeAttribute("tabindex");
-    } else {
-      potionTransactionCheckoutLinkElement.disabled = true;
-      potionTransactionCheckoutLinkElement.setAttribute("aria-disabled", "true");
-      potionTransactionCheckoutLinkElement.setAttribute("tabindex", "-1");
-    }
-  }
-
-  activePotionTransactionCheckoutUrl = url;
-}
-
-function closePotionTransactionCheckout({ notify = false } = {}) {
-  if (!potionTransactionCheckoutElement) {
-    return;
-  }
-
-  potionTransactionCheckoutElement.classList.remove("potion-transaction-checkout--visible");
-  potionTransactionCheckoutElement.setAttribute("aria-hidden", "true");
-
-  if (potionTransactionCheckoutFrame) {
-    potionTransactionCheckoutFrame.src = "about:blank";
-  }
-
-  resetPotionTransactionCheckoutSupportMessage();
-
-  if (notify) {
-    if (activePotionTransactionCheckoutId) {
-      clearPendingPotionTransactionId();
-    }
-    showPotionTransactionStatus("Checkout cancelled.");
-  }
-
-  if (
-    potionTransactionCheckoutPreviousFocus &&
-    typeof potionTransactionCheckoutPreviousFocus.focus === "function"
-  ) {
-    try {
-      potionTransactionCheckoutPreviousFocus.focus();
-    } catch (error) {
-      /* no-op */
-    }
-  }
-
-  potionTransactionCheckoutPreviousFocus = null;
-  activePotionTransactionCheckoutId = null;
-}
-
-function openPotionTransactionCheckout(transaction, checkoutUrl) {
-  if (typeof checkoutUrl !== "string" || !checkoutUrl) {
-    return false;
-  }
-
-  if (!potionTransactionCheckoutElement || !potionTransactionCheckoutFrame) {
-    return false;
-  }
-
-  const activeElement = document.activeElement;
-  potionTransactionCheckoutPreviousFocus =
-    activeElement && typeof activeElement.focus === "function" ? activeElement : null;
-
-  activePotionTransactionCheckoutId = transaction && typeof transaction.id === "string"
-    ? transaction.id
-    : null;
-
-  updatePotionTransactionCheckoutSupport(checkoutUrl, false);
-
-  potionTransactionCheckoutElement.setAttribute("aria-hidden", "false");
-  potionTransactionCheckoutElement.classList.add("potion-transaction-checkout--visible");
-  potionTransactionCheckoutFrame.src = checkoutUrl;
-
-  if (potionTransactionCheckoutCloseButton) {
-    potionTransactionCheckoutCloseButton.focus();
-  }
-
-  return true;
-}
-
-function setupPotionTransactionCheckout() {
-  if (potionTransactionCheckoutElement) {
-    return;
-  }
-
-  const overlay = byId("potionTransactionCheckout");
-  const frame = byId("potionTransactionCheckoutFrame");
-  const closeButton = byId("potionTransactionCheckoutClose");
-  const support = byId("potionTransactionCheckoutSupport");
-  const supportLink = byId("potionTransactionCheckoutLink");
-
-  if (!overlay || !frame || !closeButton) {
-    return;
-  }
-
-  potionTransactionCheckoutElement = overlay;
-  potionTransactionCheckoutFrame = frame;
-  potionTransactionCheckoutCloseButton = closeButton;
-  potionTransactionCheckoutSupportElement = support;
-  potionTransactionCheckoutLinkElement = supportLink;
-
-  resetPotionTransactionCheckoutSupportMessage();
-
-  closeButton.addEventListener("click", () => {
-    closePotionTransactionCheckout({ notify: true });
-  });
-
-  if (supportLink) {
-    supportLink.addEventListener("click", (event) => {
-      if (!activePotionTransactionCheckoutUrl || !potionTransactionCheckoutFrame) {
-        return;
-      }
-
-      event.preventDefault();
-
-      const url = activePotionTransactionCheckoutUrl;
-      const checkoutFrame = potionTransactionCheckoutFrame;
-
-      try {
-        checkoutFrame.src = "about:blank";
-      } catch (error) {
-        /* no-op */
-      }
-
-      const reloadFrame = () => {
-        checkoutFrame.src = url;
-      };
-
-      if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
-        window.requestAnimationFrame(reloadFrame);
-      } else {
-        setTimeout(reloadFrame, 0);
-      }
-
-      updatePotionTransactionCheckoutSupport(url, true);
-    });
-  }
-
-  overlay.addEventListener("click", (event) => {
-    if (event.target === overlay) {
-      closePotionTransactionCheckout({ notify: true });
-    }
-  });
-
-  frame.addEventListener("load", () => {
-    if (!isPotionTransactionCheckoutVisible()) {
-      return;
-    }
-
-    let frameUrl = "";
-
-    try {
-      if (frame.contentWindow && frame.contentWindow.location) {
-        frameUrl = frame.contentWindow.location.href || "";
-      }
-    } catch (error) {
-      /* Cross-origin navigation – fall back to the frame src attribute. */
-    }
-
-    if (!frameUrl) {
-      const rawSrc = frame.getAttribute("src") || frame.src || "";
-
-      if (typeof rawSrc === "string" && rawSrc) {
-        try {
-          const base =
-            typeof window !== "undefined" && window.location ? window.location.href : undefined;
-          frameUrl = base ? new URL(rawSrc, base).toString() : new URL(rawSrc).toString();
-        } catch (error) {
-          frameUrl = rawSrc;
-        }
-      }
-    }
-
-    if (!frameUrl) {
-      return;
-    }
-
-    const result = handlePotionTransactionCheckoutReturn(frameUrl, {
-      suppressHistoryReset: true,
-    });
-
-    if (result === "success") {
-      closePotionTransactionCheckout({ notify: false });
-    } else if (result === "cancel") {
-      if (activePotionTransactionCheckoutId) {
-        clearPendingPotionTransactionId();
-      }
-      closePotionTransactionCheckout({ notify: false });
-    }
-  });
-}
-
 function closePotionTransactionDialog() {
   if (!potionTransactionDialogElement) {
     return;
@@ -2034,12 +1796,6 @@ function setupPotionTransactionDialog() {
   if (!potionTransactionDialogKeyHandlerRegistered) {
     document.addEventListener("keydown", (event) => {
       if (event.key !== "Escape") {
-        return;
-      }
-
-      if (isPotionTransactionCheckoutVisible()) {
-        event.preventDefault();
-        closePotionTransactionCheckout({ notify: true });
         return;
       }
 
@@ -2252,36 +2008,23 @@ function redirectToPotionTransactionCheckout(transaction, stateOverride = null) 
 
   setPendingPotionTransactionId(transaction.id);
 
-  let checkoutWindow = null;
-  let openedNewTab = false;
-
-  if (typeof window !== "undefined" && typeof window.open === "function") {
-    try {
-      checkoutWindow = window.open(checkoutUrl, "_blank", "noopener,noreferrer");
-    } catch (error) {
-      checkoutWindow = null;
-    }
-
-    if (checkoutWindow) {
-      openedNewTab = true;
-      try {
-        if (typeof checkoutWindow.focus === "function") {
-          checkoutWindow.focus();
-        }
-      } catch (error) {
-        /* no-op */
-      }
-    }
-  }
-
-  if (openedNewTab) {
-    showPotionTransactionStatus("Secure checkout opened in a new tab.");
-    return;
-  }
-
-  if (typeof window !== "undefined") {
+  if (
+    typeof window !== "undefined" &&
+    window.location &&
+    typeof window.location.assign === "function"
+  ) {
     try {
       window.location.assign(checkoutUrl);
+      showPotionTransactionStatus("Redirecting to secure checkout...");
+      return;
+    } catch (error) {
+      /* no-op */
+    }
+  }
+
+  if (typeof window !== "undefined" && window.location) {
+    try {
+      window.location.href = checkoutUrl;
       showPotionTransactionStatus("Redirecting to secure checkout...");
       return;
     } catch (error) {
@@ -3724,7 +3467,6 @@ function spawnPotionPickup(config) {
 }
 
 function initializePotionFeatures() {
-  setupPotionTransactionCheckout();
   setupPotionTransactionDialog();
   potionInventory = normalizePotionInventory(storage.get(POTION_STORAGE_KEY, {}));
   buffsDisabled = Boolean(storage.get(BUFFS_DISABLED_KEY, false));
@@ -17373,19 +17115,36 @@ function closeProfileDropdown() {
   }
 }
 
+function navigateInCurrentTab(url) {
+  if (typeof window === "undefined" || !window.location) {
+    return;
+  }
+
+  try {
+    if (typeof window.location.assign === "function") {
+      window.location.assign(url);
+    } else {
+      window.location.href = url;
+    }
+  } catch (error) {
+    try {
+      window.location.href = url;
+    } catch (secondaryError) {
+      /* no-op */
+    }
+  }
+}
+
 function openDiscord() {
-  window.open("https://discord.gg/m6k7Jagm3v", "_blank");
+  navigateInCurrentTab("https://discord.gg/m6k7Jagm3v");
 }
 
 function openGithub() {
-  window.open("https://github.com/The-Unnamed-Official/Unnamed-RNG/tree/published", "_blank");
+  navigateInCurrentTab("https://github.com/The-Unnamed-Official/Unnamed-RNG/tree/published");
 }
 
 function openRollingSimulator() {
-  window.open(
-    "https://the-unnamed-official.github.io/Sols-Rolling-Calculator/",
-    "_blank"
-  );
+  navigateInCurrentTab("https://the-unnamed-official.github.io/Sols-Rolling-Calculator/");
 }
 
 function selectTitle(rarity) {
