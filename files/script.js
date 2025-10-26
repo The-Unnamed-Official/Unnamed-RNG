@@ -624,7 +624,7 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
   Object.freeze({
     id: "potionTransactionHalloweenFrights",
     name: "Halloween Frights Bundle",
-    priceUsd: 0.3,
+    priceUsd: 0.5,
     description:
       "Celebrate Halloween with a terrifyingly generous stash of frightening brews and rare drops.",
     rewards: Object.freeze({
