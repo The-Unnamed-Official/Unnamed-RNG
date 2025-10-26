@@ -2097,6 +2097,30 @@ function normalizeStripeCheckoutStatus(params) {
   return null;
 }
 
+function resolveStripeCheckoutSessionId(params) {
+  if (!params) {
+    return null;
+  }
+
+  const candidateKeys = ["session_id", "sessionId", "stripeSessionId", "checkout_session_id"];
+  for (const key of candidateKeys) {
+    const value = params.get(key);
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return null;
+}
+
+function isLikelyStripeSessionId(value) {
+  if (typeof value !== "string" || value.length < 10) {
+    return false;
+  }
+
+  return value.startsWith("cs_");
+}
+
 function resolveTransactionIdFromParams(params) {
   const candidateKeys = [
     "potionTransactionId",
@@ -2154,10 +2178,18 @@ function handlePotionTransactionCheckoutReturn(sourceUrl = null, options = {}) {
   }
 
   const storedPendingId = storage.get(PENDING_POTION_TRANSACTION_STORAGE_KEY, null);
+  if (typeof storedPendingId !== "string" || !storedPendingId) {
+    return null;
+  }
+
   let transactionId = resolveTransactionIdFromParams(params);
 
   if (!transactionId && typeof storedPendingId === "string" && storedPendingId) {
     transactionId = storedPendingId;
+  }
+
+  if (transactionId !== storedPendingId) {
+    return null;
   }
 
   if (status === "cancel") {
@@ -2178,6 +2210,24 @@ function handlePotionTransactionCheckoutReturn(sourceUrl = null, options = {}) {
 
   if (status !== "success") {
     return null;
+  }
+
+  const sessionId = resolveStripeCheckoutSessionId(params);
+  if (!isLikelyStripeSessionId(sessionId)) {
+    showPotionTransactionStatus(
+      "We couldn't verify the purchase with Stripe. Please complete the checkout to receive your items.",
+      "error",
+    );
+    clearPendingPotionTransactionId();
+    if (
+      !suppressHistoryReset &&
+      typeof window !== "undefined" &&
+      window.history &&
+      typeof window.history.replaceState === "function"
+    ) {
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+    }
+    return "error";
   }
 
   const transactionDefinition = POTION_TRANSACTION_DEFINITIONS.find(
