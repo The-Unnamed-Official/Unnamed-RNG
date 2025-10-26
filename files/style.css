@@ -6383,10 +6383,6 @@ body.flashing {
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     }
 
-    .potion-transaction-list {
-        grid-template-columns: 1fr;
-    }
-
     .potion-inventory {
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     }

@@ -3625,7 +3625,6 @@ function initializePotionFeatures() {
   pruneExpiredBuffs();
   persistActiveBuffs();
   renderPotionInventory();
-  renderPotionTransactions();
   renderPotionCrafting();
   updateBuffsSwitchControl();
   refreshBuffEffects();
@@ -5628,15 +5627,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const loadingScreen = byId("loadingScreen");
   const menuScreen = byId("menuScreen");
   const loadingText = loadingScreen ? loadingScreen.querySelector(".loadTxt") : null;
-
-  handlePotionTransactionCheckoutReturn();
-  const storedPendingTransactionId = storage.get(
-    PENDING_POTION_TRANSACTION_STORAGE_KEY,
-    null,
-  );
-  if (typeof storedPendingTransactionId === "string" && storedPendingTransactionId) {
-    startPotionTransactionStatusPolling();
-  }
 
   initEventCountdown();
 
