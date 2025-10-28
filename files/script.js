@@ -17681,6 +17681,7 @@ function deleteAllByRarity(rarityClass) {
 
 function registerInterfaceToggleButtons() {
   const toggleInventoryBtn = document.getElementById("toggleInventoryBtn");
+  const inventoryCloseBtn = document.getElementById("closeInventory");
   if (toggleInventoryBtn) {
     toggleInventoryBtn.addEventListener("click", function () {
       const inventorySection = document.querySelector(".inventory");
@@ -17698,6 +17699,24 @@ function registerInterfaceToggleButtons() {
         inventorySection.style.visibility = "hidden";
         this.textContent = "Show Inventory";
         document.body.classList.remove("inventory-open");
+      }
+    });
+  }
+
+  if (inventoryCloseBtn) {
+    inventoryCloseBtn.addEventListener("click", function () {
+      const inventorySection = document.querySelector(".inventory");
+      const toggleInventoryBtn = document.getElementById("toggleInventoryBtn");
+
+      if (!inventorySection) {
+        return;
+      }
+
+      inventorySection.style.visibility = "hidden";
+      document.body.classList.remove("inventory-open");
+
+      if (toggleInventoryBtn) {
+        toggleInventoryBtn.textContent = "Show Inventory";
       }
     });
   }
@@ -17851,6 +17870,8 @@ function registerResponsiveHandlers() {
 function setupInventoryTabs() {
   const tabButtons = Array.from(document.querySelectorAll(".inventory-tab"));
   const panels = Array.from(document.querySelectorAll(".inventory-panel"));
+  const searchContainer = document.querySelector(".inventory-search");
+  const sortContainer = document.querySelector(".inventory-sort");
 
   if (!tabButtons.length || !panels.length) {
     return;
@@ -17879,6 +17900,8 @@ function setupInventoryTabs() {
 
     activeTabName = tabName;
 
+    const isTitlesTabActive = tabName === "titles";
+
     tabButtons.forEach((button) => {
       const isActive = button.dataset.tab === tabName;
       button.classList.toggle("inventory-tab--active", isActive);
@@ -17891,6 +17914,16 @@ function setupInventoryTabs() {
       panel.classList.toggle("inventory-panel--active", isActive);
       panel.setAttribute("aria-hidden", String(!isActive));
     });
+
+    if (searchContainer) {
+      searchContainer.classList.toggle("inventory-tool--hidden", !isTitlesTabActive);
+      searchContainer.setAttribute("aria-hidden", String(!isTitlesTabActive));
+    }
+
+    if (sortContainer) {
+      sortContainer.classList.toggle("inventory-tool--hidden", !isTitlesTabActive);
+      sortContainer.setAttribute("aria-hidden", String(!isTitlesTabActive));
+    }
 
     document.querySelectorAll(".dropdown-menu.open").forEach((menu) => {
       menu.style.display = "none";
@@ -20299,32 +20332,32 @@ function updateAutoRollAvailability() {
 
 updateAudioSliderUi();
 
-function initializeHeartEffect() {
-  if (heartIntervalId) {
-    return;
-  }
+// function initializeHeartEffect() {
+//   if (heartIntervalId) {
+//     return;
+//   }
 
-  if (!heartContainerElement) {
-    heartContainerElement = document.createElement("div");
-    document.body.appendChild(heartContainerElement);
-  }
+//   if (!heartContainerElement) {
+//     heartContainerElement = document.createElement("div");
+//     document.body.appendChild(heartContainerElement);
+//   }
 
-  const createHeart = () => {
-    const heart = document.createElement("div");
-    heart.classList.add("heart");
-    heart.textContent = "🎃";
-    heart.style.left = `${Math.random() * 100}vw`;
-    heart.style.top = `${Math.random() * 100}vh`;
-    heart.style.fontSize = `${Math.random() * 25 + 15}px`;
-    heartContainerElement.appendChild(heart);
+//   const createHeart = () => {
+//     const heart = document.createElement("div");
+//     heart.classList.add("heart");
+//     heart.textContent = "🎃";
+//     heart.style.left = `${Math.random() * 100}vw`;
+//     heart.style.top = `${Math.random() * 100}vh`;
+//     heart.style.fontSize = `${Math.random() * 25 + 15}px`;
+//     heartContainerElement.appendChild(heart);
 
-    setTimeout(() => {
-      heart.remove();
-    }, 1000);
-  };
+//     setTimeout(() => {
+//       heart.remove();
+//     }, 1000);
+//   };
 
-  heartIntervalId = setInterval(createHeart, 33);
-}
+//   heartIntervalId = setInterval(createHeart, 33);
+// }
 
 const secretKey = "ImpeachedGlazer";
 
@@ -21160,8 +21193,11 @@ function createParticle(minRadius, maxRadius, minSize, maxSize, speed, rotationR
 
 function createParticleGroup() {
   const system = document.querySelector('.particle-system');
+  if (!system) {
+    return;
+  }
   system.innerHTML = '';
-  
+
   for (let i = 0; i < 10; i++) {
     const particle = createParticle(10, 30, 1, 2, 2, 720);
     system.appendChild(particle);
