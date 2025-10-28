@@ -1072,7 +1072,6 @@ body {
     opacity: 0.78;
     animation: webGlow 14s ease-in-out infinite alternate;
     pointer-events: none;
-    z-index: 5;
 }
 
 .halloween-overlay__web--top-left,
@@ -1125,16 +1124,15 @@ body {
 }
 
 .halloween-overlay__web--main {
-    top: clamp(-42px, -6vh, -16px);
-    right: clamp(-18px, -4vw, 12px);
-    width: clamp(340px, 38vw, 560px);
-    height: clamp(340px, 38vw, 560px);
+    top: clamp(-80px, -10vw, 0px);
+    right: clamp(-90px, -8vw, -24px);
+    width: clamp(360px, 40vw, 540px);
+    height: clamp(360px, 40vw, 540px);
     background-position: top right;
-    transform: scaleX(-1) rotate(-2deg);
-    transform-origin: top right;
-    opacity: 0.96;
-    filter: drop-shadow(0 24px 46px rgba(122, 94, 210, 0.32));
-    z-index: 14;
+    transform: scaleX(-0.8) rotate(-190deg);
+    opacity: 0.88;
+    filter: drop-shadow(0 18px 36px rgba(96, 70, 180, 0.28));
+    z-index: 9999;
 }
 
 .halloween-overlay__web--bottom-right::before {
