@@ -1131,7 +1131,7 @@ body {
     width: clamp(62px, 9vw, 112px);
     height: auto;
     opacity: 0.9;
-    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.6));
+    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 1));
     pointer-events: none;
 }
 
