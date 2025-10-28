@@ -17870,6 +17870,8 @@ function registerResponsiveHandlers() {
 function setupInventoryTabs() {
   const tabButtons = Array.from(document.querySelectorAll(".inventory-tab"));
   const panels = Array.from(document.querySelectorAll(".inventory-panel"));
+  const searchContainer = document.querySelector(".inventory-search");
+  const sortContainer = document.querySelector(".inventory-sort");
 
   if (!tabButtons.length || !panels.length) {
     return;
@@ -17898,6 +17900,8 @@ function setupInventoryTabs() {
 
     activeTabName = tabName;
 
+    const isTitlesTabActive = tabName === "titles";
+
     tabButtons.forEach((button) => {
       const isActive = button.dataset.tab === tabName;
       button.classList.toggle("inventory-tab--active", isActive);
@@ -17910,6 +17914,16 @@ function setupInventoryTabs() {
       panel.classList.toggle("inventory-panel--active", isActive);
       panel.setAttribute("aria-hidden", String(!isActive));
     });
+
+    if (searchContainer) {
+      searchContainer.classList.toggle("inventory-tool--hidden", !isTitlesTabActive);
+      searchContainer.setAttribute("aria-hidden", String(!isTitlesTabActive));
+    }
+
+    if (sortContainer) {
+      sortContainer.classList.toggle("inventory-tool--hidden", !isTitlesTabActive);
+      sortContainer.setAttribute("aria-hidden", String(!isTitlesTabActive));
+    }
 
     document.querySelectorAll(".dropdown-menu.open").forEach((menu) => {
       menu.style.display = "none";
