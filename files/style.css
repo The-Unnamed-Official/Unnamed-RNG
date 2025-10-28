@@ -1076,8 +1076,8 @@ body {
 
 .halloween-overlay__spider {
     position: absolute;
-    top: clamp(48px, 12vh, 180px);
-    left: clamp(48vw, 58vw, 66vw);
+    top: clamp(48px, 1vh, 130px);
+    right: clamp(2vw, 3vw, 3vw);
     width: clamp(58px, 6.6vw, 92px);
     height: auto;
     transform-origin: center;
