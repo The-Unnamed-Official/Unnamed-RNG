@@ -3853,8 +3853,8 @@ body.flashing {
     flex-shrink: 0;
     display: grid;
     place-items: center;
-    width: 64px;
-    height: 64px;
+    width: 72px;
+    height: 72px;
     border-radius: 18px;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.02));
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
@@ -3864,7 +3864,7 @@ body.flashing {
 .creator-card__avatar::before {
     content: "";
     position: absolute;
-    inset: -12px;
+    inset: -14px;
     background: url("images/unnamed_pfp_deco_inactive.png") center/contain no-repeat;
     filter: drop-shadow(0 12px 18px rgba(10, 14, 30, 0.65));
     transition: transform 220ms ease, opacity 220ms ease, background-image 60ms linear;
@@ -3876,8 +3876,8 @@ body.flashing {
 .creator-card__avatar img {
     position: relative;
     z-index: 1;
-    width: 58px;
-    height: 58px;
+    width: 66px;
+    height: 66px;
     border-radius: 50%;
     object-fit: cover;
 }
@@ -3933,18 +3933,18 @@ body.flashing {
     }
 
     .creator-card__avatar {
-        width: 54px;
-        height: 54px;
+        width: 60px;
+        height: 60px;
         border-radius: 16px;
     }
 
     .creator-card__avatar::before {
-        inset: -10px;
+        inset: -12px;
     }
 
     .creator-card__avatar img {
-        width: 48px;
-        height: 48px;
+        width: 54px;
+        height: 54px;
     }
 
     .creator-card__title {
