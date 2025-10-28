@@ -1076,13 +1076,13 @@ body {
 
 .halloween-overlay__spider {
     position: absolute;
-    top: clamp(48px, 1vh, 130px);
-    right: clamp(2vw, 3vw, 3vw);
+    top: clamp(-24px, -2.8vw, 38px);
+    right: clamp(-28px, -2.4vw, 18px);
     width: clamp(58px, 6.6vw, 92px);
     height: auto;
-    transform-origin: center;
+    transform-origin: 50% 35%;
     filter: drop-shadow(0 12px 22px rgba(8, 0, 24, 0.45));
-    animation: spiderPatrol 26s cubic-bezier(0.42, 0, 0.35, 1) infinite;
+    animation: spiderPatrol 28s linear infinite;
     pointer-events: none;
     z-index: 10000;
     will-change: transform;
@@ -1090,25 +1090,31 @@ body {
 
 @keyframes spiderPatrol {
     0% {
-        transform: translate3d(0, 0, 0) rotate(-12deg) scaleX(1);
+        transform: translate3d(-1.6vw, 0.2vw, 0) rotate(348deg);
     }
-    18% {
-        transform: translate3d(3vw, 4.8vw, 0) rotate(-2deg) scaleX(1);
+    12% {
+        transform: translate3d(-2.2vw, 4.4vw, 0) rotate(372deg);
     }
-    32% {
-        transform: translate3d(1.8vw, 10vw, 0) rotate(8deg) scaleX(-1);
+    26% {
+        transform: translate3d(0.4vw, 9.6vw, 0) rotate(408deg);
     }
-    50% {
-        transform: translate3d(-3.6vw, 14vw, 0) rotate(2deg) scaleX(-1);
+    40% {
+        transform: translate3d(4.8vw, 11.8vw, 0) rotate(438deg);
+    }
+    54% {
+        transform: translate3d(8vw, 7.2vw, 0) rotate(492deg);
     }
     68% {
-        transform: translate3d(-7vw, 8vw, 0) rotate(10deg) scaleX(-1);
+        transform: translate3d(6vw, 1.2vw, 0) rotate(540deg);
     }
-    84% {
-        transform: translate3d(-2.4vw, 1.6vw, 0) rotate(-6deg) scaleX(1);
+    82% {
+        transform: translate3d(1.8vw, -2.8vw, 0) rotate(600deg);
+    }
+    92% {
+        transform: translate3d(-1.2vw, -1.6vw, 0) rotate(660deg);
     }
     100% {
-        transform: translate3d(0, 0, 0) rotate(-12deg) scaleX(1);
+        transform: translate3d(-1.6vw, 0.2vw, 0) rotate(708deg);
     }
 }
 
