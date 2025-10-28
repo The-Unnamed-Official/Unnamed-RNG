@@ -21160,8 +21160,11 @@ function createParticle(minRadius, maxRadius, minSize, maxSize, speed, rotationR
 
 function createParticleGroup() {
   const system = document.querySelector('.particle-system');
+  if (!system) {
+    return;
+  }
   system.innerHTML = '';
-  
+
   for (let i = 0; i < 10; i++) {
     const particle = createParticle(10, 30, 1, 2, 2, 720);
     system.appendChild(particle);
