@@ -207,7 +207,7 @@
             <div class="stats-panel">
                 <div class="stats-header">
                     <h3 class="dragTxt">Statistics</h3>
-                    <button id="closeStats" class="stats-close-btn" type="button">Close</button>
+                    <button id="closeStats" class="settings-close-btn stats-close-btn" type="button">Close</button>
                 </div>
                 <div class="stats-body">
                     <div class="stats-overview">
@@ -233,7 +233,7 @@
             <div class="achievements-panel">
                 <div class="achievements-header">
                     <h3 class="dragTxt">Achievements</h3>
-                    <button id="closeAchievements" class="achievements-close-btn" type="button">Close</button>
+                    <button id="closeAchievements" class="settings-close-btn achievements-close-btn" type="button">Close</button>
                 </div>
                 <div class="achievements-body">
                     <section class="achievements-section">
@@ -687,7 +687,10 @@
 
         <div class="inventory">
             <div class="inventory-header">
-                <h2><i class="fa-solid fa-box-archive"></i> Inventory</h2>
+                <div class="inventory-header__main">
+                    <h2><i class="fa-solid fa-box-archive"></i> Inventory</h2>
+                    <button id="closeInventory" class="settings-close-btn inventory-close-btn" type="button">Close</button>
+                </div>
                 <div class="inventory-sort">
                     <span class="inventory-sort__label" id="inventorySortLabel"><i class="fa-solid fa-sort" aria-hidden="true"></i> Title Sorting</span>
                     <div class="inventory-sort__controls" role="group" aria-labelledby="inventorySortLabel">
