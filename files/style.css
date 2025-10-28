@@ -1077,14 +1077,14 @@ body {
 .halloween-overlay__spider {
     position: absolute;
     top: clamp(-24px, -2.8vw, 38px);
-    right: clamp(-28px, -2.4vw, 18px);
+    right: clamp(100px, 32.4vw, 168px);
     width: clamp(58px, 6.6vw, 92px);
     height: auto;
     transform-origin: 50% 35%;
     filter: drop-shadow(0 12px 22px rgba(8, 0, 24, 0.45));
     animation: spiderPatrol 28s linear infinite;
     pointer-events: none;
-    z-index: 10000;
+    z-index: 100000000000;
     will-change: transform;
 }
 
@@ -1102,19 +1102,19 @@ body {
         transform: translate3d(4.8vw, 11.8vw, 0) rotate(438deg);
     }
     54% {
-        transform: translate3d(8vw, 7.2vw, 0) rotate(492deg);
+        transform: translate3d(8vw, 7.2vw, 0) rotate(262deg);
     }
     68% {
-        transform: translate3d(6vw, 1.2vw, 0) rotate(540deg);
+        transform: translate3d(6vw, 1.2vw, 0) rotate(170deg);
     }
     82% {
-        transform: translate3d(1.8vw, -2.8vw, 0) rotate(600deg);
+        transform: translate3d(1.8vw, -2.8vw, 0) rotate(140deg);
     }
     92% {
-        transform: translate3d(-1.2vw, -1.6vw, 0) rotate(660deg);
+        transform: translate3d(-1.2vw, -1.6vw, 0) rotate(160deg);
     }
     100% {
-        transform: translate3d(-1.6vw, 0.2vw, 0) rotate(708deg);
+        transform: translate3d(-1.6vw, 0.2vw, 0) rotate(348deg);
     }
 }
 
@@ -1174,7 +1174,7 @@ body {
     height: clamp(360px, 40vw, 540px);
     background-position: top right;
     transform: scaleX(-0.8) rotate(-190deg);
-    opacity: 0.88;
+    opacity: 0.44 !important;
     filter: drop-shadow(0 18px 36px rgba(96, 70, 180, 0.28));
     z-index: 9999;
 }
