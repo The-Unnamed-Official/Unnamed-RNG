@@ -4595,8 +4595,8 @@ body.flashing {
   display: flex;
   align-items: center;
   gap: 12px;
+  row-gap: 8px;
   width: 100%;
-  height: 50px;
   flex-wrap: wrap;
   padding: 10px 7px;
   border-radius: 14px;
@@ -4608,20 +4608,21 @@ body.flashing {
 .inventory-sort__label {
   display: flex;
   align-items: center;
-  margin-bottom: 15px;
   gap: 6px;
+  margin: 0;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: color-mix(in srgb, #ffe2c4 58%, #d8d0ff 42%);
+  flex: 1 1 auto;
 }
 
 .inventory-sort__controls {
   display: flex;
+  align-items: center;
   gap: 8px;
   margin-left: auto;
-  top: -15px;
 }
 
 .inventory-sort__button {
@@ -4670,6 +4671,10 @@ body.flashing {
   border-radius: 12px;
   border: 1px solid rgba(255, 194, 140, 0.2);
   background: linear-gradient(135deg, rgba(255, 154, 102, 0.14), rgba(120, 86, 210, 0.18));
+}
+
+.inventory-tool--hidden {
+  display: none !important;
 }
 
 .inventory-search__label {
