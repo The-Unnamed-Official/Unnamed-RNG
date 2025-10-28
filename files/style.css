@@ -1944,8 +1944,8 @@ body {
     box-shadow: var(--halloween-modal-shadow);
     z-index: 10000000;
     color: #f1f5ff;
-    overflow: hidden;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #ff8a3d #1b102c;
 }
