@@ -1048,7 +1048,7 @@ body {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 1;
+    z-index: 990000;
 }
 
 .halloween-overlay__web {
@@ -1062,6 +1062,7 @@ body {
     opacity: 0.78;
     animation: webGlow 14s ease-in-out infinite alternate;
     pointer-events: none;
+    z-index: 5;
 }
 
 .halloween-overlay__web--top-left,
@@ -1073,12 +1074,13 @@ body {
 .halloween-overlay__web--bottom-right {
     width: clamp(220px, 26vw, 340px);
     height: clamp(220px, 26vw, 340px);
+    background-position: top right;
 }
 
 .halloween-overlay__web--top-right {
     top: -6vw;
     right: -8vw;
-    transform: scaleX(-1);
+    transform: scaleX(-1) rotate(-6deg);
     transform-origin: top right;
 }
 
@@ -1108,8 +1110,21 @@ body {
 .halloween-overlay__web--bottom-right {
     bottom: -8vw;
     right: -8vw;
-    transform: scale(-1);
+    transform: scaleX(-1) rotate(8deg);
     transform-origin: bottom right;
+}
+
+.halloween-overlay__web--main {
+    top: clamp(-120px, -10vw, -48px);
+    right: clamp(-64px, -8vw, -24px);
+    width: clamp(360px, 40vw, 540px);
+    height: clamp(360px, 40vw, 540px);
+    background-position: top right;
+    transform: scaleX(-1) rotate(-4deg);
+    transform-origin: top right;
+    opacity: 0.88;
+    filter: drop-shadow(0 18px 36px rgba(96, 70, 180, 0.28));
+    z-index: 6;
 }
 
 .halloween-overlay__web--bottom-right::before {
@@ -1881,13 +1896,13 @@ body {
     opacity: 0.45;
     filter: drop-shadow(0 8px 18px rgba(80, 60, 140, 0.32));
     pointer-events: none;
-    z-index: 1;
+    z-index: 250;
 }
 
 .settings-panel::before {
     top: clamp(-30px, -4vh, -18px);
     right: clamp(-28px, -4vw, -12px);
-    transform: scale(0.88) rotate(-10deg);
+    transform: scaleX(-1) scale(0.9) rotate(7deg);
 }
 
 .stats-panel::before {
@@ -1899,7 +1914,7 @@ body {
 .achievements-panel::before {
     top: clamp(-34px, -5vh, -18px);
     right: clamp(-32px, -4vw, -16px);
-    transform: scale(1) rotate(8deg);
+    transform: scaleX(-1) rotate(-6deg);
 }
 
 .inventory::before {
