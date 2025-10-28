@@ -1989,8 +1989,8 @@ body {
 }
 
 .achievements-panel::before {
-    top: clamp(-22px, -4vh, -12px);
-    right: clamp(-18px, -3vw, -10px);
+    top: clamp(10px, 2vh, 8px);
+    right: clamp(10px, 2vw, 8px);
     transform: scaleX(-1) rotate(-2deg);
 }
 
@@ -4596,8 +4596,9 @@ body.flashing {
   align-items: center;
   gap: 12px;
   width: 100%;
+  height: 50px;
   flex-wrap: wrap;
-  padding: 10px 14px;
+  padding: 10px 7px;
   border-radius: 14px;
   border: 1px solid rgba(255, 207, 152, 0.28);
   background: linear-gradient(135deg, rgba(255, 188, 132, 0.18), rgba(133, 100, 230, 0.24));
@@ -4607,6 +4608,7 @@ body.flashing {
 .inventory-sort__label {
   display: flex;
   align-items: center;
+  margin-bottom: 15px;
   gap: 6px;
   font-size: 13px;
   font-weight: 600;
@@ -4617,9 +4619,9 @@ body.flashing {
 
 .inventory-sort__controls {
   display: flex;
-  align-items: center;
   gap: 8px;
   margin-left: auto;
+  top: -15px;
 }
 
 .inventory-sort__button {
@@ -7651,7 +7653,7 @@ body.flashing {
     flex: 1 1 auto;
     background: var(--halloween-modal-gradient);
     background-size: cover;
-    border-radius: 18px;
+    border-radius: 23px;
     border: 1px solid var(--halloween-modal-border-color);
     box-shadow: var(--halloween-modal-shadow);
     overflow: visible;
@@ -7661,6 +7663,7 @@ body.flashing {
 
 .achievements-header {
     z-index: 500000;
+    border-radius: 23px;
 }
 
 .achievements-header .dragTxt {
