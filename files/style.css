@@ -22,6 +22,16 @@
 
   /* Seasonal art */
   --halloween-web-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20200%20200%27%3E%0A%20%20%3Cg%20fill%3D%27none%27%20stroke%3D%27%23f8faff%27%20stroke-width%3D%271.1%27%20stroke-linecap%3D%27round%27%20opacity%3D%270.75%27%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20L0%20200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20L200%200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20L200%20200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20L140%20200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20L80%20200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20Q50%2030%20120%200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20Q80%2060%20160%200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20Q110%20100%20200%2020%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20Q140%20150%20200%2080%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20Q160%20180%20200%20140%27%2F%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  --halloween-modal-gradient:
+    radial-gradient(circle at 15% 10%, rgba(255, 157, 101, 0.32), transparent 58%),
+    radial-gradient(circle at 85% 8%, rgba(109, 71, 203, 0.36), transparent 62%),
+    linear-gradient(160deg, rgba(24, 18, 42, 0.92), rgba(10, 12, 24, 0.96)),
+    url(backgrounds/rng_master.png);
+  --halloween-modal-border-color: rgba(255, 163, 100, 0.28);
+  --halloween-modal-shadow: 0 24px 60px rgba(21, 10, 38, 0.65);
+  --halloween-header-gradient: linear-gradient(135deg, rgba(34, 20, 56, 0.92), rgba(16, 12, 28, 0.9));
+  --halloween-header-border-color: rgba(255, 168, 112, 0.2);
+  --halloween-header-shadow: 0 6px 18px rgba(10, 6, 20, 0.55);
 }
 
 /* Motion safety */
@@ -1115,16 +1125,16 @@ body {
 }
 
 .halloween-overlay__web--main {
-    top: clamp(-120px, -10vw, -48px);
-    right: clamp(-64px, -8vw, -24px);
-    width: clamp(360px, 40vw, 540px);
-    height: clamp(360px, 40vw, 540px);
+    top: clamp(-42px, -6vh, -16px);
+    right: clamp(-18px, -4vw, 12px);
+    width: clamp(340px, 38vw, 560px);
+    height: clamp(340px, 38vw, 560px);
     background-position: top right;
-    transform: scaleX(-1) rotate(-4deg);
+    transform: scaleX(-1) rotate(-2deg);
     transform-origin: top right;
-    opacity: 0.88;
-    filter: drop-shadow(0 18px 36px rgba(96, 70, 180, 0.28));
-    z-index: 6;
+    opacity: 0.96;
+    filter: drop-shadow(0 24px 46px rgba(122, 94, 210, 0.32));
+    z-index: 14;
 }
 
 .halloween-overlay__web--bottom-right::before {
@@ -1148,24 +1158,27 @@ body {
     opacity: 0.9;
     filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 1));
     pointer-events: none;
+    will-change: transform, opacity;
 }
 
 .halloween-overlay__bat--1 {
     top: clamp(18%, 26vh, 32%);
-    left: clamp(12%, 20vw, 28%);
-    animation: batFlight 16s linear infinite;
+    left: -18vw;
+    animation: batFlightLeftToRight 6s linear infinite;
 }
 
 .halloween-overlay__bat--2 {
-    top: clamp(28%, 42vh, 46%);
-    right: clamp(16%, 22vw, 32%);
-    animation: batFlight 18s linear infinite reverse;
+    top: clamp(32%, 46vh, 54%);
+    left: 102vw;
+    animation: batFlightRightToLeft 6.5s linear infinite;
+    animation-delay: 0.8s;
 }
 
 .halloween-overlay__bat--3 {
-    top: clamp(8%, 18vh, 26%);
-    left: clamp(58%, 62vw, 72%);
-    animation: batFlight 20s linear infinite;
+    top: -14vh;
+    left: -20vw;
+    animation: batFlightDiagonal 7s linear infinite;
+    animation-delay: 0.4s;
 }
 
 .halloween-overlay__lantern {
@@ -1224,12 +1237,38 @@ body {
     100% { opacity: 0.7; filter: drop-shadow(0 6px 18px rgba(148, 108, 255, 0.18)); }
 }
 
-@keyframes batFlight {
-    0% { transform: translate3d(-8vw, 0, 0) scale(0.95); }
-    25% { transform: translate3d(2vw, -1.5vw, 0) scale(1); }
-    50% { transform: translate3d(6vw, 0.5vw, 0) scale(1.05); }
-    75% { transform: translate3d(-2vw, 1.5vw, 0) scale(0.98); }
-    100% { transform: translate3d(-8vw, 0, 0) scale(0.95); }
+@keyframes batFlightLeftToRight {
+    0% { opacity: 0; transform: translate3d(0, -6vh, 0) scale(0.85) rotate(-14deg); }
+    10% { opacity: 0.95; transform: translate3d(18vw, 4vh, 0) scale(0.98) rotate(9deg); }
+    20% { transform: translate3d(36vw, -3vh, 0) scale(1.05) rotate(-10deg); }
+    30% { transform: translate3d(56vw, 3vh, 0) scale(1.08) rotate(8deg); }
+    40% { transform: translate3d(76vw, -4vh, 0) scale(1.06) rotate(-9deg); }
+    55% { transform: translate3d(96vw, 3vh, 0) scale(1.02) rotate(7deg); }
+    70% { transform: translate3d(118vw, -5vh, 0) scale(0.98) rotate(-8deg); }
+    85% { opacity: 0.9; transform: translate3d(138vw, 4vh, 0) scale(0.95) rotate(6deg); }
+    100% { opacity: 0; transform: translate3d(160vw, -2vh, 0) scale(0.92) rotate(-5deg); }
+}
+
+@keyframes batFlightRightToLeft {
+    0% { opacity: 0; transform: translate3d(0, -4vh, 0) scale(0.95) rotate(12deg); }
+    12% { opacity: 0.92; transform: translate3d(-18vw, 3vh, 0) scale(1.02) rotate(-9deg); }
+    25% { transform: translate3d(-40vw, -4vh, 0) scale(1.08) rotate(7deg); }
+    40% { transform: translate3d(-62vw, 2vh, 0) scale(1.05) rotate(-8deg); }
+    55% { transform: translate3d(-84vw, -5vh, 0) scale(1.01) rotate(9deg); }
+    72% { transform: translate3d(-108vw, 4vh, 0) scale(0.97) rotate(-7deg); }
+    88% { opacity: 0.85; transform: translate3d(-132vw, -3vh, 0) scale(0.94) rotate(6deg); }
+    100% { opacity: 0; transform: translate3d(-156vw, 2vh, 0) scale(0.9) rotate(-4deg); }
+}
+
+@keyframes batFlightDiagonal {
+    0% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.82) rotate(-16deg); }
+    10% { opacity: 0.95; transform: translate3d(16vw, 12vh, 0) scale(0.92) rotate(10deg); }
+    25% { transform: translate3d(34vw, 26vh, 0) scale(1.04) rotate(-9deg); }
+    40% { transform: translate3d(52vw, 38vh, 0) scale(1.09) rotate(8deg); }
+    55% { transform: translate3d(72vw, 52vh, 0) scale(1.06) rotate(-7deg); }
+    70% { transform: translate3d(92vw, 66vh, 0) scale(1.02) rotate(6deg); }
+    85% { opacity: 0.88; transform: translate3d(110vw, 78vh, 0) scale(0.98) rotate(-5deg); }
+    100% { opacity: 0; transform: translate3d(128vw, 88vh, 0) scale(0.94) rotate(4deg); }
 }
 
 @keyframes lanternSwing {
@@ -1856,15 +1895,11 @@ body {
     padding: 0;
     display: flex;
     flex-direction: column;
-    background:
-        radial-gradient(circle at 15% 10%, rgba(255, 157, 101, 0.32), transparent 58%),
-        radial-gradient(circle at 85% 8%, rgba(109, 71, 203, 0.36), transparent 62%),
-        linear-gradient(160deg, rgba(24, 18, 42, 0.92), rgba(10, 12, 24, 0.96)),
-        url(backgrounds/rng_master.png);
+    background: var(--halloween-modal-gradient);
     background-size: cover;
     border-radius: 18px;
-    border: 1px solid rgba(255, 163, 100, 0.28);
-    box-shadow: 0 24px 60px rgba(21, 10, 38, 0.65);
+    border: 1px solid var(--halloween-modal-border-color);
+    box-shadow: var(--halloween-modal-shadow);
     z-index: 10000000;
     color: #f1f5ff;
     overflow: hidden;
@@ -1923,15 +1958,16 @@ body {
     transform: scale(0.9) rotate(-5deg);
 }
 
-.settings-header {
+.settings-header,
+.stats-header,
+.achievements-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
     padding: 18px 22px 14px 22px;
-    border-bottom: 1px solid rgba(255, 168, 112, 0.2);
-    background:
-        linear-gradient(135deg, rgba(34, 20, 56, 0.92), rgba(16, 12, 28, 0.9));
+    border-bottom: 1px solid var(--halloween-header-border-color);
+    background: var(--halloween-header-gradient);
     backdrop-filter: blur(18px);
     cursor: grab;
     user-select: none;
@@ -1939,7 +1975,31 @@ body {
     top: 0;
     z-index: 50;
     flex: 0 0 auto;
-    box-shadow: 0 6px 18px rgba(10, 6, 20, 0.55);
+    box-shadow: var(--halloween-header-shadow);
+}
+
+.inventory-header {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 18px 22px 20px 22px;
+    margin: -16px -16px 18px;
+    border-bottom: 1px solid var(--halloween-header-border-color);
+    background: var(--halloween-header-gradient);
+    backdrop-filter: blur(18px);
+    box-shadow: var(--halloween-header-shadow);
+    border-radius: 18px 18px 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.inventory-header__main {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
 .settings-header .dragTxt {
@@ -4378,25 +4438,21 @@ body.flashing {
   top: 50%;
   transform: translate3d(0, -50%, 0);
   width: clamp(320px, 32vw, 420px);
-  /* Keep background image but add a dark overlay for readability */
-  background:
-    linear-gradient(rgba(15,15,15,0.75), rgba(15,15,15,0.75)),
-    url(backgrounds/rng_master.png);
-  background-position: center;
+  background: var(--halloween-modal-gradient);
   background-size: cover;
-  /* Remove groove; use a clean subtle border */
-  border: 1px solid #3f3f3f;
-  border-radius: 14px;
+  background-position: center;
+  border: 1px solid var(--halloween-modal-border-color);
+  border-radius: 18px;
   padding: 16px;
-  /* Stronger, softer shadow */
-  box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+  box-shadow: var(--halloween-modal-shadow);
+  color: #f1f5ff;
   text-align: left;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   max-height: min(85vh, 720px);
-  /* No animated transitions */
   z-index: 99999;
+  backdrop-filter: blur(12px);
 }
 
 @media (max-width: 960px) {
@@ -4455,25 +4511,14 @@ body.flashing {
   padding: 10px;
 }
 
-/* Title */
-.inventory-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 6px 6px 12px 6px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-
 .inventory h2 {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 18px;
+  font-size: clamp(1.1rem, 0.9rem + 0.6vw, 1.35rem);
   font-weight: 700;
-  color: #fff;
+  color: #fdfcff;
+  text-shadow: 0 8px 20px rgba(26, 10, 34, 0.55);
   margin: 0;
 }
 
@@ -4481,22 +4526,24 @@ body.flashing {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 0 6px 12px 6px;
+  margin: 0 0 12px;
   padding: 4px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: linear-gradient(140deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255, 194, 140, 0.2);
+  background: linear-gradient(135deg, rgba(255, 154, 102, 0.14), rgba(120, 86, 210, 0.18));
 }
 
 .inventory-sort {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-left: auto;
-  padding: 6px 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: linear-gradient(140deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  width: 100%;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 194, 140, 0.24);
+  background: linear-gradient(135deg, rgba(255, 154, 102, 0.22), rgba(120, 86, 210, 0.24));
+  box-shadow: inset 0 0 0 1px rgba(255, 236, 204, 0.04);
 }
 
 .inventory-sort__label {
@@ -4507,13 +4554,14 @@ body.flashing {
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.75);
+  color: color-mix(in srgb, #ffd4ae 52%, #d0c6ff 48%);
 }
 
 .inventory-sort__controls {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: auto;
 }
 
 .inventory-sort__button {
@@ -4557,11 +4605,11 @@ body.flashing {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 0 6px 12px 6px;
+  margin: 0 0 12px;
   padding: 8px 12px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: linear-gradient(140deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255, 194, 140, 0.2);
+  background: linear-gradient(135deg, rgba(255, 154, 102, 0.14), rgba(120, 86, 210, 0.18));
 }
 
 .inventory-search__label {
@@ -4580,9 +4628,9 @@ body.flashing {
   min-width: 0;
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(0, 0, 0, 0.35);
-  color: #ffffff;
+  border: 1px solid rgba(255, 194, 140, 0.28);
+  background: rgba(18, 12, 32, 0.55);
+  color: #fdfcff;
   font-size: 14px;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
@@ -4595,7 +4643,7 @@ body.flashing {
   outline: none;
   border-color: rgba(255, 205, 141, 0.85);
   box-shadow: 0 0 0 3px rgba(255, 205, 141, 0.25);
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(18, 12, 32, 0.7);
 }
 
 .inventory-tab {
@@ -7543,35 +7591,18 @@ body.flashing {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
-    background:
-        linear-gradient(160deg, rgba(28, 34, 54, 0.52), rgba(12, 18, 32, 0.76)),
-        url(backgrounds/rng_master.png);
+    background: var(--halloween-modal-gradient);
     background-size: cover;
     border-radius: 18px;
-    border: 1px solid rgba(120, 164, 255, 0.24);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    border: 1px solid var(--halloween-modal-border-color);
+    box-shadow: var(--halloween-modal-shadow);
     overflow: visible;
     min-height: 0;
     position: relative;
 }
 
 .achievements-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 18px 22px 14px 22px;
-    border-bottom: 1px solid rgba(120, 164, 255, 0.16);
-    background: rgba(10, 14, 26, 0.75);
-    backdrop-filter: blur(12px);
-    border-radius: 17px;
-    cursor: grab;
-    user-select: none;
-    position: sticky;
-    top: 0;
     z-index: 500000;
-    flex: 0 0 auto;
-    box-shadow: 0 6px 14px rgba(4, 8, 16, 0.55);
 }
 
 .achievements-header .dragTxt {
@@ -7585,27 +7616,6 @@ body.flashing {
     cursor: grabbing;
 }
 
-.achievements-close-btn {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    background: rgba(40, 62, 110, 0.55);
-    color: #f4f7ff;
-    padding: 10px 14px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-align: center;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-}
-
-.achievements-close-btn:hover {
-    transform: translateY(-1px);
-    background: rgba(76, 104, 163, 0.75);
-    border-color: rgba(167, 200, 255, 0.4);
-}
-
-.achievements-close-btn:active {
-    transform: translateY(0);
-}
 
 .achievements-body {
     flex: 1;
@@ -7706,10 +7716,6 @@ body.flashing {
     .achievement-grid {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     }
-}
-
-#closeAchievements:hover {
-    background: rgba(255, 0, 0, 1);
 }
 
 .stat-card::before {
@@ -7831,13 +7837,11 @@ body.flashing {
     padding: 0;
     display: flex;
     flex-direction: column;
-    background:
-        linear-gradient(160deg, rgba(28,34,54,0.88), rgba(12,18,32,0.95)),
-        url(backgrounds/rng_master.png);
+    background: var(--halloween-modal-gradient);
     background-size: cover;
     border-radius: 18px;
-    border: 1px solid rgba(120, 164, 255, 0.25);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    border: 1px solid var(--halloween-modal-border-color);
+    box-shadow: var(--halloween-modal-shadow);
     z-index: 10000000;
     color: #f1f5ff;
     overflow: hidden;
@@ -7853,16 +7857,7 @@ body.flashing {
 }
 
 .stats-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    padding: 18px 22px 14px 22px;
-    border-bottom: 1px solid rgba(120, 164, 255, 0.16);
-    background: rgba(10, 14, 26, 0.65);
-    backdrop-filter: blur(12px);
     cursor: grab;
-    user-select: none;
 }
 
 .stats-header .dragTxt {
@@ -7876,23 +7871,6 @@ body.flashing {
     cursor: grabbing;
 }
 
-.stats-close-btn {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 12px;
-    background: rgba(40, 62, 110, 0.55);
-    color: #f4f7ff;
-    padding: 10px 14px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-align: center;
-    transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-}
-
-.stats-close-btn:hover {
-    transform: translateY(-1px);
-    background: rgba(76, 104, 163, 0.75);
-    border-color: rgba(167, 200, 255, 0.4);
-}
 
 .stats-body {
     flex: 1;

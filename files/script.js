@@ -17681,6 +17681,7 @@ function deleteAllByRarity(rarityClass) {
 
 function registerInterfaceToggleButtons() {
   const toggleInventoryBtn = document.getElementById("toggleInventoryBtn");
+  const inventoryCloseBtn = document.getElementById("closeInventory");
   if (toggleInventoryBtn) {
     toggleInventoryBtn.addEventListener("click", function () {
       const inventorySection = document.querySelector(".inventory");
@@ -17698,6 +17699,24 @@ function registerInterfaceToggleButtons() {
         inventorySection.style.visibility = "hidden";
         this.textContent = "Show Inventory";
         document.body.classList.remove("inventory-open");
+      }
+    });
+  }
+
+  if (inventoryCloseBtn) {
+    inventoryCloseBtn.addEventListener("click", function () {
+      const inventorySection = document.querySelector(".inventory");
+      const toggleInventoryBtn = document.getElementById("toggleInventoryBtn");
+
+      if (!inventorySection) {
+        return;
+      }
+
+      inventorySection.style.visibility = "hidden";
+      document.body.classList.remove("inventory-open");
+
+      if (toggleInventoryBtn) {
+        toggleInventoryBtn.textContent = "Show Inventory";
       }
     });
   }
