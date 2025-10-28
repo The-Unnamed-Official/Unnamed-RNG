@@ -693,6 +693,20 @@
                     <h2><i class="fa-solid fa-box-archive"></i> Inventory</h2>
                     <button id="closeInventory" class="settings-close-btn inventory-close-btn" type="button">Close</button>
                 </div>
+            </div>
+            <div class="inventory-tabs" role="tablist" aria-label="Inventory sections">
+                <button id="inventoryTabTitles" class="inventory-tab inventory-tab--active" type="button" role="tab" aria-selected="true" data-tab="titles">Titles</button>
+                <button id="inventoryTabDelete" class="inventory-tab" type="button" role="tab" aria-selected="false" data-tab="delete">Delete Titles</button>
+                <button id="inventoryTabPotions" class="inventory-tab" type="button" role="tab" aria-selected="false" data-tab="potions">Potions</button>
+            </div>
+            <div class="inventory-search" role="search">
+                <label class="inventory-search__label" for="inventorySearchInput">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <span>Search Titles</span>
+                </label>
+                <input id="inventorySearchInput" class="inventory-search__input" type="search" placeholder="Search titles..." aria-label="Search titles by name">
+            </div>
+            <div class="inventory-panels">
                 <div class="inventory-sort">
                     <span class="inventory-sort__label" id="inventorySortLabel"><i class="fa-solid fa-sort" aria-hidden="true"></i> Title Sorting</span>
                     <div class="inventory-sort__controls" role="group" aria-labelledby="inventorySortLabel">
@@ -707,20 +721,6 @@
                         </button>
                     </div>
                 </div>
-            </div>
-            <div class="inventory-search" role="search">
-                <label class="inventory-search__label" for="inventorySearchInput">
-                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    <span>Search Titles</span>
-                </label>
-                <input id="inventorySearchInput" class="inventory-search__input" type="search" placeholder="Search titles..." aria-label="Search titles by name">
-            </div>
-            <div class="inventory-tabs" role="tablist" aria-label="Inventory sections">
-                <button id="inventoryTabTitles" class="inventory-tab inventory-tab--active" type="button" role="tab" aria-selected="true" data-tab="titles">Titles</button>
-                <button id="inventoryTabDelete" class="inventory-tab" type="button" role="tab" aria-selected="false" data-tab="delete">Delete Titles</button>
-                <button id="inventoryTabPotions" class="inventory-tab" type="button" role="tab" aria-selected="false" data-tab="potions">Potions</button>
-            </div>
-            <div class="inventory-panels">
                 <div class="inventory-panel inventory-panel--active" role="tabpanel" aria-labelledby="inventoryTabTitles" data-tab-panel="titles">
                     <div class="invent inventory-panel__scroll">
                         <ul class="inv" id="inventoryList"></ul>

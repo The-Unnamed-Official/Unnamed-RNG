@@ -2025,12 +2025,9 @@ body {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
     padding: 14px 20px 16px;
-    margin: -10px -16px 16px;
+    margin: -10px 0px 0px;
     border-radius: 18px;
-    border: 1px solid rgba(255, 203, 142, 0.26);
-    background: linear-gradient(140deg, rgba(255, 176, 112, 0.16), rgba(120, 86, 210, 0.22));
     backdrop-filter: blur(20px);
-    box-shadow: inset 0 1px 0 rgba(255, 236, 204, 0.06), 0 14px 36px rgba(8, 5, 20, 0.52);
     position: sticky;
     top: 0;
     z-index: 50;
