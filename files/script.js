@@ -676,6 +676,8 @@ const POTION_TRANSACTION_CHECKOUT_URLS = Object.freeze({
 });
 
 const POTION_TRANSACTION_PURCHASE_COUNTS_KEY = "potionTransactionPurchaseCounts";
+const HALLOWEEN_FRIGHTS_PURCHASE_RESET_KEY = "halloweenFrightsBundlePurchaseReset2025";
+const HALLOWEEN_FRIGHTS_TRANSACTION_ID = "potionTransactionHalloweenFrights";
 
 function normalizePotionTransactionPurchaseCounts(raw) {
   if (!raw || typeof raw !== "object") {
@@ -703,6 +705,21 @@ function normalizePotionTransactionPurchaseCounts(raw) {
 let potionTransactionPurchaseCounts = normalizePotionTransactionPurchaseCounts(
   storage.get(POTION_TRANSACTION_PURCHASE_COUNTS_KEY, {}),
 );
+
+if (!storage.get(HALLOWEEN_FRIGHTS_PURCHASE_RESET_KEY, false)) {
+  if (
+    Object.prototype.hasOwnProperty.call(
+      potionTransactionPurchaseCounts,
+      HALLOWEEN_FRIGHTS_TRANSACTION_ID,
+    )
+  ) {
+    const nextCounts = { ...potionTransactionPurchaseCounts };
+    delete nextCounts[HALLOWEEN_FRIGHTS_TRANSACTION_ID];
+    writePotionTransactionPurchaseCounts(nextCounts);
+  }
+
+  storage.set(HALLOWEEN_FRIGHTS_PURCHASE_RESET_KEY, true);
+}
 
 function writePotionTransactionPurchaseCounts(nextCounts) {
   const payload = normalizePotionTransactionPurchaseCounts(nextCounts);
@@ -3906,6 +3923,7 @@ const STOPPABLE_AUDIO_IDS = [
   "impeachedAudio",
   "eonbreakAudio",
   "celAudio",
+  "malvorynAudio",
   "silcarAudio",
   "gregAudio",
   "mintllieAudio",
@@ -6206,6 +6224,7 @@ function registerRollButtonHandler() {
     rarity.type === "The Void's Veil [1 in 10,031]" ||
     rarity.type === "Wailing Shade [1 in 31,010]" ||
     rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" ||
+    rarity.type === "Malvoryn [1 in 666,666]" ||
     isDescendedTitleType(rarity.type)
   ) {
     const resultContainer = byId("result");
@@ -6376,6 +6395,8 @@ function registerRollButtonHandler() {
         warningPopup.style.display = "none";
       }, 2800);
     } else if (rarity.type === "Celestial Chorus [1 in 202,020]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Malvoryn [1 in 666,666]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Iridocyclitis Veil [1 in 5,000/50th]") {
       hugeSuspenceAudio.play();
@@ -9743,6 +9764,180 @@ function registerRollButtonHandler() {
         rollCount1++;
         titleCont.style.visibility = "visible";
         celAudio.play();
+      }
+    } else if (rarity.type === "Malvoryn [1 in 666,666]") {
+      if (skipCutsceneTranscendent) {
+        document.body.className = "blackBg";
+        disableChange();
+
+        const starContainer = document.getElementById("starContainer");
+        const squareContainer = document.getElementById("squareContainer");
+
+        if (starContainer) {
+          const malvorynStarClasses = ["purple-star", "blue-star", "white-star"];
+
+          for (let i = 0; i < 144; i += 1) {
+            const shard = document.createElement("span");
+            shard.className = malvorynStarClasses[i % malvorynStarClasses.length];
+            shard.innerHTML = i % 3 === 0 ? "✶" : i % 3 === 1 ? "✧" : "✦";
+            shard.style.left = Math.random() * 100 + "vw";
+
+            const randomX = (Math.random() - 0.5) * 28 + "vw";
+            shard.style.setProperty("--randomX", randomX);
+
+            const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+            shard.style.setProperty("--randomRotation", randomRotation);
+
+            shard.style.animationDelay = (i * 0.055).toFixed(2) + "s";
+
+            starContainer.appendChild(shard);
+
+            shard.addEventListener("animationend", () => {
+              shard.remove();
+            });
+          }
+        }
+
+        const createFragment = () => {
+          if (!squareContainer) {
+            return;
+          }
+
+          const fragment = document.createElement("div");
+          fragment.className = "malvoryn-fragment";
+          fragment.style.left = Math.random() * 100 + "vw";
+          fragment.style.top = Math.random() * 100 + "vh";
+          fragment.style.setProperty("--offsetX", `${(Math.random() - 0.5) * 360}px`);
+          fragment.style.setProperty("--offsetY", `${(Math.random() - 0.5) * 220}px`);
+          fragment.style.setProperty("--fragment-scale", (1.1 + Math.random() * 0.9).toFixed(2));
+          fragment.style.setProperty("--fragment-rotation", `${(Math.random() * 720 - 360).toFixed(0)}deg`);
+
+          squareContainer.appendChild(fragment);
+
+          fragment.addEventListener("animationend", () => {
+            fragment.remove();
+          });
+        };
+
+        if (squareContainer) {
+          createFragment();
+        }
+
+        const fragmentInterval = squareContainer
+          ? setInterval(() => {
+              for (let i = 0; i < 4; i += 1) {
+                createFragment();
+              }
+            }, 160)
+          : null;
+
+        const ringInterval = squareContainer
+          ? setInterval(() => {
+              const ring = document.createElement("div");
+              ring.className = "malvoryn-ring";
+              ring.style.setProperty("--ring-scale", (1.35 + Math.random() * 0.55).toFixed(2));
+
+              squareContainer.appendChild(ring);
+
+              ring.addEventListener("animationend", () => {
+                ring.remove();
+              });
+            }, 1200)
+          : null;
+
+        const stopIntervals = () => {
+          if (fragmentInterval) {
+            clearInterval(fragmentInterval);
+          }
+
+          if (ringInterval) {
+            clearInterval(ringInterval);
+          }
+        };
+
+        setTimeout(stopIntervals, 9800);
+
+        const flickerSequence = [
+          { time: 600, className: "whiteFlash" },
+          { time: 1200, className: "blackBg" },
+          { time: 1900, className: "whiteFlash" },
+          { time: 2700, className: "blackBg" },
+          { time: 3600, className: "whiteFlash" },
+          { time: 4500, className: "blackBg" },
+          { time: 5600, className: "whiteFlash" },
+          { time: 6800, className: "blackBg" },
+          { time: 8200, className: "whiteFlash" },
+          { time: 9400, className: "blackBg" },
+        ];
+
+        flickerSequence.forEach((step) => {
+          setTimeout(() => {
+            document.body.className = step.className;
+          }, step.time);
+        });
+
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            updateRollingHistory(title, rarity.type);
+            displayResult(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+
+            if (typeof hugeSuspenceAudio?.pause === "function") {
+              try {
+                hugeSuspenceAudio.pause();
+              } catch (error) {
+                /* no-op */
+              }
+            }
+
+            if (typeof malvorynAudio?.pause === "function") {
+              try {
+                malvorynAudio.pause();
+                malvorynAudio.currentTime = 0;
+              } catch (error) {
+                /* no-op */
+              }
+            }
+
+            malvorynAudio.play();
+          }, 120);
+          enableChange();
+        }, 11000);
+      } else {
+        if (typeof hugeSuspenceAudio?.pause === "function") {
+          try {
+            hugeSuspenceAudio.pause();
+          } catch (error) {
+            /* no-op */
+          }
+        }
+
+        addToInventory(title, rarity.class);
+        updateRollingHistory(title, rarity.type);
+        displayResult(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+
+        if (typeof malvorynAudio?.pause === "function") {
+          try {
+            malvorynAudio.pause();
+            malvorynAudio.currentTime = 0;
+          } catch (error) {
+            /* no-op */
+          }
+        }
+
+        malvorynAudio.play();
       }
     } else if (rarity.type === "Devil's Heart [1 in 66,666]") {
       if (skipCutscene100K) {
@@ -16970,6 +17165,12 @@ function rollRarity() {
       class: "alienBgImg",
       chance: 0.00015293279,
       titles: ["Catien", "Another Species"]
+    },
+    {
+      type: "Malvoryn [1 in 666,666]",
+      class: "malvorynBgImg",
+      chance: 0.00015000015,
+      titles: ["The Deep Dark", "The One Who Broke The World", "Disaster", "Chaos"]
     }
   ];
 
@@ -18090,6 +18291,10 @@ const backgroundDetails = {
   celestialchorusBgImg: {
     image: "files/backgrounds/celestialchorus.png",
     audio: "celAudio",
+  },
+  malvorynBgImg: {
+    image: "files/backgrounds/malvoryn.png",
+    audio: "malvorynAudio",
   },
   arcanepulseBgImg: {
     image: "files/backgrounds/arcanepulse.png",
@@ -19324,8 +19529,18 @@ function startAnimation5() {
   }, 17000);
 }
 
-function startAnimationA5() {
-  const star = document.getElementById("star");
+function startAnimationA5(options = {}) {
+  const targetId =
+    typeof options === "string"
+      ? options
+      : (options && options.targetId) || "star";
+  const star = document.getElementById(targetId);
+
+  if (!star) {
+    return;
+  }
+
+  const baseClasses = star.className;
 
   star.classList.add("spin");
 
@@ -19338,10 +19553,21 @@ function startAnimationA5() {
   }, 8750);
 
   setTimeout(() => {
-    star.classList.add("cutsceneStar");
-    star.classList.remove("scale-up-and-vanish");
-    star.classList.remove("spin-slow");
-    star.classList.remove("spin");
+    if (baseClasses) {
+      star.className = baseClasses;
+    } else {
+      star.classList.remove("scale-up-and-vanish");
+      star.classList.remove("spin-slow");
+      star.classList.remove("spin");
+
+      if (targetId === "starBig") {
+        star.classList.add("cutsceneStarBig");
+      } else if (targetId === "starSmall") {
+        star.classList.add("cutsceneStarSmall");
+      } else {
+        star.classList.add("cutsceneStar");
+      }
+    }
   }, 10750);
 }
 
@@ -20614,6 +20840,7 @@ function getClassForRarity(rarity) {
       'Arcane Pulse [1 in 77,777]': 'under100k',
       'Impeached [1 in 101,010]': 'under1m',
       'Celestial Chorus [1 in 202,020]': 'under1m',
+      'Malvoryn [1 in 666,666]': 'under1m',
       'Silly Car :3 [1 in 1,000,000]': 'transcendent',
       'H1di [1 in 9,890,089]': 'transcendent',
       'BlindGT [1 in 2,000,000/15th]': 'special',
@@ -20710,6 +20937,9 @@ document
 document
   .getElementById("deleteAllToxicButton")
   .addEventListener("click", () => deleteAllByRarity("toxBgImg"));
+document
+  .getElementById("deleteAllMalvorynButton")
+  .addEventListener("click", () => deleteAllByRarity("malvorynBgImg"));
 document
   .getElementById("deleteAllIsekaiLofiButton")
   .addEventListener("click", () => deleteAllByRarity("isekailofiBgImg"));
@@ -21143,7 +21373,8 @@ document
       "x1staBgImg",
       "astraldBgImg",
       "mastermindBgImg",
-      "alienBgImg"
+      "alienBgImg",
+      "malvorynBgImg"
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
