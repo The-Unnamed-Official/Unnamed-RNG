@@ -19529,18 +19529,8 @@ function startAnimation5() {
   }, 17000);
 }
 
-function startAnimationA5(options = {}) {
-  const targetId =
-    typeof options === "string"
-      ? options
-      : (options && options.targetId) || "star";
-  const star = document.getElementById(targetId);
-
-  if (!star) {
-    return;
-  }
-
-  const baseClasses = star.className;
+function startAnimationA5() {
+  const star = document.getElementById("star");
 
   star.classList.add("spin");
 
@@ -19553,21 +19543,10 @@ function startAnimationA5(options = {}) {
   }, 8750);
 
   setTimeout(() => {
-    if (baseClasses) {
-      star.className = baseClasses;
-    } else {
-      star.classList.remove("scale-up-and-vanish");
-      star.classList.remove("spin-slow");
-      star.classList.remove("spin");
-
-      if (targetId === "starBig") {
-        star.classList.add("cutsceneStarBig");
-      } else if (targetId === "starSmall") {
-        star.classList.add("cutsceneStarSmall");
-      } else {
-        star.classList.add("cutsceneStar");
-      }
-    }
+    star.classList.add("cutsceneStar");
+    star.classList.remove("scale-up-and-vanish");
+    star.classList.remove("spin-slow");
+    star.classList.remove("spin");
   }, 10750);
 }
 
