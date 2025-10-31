@@ -34,6 +34,12 @@
   --halloween-header-shadow: 0 6px 18px rgba(10, 6, 20, 0.55);
 }
 
+@property --cutscene-spin-duration {
+  syntax: '<time>';
+  inherits: true;
+  initial-value: 9s;
+}
+
 /* Motion safety */
 @media (prefers-reduced-motion: reduce) {
   :root {
@@ -2770,48 +2776,19 @@ body {
     }
 }
 
-.cutsceneStar {
-    position: absolute;
-    top: 30%;
-    left: 40%;
-    scale: 0;
-    pointer-events: none;
-    transition: scale 0.5s ease-in;
-    transform-origin: center;
-    animation: spin1 9s linear infinite;
-}
-
-.starShenvii {
-    position: absolute;
-    top: 30%;
-    left: 40%;
-    scale: 0;
-    pointer-events: none;
-    transition: scale 0.5s ease-in;
-    transform-origin: center;
-    animation: spin1 9s linear infinite;
-}
-
-.cutsceneStarBig {
-    position: absolute;
-    top: 30%;
-    left: 40%;
-    scale: 0;
-    pointer-events: none;
-    transition: scale 0.5s ease-in;
-    transform-origin: center;
-    animation: spin1 9s linear infinite;
-}
-
+.cutsceneStar,
+.starShenvii,
+.cutsceneStarBig,
 .cutsceneStarSmall {
     position: absolute;
     top: 30%;
     left: 40%;
     scale: 0;
     pointer-events: none;
-    transition: scale 0.5s ease-in;
+    transition: scale 0.5s ease-in, --cutscene-spin-duration 0.6s ease-in-out;
     transform-origin: center;
-    animation: spin1 9s linear infinite;
+    --cutscene-spin-duration: 9s;
+    animation: spin1 var(--cutscene-spin-duration) linear infinite;
 }
 
 .descended-cutscene {
@@ -3276,7 +3253,7 @@ body {
 
 .spin {
     transform: translate(-50%, -50%);
-    animation: spin 1s linear infinite;
+    --cutscene-spin-duration: 1s;
     scale: 2.5;
     visibility: visible;
     transition: scale 0.5s ease-in;
@@ -3289,8 +3266,8 @@ body {
 
 .spin-slow {
     transform: translate(-50%, -50%);
-    animation-duration: 4s;
-    transition: transform 0.5s ease-in-out, animation-duration 0.5s ease-in-out;
+    --cutscene-spin-duration: 4s;
+    transition: transform 0.5s ease-in-out, --cutscene-spin-duration 0.8s ease-in-out;
 }
 
 .scale-up-and-vanish {
@@ -3605,6 +3582,12 @@ body {
     background-size: cover;
     object-fit: contain;
 
+}
+
+.malvorynBgImg {
+    background: url(backgrounds/malvoryn.png);
+    background-size: cover;
+    object-fit: contain;
 }
 
 .geezerBgGif {
@@ -6786,6 +6769,74 @@ body.flashing {
     height: 100vh;
     overflow: hidden;
     z-index: 0;
+}
+
+.malvoryn-fragment {
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle at center, rgba(164, 118, 255, 0.95), rgba(42, 4, 83, 0));
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.25);
+    filter: drop-shadow(0 0 8px rgba(129, 88, 255, 0.7));
+    mix-blend-mode: screen;
+    animation: malvorynFragment 3.4s ease-out forwards;
+}
+
+@keyframes malvorynFragment {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.25) rotate(0deg);
+    }
+    22% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(calc(-50% + var(--offsetX, 0px)), calc(-50% + var(--offsetY, 0px)))
+            scale(var(--fragment-scale, 1.35)) rotate(var(--fragment-rotation, 360deg));
+    }
+}
+
+.malvoryn-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 32vmin;
+    height: 32vmin;
+    border-radius: 50%;
+    border: 2px solid rgba(160, 118, 255, 0.4);
+    pointer-events: none;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.3);
+    mix-blend-mode: screen;
+    filter: drop-shadow(0 0 20px rgba(128, 90, 255, 0.6));
+    animation: malvorynRing 4.4s ease-out forwards;
+}
+
+.malvoryn-ring::after {
+    content: "";
+    position: absolute;
+    inset: 12%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(90, 30, 180, 0.35) 0%, rgba(15, 5, 30, 0) 70%);
+    opacity: 0.6;
+}
+
+@keyframes malvorynRing {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.3);
+    }
+    24% {
+        opacity: 0.9;
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(var(--ring-scale, 1.65));
+    }
 }
 
 .animated-circle-black {
