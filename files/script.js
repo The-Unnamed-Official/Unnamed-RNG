@@ -9752,7 +9752,6 @@ function registerRollButtonHandler() {
       if (skipCutsceneTranscendent) {
         document.body.className = "blackBg";
         disableChange();
-        startAnimationA5({ targetId: "starBig" });
 
         const starContainer = document.getElementById("starContainer");
         const squareContainer = document.getElementById("squareContainer");
