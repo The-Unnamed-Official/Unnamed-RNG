@@ -676,6 +676,8 @@ const POTION_TRANSACTION_CHECKOUT_URLS = Object.freeze({
 });
 
 const POTION_TRANSACTION_PURCHASE_COUNTS_KEY = "potionTransactionPurchaseCounts";
+const HALLOWEEN_FRIGHTS_PURCHASE_RESET_KEY = "halloweenFrightsBundlePurchaseReset2025";
+const HALLOWEEN_FRIGHTS_TRANSACTION_ID = "potionTransactionHalloweenFrights";
 
 function normalizePotionTransactionPurchaseCounts(raw) {
   if (!raw || typeof raw !== "object") {
@@ -703,6 +705,21 @@ function normalizePotionTransactionPurchaseCounts(raw) {
 let potionTransactionPurchaseCounts = normalizePotionTransactionPurchaseCounts(
   storage.get(POTION_TRANSACTION_PURCHASE_COUNTS_KEY, {}),
 );
+
+if (!storage.get(HALLOWEEN_FRIGHTS_PURCHASE_RESET_KEY, false)) {
+  if (
+    Object.prototype.hasOwnProperty.call(
+      potionTransactionPurchaseCounts,
+      HALLOWEEN_FRIGHTS_TRANSACTION_ID,
+    )
+  ) {
+    const nextCounts = { ...potionTransactionPurchaseCounts };
+    delete nextCounts[HALLOWEEN_FRIGHTS_TRANSACTION_ID];
+    writePotionTransactionPurchaseCounts(nextCounts);
+  }
+
+  storage.set(HALLOWEEN_FRIGHTS_PURCHASE_RESET_KEY, true);
+}
 
 function writePotionTransactionPurchaseCounts(nextCounts) {
   const payload = normalizePotionTransactionPurchaseCounts(nextCounts);
