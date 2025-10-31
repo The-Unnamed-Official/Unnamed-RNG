@@ -6207,6 +6207,7 @@ function registerRollButtonHandler() {
     rarity.type === "The Void's Veil [1 in 10,031]" ||
     rarity.type === "Wailing Shade [1 in 31,010]" ||
     rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" ||
+    rarity.type === "Malvoryn [1 in 666,666]" ||
     isDescendedTitleType(rarity.type)
   ) {
     const resultContainer = byId("result");
