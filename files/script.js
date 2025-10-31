@@ -6324,8 +6324,6 @@ function registerRollButtonHandler() {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "HARV [1 in 33,333]") {
       hugeSuspenceAudio.play();
-    } else if (rarity.type === "Malvoryn [1 in 666,666]") {
-      hugeSuspenceAudio.play();
     } else if (rarity.type === "Astrald [1 in 100,000]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Hypernova [1 in 40,000]") {
