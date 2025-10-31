@@ -17170,7 +17170,7 @@ function rollRarity() {
       type: "Malvoryn [1 in 666,666]",
       class: "malvorynBgImg",
       chance: 0.00015000015,
-      titles: ["The Deep Dark", "The One Who Broke The World", "Disaster", "Chaos"]
+      titles: ["The Deep Dark", "The One Who Broke The World", "Disaster", "Chaos", "The Broken One"]
     }
   ];
 
