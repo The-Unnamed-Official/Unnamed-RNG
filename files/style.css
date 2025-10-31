@@ -2777,6 +2777,7 @@ body {
 }
 
 .cutsceneStar,
+.cutsceneStar,
 .starShenvii,
 .cutsceneStarBig,
 .cutsceneStarSmall {
@@ -2788,9 +2789,31 @@ body {
     transition: scale 0.5s ease-in, --cutscene-spin-duration 0.6s ease-in-out;
     transform-origin: center;
     --cutscene-spin-duration: 9s;
-    --cutscene-spin-base-transform: translate(-50%, -50%);
+    --cutscene-center-offset-x: 0px;
+    --cutscene-center-offset-y: 0px;
+    --cutscene-center-translate-x: calc(-50% + var(--cutscene-center-offset-x));
+    --cutscene-center-translate-y: calc(-50% + var(--cutscene-center-offset-y));
+    --cutscene-spin-base-transform: translate(
+        var(--cutscene-center-translate-x),
+        var(--cutscene-center-translate-y)
+    );
     transform: var(--cutscene-spin-base-transform);
     animation: cutscene-spin var(--cutscene-spin-duration) linear infinite;
+}
+
+.cutsceneStar {
+    --cutscene-center-offset-x: 3.7px;
+    --cutscene-center-offset-y: 0.45px;
+}
+
+.cutsceneStarBig {
+    --cutscene-center-offset-x: 0.53px;
+    --cutscene-center-offset-y: 0.44px;
+}
+
+.cutsceneStarSmall {
+    --cutscene-center-offset-x: 6.71px;
+    --cutscene-center-offset-y: 0.17px;
 }
 
 .descended-cutscene {
@@ -3099,7 +3122,15 @@ body {
     scale: 0;
     pointer-events: none;
     transform-origin: center;
-    --cutscene-spin-base-transform: translate(-50%, -50%);
+    --cutscene-center-offset-x: 34.3px;
+    --cutscene-center-offset-y: 28.23px;
+    --cutscene-center-translate-x: calc(-50% + var(--cutscene-center-offset-x));
+    --cutscene-center-translate-y: calc(-50% + var(--cutscene-center-offset-y));
+    --cutscene-spin-base-transform: translate(
+        var(--cutscene-center-translate-x),
+        var(--cutscene-center-translate-y)
+    );
+    transform: var(--cutscene-spin-base-transform);
     animation: cutscene-spin 9s linear infinite;
 }
 
@@ -3112,7 +3143,8 @@ body {
     transition: scale 0.5s ease-in;
 }
 
-.cutsceneStarEvent {
+.cutsceneStarEvent,
+.starShenvii {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -3120,7 +3152,15 @@ body {
     pointer-events: none;
     transition: scale 0.5s ease-in;
     transform-origin: center;
-    --cutscene-spin-base-transform: translate(-50%, -50%);
+    --cutscene-center-offset-x: 34.3px;
+    --cutscene-center-offset-y: 28.23px;
+    --cutscene-center-translate-x: calc(-50% + var(--cutscene-center-offset-x));
+    --cutscene-center-translate-y: calc(-50% + var(--cutscene-center-offset-y));
+    --cutscene-spin-base-transform: translate(
+        var(--cutscene-center-translate-x),
+        var(--cutscene-center-translate-y)
+    );
+    transform: var(--cutscene-spin-base-transform);
     animation: cutscene-spin 9s linear infinite;
 }
 
