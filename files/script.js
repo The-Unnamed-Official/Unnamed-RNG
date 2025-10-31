@@ -6324,6 +6324,8 @@ function registerRollButtonHandler() {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "HARV [1 in 33,333]") {
       hugeSuspenceAudio.play();
+    } else if (rarity.type === "Malvoryn [1 in 666,666]") {
+      hugeSuspenceAudio.play();
     } else if (rarity.type === "Astrald [1 in 100,000]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Hypernova [1 in 40,000]") {
@@ -16970,6 +16972,12 @@ function rollRarity() {
       class: "alienBgImg",
       chance: 0.00015293279,
       titles: ["Catien", "Another Species"]
+    },
+    {
+      type: "Malvoryn [1 in 666,666]",
+      class: "malvorynBgImg",
+      chance: 0.00015000015,
+      titles: ["The Deep Dark", "The One Who Broke The World", "Disaster", "Chaos"]
     }
   ];
 
