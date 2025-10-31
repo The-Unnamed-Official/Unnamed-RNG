@@ -20823,7 +20823,7 @@ function getClassForRarity(rarity) {
       'Arcane Pulse [1 in 77,777]': 'under100k',
       'Impeached [1 in 101,010]': 'under1m',
       'Celestial Chorus [1 in 202,020]': 'under1m',
-      'Malvoryn [1 in 666,666]': 'transcendent',
+      'Malvoryn [1 in 666,666]': 'under1m',
       'Silly Car :3 [1 in 1,000,000]': 'transcendent',
       'H1di [1 in 9,890,089]': 'transcendent',
       'BlindGT [1 in 2,000,000/15th]': 'special',
@@ -20920,6 +20920,9 @@ document
 document
   .getElementById("deleteAllToxicButton")
   .addEventListener("click", () => deleteAllByRarity("toxBgImg"));
+document
+  .getElementById("deleteAllMalvorynButton")
+  .addEventListener("click", () => deleteAllByRarity("malvorynBgImg"));
 document
   .getElementById("deleteAllIsekaiLofiButton")
   .addEventListener("click", () => deleteAllByRarity("isekailofiBgImg"));
@@ -21353,7 +21356,8 @@ document
       "x1staBgImg",
       "astraldBgImg",
       "mastermindBgImg",
-      "alienBgImg"
+      "alienBgImg",
+      "malvorynBgImg"
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });
