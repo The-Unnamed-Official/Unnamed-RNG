@@ -2781,14 +2781,16 @@ body {
 .cutsceneStarBig,
 .cutsceneStarSmall {
     position: absolute;
-    top: 30%;
-    left: 40%;
+    top: 50%;
+    left: 50%;
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in, --cutscene-spin-duration 0.6s ease-in-out;
     transform-origin: center;
     --cutscene-spin-duration: 9s;
-    animation: spin1 var(--cutscene-spin-duration) linear infinite;
+    --cutscene-spin-base-transform: translate(-50%, -50%);
+    transform: var(--cutscene-spin-base-transform);
+    animation: cutscene-spin var(--cutscene-spin-duration) linear infinite;
 }
 
 .descended-cutscene {
@@ -3092,12 +3094,13 @@ body {
 
 .cutsceneStarEaster {
     position: absolute;
-    top: 30%;
-    left: 40%;
+    top: 50%;
+    left: 50%;
     scale: 0;
     pointer-events: none;
     transform-origin: center;
-    animation: spin1 9s linear infinite;
+    --cutscene-spin-base-transform: translate(-50%, -50%);
+    animation: cutscene-spin 9s linear infinite;
 }
 
 .msfuStar {
@@ -3111,13 +3114,24 @@ body {
 
 .cutsceneStarEvent {
     position: absolute;
-    top: 30%;
-    left: 40%;
+    top: 50%;
+    left: 50%;
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
     transform-origin: center;
-    animation: spin1 9s linear infinite;
+    --cutscene-spin-base-transform: translate(-50%, -50%);
+    animation: cutscene-spin 9s linear infinite;
+}
+
+@keyframes cutscene-spin {
+    0% {
+        transform: var(--cutscene-spin-base-transform, translate(-50%, -50%)) rotate(0deg);
+    }
+
+    100% {
+        transform: var(--cutscene-spin-base-transform, translate(-50%, -50%)) rotate(360deg);
+    }
 }
 
 @keyframes spin {
@@ -3252,7 +3266,6 @@ body {
 }
 
 .spin {
-    transform: translate(-50%, -50%);
     --cutscene-spin-duration: 1s;
     scale: 2.5;
     visibility: visible;
@@ -3260,14 +3273,12 @@ body {
 }
 
 .spinF {
-    transform: translate(-50%, -50%);
-    animation: spin 0.1s linear infinite;
+    --cutscene-spin-duration: 0.1s;
 }
 
 .spin-slow {
-    transform: translate(-50%, -50%);
     --cutscene-spin-duration: 4s;
-    transition: transform 0.5s ease-in-out, --cutscene-spin-duration 0.8s ease-in-out;
+    transition: --cutscene-spin-duration 0.8s ease-in-out;
 }
 
 .scale-up-and-vanish {
