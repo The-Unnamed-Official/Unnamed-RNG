@@ -696,7 +696,7 @@ body.equinox-pulse-active :is(
     align-items: center;
     gap: 16px;
     padding: 22px 26px 26px;
-    width: min(80vw, 540px);
+    width: min(50vw, 440px);
     border-radius: 30px;
     background:
         radial-gradient(circle at 12% 18%, rgba(92, 252, 255, 0.45), transparent 52%),
