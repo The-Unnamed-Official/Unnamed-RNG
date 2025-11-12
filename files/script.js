@@ -26,6 +26,11 @@ const EVENT_DISCORD_TIMESTAMP_FULL = "<t:1762614000:f>";
 const EVENT_DISCORD_TIMESTAMP_RELATIVE = "<t:1762614000:R>";
 const EVENT_TIME_ZONE = "Europe/Berlin";
 
+const SEASONAL_EVENT_METADATA = Object.freeze({
+  name: "Halloween Frights 2025",
+  label: "Event",
+});
+
 const POTION_TYPES = Object.freeze({
   LUCK: "luck",
   SPEED: "speed",
@@ -665,6 +670,7 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     maxPurchases: 2,
     limitLabel: "Max 2 purchases",
     limitReachedActionLabel: "Limit Reached",
+    retired: true,
   }),
   Object.freeze({
     id: "potionTransactionHasty",
@@ -801,6 +807,24 @@ function getPotionTransactionState(transaction) {
   }
 
   const purchaseCount = getPotionTransactionPurchaseCount(transaction.id);
+  const retired = Boolean(transaction.retired);
+
+  if (retired) {
+    return {
+      purchaseCount,
+      maxPurchases: 0,
+      remainingPurchases: 0,
+      limitReached: true,
+      promoActive: false,
+      priceLabel: transaction.retiredPriceLabel || "Retired",
+      checkoutUrl: null,
+      actionLabel: transaction.retiredActionLabel || "Unobtainable",
+      actionDisabled: true,
+      badges: [],
+      retired: true,
+    };
+  }
+
   const maxPurchasesRaw = transaction.maxPurchases;
   const maxPurchases = Number.isFinite(maxPurchasesRaw)
     ? Math.max(0, Math.trunc(maxPurchasesRaw))
@@ -878,6 +902,7 @@ function getPotionTransactionState(transaction) {
     actionLabel,
     actionDisabled,
     badges,
+    retired: false,
   };
 }
 
@@ -1079,6 +1104,12 @@ function initEventCountdown() {
     return;
   }
 
+  if (!hasActiveSeasonalEvent()) {
+    countdownElement.textContent = "Coming soon";
+    countdownElement.removeAttribute("title");
+    return;
+  }
+
   const eventDate = new Date(EVENT_END_TIMESTAMP);
 
   let absoluteLabel = eventDate.toLocaleString();
@@ -1090,6 +1121,8 @@ function initEventCountdown() {
     });
   } catch (error) {
   }
+
+  countdownElement.title = absoluteLabel;
 
   const segmentsFor = (diffMs) => {
     const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
@@ -1116,6 +1149,17 @@ function initEventCountdown() {
   let intervalId = null;
 
   const render = () => {
+    if (!hasActiveSeasonalEvent()) {
+      countdownElement.textContent = "Coming soon";
+      countdownElement.removeAttribute("title");
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      syncSeasonalEventChip();
+      return;
+    }
+
     const now = Date.now();
     const diffMs = EVENT_END_TIMESTAMP - now;
 
@@ -1125,6 +1169,7 @@ function initEventCountdown() {
         clearInterval(intervalId);
         intervalId = null;
       }
+      syncSeasonalEventChip();
       return;
     }
 
@@ -2456,6 +2501,11 @@ function renderPotionTransactions() {
       card.setAttribute("aria-disabled", "true");
     }
 
+    if (state?.retired) {
+      card.classList.add("potion-transaction-card--retired", "card--unobtainable");
+      card.setAttribute("aria-disabled", "true");
+    }
+
     if (typeof transaction.bannerImage === "string" && transaction.bannerImage.trim()) {
       const banner = document.createElement("div");
       banner.className = "potion-transaction-card__banner";
@@ -2591,6 +2641,10 @@ function renderPotionCrafting() {
   POTION_DEFINITIONS.forEach((potion) => {
     const card = document.createElement("article");
     card.className = "potion-card";
+    if (potion.craftingDisabled) {
+      card.classList.add("potion-card--retired", "card--unobtainable");
+      card.setAttribute("aria-disabled", "true");
+    }
 
     const imageWrapper = document.createElement("div");
     imageWrapper.className = "potion-card__image";
@@ -4055,6 +4109,48 @@ const ACTIVE_EVENT_BUCKETS = new Set([]);
 
 function isEventBucketActive(bucket) {
   return typeof bucket === "string" && ACTIVE_EVENT_BUCKETS.has(bucket);
+}
+
+function hasActiveSeasonalEvent() {
+  if (ACTIVE_EVENT_BUCKETS.size > 0) {
+    return true;
+  }
+
+  return Number.isFinite(EVENT_END_TIMESTAMP) && Date.now() < EVENT_END_TIMESTAMP;
+}
+
+function syncSeasonalEventChip() {
+  const eventChip = byId("versionEventChip");
+  const eventNameElement = byId("eventName");
+  const eventLabelElement = byId("eventLabel");
+  const countdownElement = byId("eventCountdown");
+
+  if (!eventChip) {
+    return;
+  }
+
+  if (!hasActiveSeasonalEvent()) {
+    eventChip.setAttribute("hidden", "true");
+    eventChip.setAttribute("aria-hidden", "true");
+    eventChip.classList.remove("version__chip--event-active");
+    if (countdownElement) {
+      countdownElement.textContent = "Coming soon";
+      countdownElement.removeAttribute("title");
+    }
+    return;
+  }
+
+  eventChip.removeAttribute("hidden");
+  eventChip.setAttribute("aria-hidden", "false");
+  eventChip.classList.add("version__chip--event-active");
+
+  if (eventLabelElement) {
+    eventLabelElement.textContent = SEASONAL_EVENT_METADATA.label || "Event";
+  }
+
+  if (eventNameElement) {
+    eventNameElement.textContent = SEASONAL_EVENT_METADATA.name;
+  }
 }
 
 const originalAudioPlay = HTMLMediaElement.prototype.play;
@@ -5702,6 +5798,7 @@ document.addEventListener("DOMContentLoaded", () => {
     startPotionTransactionStatusPolling();
   }
 
+  syncSeasonalEventChip();
   initEventCountdown();
 
   if (pendingEquinoxPulseState !== null || equinoxPulseActive) {
