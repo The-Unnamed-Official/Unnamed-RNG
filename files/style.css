@@ -1081,14 +1081,14 @@ body {
         radial-gradient(52% 42% at 82% 18%, rgba(102, 176, 255, 0.22), transparent 72%);
     opacity: 0.88;
     mix-blend-mode: screen;
-    z-index: 0;
+    z-index: -2;
 }
 
 .halloween-overlay {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 0;
+    z-index: -1;
 }
 
 .halloween-overlay__snow {
@@ -1096,12 +1096,12 @@ body {
     inset: -18vh 0 -6vh;
     background-repeat: repeat;
     background-image:
-        radial-gradient(2px 2px at 24px 28px, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 64%),
-        radial-gradient(1.6px 1.6px at 80px 120px, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0) 60%),
-        radial-gradient(1.8px 1.8px at 140px 60px, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 68%);
-    background-size: 220px 220px, 280px 280px, 200px 200px;
+        radial-gradient(4px 4px at 28px 32px, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 64%),
+        radial-gradient(3px 3px at 88px 134px, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0) 60%),
+        radial-gradient(3.4px 3.4px at 156px 70px, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 68%);
+    background-size: 240px 240px, 320px 320px, 240px 240px;
     background-position: 0 0, 0 0, 0 0;
-    opacity: 0.65;
+    opacity: 0.7;
     --snowfall-duration: 48s;
     --snow-shift-1: 680px;
     --snow-shift-2: 520px;
@@ -1113,7 +1113,7 @@ body {
 .halloween-overlay__snow--back {
     filter: blur(1.2px);
     opacity: 0.42;
-    background-size: 260px 260px, 340px 340px, 220px 220px;
+    background-size: 280px 280px, 380px 380px, 260px 260px;
     --snowfall-duration: 68s;
     --snow-shift-1: 760px;
     --snow-shift-2: 600px;
@@ -1127,8 +1127,8 @@ body {
 
 .halloween-overlay__snow--front {
     filter: drop-shadow(0 8px 16px rgba(18, 36, 64, 0.28));
-    opacity: 0.78;
-    background-size: 180px 180px, 240px 240px, 160px 160px;
+    opacity: 0.82;
+    background-size: 200px 200px, 280px 280px, 200px 200px;
     --snowfall-duration: 28s;
     --snow-shift-1: 520px;
     --snow-shift-2: 460px;
@@ -1140,19 +1140,20 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    height: clamp(140px, 20vh, 240px);
+    height: clamp(24px, 5vh, 64px);
     pointer-events: none;
     background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(237, 246, 255, 0.82) 36%, rgba(220, 236, 255, 0.94) 70%, rgba(210, 230, 248, 0.98) 100%);
-    box-shadow: 0 -18px 48px rgba(36, 72, 120, 0.22);
+        linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, rgba(238, 246, 255, 0.78) 55%, rgba(216, 232, 248, 0.88) 100%);
+    box-shadow: 0 -10px 28px rgba(36, 72, 120, 0.18);
     overflow: hidden;
+    z-index: -1;
 }
 
 .halloween-overlay__ground::before {
     content: "";
     position: absolute;
-    inset: -55% -2% auto;
-    height: 70%;
+    inset: -140% -2% auto;
+    height: 95%;
     background:
         radial-gradient(44% 80% at 8% 80%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 70%),
         radial-gradient(50% 70% at 30% 72%, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0) 70%),
@@ -1162,7 +1163,7 @@ body {
     background-repeat: no-repeat;
     background-size: 18% 110%, 24% 108%, 26% 106%, 22% 110%, 14% 104%;
     background-position: 0% 100%, 24% 100%, 52% 100%, 76% 100%, 96% 100%;
-    opacity: 0.95;
+    opacity: 0.75;
 }
 
 @keyframes snowfall {
