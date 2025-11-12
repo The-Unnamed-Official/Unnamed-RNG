@@ -431,16 +431,8 @@ const POTION_DEFINITIONS = [
     consumeOnRoll: true,
     disableWithToggle: true,
     eventExclusive: "Halloween Event Exclusive",
-    craftCost: {
-      classes: {
-        commonBgImg: 800,
-        rareBgImg: 500,
-        unstoppableBgImg: 45,
-        fearBgImg: 3,
-      },
-      titles: [],
-      potions: { luckyPotion: 50, fortuneSpoid1: 5, basicPotion: 1,  },
-    },
+    craftingDisabled: true,
+    craftCost: null,
   },
   {
     id: "pumpkinPotion",
@@ -454,16 +446,59 @@ const POTION_DEFINITIONS = [
     consumeOnRoll: true,
     disableWithToggle: true,
     eventExclusive: "Halloween Event Exclusive",
+    craftingDisabled: true,
+    craftCost: null,
+  },
+  {
+    id: "masteryElixir",
+    name: "Mastery Elixir",
+    image: "files/images/MasteryElixir.png",
+    buffImage: "files/images/MasteryBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 800000,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next Roll",
+    consumeOnRoll: true,
+    disableWithToggle: true,
     craftCost: {
-      classes: {
-        commonBgImg: 900,
-        rareBgImg: 600,
-        legendaryBgImg: 100,
-        unstoppableBgImg: 50,
-        fearBgImg: 4,
-      },
+      classes: { solarpowerBgImg: 100 },
       titles: [],
-      potions: { luckyPotion: 75, fortuneSpoid1: 7, basicPotion: 2 },
+      potions: { luckyPotion: 100, basicPotion: 1, decentPotion: 2 },
+    },
+  },
+  {
+    id: "hellishPotion",
+    name: "Hellish Potion",
+    image: "files/images/HellishPotion.png",
+    buffImage: "files/images/HellishBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 60000,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next 6 Rolls",
+    consumeOnRoll: true,
+    consumeUses: 6,
+    disableWithToggle: true,
+    craftCost: {
+      classes: {},
+      titles: [],
+      potions: { luckyPotion: 200, basicPotion: 10 },
+    },
+  },
+  {
+    id: "boundlessPotion",
+    name: "Boundless Potion",
+    image: "files/images/BoundlessPotion.png",
+    buffImage: "files/images/BoundlessBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 1000000,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next Roll",
+    consumeOnRoll: true,
+    disableWithToggle: true,
+    craftCost: {
+      classes: {},
+      titles: [],
+      potions: { luckyPotion: 500, basicPotion: 10, decentPotion: 2 },
     },
   },
   {
@@ -583,7 +618,7 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     name: "Supporter Starter Bundle",
     priceUsd: 1,
     description:
-      "Jump-start your potion reserves with a massive infusion of core brews. Limited-time offer: your first purchase this week is free!",
+      "Jump-start your potion reserves with a massive infusion of core brews.",
     rewards: Object.freeze({
       potions: Object.freeze({
         luckyPotion: 1000,
@@ -595,25 +630,17 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     maxPurchases: 10,
     limitLabel: "Max 10 purchases",
     limitReachedActionLabel: "Limit Reached",
-    promotion: Object.freeze({
-      maxUses: 1,
-      checkoutUrl: "https://buy.stripe.com/9B6fZj8QJfnF7jp2VK3AY02",
-      priceLabel: "Free (Limited Week)",
-      actionLabel: "Claim for Free",
-      badgeText: "First purchase free!",
-      usedBadgeText: "Free claim used",
-    }),
   }),
   Object.freeze({
     id: "potionTransactionDescended",
     name: "Descended Power Bundle",
     priceUsd: 2,
-    description: "Secure a stockpile of top-tier Halloween brews for your next session.",
+    description: "Secure a stockpile of top-tier luck brews for your next session.",
     rewards: Object.freeze({
       potions: Object.freeze({
         [DESCENDED_POTION_ID]: 130,
-        bloodyPotion: 100,
-        pumpkinPotion: 80,
+        masteryElixir: 60,
+        boundlessPotion: 30,
       }),
     }),
     bannerImage: "files/images/descendedBundleBanner.png",
@@ -626,11 +653,12 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     name: "Halloween Frights Bundle",
     priceUsd: 0.5,
     description:
-      "Celebrate Halloween with a terrifyingly generous stash of frightening brews and rare drops.",
+      "Retired Halloween stock, restocked with core potions for ongoing adventures.",
     rewards: Object.freeze({
       potions: Object.freeze({
-        bloodyPotion: 50,
-        pumpkinPotion: 30,
+        luckyPotion: 2000,
+        speedPotion: 2000,
+        fortunePotion3: 100,
       }),
     }),
     bannerImage: "files/images/halloweenBundleBanner.png",
@@ -643,7 +671,7 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     name: "Hasty Bundle",
     priceUsd: 1,
     description:
-      "Begin your quick rolling spree with Titles to explore!",
+      "Begin your quick rolling spree with titles to explore!",
     rewards: Object.freeze({
       potions: Object.freeze({
         speedPotion: 1000,
@@ -657,14 +685,6 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     maxPurchases: 10,
     limitLabel: "Max 10 purchases",
     limitReachedActionLabel: "Limit Reached",
-    promotion: Object.freeze({
-      maxUses: 1,
-      checkoutUrl: "https://buy.stripe.com/14AaEZ1oh4J1cDJ67W3AY05",
-      priceLabel: "Free (Limited Week)",
-      actionLabel: "Claim for Free",
-      badgeText: "First purchase free!",
-      usedBadgeText: "Free claim used",
-    }),
   }),
 ]);
 
@@ -676,8 +696,7 @@ const POTION_TRANSACTION_CHECKOUT_URLS = Object.freeze({
 });
 
 const POTION_TRANSACTION_PURCHASE_COUNTS_KEY = "potionTransactionPurchaseCounts";
-const HALLOWEEN_FRIGHTS_PURCHASE_RESET_KEY = "halloweenFrightsBundlePurchaseReset2025";
-const HALLOWEEN_FRIGHTS_TRANSACTION_ID = "potionTransactionHalloweenFrights";
+const POTION_TRANSACTION_PURCHASE_RESET_KEY = "potionTransactionPurchaseReset_v1_4";
 
 function normalizePotionTransactionPurchaseCounts(raw) {
   if (!raw || typeof raw !== "object") {
@@ -706,19 +725,9 @@ let potionTransactionPurchaseCounts = normalizePotionTransactionPurchaseCounts(
   storage.get(POTION_TRANSACTION_PURCHASE_COUNTS_KEY, {}),
 );
 
-if (!storage.get(HALLOWEEN_FRIGHTS_PURCHASE_RESET_KEY, false)) {
-  if (
-    Object.prototype.hasOwnProperty.call(
-      potionTransactionPurchaseCounts,
-      HALLOWEEN_FRIGHTS_TRANSACTION_ID,
-    )
-  ) {
-    const nextCounts = { ...potionTransactionPurchaseCounts };
-    delete nextCounts[HALLOWEEN_FRIGHTS_TRANSACTION_ID];
-    writePotionTransactionPurchaseCounts(nextCounts);
-  }
-
-  storage.set(HALLOWEEN_FRIGHTS_PURCHASE_RESET_KEY, true);
+if (!storage.get(POTION_TRANSACTION_PURCHASE_RESET_KEY, false)) {
+  writePotionTransactionPurchaseCounts({});
+  storage.set(POTION_TRANSACTION_PURCHASE_RESET_KEY, true);
 }
 
 function writePotionTransactionPurchaseCounts(nextCounts) {
@@ -922,6 +931,7 @@ const POTION_SPAWN_CONFIGS = [
       { potionId: "fortuneSpoid2", chance: 0.01 },
       { potionId: "basicPotion", chance: 0.0002 },
       { potionId: "decentPotion", chance: 0.0001 },
+      { potionId: "masteryElixir", chance: 0.001 },
     ],
   },
   {
@@ -1428,6 +1438,10 @@ function hasSufficientPotionResources(costPotions = {}, summary) {
 
 function canCraftPotion(potion, summary = summarizeInventoryForPotions()) {
   if (!potion || typeof potion !== "object") {
+    return false;
+  }
+
+  if (potion.craftingDisabled) {
     return false;
   }
 
@@ -2626,68 +2640,77 @@ function renderPotionCrafting() {
 
     const costTitle = document.createElement("p");
     costTitle.className = "potion-card__cost-title";
-    costTitle.textContent = "Required Ingredients";
 
     const costList = document.createElement("ul");
     costList.className = "potion-card__cost-list";
 
-    Object.entries(potion.craftCost?.classes || {}).forEach(([rarityClass, required]) => {
-      if (!Number.isFinite(required) || required <= 0) {
-        return;
-      }
-
+    if (potion.craftingDisabled) {
+      costTitle.textContent = "Currently Unavailable";
       const li = document.createElement("li");
       li.className = "potion-card__cost-item";
-      const owned = summary.classCounts[rarityClass] || 0;
-      if (owned < required) {
-        li.classList.add("potion-card__cost-item--insufficient");
-      }
-      li.textContent = `${required} × ${getRequirementLabel(rarityClass)} (${owned} owned)`;
+      li.textContent = "This potion can no longer be crafted.";
       costList.appendChild(li);
-    });
+    } else {
+      costTitle.textContent = "Required Ingredients";
 
-    (Array.isArray(potion.craftCost?.titles) ? potion.craftCost.titles : []).forEach((entry) => {
-      if (!entry || typeof entry !== "object") {
-        return;
+      Object.entries(potion.craftCost?.classes || {}).forEach(([rarityClass, required]) => {
+        if (!Number.isFinite(required) || required <= 0) {
+          return;
+        }
+
+        const li = document.createElement("li");
+        li.className = "potion-card__cost-item";
+        const owned = summary.classCounts[rarityClass] || 0;
+        if (owned < required) {
+          li.classList.add("potion-card__cost-item--insufficient");
+        }
+        li.textContent = `${required} × ${getRequirementLabel(rarityClass)} (${owned} owned)`;
+        costList.appendChild(li);
+      });
+
+      (Array.isArray(potion.craftCost?.titles) ? potion.craftCost.titles : []).forEach((entry) => {
+        if (!entry || typeof entry !== "object") {
+          return;
+        }
+
+        const { title: titleName, count } = entry;
+        if (!titleName || !Number.isFinite(count) || count <= 0) {
+          return;
+        }
+
+        const li = document.createElement("li");
+        li.className = "potion-card__cost-item";
+        const owned = summary.titleCounts[titleName] || 0;
+        if (owned < count) {
+          li.classList.add("potion-card__cost-item--insufficient");
+        }
+        li.textContent = `${count} × "${titleName}" (${owned} owned)`;
+        costList.appendChild(li);
+      });
+
+      Object.entries(potion.craftCost?.potions || {}).forEach(([ingredientId, required]) => {
+        if (!ingredientId || !Number.isFinite(required) || required <= 0) {
+          return;
+        }
+
+        const li = document.createElement("li");
+        li.className = "potion-card__cost-item";
+        const ingredient = getPotionDefinition(ingredientId);
+        const owned = summary.potionCounts[ingredientId] || 0;
+        if (owned < required) {
+          li.classList.add("potion-card__cost-item--insufficient");
+        }
+        const label = ingredient ? ingredient.name : ingredientId;
+        li.textContent = `${required} × ${label} (${owned} owned)`;
+        costList.appendChild(li);
+      });
+
+      if (!costList.children.length) {
+        const li = document.createElement("li");
+        li.className = "potion-card__cost-item";
+        li.textContent = "No cost";
+        costList.appendChild(li);
       }
-
-      const { title: titleName, count } = entry;
-      if (!titleName || !Number.isFinite(count) || count <= 0) {
-        return;
-      }
-
-      const li = document.createElement("li");
-      li.className = "potion-card__cost-item";
-      const owned = summary.titleCounts[titleName] || 0;
-      if (owned < count) {
-        li.classList.add("potion-card__cost-item--insufficient");
-      }
-      li.textContent = `${count} × "${titleName}" (${owned} owned)`;
-      costList.appendChild(li);
-    });
-
-    Object.entries(potion.craftCost?.potions || {}).forEach(([ingredientId, required]) => {
-      if (!ingredientId || !Number.isFinite(required) || required <= 0) {
-        return;
-      }
-
-      const li = document.createElement("li");
-      li.className = "potion-card__cost-item";
-      const ingredient = getPotionDefinition(ingredientId);
-      const owned = summary.potionCounts[ingredientId] || 0;
-      if (owned < required) {
-        li.classList.add("potion-card__cost-item--insufficient");
-      }
-      const label = ingredient ? ingredient.name : ingredientId;
-      li.textContent = `${required} × ${label} (${owned} owned)`;
-      costList.appendChild(li);
-    });
-
-    if (!costList.children.length) {
-      const li = document.createElement("li");
-      li.className = "potion-card__cost-item";
-      li.textContent = "No cost";
-      costList.appendChild(li);
     }
 
     const actions = document.createElement("div");
@@ -2696,10 +2719,15 @@ function renderPotionCrafting() {
     const craftButton = document.createElement("button");
     craftButton.className = "potion-card__action-button";
     craftButton.type = "button";
-    const craftable = canCraftPotion(potion, summary);
+    const craftable = !potion.craftingDisabled && canCraftPotion(potion, summary);
     craftButton.disabled = !craftable;
-    craftButton.textContent = craftable ? "Craft" : "Needs Resources";
-    craftButton.addEventListener("click", () => craftPotion(potion.id));
+    if (potion.craftingDisabled) {
+      craftButton.textContent = "Unavailable";
+      craftButton.setAttribute("aria-disabled", "true");
+    } else {
+      craftButton.textContent = craftable ? "Craft" : "Needs Resources";
+      craftButton.addEventListener("click", () => craftPotion(potion.id));
+    }
 
     const ownedLabel = document.createElement("span");
     ownedLabel.className = "potion-card__inventory-count";
@@ -2851,7 +2879,10 @@ function normalizeActiveBuffs(raw) {
       const storedConsumeFlag = entry.consumeOnRoll === true || entry.consumeOnRoll === "true";
       const consumeOnRoll = storedConsumeFlag || Boolean(potion.consumeOnRoll);
 
-      let usesRemaining = 1;
+      const configuredUses = consumeOnRoll && Number.isFinite(potion.consumeUses)
+        ? Math.max(1, Math.trunc(potion.consumeUses))
+        : 1;
+      let usesRemaining = configuredUses;
       if (consumeOnRoll) {
         const parsedUses = Number.parseInt(entry.usesRemaining, 10);
         if (Number.isFinite(parsedUses) && parsedUses >= 1) {
@@ -3359,6 +3390,9 @@ function activatePotionBuff(potion) {
   const durationMs = durationSeconds * 1000;
   const icon = potion.buffImage || getBuffIconForType(potion.type) || potion.image;
   const consumeOnRoll = Boolean(potion.consumeOnRoll);
+  const usesPerActivation = consumeOnRoll && Number.isFinite(potion.consumeUses)
+    ? Math.max(1, Math.trunc(potion.consumeUses))
+    : 1;
   const disableWithToggle = Object.prototype.hasOwnProperty.call(potion, "disableWithToggle")
     ? Boolean(potion.disableWithToggle)
     : null;
@@ -3374,8 +3408,8 @@ function activatePotionBuff(potion) {
     if (consumeOnRoll) {
       const currentUses = Number.isFinite(existing.usesRemaining) && existing.usesRemaining >= 1
         ? existing.usesRemaining
-        : 1;
-      existing.usesRemaining = currentUses + 1;
+        : 0;
+      existing.usesRemaining = currentUses + usesPerActivation;
     } else if (Object.prototype.hasOwnProperty.call(existing, "usesRemaining")) {
       delete existing.usesRemaining;
     }
@@ -3402,7 +3436,7 @@ function activatePotionBuff(potion) {
   };
 
   if (consumeOnRoll) {
-    buff.usesRemaining = 1;
+    buff.usesRemaining = usesPerActivation;
   }
 
   if (disableWithToggle !== null) {
@@ -5169,7 +5203,7 @@ const ACHIEVEMENTS = [
     requiredEventBucket: "eventS25",
     unobtainable: true,
   },
-  { name: "It's SPOOKY season!", requiredEventBucket: "eventTitleHalloween25" },
+  { name: "It's SPOOKY season!", requiredEventBucket: "eventTitleHalloween25", unobtainable: true },
   { name: "Seasonal Tourist", minEventTitleCount: 1 },
   { name: "Event!", minDistinctEventBuckets: 1 },
   { name: "Event Explorer", minDistinctEventBuckets: 3 },
