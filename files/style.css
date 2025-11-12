@@ -20,18 +20,18 @@
   /* Layout */
   --layout-max-width: 1120px;
 
-  /* Seasonal art placeholders disabled */
+  /* Seasonal art placeholders refreshed for winter palette */
   --halloween-web-image: none;
   --halloween-modal-gradient:
-    radial-gradient(circle at 20% 15%, rgba(102, 126, 234, 0.28), transparent 55%),
-    radial-gradient(circle at 82% 10%, rgba(118, 75, 162, 0.32), transparent 58%),
-    linear-gradient(160deg, rgba(24, 28, 52, 0.92), rgba(10, 14, 28, 0.96)),
+    radial-gradient(circle at 20% 15%, rgba(114, 182, 255, 0.32), transparent 55%),
+    radial-gradient(circle at 82% 10%, rgba(174, 224, 255, 0.28), transparent 58%),
+    linear-gradient(160deg, rgba(12, 34, 64, 0.92), rgba(6, 18, 46, 0.96)),
     url(backgrounds/rng_master.png);
-  --halloween-modal-border-color: rgba(122, 162, 255, 0.28);
-  --halloween-modal-shadow: 0 24px 60px rgba(12, 18, 38, 0.55);
-  --halloween-header-gradient: linear-gradient(135deg, rgba(28, 32, 56, 0.92), rgba(14, 18, 34, 0.9));
-  --halloween-header-border-color: rgba(122, 162, 255, 0.22);
-  --halloween-header-shadow: 0 6px 18px rgba(6, 12, 32, 0.5);
+  --halloween-modal-border-color: rgba(164, 214, 255, 0.28);
+  --halloween-modal-shadow: 0 24px 60px rgba(8, 16, 32, 0.55);
+  --halloween-header-gradient: linear-gradient(135deg, rgba(18, 44, 86, 0.92), rgba(12, 30, 70, 0.9));
+  --halloween-header-border-color: rgba(168, 218, 255, 0.24);
+  --halloween-header-shadow: 0 6px 18px rgba(8, 22, 48, 0.5);
 }
 
 /* Motion safety */
@@ -1057,11 +1057,11 @@ body {
     height: 100vh;
     font-family: "Poppins", "Segoe UI", Arial, sans-serif;
     background:
-        radial-gradient(120% 120% at 50% 100%, rgba(119, 45, 140, 0.55) 0%, rgba(15, 15, 40, 0.94) 58%, rgba(5, 6, 15, 1) 100%),
-        linear-gradient(120deg, rgba(255, 132, 72, 0.28), rgba(81, 28, 122, 0.42)),
+        radial-gradient(120% 120% at 50% 100%, rgba(92, 154, 236, 0.55) 0%, rgba(12, 24, 52, 0.94) 58%, rgba(4, 8, 20, 1) 100%),
+        linear-gradient(120deg, rgba(160, 210, 255, 0.28), rgba(78, 140, 206, 0.38)),
         url(backgrounds/menu.png);
-    background-blend-mode: screen, overlay, normal;
-    background-size: 220% 220%, 180% 180%, cover;
+    background-blend-mode: screen, lighten, normal;
+    background-size: 220% 220%, 200% 200%, cover;
     background-position: center top, center, center;
     transition: background 0.5s, background-position 6s ease-in-out;
     overflow: hidden;
@@ -1076,10 +1076,10 @@ body {
     inset: 0;
     pointer-events: none;
     background:
-        radial-gradient(60% 75% at 50% 0%, rgba(135, 86, 225, 0.22), transparent 70%),
-        radial-gradient(50% 55% at 12% 12%, rgba(255, 170, 92, 0.28), transparent 65%),
-        radial-gradient(48% 60% at 88% 18%, rgba(254, 83, 124, 0.22), transparent 70%);
-    opacity: 0.9;
+        radial-gradient(70% 60% at 50% -10%, rgba(132, 198, 255, 0.32), transparent 72%),
+        radial-gradient(55% 40% at 18% 10%, rgba(180, 226, 255, 0.26), transparent 70%),
+        radial-gradient(52% 42% at 82% 18%, rgba(102, 176, 255, 0.22), transparent 72%);
+    opacity: 0.88;
     mix-blend-mode: screen;
     z-index: 0;
 }
@@ -1088,271 +1088,97 @@ body {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: 990000;
+    z-index: 0;
 }
 
-.halloween-overlay__web {
+.halloween-overlay__snow {
     position: absolute;
-    width: clamp(160px, 18vw, 240px);
-    height: clamp(160px, 18vw, 240px);
-    background-image: var(--halloween-web-image);
-    background-size: contain;
-    background-repeat: no-repeat;
-    filter: drop-shadow(0 10px 24px rgba(132, 92, 255, 0.18));
+    inset: -18vh 0 -6vh;
+    background-repeat: repeat;
+    background-image:
+        radial-gradient(2px 2px at 24px 28px, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 64%),
+        radial-gradient(1.6px 1.6px at 80px 120px, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0) 60%),
+        radial-gradient(1.8px 1.8px at 140px 60px, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 68%);
+    background-size: 220px 220px, 280px 280px, 200px 200px;
+    background-position: 0 0, 0 0, 0 0;
+    opacity: 0.65;
+    --snowfall-duration: 48s;
+    --snow-shift-1: 680px;
+    --snow-shift-2: 520px;
+    --snow-shift-3: 420px;
+    animation: snowfall var(--snowfall-duration) linear infinite;
+    transform: translateZ(0);
+}
+
+.halloween-overlay__snow--back {
+    filter: blur(1.2px);
+    opacity: 0.42;
+    background-size: 260px 260px, 340px 340px, 220px 220px;
+    --snowfall-duration: 68s;
+    --snow-shift-1: 760px;
+    --snow-shift-2: 600px;
+    --snow-shift-3: 480px;
+}
+
+.halloween-overlay__snow--mid {
+    --snowfall-duration: 52s;
+    opacity: 0.6;
+}
+
+.halloween-overlay__snow--front {
+    filter: drop-shadow(0 8px 16px rgba(18, 36, 64, 0.28));
     opacity: 0.78;
-    animation: webGlow 14s ease-in-out infinite alternate;
-    pointer-events: none;
+    background-size: 180px 180px, 240px 240px, 160px 160px;
+    --snowfall-duration: 28s;
+    --snow-shift-1: 520px;
+    --snow-shift-2: 460px;
+    --snow-shift-3: 360px;
 }
 
-.halloween-overlay__spider {
+.halloween-overlay__ground {
     position: absolute;
-    top: clamp(-24px, -2.8vw, 38px);
-    right: clamp(100px, 32.4vw, 168px);
-    width: clamp(58px, 6.6vw, 92px);
-    height: auto;
-    transform-origin: 50% 35%;
-    filter: drop-shadow(0 12px 22px rgba(8, 0, 24, 0.45));
-    animation: spiderPatrol 28s linear infinite;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: clamp(140px, 20vh, 240px);
     pointer-events: none;
-    z-index: 100000000000;
-    will-change: transform;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(237, 246, 255, 0.82) 36%, rgba(220, 236, 255, 0.94) 70%, rgba(210, 230, 248, 0.98) 100%);
+    box-shadow: 0 -18px 48px rgba(36, 72, 120, 0.22);
+    overflow: hidden;
 }
 
-@keyframes spiderPatrol {
+.halloween-overlay__ground::before {
+    content: "";
+    position: absolute;
+    inset: -55% -2% auto;
+    height: 70%;
+    background:
+        radial-gradient(44% 80% at 8% 80%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 70%),
+        radial-gradient(50% 70% at 30% 72%, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0) 70%),
+        radial-gradient(48% 68% at 56% 78%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 70%),
+        radial-gradient(52% 72% at 80% 76%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 70%),
+        radial-gradient(58% 68% at 96% 82%, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0) 70%);
+    background-repeat: no-repeat;
+    background-size: 18% 110%, 24% 108%, 26% 106%, 22% 110%, 14% 104%;
+    background-position: 0% 100%, 24% 100%, 52% 100%, 76% 100%, 96% 100%;
+    opacity: 0.95;
+}
+
+@keyframes snowfall {
     0% {
-        transform: translate3d(-1.6vw, 0.2vw, 0) rotate(348deg);
-    }
-    12% {
-        transform: translate3d(-2.2vw, 4.4vw, 0) rotate(372deg);
-    }
-    26% {
-        transform: translate3d(0.4vw, 9.6vw, 0) rotate(408deg);
-    }
-    40% {
-        transform: translate3d(4.8vw, 11.8vw, 0) rotate(438deg);
-    }
-    54% {
-        transform: translate3d(8vw, 7.2vw, 0) rotate(262deg);
-    }
-    68% {
-        transform: translate3d(6vw, 1.2vw, 0) rotate(170deg);
-    }
-    82% {
-        transform: translate3d(1.8vw, -2.8vw, 0) rotate(140deg);
-    }
-    92% {
-        transform: translate3d(-1.2vw, -1.6vw, 0) rotate(160deg);
+        background-position: 0 0, 0 0, 0 0;
     }
     100% {
-        transform: translate3d(-1.6vw, 0.2vw, 0) rotate(348deg);
+        background-position:
+            0 var(--snow-shift-1),
+            0 var(--snow-shift-2),
+            0 var(--snow-shift-3);
     }
-}
-
-.halloween-overlay__web--top-left,
-.halloween-overlay__web--bottom-left {
-    display: none;
-}
-
-.halloween-overlay__web--top-right,
-.halloween-overlay__web--bottom-right {
-    width: clamp(220px, 26vw, 340px);
-    height: clamp(220px, 26vw, 340px);
-    background-position: top right;
-}
-
-.halloween-overlay__web--top-right {
-    top: -6vw;
-    right: -8vw;
-    transform: scaleX(-1) rotate(-6deg);
-    transform-origin: top right;
-}
-
-.halloween-overlay__web--top-right::before,
-.halloween-overlay__web--top-right::after {
-    content: "";
-    position: absolute;
-    inset: 10% -6% auto auto;
-    width: 68%;
-    height: 68%;
-    background-image: var(--halloween-web-image);
-    background-size: contain;
-    background-repeat: no-repeat;
-    opacity: 0.55;
-    transform-origin: top right;
-    pointer-events: none;
-}
-
-.halloween-overlay__web--top-right::before {
-    transform: rotate(-12deg);
-}
-
-.halloween-overlay__web--top-right::after {
-    transform: rotate(9deg);
-}
-
-.halloween-overlay__web--bottom-right {
-    bottom: -8vw;
-    right: -8vw;
-    transform: scaleX(-1) rotate(8deg);
-    transform-origin: bottom right;
-}
-
-.halloween-overlay__web--main {
-    top: clamp(-80px, -10vw, 0px);
-    right: clamp(-90px, -8vw, -24px);
-    width: clamp(360px, 40vw, 540px);
-    height: clamp(360px, 40vw, 540px);
-    background-position: top right;
-    transform: scaleX(-0.8) rotate(-190deg);
-    opacity: 0.24 !important;
-    filter: drop-shadow(0 18px 36px rgba(96, 70, 180, 0.28));
-    z-index: 9999;
-}
-
-.halloween-overlay__web--bottom-right::before {
-    content: "";
-    position: absolute;
-    inset: auto -4% 8% auto;
-    width: 62%;
-    height: 62%;
-    background-image: var(--halloween-web-image);
-    background-size: contain;
-    background-repeat: no-repeat;
-    opacity: 0.48;
-    transform: rotate(-6deg) scaleX(-1);
-    pointer-events: none;
-}
-
-.halloween-overlay__bat {
-    position: absolute;
-    width: clamp(62px, 9vw, 112px);
-    height: auto;
-    opacity: 0.9;
-    filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 1));
-    pointer-events: none;
-    will-change: transform, opacity;
-}
-
-.halloween-overlay__bat--1 {
-    top: clamp(18%, 26vh, 32%);
-    left: -18vw;
-    animation: batFlightLeftToRight 6s linear infinite;
-}
-
-.halloween-overlay__bat--2 {
-    top: clamp(32%, 46vh, 54%);
-    left: 102vw;
-    animation: batFlightRightToLeft 6.5s linear infinite;
-    animation-delay: 0.8s;
-}
-
-.halloween-overlay__bat--3 {
-    top: -14vh;
-    left: -20vw;
-    animation: batFlightDiagonal 7s linear infinite;
-    animation-delay: 0.4s;
-}
-
-.halloween-overlay__lantern {
-    position: absolute;
-    width: clamp(26px, 4vw, 44px);
-    height: clamp(46px, 8vw, 84px);
-    background: linear-gradient(180deg, rgba(255, 180, 120, 0.92) 0%, rgba(255, 112, 67, 0.9) 45%, rgba(137, 42, 6, 0.9) 100%);
-    border-radius: 45% 45% 55% 55%;
-    box-shadow:
-        0 0 12px rgba(255, 153, 82, 0.8),
-        inset 0 0 18px rgba(255, 236, 182, 0.66);
-    opacity: 0.95;
-    transform-origin: top center;
-    animation: lanternSwing 6s ease-in-out infinite;
-}
-
-.halloween-overlay__lantern::before {
-    content: "";
-    position: absolute;
-    top: -30%;
-    left: 50%;
-    width: 2px;
-    height: clamp(34px, 5vh, 56px);
-    background: linear-gradient(180deg, rgba(255, 209, 163, 0.35), rgba(255, 114, 70, 0.05));
-    transform: translateX(-50%);
-}
-
-.halloween-overlay__lantern::after {
-    content: "";
-    position: absolute;
-    inset: 8% 12%;
-    border-radius: 50%;
-    border: 1px solid rgba(255, 236, 200, 0.6);
-    box-shadow: inset 0 0 22px rgba(255, 236, 182, 0.75);
-}
-
-.halloween-overlay__lantern--left {
-    left: clamp(2%, 6vw, 8%);
-    top: clamp(22%, 32vh, 38%);
-}
-
-.halloween-overlay__lantern--right {
-    right: clamp(2%, 6vw, 8%);
-    top: clamp(30%, 46vh, 54%);
-    animation-delay: 1.5s;
-}
-
-.black-hole,
-.black-hole .particle-system {
-    display: none !important;
-}
-
-@keyframes webGlow {
-    0% { opacity: 0.55; filter: drop-shadow(0 4px 16px rgba(124, 92, 255, 0.1)); }
-    50% { opacity: 0.85; filter: drop-shadow(0 10px 26px rgba(186, 146, 255, 0.25)); }
-    100% { opacity: 0.7; filter: drop-shadow(0 6px 18px rgba(148, 108, 255, 0.18)); }
-}
-
-@keyframes batFlightLeftToRight {
-    0% { opacity: 0; transform: translate3d(0, -6vh, 0) scale(0.85) rotate(-14deg); }
-    10% { opacity: 0.95; transform: translate3d(18vw, 4vh, 0) scale(0.98) rotate(9deg); }
-    20% { transform: translate3d(36vw, -3vh, 0) scale(1.05) rotate(-10deg); }
-    30% { transform: translate3d(56vw, 3vh, 0) scale(1.08) rotate(8deg); }
-    40% { transform: translate3d(76vw, -4vh, 0) scale(1.06) rotate(-9deg); }
-    55% { transform: translate3d(96vw, 3vh, 0) scale(1.02) rotate(7deg); }
-    70% { transform: translate3d(118vw, -5vh, 0) scale(0.98) rotate(-8deg); }
-    85% { opacity: 0.9; transform: translate3d(138vw, 4vh, 0) scale(0.95) rotate(6deg); }
-    100% { opacity: 0; transform: translate3d(160vw, -2vh, 0) scale(0.92) rotate(-5deg); }
-}
-
-@keyframes batFlightRightToLeft {
-    0% { opacity: 0; transform: translate3d(0, -4vh, 0) scale(0.95) rotate(12deg); }
-    12% { opacity: 0.92; transform: translate3d(-18vw, 3vh, 0) scale(1.02) rotate(-9deg); }
-    25% { transform: translate3d(-40vw, -4vh, 0) scale(1.08) rotate(7deg); }
-    40% { transform: translate3d(-62vw, 2vh, 0) scale(1.05) rotate(-8deg); }
-    55% { transform: translate3d(-84vw, -5vh, 0) scale(1.01) rotate(9deg); }
-    72% { transform: translate3d(-108vw, 4vh, 0) scale(0.97) rotate(-7deg); }
-    88% { opacity: 0.85; transform: translate3d(-132vw, -3vh, 0) scale(0.94) rotate(6deg); }
-    100% { opacity: 0; transform: translate3d(-156vw, 2vh, 0) scale(0.9) rotate(-4deg); }
-}
-
-@keyframes batFlightDiagonal {
-    0% { opacity: 0; transform: translate3d(0, 0, 0) scale(0.82) rotate(-16deg); }
-    10% { opacity: 0.95; transform: translate3d(16vw, 12vh, 0) scale(0.92) rotate(10deg); }
-    25% { transform: translate3d(34vw, 26vh, 0) scale(1.04) rotate(-9deg); }
-    40% { transform: translate3d(52vw, 38vh, 0) scale(1.09) rotate(8deg); }
-    55% { transform: translate3d(72vw, 52vh, 0) scale(1.06) rotate(-7deg); }
-    70% { transform: translate3d(92vw, 66vh, 0) scale(1.02) rotate(6deg); }
-    85% { opacity: 0.88; transform: translate3d(110vw, 78vh, 0) scale(0.98) rotate(-5deg); }
-    100% { opacity: 0; transform: translate3d(128vw, 88vh, 0) scale(0.94) rotate(4deg); }
-}
-
-@keyframes lanternSwing {
-    0% { transform: rotate(-4deg); }
-    50% { transform: rotate(4deg); }
-    100% { transform: rotate(-4deg); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .halloween-overlay__bat,
-    .halloween-overlay__lantern,
-    .halloween-overlay__web {
+    .halloween-overlay__snow {
         animation: none !important;
     }
 }
@@ -2805,8 +2631,9 @@ body {
 .cutsceneStarBig,
 .cutsceneStarSmall {
     position: absolute;
-    top: 30%;
-    left: 40%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in, --cutscene-spin-duration 0.6s ease-in-out;
@@ -3116,8 +2943,9 @@ body {
 
 .cutsceneStarEaster {
     position: absolute;
-    top: 30%;
-    left: 40%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     scale: 0;
     pointer-events: none;
     transform-origin: center;
@@ -3126,8 +2954,9 @@ body {
 
 .msfuStar {
     position: absolute;
-    top: 30%;
-    left: 40%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
@@ -3136,8 +2965,9 @@ body {
 .cutsceneStarEvent,
 .starShenvii {
     position: absolute;
-    top: 30%;
-    left: 40%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
