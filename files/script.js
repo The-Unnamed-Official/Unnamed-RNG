@@ -21,10 +21,98 @@ const storage = {
 const byId = (id) => document.getElementById(id);
 const $all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
+const PERSISTENT_BODY_CLASSES = new Set(["reduced-motion", "potato-mode"]);
+
+function installPersistentBodyClassPreserver() {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  if (installPersistentBodyClassPreserver.__installed) {
+    return;
+  }
+
+  const prototype =
+    typeof HTMLBodyElement !== "undefined"
+      ? HTMLBodyElement.prototype
+      : document.body
+      ? Object.getPrototypeOf(document.body)
+      : null;
+
+  if (!prototype) {
+    return;
+  }
+
+  const descriptor =
+    Object.getOwnPropertyDescriptor(prototype, "className") ||
+    Object.getOwnPropertyDescriptor(Element.prototype, "className");
+
+  if (
+    !descriptor ||
+    descriptor.configurable === false ||
+    typeof descriptor.set !== "function"
+  ) {
+    return;
+  }
+
+  const originalSet = descriptor.set;
+  const originalGet = descriptor.get;
+
+  Object.defineProperty(prototype, "className", {
+    configurable: true,
+    enumerable: descriptor.enumerable ?? false,
+    get:
+      typeof originalGet === "function"
+        ? function getClassName() {
+            return originalGet.call(this);
+          }
+        : function fallbackGetClassName() {
+            const classAttribute = this.getAttribute && this.getAttribute("class");
+            return typeof classAttribute === "string" ? classAttribute : "";
+          },
+    set(value) {
+      if (this === document.body) {
+        const existingPersistent = Array.from(this.classList).filter((className) =>
+          PERSISTENT_BODY_CLASSES.has(className),
+        );
+
+        const normalizedValue = value == null ? "" : String(value);
+        const tokens = normalizedValue
+          .split(/\s+/)
+          .map((token) => token.trim())
+          .filter(Boolean);
+
+        const merged = new Set(tokens);
+        existingPersistent.forEach((className) => merged.add(className));
+
+        originalSet.call(this, Array.from(merged).join(" "));
+        return;
+      }
+
+      originalSet.call(this, value);
+    },
+  });
+
+  installPersistentBodyClassPreserver.__installed = true;
+}
+
+installPersistentBodyClassPreserver();
+
+if (!installPersistentBodyClassPreserver.__installed && document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", installPersistentBodyClassPreserver, {
+    once: true,
+  });
+}
+
 const EVENT_END_TIMESTAMP = 1762614000 * 1000;
 const EVENT_DISCORD_TIMESTAMP_FULL = "<t:1762614000:f>";
 const EVENT_DISCORD_TIMESTAMP_RELATIVE = "<t:1762614000:R>";
 const EVENT_TIME_ZONE = "Europe/Berlin";
+
+const SEASONAL_EVENT_METADATA = Object.freeze({
+  name: "Halloween Frights 2025",
+  label: "Event",
+});
 
 const POTION_TYPES = Object.freeze({
   LUCK: "luck",
@@ -431,16 +519,8 @@ const POTION_DEFINITIONS = [
     consumeOnRoll: true,
     disableWithToggle: true,
     eventExclusive: "Halloween Event Exclusive",
-    craftCost: {
-      classes: {
-        commonBgImg: 800,
-        rareBgImg: 500,
-        unstoppableBgImg: 45,
-        fearBgImg: 3,
-      },
-      titles: [],
-      potions: { luckyPotion: 50, fortuneSpoid1: 5, basicPotion: 1,  },
-    },
+    craftingDisabled: true,
+    craftCost: null,
   },
   {
     id: "pumpkinPotion",
@@ -454,16 +534,59 @@ const POTION_DEFINITIONS = [
     consumeOnRoll: true,
     disableWithToggle: true,
     eventExclusive: "Halloween Event Exclusive",
+    craftingDisabled: true,
+    craftCost: null,
+  },
+  {
+    id: "masteryElixir",
+    name: "Mastery Elixir",
+    image: "files/images/MasteryElixir.png",
+    buffImage: "files/images/MasteryBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 800000,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next Roll",
+    consumeOnRoll: true,
+    disableWithToggle: true,
     craftCost: {
-      classes: {
-        commonBgImg: 900,
-        rareBgImg: 600,
-        legendaryBgImg: 100,
-        unstoppableBgImg: 50,
-        fearBgImg: 4,
-      },
+      classes: { solarpowerBgImg: 100 },
       titles: [],
-      potions: { luckyPotion: 75, fortuneSpoid1: 7, basicPotion: 2 },
+      potions: { luckyPotion: 100, basicPotion: 1, decentPotion: 2 },
+    },
+  },
+  {
+    id: "hellishPotion",
+    name: "Hellish Potion",
+    image: "files/images/HellishPotion.png",
+    buffImage: "files/images/HellishBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 60000,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next 6 Rolls",
+    consumeOnRoll: true,
+    consumeUses: 6,
+    disableWithToggle: true,
+    craftCost: {
+      classes: {},
+      titles: [],
+      potions: { luckyPotion: 200, basicPotion: 10 },
+    },
+  },
+  {
+    id: "boundlessPotion",
+    name: "Boundless Potion",
+    image: "files/images/BoundlessPotion.png",
+    buffImage: "files/images/BoundlessBuff.png",
+    type: POTION_TYPES.LUCK,
+    effectPercent: 1000000,
+    durationSeconds: 31536000,
+    durationDisplay: "Duration: Next Roll",
+    consumeOnRoll: true,
+    disableWithToggle: true,
+    craftCost: {
+      classes: { commonBgImg: 1000 },
+      titles: [],
+      potions: { luckyPotion: 800, basicPotion: 20, decentPotion: 10 },
     },
   },
   {
@@ -583,7 +706,7 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     name: "Supporter Starter Bundle",
     priceUsd: 1,
     description:
-      "Jump-start your potion reserves with a massive infusion of core brews. Limited-time offer: your first purchase this week is free!",
+      "Jump-start your potion reserves with a massive infusion of core brews.",
     rewards: Object.freeze({
       potions: Object.freeze({
         luckyPotion: 1000,
@@ -595,25 +718,18 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     maxPurchases: 10,
     limitLabel: "Max 10 purchases",
     limitReachedActionLabel: "Limit Reached",
-    promotion: Object.freeze({
-      maxUses: 1,
-      checkoutUrl: "https://buy.stripe.com/9B6fZj8QJfnF7jp2VK3AY02",
-      priceLabel: "Free (Limited Week)",
-      actionLabel: "Claim for Free",
-      badgeText: "First purchase free!",
-      usedBadgeText: "Free claim used",
-    }),
   }),
   Object.freeze({
     id: "potionTransactionDescended",
     name: "Descended Power Bundle",
     priceUsd: 2,
-    description: "Secure a stockpile of top-tier Halloween brews for your next session.",
+    description: "Secure a stockpile of top-tier luck brews for your next session.",
     rewards: Object.freeze({
       potions: Object.freeze({
-        [DESCENDED_POTION_ID]: 130,
-        bloodyPotion: 100,
-        pumpkinPotion: 80,
+        [DESCENDED_POTION_ID]: 500,
+        luckyPotion: 2000,
+        speedPotion: 2000,
+        fortunePotion3: 100,
       }),
     }),
     bannerImage: "files/images/descendedBundleBanner.png",
@@ -626,7 +742,7 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     name: "Halloween Frights Bundle",
     priceUsd: 0.5,
     description:
-      "Celebrate Halloween with a terrifyingly generous stash of frightening brews and rare drops.",
+      "Retired Halloween stock, restocked with core potions for ongoing adventures.",
     rewards: Object.freeze({
       potions: Object.freeze({
         bloodyPotion: 50,
@@ -637,13 +753,14 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     maxPurchases: 2,
     limitLabel: "Max 2 purchases",
     limitReachedActionLabel: "Limit Reached",
+    retired: true,
   }),
   Object.freeze({
     id: "potionTransactionHasty",
     name: "Hasty Bundle",
     priceUsd: 1,
     description:
-      "Begin your quick rolling spree with Titles to explore!",
+      "Begin your quick rolling spree with titles to explore!",
     rewards: Object.freeze({
       potions: Object.freeze({
         speedPotion: 1000,
@@ -657,14 +774,21 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     maxPurchases: 10,
     limitLabel: "Max 10 purchases",
     limitReachedActionLabel: "Limit Reached",
-    promotion: Object.freeze({
-      maxUses: 1,
-      checkoutUrl: "https://buy.stripe.com/14AaEZ1oh4J1cDJ67W3AY05",
-      priceLabel: "Free (Limited Week)",
-      actionLabel: "Claim for Free",
-      badgeText: "First purchase free!",
-      usedBadgeText: "Free claim used",
+  }),
+  Object.freeze({
+    id: "potionTransactionWinterFest",
+    name: "Winter Fest Potion Bundle",
+    priceUsd: 1.5,
+    description:
+      "Celebrate the chill with a mix of powerful brews for your next adventure.",
+    rewards: Object.freeze({
+      potions: Object.freeze({
+        boundlessPotion: 5,
+        hellishPotion: 3,
+        masteryElixir: 30,
+      }),
     }),
+    bannerImage: "files/images/winterFestBundle.png",
   }),
 ]);
 
@@ -673,11 +797,11 @@ const POTION_TRANSACTION_CHECKOUT_URLS = Object.freeze({
   potionTransactionDescended: "https://buy.stripe.com/9B69AV0kd3EXdHN53S3AY01",
   potionTransactionHalloweenFrights: "https://buy.stripe.com/6oU6oJeb33EX5bh0NC3AY03",
   potionTransactionHasty: "https://buy.stripe.com/14A28t2slgrJ5bh9k83AY06",
+  potionTransactionWinterFest: "https://buy.stripe.com/00wfZj4At6R97jp67W3AY07",
 });
 
 const POTION_TRANSACTION_PURCHASE_COUNTS_KEY = "potionTransactionPurchaseCounts";
-const HALLOWEEN_FRIGHTS_PURCHASE_RESET_KEY = "halloweenFrightsBundlePurchaseReset2025";
-const HALLOWEEN_FRIGHTS_TRANSACTION_ID = "potionTransactionHalloweenFrights";
+const POTION_TRANSACTION_PURCHASE_RESET_KEY = "potionTransactionPurchaseReset_v1_4";
 
 function normalizePotionTransactionPurchaseCounts(raw) {
   if (!raw || typeof raw !== "object") {
@@ -706,19 +830,9 @@ let potionTransactionPurchaseCounts = normalizePotionTransactionPurchaseCounts(
   storage.get(POTION_TRANSACTION_PURCHASE_COUNTS_KEY, {}),
 );
 
-if (!storage.get(HALLOWEEN_FRIGHTS_PURCHASE_RESET_KEY, false)) {
-  if (
-    Object.prototype.hasOwnProperty.call(
-      potionTransactionPurchaseCounts,
-      HALLOWEEN_FRIGHTS_TRANSACTION_ID,
-    )
-  ) {
-    const nextCounts = { ...potionTransactionPurchaseCounts };
-    delete nextCounts[HALLOWEEN_FRIGHTS_TRANSACTION_ID];
-    writePotionTransactionPurchaseCounts(nextCounts);
-  }
-
-  storage.set(HALLOWEEN_FRIGHTS_PURCHASE_RESET_KEY, true);
+if (!storage.get(POTION_TRANSACTION_PURCHASE_RESET_KEY, false)) {
+  writePotionTransactionPurchaseCounts({});
+  storage.set(POTION_TRANSACTION_PURCHASE_RESET_KEY, true);
 }
 
 function writePotionTransactionPurchaseCounts(nextCounts) {
@@ -792,6 +906,24 @@ function getPotionTransactionState(transaction) {
   }
 
   const purchaseCount = getPotionTransactionPurchaseCount(transaction.id);
+  const retired = Boolean(transaction.retired);
+
+  if (retired) {
+    return {
+      purchaseCount,
+      maxPurchases: 0,
+      remainingPurchases: 0,
+      limitReached: true,
+      promoActive: false,
+      priceLabel: transaction.retiredPriceLabel || "Retired",
+      checkoutUrl: null,
+      actionLabel: transaction.retiredActionLabel || "Unobtainable",
+      actionDisabled: true,
+      badges: [],
+      retired: true,
+    };
+  }
+
   const maxPurchasesRaw = transaction.maxPurchases;
   const maxPurchases = Number.isFinite(maxPurchasesRaw)
     ? Math.max(0, Math.trunc(maxPurchasesRaw))
@@ -869,6 +1001,7 @@ function getPotionTransactionState(transaction) {
     actionLabel,
     actionDisabled,
     badges,
+    retired: false,
   };
 }
 
@@ -922,6 +1055,7 @@ const POTION_SPAWN_CONFIGS = [
       { potionId: "fortuneSpoid2", chance: 0.01 },
       { potionId: "basicPotion", chance: 0.0002 },
       { potionId: "decentPotion", chance: 0.0001 },
+      { potionId: "masteryElixir", chance: 0.001 },
     ],
   },
   {
@@ -1032,6 +1166,99 @@ if (reducedAnimationsEnabled) {
   syncReducedAnimationsOnBody(true);
 }
 
+const GRAPHICS_PRESETS = Object.freeze({
+  DEFAULT: "default",
+  REDUCED: "reduced",
+  POTATO: "potato",
+});
+const GRAPHICS_PRESET_STORAGE_KEY = "graphicsPreset";
+const GRAPHICS_PRESET_VALUES = Object.freeze(Object.values(GRAPHICS_PRESETS));
+
+const storedGraphicsPreset = storage.get(GRAPHICS_PRESET_STORAGE_KEY, null);
+let graphicsPreset = GRAPHICS_PRESETS.DEFAULT;
+if (typeof storedGraphicsPreset === "string" && GRAPHICS_PRESET_VALUES.includes(storedGraphicsPreset)) {
+  graphicsPreset = storedGraphicsPreset;
+} else if (reducedAnimationsEnabled) {
+  graphicsPreset = GRAPHICS_PRESETS.REDUCED;
+}
+
+let potatoModeEnabled = graphicsPreset === GRAPHICS_PRESETS.POTATO;
+let pendingPotatoModeState = potatoModeEnabled ? true : null;
+
+function syncPotatoModeOnBody(active) {
+  const body = document.body;
+  if (!body) {
+    pendingPotatoModeState = Boolean(active);
+    return;
+  }
+
+  body.classList.toggle("potato-mode", Boolean(active));
+  pendingPotatoModeState = null;
+}
+
+function setPotatoModeEnabled(enabled) {
+  const next = Boolean(enabled);
+  if (next === potatoModeEnabled && pendingPotatoModeState === null) {
+    if (document.body) {
+      document.body.classList.toggle("potato-mode", next);
+    }
+    return;
+  }
+
+  potatoModeEnabled = next;
+  syncPotatoModeOnBody(potatoModeEnabled);
+}
+
+function isPotatoModeEnabled() {
+  return potatoModeEnabled;
+}
+
+function getGraphicsPreset() {
+  return graphicsPreset;
+}
+
+function applyGraphicsPreset(preset) {
+  switch (preset) {
+    case GRAPHICS_PRESETS.POTATO:
+      setPotatoModeEnabled(true);
+      setReducedAnimationsEnabled(true);
+      break;
+    case GRAPHICS_PRESETS.REDUCED:
+      setPotatoModeEnabled(false);
+      setReducedAnimationsEnabled(true);
+      break;
+    default:
+      setPotatoModeEnabled(false);
+      setReducedAnimationsEnabled(false);
+      break;
+  }
+}
+
+function setGraphicsPreset(preset) {
+  const nextPreset =
+    typeof preset === "string" && GRAPHICS_PRESET_VALUES.includes(preset)
+      ? preset
+      : GRAPHICS_PRESETS.DEFAULT;
+
+  if (nextPreset === graphicsPreset) {
+    applyGraphicsPreset(graphicsPreset);
+    return graphicsPreset;
+  }
+
+  graphicsPreset = nextPreset;
+
+  if (graphicsPreset === GRAPHICS_PRESETS.DEFAULT) {
+    storage.remove(GRAPHICS_PRESET_STORAGE_KEY);
+  } else {
+    storage.set(GRAPHICS_PRESET_STORAGE_KEY, graphicsPreset);
+  }
+
+  applyGraphicsPreset(graphicsPreset);
+  return graphicsPreset;
+}
+
+applyGraphicsPreset(graphicsPreset);
+
 function isEquinoxRarityClass(value) {
   return typeof value === "string" && value === EQUINOX_RARITY_CLASS;
 }
@@ -1069,6 +1296,12 @@ function initEventCountdown() {
     return;
   }
 
+  if (!hasActiveSeasonalEvent()) {
+    countdownElement.textContent = "Coming soon";
+    countdownElement.removeAttribute("title");
+    return;
+  }
+
   const eventDate = new Date(EVENT_END_TIMESTAMP);
 
   let absoluteLabel = eventDate.toLocaleString();
@@ -1080,6 +1313,8 @@ function initEventCountdown() {
     });
   } catch (error) {
   }
+
+  countdownElement.title = absoluteLabel;
 
   const segmentsFor = (diffMs) => {
     const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
@@ -1106,6 +1341,17 @@ function initEventCountdown() {
   let intervalId = null;
 
   const render = () => {
+    if (!hasActiveSeasonalEvent()) {
+      countdownElement.textContent = "Coming soon";
+      countdownElement.removeAttribute("title");
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      syncSeasonalEventChip();
+      return;
+    }
+
     const now = Date.now();
     const diffMs = EVENT_END_TIMESTAMP - now;
 
@@ -1115,6 +1361,7 @@ function initEventCountdown() {
         clearInterval(intervalId);
         intervalId = null;
       }
+      syncSeasonalEventChip();
       return;
     }
 
@@ -1428,6 +1675,10 @@ function hasSufficientPotionResources(costPotions = {}, summary) {
 
 function canCraftPotion(potion, summary = summarizeInventoryForPotions()) {
   if (!potion || typeof potion !== "object") {
+    return false;
+  }
+
+  if (potion.craftingDisabled) {
     return false;
   }
 
@@ -2442,6 +2693,11 @@ function renderPotionTransactions() {
       card.setAttribute("aria-disabled", "true");
     }
 
+    if (state?.retired) {
+      card.classList.add("potion-transaction-card--retired", "card--unobtainable");
+      card.setAttribute("aria-disabled", "true");
+    }
+
     if (typeof transaction.bannerImage === "string" && transaction.bannerImage.trim()) {
       const banner = document.createElement("div");
       banner.className = "potion-transaction-card__banner";
@@ -2577,6 +2833,10 @@ function renderPotionCrafting() {
   POTION_DEFINITIONS.forEach((potion) => {
     const card = document.createElement("article");
     card.className = "potion-card";
+    if (potion.craftingDisabled) {
+      card.classList.add("potion-card--retired", "card--unobtainable");
+      card.setAttribute("aria-disabled", "true");
+    }
 
     const imageWrapper = document.createElement("div");
     imageWrapper.className = "potion-card__image";
@@ -2626,68 +2886,77 @@ function renderPotionCrafting() {
 
     const costTitle = document.createElement("p");
     costTitle.className = "potion-card__cost-title";
-    costTitle.textContent = "Required Ingredients";
 
     const costList = document.createElement("ul");
     costList.className = "potion-card__cost-list";
 
-    Object.entries(potion.craftCost?.classes || {}).forEach(([rarityClass, required]) => {
-      if (!Number.isFinite(required) || required <= 0) {
-        return;
-      }
-
+    if (potion.craftingDisabled) {
+      costTitle.textContent = "Currently Unavailable";
       const li = document.createElement("li");
       li.className = "potion-card__cost-item";
-      const owned = summary.classCounts[rarityClass] || 0;
-      if (owned < required) {
-        li.classList.add("potion-card__cost-item--insufficient");
-      }
-      li.textContent = `${required} × ${getRequirementLabel(rarityClass)} (${owned} owned)`;
+      li.textContent = "This potion can no longer be crafted.";
       costList.appendChild(li);
-    });
+    } else {
+      costTitle.textContent = "Required Ingredients";
 
-    (Array.isArray(potion.craftCost?.titles) ? potion.craftCost.titles : []).forEach((entry) => {
-      if (!entry || typeof entry !== "object") {
-        return;
+      Object.entries(potion.craftCost?.classes || {}).forEach(([rarityClass, required]) => {
+        if (!Number.isFinite(required) || required <= 0) {
+          return;
+        }
+
+        const li = document.createElement("li");
+        li.className = "potion-card__cost-item";
+        const owned = summary.classCounts[rarityClass] || 0;
+        if (owned < required) {
+          li.classList.add("potion-card__cost-item--insufficient");
+        }
+        li.textContent = `${required} × ${getRequirementLabel(rarityClass)} (${owned} owned)`;
+        costList.appendChild(li);
+      });
+
+      (Array.isArray(potion.craftCost?.titles) ? potion.craftCost.titles : []).forEach((entry) => {
+        if (!entry || typeof entry !== "object") {
+          return;
+        }
+
+        const { title: titleName, count } = entry;
+        if (!titleName || !Number.isFinite(count) || count <= 0) {
+          return;
+        }
+
+        const li = document.createElement("li");
+        li.className = "potion-card__cost-item";
+        const owned = summary.titleCounts[titleName] || 0;
+        if (owned < count) {
+          li.classList.add("potion-card__cost-item--insufficient");
+        }
+        li.textContent = `${count} × "${titleName}" (${owned} owned)`;
+        costList.appendChild(li);
+      });
+
+      Object.entries(potion.craftCost?.potions || {}).forEach(([ingredientId, required]) => {
+        if (!ingredientId || !Number.isFinite(required) || required <= 0) {
+          return;
+        }
+
+        const li = document.createElement("li");
+        li.className = "potion-card__cost-item";
+        const ingredient = getPotionDefinition(ingredientId);
+        const owned = summary.potionCounts[ingredientId] || 0;
+        if (owned < required) {
+          li.classList.add("potion-card__cost-item--insufficient");
+        }
+        const label = ingredient ? ingredient.name : ingredientId;
+        li.textContent = `${required} × ${label} (${owned} owned)`;
+        costList.appendChild(li);
+      });
+
+      if (!costList.children.length) {
+        const li = document.createElement("li");
+        li.className = "potion-card__cost-item";
+        li.textContent = "No cost";
+        costList.appendChild(li);
       }
-
-      const { title: titleName, count } = entry;
-      if (!titleName || !Number.isFinite(count) || count <= 0) {
-        return;
-      }
-
-      const li = document.createElement("li");
-      li.className = "potion-card__cost-item";
-      const owned = summary.titleCounts[titleName] || 0;
-      if (owned < count) {
-        li.classList.add("potion-card__cost-item--insufficient");
-      }
-      li.textContent = `${count} × "${titleName}" (${owned} owned)`;
-      costList.appendChild(li);
-    });
-
-    Object.entries(potion.craftCost?.potions || {}).forEach(([ingredientId, required]) => {
-      if (!ingredientId || !Number.isFinite(required) || required <= 0) {
-        return;
-      }
-
-      const li = document.createElement("li");
-      li.className = "potion-card__cost-item";
-      const ingredient = getPotionDefinition(ingredientId);
-      const owned = summary.potionCounts[ingredientId] || 0;
-      if (owned < required) {
-        li.classList.add("potion-card__cost-item--insufficient");
-      }
-      const label = ingredient ? ingredient.name : ingredientId;
-      li.textContent = `${required} × ${label} (${owned} owned)`;
-      costList.appendChild(li);
-    });
-
-    if (!costList.children.length) {
-      const li = document.createElement("li");
-      li.className = "potion-card__cost-item";
-      li.textContent = "No cost";
-      costList.appendChild(li);
     }
 
     const actions = document.createElement("div");
@@ -2696,10 +2965,15 @@ function renderPotionCrafting() {
     const craftButton = document.createElement("button");
     craftButton.className = "potion-card__action-button";
     craftButton.type = "button";
-    const craftable = canCraftPotion(potion, summary);
+    const craftable = !potion.craftingDisabled && canCraftPotion(potion, summary);
     craftButton.disabled = !craftable;
-    craftButton.textContent = craftable ? "Craft" : "Needs Resources";
-    craftButton.addEventListener("click", () => craftPotion(potion.id));
+    if (potion.craftingDisabled) {
+      craftButton.textContent = "Unavailable";
+      craftButton.setAttribute("aria-disabled", "true");
+    } else {
+      craftButton.textContent = craftable ? "Craft" : "Needs Resources";
+      craftButton.addEventListener("click", () => craftPotion(potion.id));
+    }
 
     const ownedLabel = document.createElement("span");
     ownedLabel.className = "potion-card__inventory-count";
@@ -2851,7 +3125,10 @@ function normalizeActiveBuffs(raw) {
       const storedConsumeFlag = entry.consumeOnRoll === true || entry.consumeOnRoll === "true";
       const consumeOnRoll = storedConsumeFlag || Boolean(potion.consumeOnRoll);
 
-      let usesRemaining = 1;
+      const configuredUses = consumeOnRoll && Number.isFinite(potion.consumeUses)
+        ? Math.max(1, Math.trunc(potion.consumeUses))
+        : 1;
+      let usesRemaining = configuredUses;
       if (consumeOnRoll) {
         const parsedUses = Number.parseInt(entry.usesRemaining, 10);
         if (Number.isFinite(parsedUses) && parsedUses >= 1) {
@@ -3359,6 +3636,9 @@ function activatePotionBuff(potion) {
   const durationMs = durationSeconds * 1000;
   const icon = potion.buffImage || getBuffIconForType(potion.type) || potion.image;
   const consumeOnRoll = Boolean(potion.consumeOnRoll);
+  const usesPerActivation = consumeOnRoll && Number.isFinite(potion.consumeUses)
+    ? Math.max(1, Math.trunc(potion.consumeUses))
+    : 1;
   const disableWithToggle = Object.prototype.hasOwnProperty.call(potion, "disableWithToggle")
     ? Boolean(potion.disableWithToggle)
     : null;
@@ -3374,8 +3654,8 @@ function activatePotionBuff(potion) {
     if (consumeOnRoll) {
       const currentUses = Number.isFinite(existing.usesRemaining) && existing.usesRemaining >= 1
         ? existing.usesRemaining
-        : 1;
-      existing.usesRemaining = currentUses + 1;
+        : 0;
+      existing.usesRemaining = currentUses + usesPerActivation;
     } else if (Object.prototype.hasOwnProperty.call(existing, "usesRemaining")) {
       delete existing.usesRemaining;
     }
@@ -3402,7 +3682,7 @@ function activatePotionBuff(potion) {
   };
 
   if (consumeOnRoll) {
-    buff.usesRemaining = 1;
+    buff.usesRemaining = usesPerActivation;
   }
 
   if (disableWithToggle !== null) {
@@ -4021,6 +4301,48 @@ const ACTIVE_EVENT_BUCKETS = new Set([]);
 
 function isEventBucketActive(bucket) {
   return typeof bucket === "string" && ACTIVE_EVENT_BUCKETS.has(bucket);
+}
+
+function hasActiveSeasonalEvent() {
+  if (ACTIVE_EVENT_BUCKETS.size > 0) {
+    return true;
+  }
+
+  return Number.isFinite(EVENT_END_TIMESTAMP) && Date.now() < EVENT_END_TIMESTAMP;
+}
+
+function syncSeasonalEventChip() {
+  const eventChip = byId("versionEventChip");
+  const eventNameElement = byId("eventName");
+  const eventLabelElement = byId("eventLabel");
+  const countdownElement = byId("eventCountdown");
+
+  if (!eventChip) {
+    return;
+  }
+
+  if (!hasActiveSeasonalEvent()) {
+    eventChip.setAttribute("hidden", "true");
+    eventChip.setAttribute("aria-hidden", "true");
+    eventChip.classList.remove("version__chip--event-active");
+    if (countdownElement) {
+      countdownElement.textContent = "Coming soon";
+      countdownElement.removeAttribute("title");
+    }
+    return;
+  }
+
+  eventChip.removeAttribute("hidden");
+  eventChip.setAttribute("aria-hidden", "false");
+  eventChip.classList.add("version__chip--event-active");
+
+  if (eventLabelElement) {
+    eventLabelElement.textContent = SEASONAL_EVENT_METADATA.label || "Event";
+  }
+
+  if (eventNameElement) {
+    eventNameElement.textContent = SEASONAL_EVENT_METADATA.name;
+  }
 }
 
 const originalAudioPlay = HTMLMediaElement.prototype.play;
@@ -5169,7 +5491,11 @@ const ACHIEVEMENTS = [
     requiredEventBucket: "eventS25",
     unobtainable: true,
   },
-  { name: "It's SPOOKY season!", requiredEventBucket: "eventTitleHalloween25" },
+  {
+    name: "It's SPOOKY season!",
+    requiredEventBucket: "eventTitleHalloween25",
+    unobtainable: true,
+  },
   { name: "Seasonal Tourist", minEventTitleCount: 1 },
   { name: "Event!", minDistinctEventBuckets: 1 },
   { name: "Event Explorer", minDistinctEventBuckets: 3 },
@@ -5668,6 +5994,7 @@ document.addEventListener("DOMContentLoaded", () => {
     startPotionTransactionStatusPolling();
   }
 
+  syncSeasonalEventChip();
   initEventCountdown();
 
   if (pendingEquinoxPulseState !== null || equinoxPulseActive) {
@@ -5678,6 +6005,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (pendingReducedAnimationsState !== null || reducedAnimationsEnabled) {
     const desiredReducedState = pendingReducedAnimationsState !== null ? pendingReducedAnimationsState : reducedAnimationsEnabled;
     syncReducedAnimationsOnBody(desiredReducedState);
+  }
+
+  if (pendingPotatoModeState !== null || potatoModeEnabled) {
+    const desiredPotatoState = pendingPotatoModeState !== null ? pendingPotatoModeState : potatoModeEnabled;
+    syncPotatoModeOnBody(desiredPotatoState);
   }
 
   if (rollButton) {
@@ -17125,53 +17457,17 @@ function rollRarity() {
       titles: ["Mythical", "Dude"]
     },
     {
-      type: "Pumpkin Hollow [1 in 3,110]",
-      class: "pumpkinhollowBgImg",
-      chance: 0.03215434083,
-      titles: ["Mythical", "Dude"]
-    },
-    {
-      type: "The Scarecrow's Sigil [1 in 1,031]",
-      class: "thescarecrowssigilBgImg",
-      chance: 0.09699321047,
-      titles: ["Stalking", "Hay"]
-    },
-    {
-      type: "Hollow Hill Manor [1 in 10,031]",
-      class: "hollowhillmanorBgImg",
-      chance: 0.0099690958,
-      titles: ["Haunted", "Ghoul"]
-    },
-    {
-      type: "The Phantom Moon [1 in 10,031]",
-      class: "thephantommoonBgImg",
-      chance: 0.0099690958,
-      titles: ["Gravity", "Alive"]
-    },
-    {
-      type: "The Void's Veil [1 in 10,031]",
-      class: "thevoidsveilBgImg",
-      chance: 0.0099690958,
-      titles: ["Mystic", "Aliens"]
-    },
-    {
-      type: "Wailing Shade [1 in 31,010]",
-      class: "wailingshadeBgImg",
-      chance: 0.0032247662,
-      titles: ["Haunt", "Pray"]
-    },
-    {
       type: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]",
       class: "alienBgImg",
       chance: 0.00015293279,
       titles: ["Catien", "Another Species"]
     },
-    {
-      type: "Malvoryn [1 in 666,666]",
-      class: "malvorynBgImg",
-      chance: 0.00015000015,
-      titles: ["The Deep Dark", "The One Who Broke The World", "Disaster", "Chaos", "The Broken One"]
-    }
+    // {
+    //   type: "Malvoryn [1 in 666,666]",
+    //   class: "malvorynBgImg",
+    //   chance: 0.00015000015,
+    //   titles: ["The Deep Dark", "The One Who Broke The World", "Disaster", "Chaos", "The Broken One"]
+    // }
   ];
 
   const {
@@ -17996,21 +18292,121 @@ function registerInterfaceToggleButtons() {
     });
   }
 
-  const toggleReducedAnimationsBtn = document.getElementById("toggleReducedAnimationsBtn");
-  if (toggleReducedAnimationsBtn) {
-    const updateButtonState = () => {
-      const active = isReducedAnimationsEnabled();
-      toggleReducedAnimationsBtn.textContent = active ? "Restore Animations" : "Reduce Animations";
-      toggleReducedAnimationsBtn.setAttribute("aria-pressed", String(active));
+  const graphicsPresetContainer = document.getElementById("graphicsPresetDropdown");
+  const graphicsPresetToggle = document.getElementById("graphicsPresetDropdownToggle");
+  const graphicsPresetMenu = document.getElementById("graphicsPresetDropdownMenu");
+  const graphicsPresetButtons = graphicsPresetMenu
+    ? Array.from(graphicsPresetMenu.querySelectorAll("[data-graphics-preset]"))
+    : [];
+
+  const updateGraphicsPresetControls = () => {
+    const currentPreset = getGraphicsPreset();
+
+    if (graphicsPresetToggle) {
+      let label = "Graphics Preset: Default";
+      if (currentPreset === GRAPHICS_PRESETS.POTATO) {
+        label = "Graphics Preset: Potato";
+      } else if (currentPreset === GRAPHICS_PRESETS.REDUCED) {
+        label = "Graphics Preset: Reduced";
+      }
+      graphicsPresetToggle.textContent = label;
+    }
+
+    graphicsPresetButtons.forEach((button) => {
+      const preset = button.getAttribute("data-graphics-preset");
+      const isActive = preset === currentPreset;
+      button.setAttribute("aria-pressed", String(isActive));
+
+      if (preset === GRAPHICS_PRESETS.POTATO) {
+        button.textContent = isActive ? "Disable Potato Graphics" : "Potato Graphics";
+      } else if (preset === GRAPHICS_PRESETS.REDUCED) {
+        button.textContent = isActive ? "Restore Animations" : "Reduce Animations";
+      } else {
+        button.textContent = isActive ? "Default Graphics (Active)" : "Default Graphics";
+      }
+    });
+  };
+
+  const closeGraphicsPresetMenu = () => {
+    if (!graphicsPresetMenu || !graphicsPresetToggle) {
+      return;
+    }
+
+    if (!graphicsPresetMenu.hidden) {
+      graphicsPresetMenu.hidden = true;
+      graphicsPresetToggle.setAttribute("aria-expanded", "false");
+    }
+  };
+
+  const openGraphicsPresetMenu = () => {
+    if (!graphicsPresetMenu || !graphicsPresetToggle) {
+      return;
+    }
+
+    graphicsPresetMenu.hidden = false;
+    graphicsPresetToggle.setAttribute("aria-expanded", "true");
+  };
+
+  if (graphicsPresetToggle && graphicsPresetMenu && graphicsPresetContainer) {
+    graphicsPresetToggle.addEventListener("click", () => {
+      const expanded = graphicsPresetToggle.getAttribute("aria-expanded") === "true";
+      if (expanded) {
+        closeGraphicsPresetMenu();
+      } else {
+        openGraphicsPresetMenu();
+      }
+    });
+
+    const handleDocumentClick = (event) => {
+      if (!graphicsPresetContainer.contains(event.target)) {
+        closeGraphicsPresetMenu();
+      }
     };
 
-    updateButtonState();
+    document.addEventListener("click", handleDocumentClick);
 
-    toggleReducedAnimationsBtn.addEventListener("click", () => {
-      setReducedAnimationsEnabled(!isReducedAnimationsEnabled());
-      updateButtonState();
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        if (!graphicsPresetMenu.hidden) {
+          closeGraphicsPresetMenu();
+        }
+        graphicsPresetToggle.focus();
+      }
+    };
+
+    graphicsPresetToggle.addEventListener("keydown", handleEscape);
+    graphicsPresetMenu.addEventListener("keydown", handleEscape);
+  }
+
+  document.addEventListener("settingsMenuOpened", closeGraphicsPresetMenu);
+  document.addEventListener("settingsMenuClosed", closeGraphicsPresetMenu);
+
+  if (graphicsPresetButtons.length) {
+    graphicsPresetButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const preset = button.getAttribute("data-graphics-preset");
+        const current = getGraphicsPreset();
+
+        if (preset === GRAPHICS_PRESETS.POTATO) {
+          const nextPreset =
+            current === GRAPHICS_PRESETS.POTATO ? GRAPHICS_PRESETS.DEFAULT : GRAPHICS_PRESETS.POTATO;
+          setGraphicsPreset(nextPreset);
+        } else if (preset === GRAPHICS_PRESETS.REDUCED) {
+          const nextPreset =
+            current === GRAPHICS_PRESETS.REDUCED ? GRAPHICS_PRESETS.DEFAULT : GRAPHICS_PRESETS.REDUCED;
+          setGraphicsPreset(nextPreset);
+        } else {
+          setGraphicsPreset(GRAPHICS_PRESETS.DEFAULT);
+        }
+
+        updateGraphicsPresetControls();
+        closeGraphicsPresetMenu();
+      });
     });
   }
+
+  closeGraphicsPresetMenu();
+  updateGraphicsPresetControls();
 
   const toggleBuffsSwitch = document.getElementById("toggleBuffsSwitch");
   if (toggleBuffsSwitch) {
@@ -20018,12 +20414,14 @@ function registerMenuButtons() {
   if (settingsButton && settingsMenu) {
     settingsButton.addEventListener("click", () => {
       settingsMenu.style.display = "flex";
+      document.dispatchEvent(new CustomEvent("settingsMenuOpened"));
     });
   }
 
   if (closeSettings && settingsMenu) {
     closeSettings.addEventListener("click", () => {
       settingsMenu.style.display = "none";
+      document.dispatchEvent(new CustomEvent("settingsMenuClosed"));
     });
   }
 

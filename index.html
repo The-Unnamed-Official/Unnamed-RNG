@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Unnamed's RNG - 1.3 Halloween Frights</title>
+    <title>Unnamed's RNG - 1.4</title>
     <script src="https://kit.fontawesome.com/fe85db6219.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="files/style.css">
@@ -16,47 +16,40 @@
     <link rel="icon" type="image/png" sizes="500x500" href="/Unnamed-RNG/files/images/favicon-500.png">
 </head>
 <body>
+  <div class="halloween-backdrop" aria-hidden="true">
+    <div class="halloween-overlay halloween-overlay--ground">
+      <div class="halloween-overlay__ground"></div>
+    </div>
+  </div>
+  <div class="halloween-overlay halloween-overlay--snow" aria-hidden="true">
+    <div class="halloween-overlay__snow halloween-overlay__snow--back"></div>
+    <div class="halloween-overlay__snow halloween-overlay__snow--mid"></div>
+    <div class="halloween-overlay__snow halloween-overlay__snow--front"></div>
+  </div>
   <div id="flashLayer" aria-hidden="true"></div>
 
-    <div class="halloween-backdrop" aria-hidden="true"></div>
-
-    <div class="halloween-overlay" aria-hidden="true">
-        <div class="halloween-overlay__web halloween-overlay__web--top-left"></div>
-        <div class="halloween-overlay__web halloween-overlay__web--top-right"></div>
-        <div class="halloween-overlay__web halloween-overlay__web--bottom-left"></div>
-        <div class="halloween-overlay__web halloween-overlay__web--bottom-right"></div>
-        <div class="halloween-overlay__web halloween-overlay__web--main" aria-hidden="true"></div>
-
-        <img src="files/images/spider.gif" alt="" class="halloween-overlay__spider" loading="lazy">
-
-        <img src="files/images/bat.gif" alt="" class="halloween-overlay__bat halloween-overlay__bat--1" loading="lazy">
-        <img src="files/images/bat2.gif" alt="" class="halloween-overlay__bat halloween-overlay__bat--2" loading="lazy">
-        <img src="files/images/bat3.gif" alt="" class="halloween-overlay__bat halloween-overlay__bat--3" loading="lazy">
-
-        <div class="halloween-overlay__lantern halloween-overlay__lantern--left"></div>
-        <div class="halloween-overlay__lantern halloween-overlay__lantern--right"></div>
-    </div>
-
     <div class="version" role="status" aria-live="polite">
-        <h1 class="version__group">
-            <span class="version__chip version__chip--event" role="group" aria-labelledby="eventChipTitle">
-                <span class="version__eyebrow" id="eventChipTitle">Event</span>
-                <span class="version__value">Halloween Frights</span>
-                <div class="version__event-meta">
-                    <span id="eventCountdown" class="version__detail version__countdown" aria-live="polite"></span>
-                </div>
-            </span>
-            
+        <div class="version__card">
+            <h1 class="version__title">Unnamed's RNG</h1>
+        </div>
+        <div class="version__chips" role="group" aria-label="Game metadata">
             <span class="version__chip version__chip--number" role="text">
                 <span class="version__eyebrow">Version</span>
-                <span class="version__value">1.3.992</span>
-                <span class="version__detail">1.3.992_updHALLOWEEN</span>
+                <span class="version__value">1.4.01</span>
+                <span class="version__detail">1.4.01_RELEASE</span>
             </span>
-            
-            <span class="version__chip version__chip--title">
-                <span class="version__value">Unnamed's RNG</span>
+
+            <span
+                class="version__chip version__chip--event"
+                id="versionEventChip"
+                aria-hidden="true"
+                hidden
+            >
+                <span class="version__eyebrow" id="eventLabel">Event</span>
+                <span class="version__value" id="eventName">Seasonal Event</span>
+                <span class="version__detail" id="eventCountdown">Coming soon</span>
             </span>
-        </h1>
+        </div>
     </div>
 
     <canvas id="fireworksCanvas"></canvas>
@@ -159,7 +152,52 @@
                             <div class="settings-grid">
                                 <button id="toggleRollDisplayBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll &amp; Display</button>
                                 <button id="toggleRollHistoryBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll History</button>
-                                <button id="toggleReducedAnimationsBtn" class="settings-btn settings-btn--ghost" type="button">Reduce Animations</button>
+                                <div id="graphicsPresetDropdown" class="settings-dropdown">
+                                    <button
+                                        id="graphicsPresetDropdownToggle"
+                                        class="settings-btn settings-btn--ghost settings-dropdown__toggle"
+                                        type="button"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                        aria-controls="graphicsPresetDropdownMenu"
+                                    >
+                                        Graphics Preset
+                                    </button>
+                                    <div
+                                        id="graphicsPresetDropdownMenu"
+                                        class="settings-dropdown__menu"
+                                        role="menu"
+                                        hidden
+                                    >
+                                        <button
+                                            id="defaultGraphicsBtn"
+                                            class="settings-btn settings-btn--ghost settings-dropdown__item"
+                                            type="button"
+                                            data-graphics-preset="default"
+                                            role="menuitem"
+                                        >
+                                            Default Graphics
+                                        </button>
+                                        <button
+                                            id="toggleReducedAnimationsBtn"
+                                            class="settings-btn settings-btn--ghost settings-dropdown__item"
+                                            type="button"
+                                            data-graphics-preset="reduced"
+                                            role="menuitem"
+                                        >
+                                            Reduce Animations
+                                        </button>
+                                        <button
+                                            id="potatoGraphicsBtn"
+                                            class="settings-btn settings-btn--ghost settings-dropdown__item"
+                                            type="button"
+                                            data-graphics-preset="potato"
+                                            role="menuitem"
+                                        >
+                                            Potato Graphics
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="settings-switch" id="potionBuffsSwitch">
                                     <label class="settings-switch__container" for="toggleBuffsSwitch">
                                         <input type="checkbox" id="toggleBuffsSwitch" class="settings-switch__input" role="switch" aria-checked="true">
@@ -184,7 +222,7 @@
                                 <button id="toggleCutscene100K" class="cutsceneSkipBtb" data-tier="mastery" type="button"><span id="100KTxt" class="under100k">Skip Mastery Cutscenes</span></button>
                                 <button id="toggleCutscene1M" class="cutsceneSkipBtb" data-tier="supreme" type="button"><span id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</span></button>
                                 <button id="toggleCutsceneTranscendent" class="cutsceneSkipBtb" data-tier="transcendent" type="button"><span id="transcendentTxt" class="transcendent">Skip Transcendent Cutscenes</span></button>
-                                <button id="toggleCutsceneHalloween25" class="cutsceneSkipBtb" data-tier="event-halloween25" type="button"><span id="halloween25Txt" class="event-halloween25">Skip Halloween 2025 Title Cutscenes</span></button>
+                                <!-- <button id="toggleCutsceneHalloween25" class="cutsceneSkipBtb" data-tier="event-halloween25" type="button"><span id="halloween25Txt" class="event-halloween25">Skip Halloween 2025 Title Cutscenes</span></button> -->
                             </div>
                         </section>
                     </div>
@@ -423,18 +461,6 @@
                     <section class="achievements-section">
                         <h4 class="achievements-section__title">Event Exclusives</h4>
                         <div class="achievements-subsection">
-                            <h5 class="achievements-section__subtitle">Halloween Frights 2025</h5>
-                            <div class="achievement-grid">
-                                <div
-                                    class="achievement-itemEvent"
-                                    data-event="Collect a Halloween-exclusive title in 2025 to unlock this achievement"
-                                    data-name="It's SPOOKY season!"
-                                >
-                                    It's SPOOKY season!
-                                </div>
-                            </div>
-                        </div>
-                        <div class="achievements-subsection">
                             <h5 class="achievements-section__subtitle">Seasonal Collections</h5>
                             <div class="achievement-grid">
                                 <div
@@ -493,6 +519,19 @@
                     <section class="achievements-section">
                         <h4 class="achievements-section__title">Unobtainable Events</h4>
                         <p class="achievements-section__note">These achievements are no longer obtainable but remain visible for players who previously earned them.</p>
+                        <div class="achievements-subsection">
+                            <h5 class="achievements-section__subtitle">Halloween Frights 2025</h5>
+                            <div class="achievement-grid">
+                                <div
+                                    class="achievement-itemEvent"
+                                    data-event="Previously unlocked by collecting the Halloween-exclusive title in 2025."
+                                    data-name="It's SPOOKY season!"
+                                >
+                                    It's SPOOKY season!
+                                    <span class="achievement-flag achievement-flag--unobtainable">Unobtainable</span>
+                                </div>
+                            </div>
+                        </div>
                         <div class="achievements-subsection">
                             <h5 class="achievements-section__subtitle">Halloween 2024</h5>
                             <div class="achievement-grid">
