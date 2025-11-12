@@ -21,6 +21,89 @@ const storage = {
 const byId = (id) => document.getElementById(id);
 const $all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
+const PERSISTENT_BODY_CLASSES = new Set(["reduced-motion", "potato-mode"]);
+
+function installPersistentBodyClassPreserver() {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  if (installPersistentBodyClassPreserver.__installed) {
+    return;
+  }
+
+  const prototype =
+    typeof HTMLBodyElement !== "undefined"
+      ? HTMLBodyElement.prototype
+      : document.body
+      ? Object.getPrototypeOf(document.body)
+      : null;
+
+  if (!prototype) {
+    return;
+  }
+
+  const descriptor =
+    Object.getOwnPropertyDescriptor(prototype, "className") ||
+    Object.getOwnPropertyDescriptor(Element.prototype, "className");
+
+  if (
+    !descriptor ||
+    descriptor.configurable === false ||
+    typeof descriptor.set !== "function"
+  ) {
+    return;
+  }
+
+  const originalSet = descriptor.set;
+  const originalGet = descriptor.get;
+
+  Object.defineProperty(prototype, "className", {
+    configurable: true,
+    enumerable: descriptor.enumerable ?? false,
+    get:
+      typeof originalGet === "function"
+        ? function getClassName() {
+            return originalGet.call(this);
+          }
+        : function fallbackGetClassName() {
+            const classAttribute = this.getAttribute && this.getAttribute("class");
+            return typeof classAttribute === "string" ? classAttribute : "";
+          },
+    set(value) {
+      if (this === document.body) {
+        const existingPersistent = Array.from(this.classList).filter((className) =>
+          PERSISTENT_BODY_CLASSES.has(className),
+        );
+
+        const normalizedValue = value == null ? "" : String(value);
+        const tokens = normalizedValue
+          .split(/\s+/)
+          .map((token) => token.trim())
+          .filter(Boolean);
+
+        const merged = new Set(tokens);
+        existingPersistent.forEach((className) => merged.add(className));
+
+        originalSet.call(this, Array.from(merged).join(" "));
+        return;
+      }
+
+      originalSet.call(this, value);
+    },
+  });
+
+  installPersistentBodyClassPreserver.__installed = true;
+}
+
+installPersistentBodyClassPreserver();
+
+if (!installPersistentBodyClassPreserver.__installed && document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", installPersistentBodyClassPreserver, {
+    once: true,
+  });
+}
+
 const EVENT_END_TIMESTAMP = 1762614000 * 1000;
 const EVENT_DISCORD_TIMESTAMP_FULL = "<t:1762614000:f>";
 const EVENT_DISCORD_TIMESTAMP_RELATIVE = "<t:1762614000:R>";
@@ -18295,6 +18378,9 @@ function registerInterfaceToggleButtons() {
     graphicsPresetMenu.addEventListener("keydown", handleEscape);
   }
 
+  document.addEventListener("settingsMenuOpened", closeGraphicsPresetMenu);
+  document.addEventListener("settingsMenuClosed", closeGraphicsPresetMenu);
+
   if (graphicsPresetButtons.length) {
     graphicsPresetButtons.forEach((button) => {
       button.addEventListener("click", () => {
@@ -18319,6 +18405,7 @@ function registerInterfaceToggleButtons() {
     });
   }
 
+  closeGraphicsPresetMenu();
   updateGraphicsPresetControls();
 
   const toggleBuffsSwitch = document.getElementById("toggleBuffsSwitch");
@@ -20327,12 +20414,14 @@ function registerMenuButtons() {
   if (settingsButton && settingsMenu) {
     settingsButton.addEventListener("click", () => {
       settingsMenu.style.display = "flex";
+      document.dispatchEvent(new CustomEvent("settingsMenuOpened"));
     });
   }
 
   if (closeSettings && settingsMenu) {
     closeSettings.addEventListener("click", () => {
       settingsMenu.style.display = "none";
+      document.dispatchEvent(new CustomEvent("settingsMenuClosed"));
     });
   }
 
