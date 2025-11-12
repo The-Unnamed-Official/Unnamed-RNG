@@ -19,17 +19,27 @@
   <div id="flashLayer" aria-hidden="true"></div>
 
     <div class="version" role="status" aria-live="polite">
-        <h1 class="version__group">
-            <span class="version__chip version__chip--number" role="text">
-                <span class="version__eyebrow">Version</span>
-                <span class="version__value">1.4.0</span>
-                <span class="version__detail">1.4_release</span>
-            </span>
-            
-            <span class="version__chip version__chip--title">
-                <span class="version__value">Unnamed's RNG</span>
-            </span>
-        </h1>
+        <div class="version__card">
+            <h1 class="version__title">Unnamed's RNG</h1>
+            <div class="version__chips" role="group" aria-label="Game metadata">
+                <span class="version__chip version__chip--number" role="text">
+                    <span class="version__eyebrow">Version</span>
+                    <span class="version__value">1.4.0</span>
+                    <span class="version__detail">1.4_release</span>
+                </span>
+
+                <span
+                    class="version__chip version__chip--event"
+                    id="versionEventChip"
+                    aria-hidden="true"
+                    hidden
+                >
+                    <span class="version__eyebrow" id="eventLabel">Event</span>
+                    <span class="version__value" id="eventName">Seasonal Event</span>
+                    <span class="version__detail" id="eventCountdown">Coming soon</span>
+                </span>
+            </div>
+        </div>
     </div>
 
     <canvas id="fireworksCanvas"></canvas>
