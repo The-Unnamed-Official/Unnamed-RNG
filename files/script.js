@@ -501,9 +501,9 @@ const POTION_DEFINITIONS = [
     consumeOnRoll: true,
     disableWithToggle: true,
     craftCost: {
-      classes: {},
+      classes: { commonBgImg: 1000 },
       titles: [],
-      potions: { luckyPotion: 500, basicPotion: 10, decentPotion: 2 },
+      potions: { luckyPotion: 800, basicPotion: 20, decentPotion: 10 },
     },
   },
   {
