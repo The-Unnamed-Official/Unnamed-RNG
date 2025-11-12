@@ -20,24 +20,18 @@
   /* Layout */
   --layout-max-width: 1120px;
 
-  /* Seasonal art */
-  --halloween-web-image: url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%20200%20200%27%3E%0A%20%20%3Cg%20fill%3D%27none%27%20stroke%3D%27%23f8faff%27%20stroke-width%3D%271.1%27%20stroke-linecap%3D%27round%27%20opacity%3D%270.75%27%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20L0%20200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20L200%200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20L200%20200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20L140%20200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20L80%20200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20Q50%2030%20120%200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20Q80%2060%20160%200%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20Q110%20100%20200%2020%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20Q140%20150%20200%2080%27%2F%3E%0A%20%20%20%20%3Cpath%20d%3D%27M0%200%20Q160%20180%20200%20140%27%2F%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E");
+  /* Seasonal art placeholders disabled */
+  --halloween-web-image: none;
   --halloween-modal-gradient:
-    radial-gradient(circle at 15% 10%, rgba(255, 157, 101, 0.32), transparent 58%),
-    radial-gradient(circle at 85% 8%, rgba(109, 71, 203, 0.36), transparent 62%),
-    linear-gradient(160deg, rgba(24, 18, 42, 0.92), rgba(10, 12, 24, 0.96)),
+    radial-gradient(circle at 20% 15%, rgba(102, 126, 234, 0.28), transparent 55%),
+    radial-gradient(circle at 82% 10%, rgba(118, 75, 162, 0.32), transparent 58%),
+    linear-gradient(160deg, rgba(24, 28, 52, 0.92), rgba(10, 14, 28, 0.96)),
     url(backgrounds/rng_master.png);
-  --halloween-modal-border-color: rgba(255, 163, 100, 0.28);
-  --halloween-modal-shadow: 0 24px 60px rgba(21, 10, 38, 0.65);
-  --halloween-header-gradient: linear-gradient(135deg, rgba(34, 20, 56, 0.92), rgba(16, 12, 28, 0.9));
-  --halloween-header-border-color: rgba(255, 168, 112, 0.2);
-  --halloween-header-shadow: 0 6px 18px rgba(10, 6, 20, 0.55);
-}
-
-@property --cutscene-spin-duration {
-  syntax: '<time>';
-  inherits: true;
-  initial-value: 9s;
+  --halloween-modal-border-color: rgba(122, 162, 255, 0.28);
+  --halloween-modal-shadow: 0 24px 60px rgba(12, 18, 38, 0.55);
+  --halloween-header-gradient: linear-gradient(135deg, rgba(28, 32, 56, 0.92), rgba(14, 18, 34, 0.9));
+  --halloween-header-border-color: rgba(122, 162, 255, 0.22);
+  --halloween-header-shadow: 0 6px 18px rgba(6, 12, 32, 0.5);
 }
 
 /* Motion safety */
@@ -2777,43 +2771,18 @@ body {
 }
 
 .cutsceneStar,
-.cutsceneStar,
 .starShenvii,
 .cutsceneStarBig,
 .cutsceneStarSmall {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 30%;
+    left: 40%;
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in, --cutscene-spin-duration 0.6s ease-in-out;
     transform-origin: center;
     --cutscene-spin-duration: 9s;
-    --cutscene-center-offset-x: 0px;
-    --cutscene-center-offset-y: 0px;
-    --cutscene-center-translate-x: calc(-50% + var(--cutscene-center-offset-x));
-    --cutscene-center-translate-y: calc(-50% + var(--cutscene-center-offset-y));
-    --cutscene-spin-base-transform: translate(
-        var(--cutscene-center-translate-x),
-        var(--cutscene-center-translate-y)
-    );
-    transform: var(--cutscene-spin-base-transform);
-    animation: cutscene-spin var(--cutscene-spin-duration) linear infinite;
-}
-
-.cutsceneStar {
-    --cutscene-center-offset-x: 3.7px;
-    --cutscene-center-offset-y: 0.45px;
-}
-
-.cutsceneStarBig {
-    --cutscene-center-offset-x: 0.53px;
-    --cutscene-center-offset-y: 0.44px;
-}
-
-.cutsceneStarSmall {
-    --cutscene-center-offset-x: 6.71px;
-    --cutscene-center-offset-y: 0.17px;
+    animation: spin1 var(--cutscene-spin-duration) linear infinite;
 }
 
 .descended-cutscene {
@@ -3117,21 +3086,12 @@ body {
 
 .cutsceneStarEaster {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 30%;
+    left: 40%;
     scale: 0;
     pointer-events: none;
     transform-origin: center;
-    --cutscene-center-offset-x: 34.3px;
-    --cutscene-center-offset-y: 28.23px;
-    --cutscene-center-translate-x: calc(-50% + var(--cutscene-center-offset-x));
-    --cutscene-center-translate-y: calc(-50% + var(--cutscene-center-offset-y));
-    --cutscene-spin-base-transform: translate(
-        var(--cutscene-center-translate-x),
-        var(--cutscene-center-translate-y)
-    );
-    transform: var(--cutscene-spin-base-transform);
-    animation: cutscene-spin 9s linear infinite;
+    animation: spin1 9s linear infinite;
 }
 
 .msfuStar {
@@ -3146,32 +3106,13 @@ body {
 .cutsceneStarEvent,
 .starShenvii {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 30%;
+    left: 40%;
     scale: 0;
     pointer-events: none;
     transition: scale 0.5s ease-in;
     transform-origin: center;
-    --cutscene-center-offset-x: 34.3px;
-    --cutscene-center-offset-y: 28.23px;
-    --cutscene-center-translate-x: calc(-50% + var(--cutscene-center-offset-x));
-    --cutscene-center-translate-y: calc(-50% + var(--cutscene-center-offset-y));
-    --cutscene-spin-base-transform: translate(
-        var(--cutscene-center-translate-x),
-        var(--cutscene-center-translate-y)
-    );
-    transform: var(--cutscene-spin-base-transform);
-    animation: cutscene-spin 9s linear infinite;
-}
-
-@keyframes cutscene-spin {
-    0% {
-        transform: var(--cutscene-spin-base-transform, translate(-50%, -50%)) rotate(0deg);
-    }
-
-    100% {
-        transform: var(--cutscene-spin-base-transform, translate(-50%, -50%)) rotate(360deg);
-    }
+    animation: spin1 9s linear infinite;
 }
 
 @keyframes spin {
@@ -3306,6 +3247,7 @@ body {
 }
 
 .spin {
+    transform: translate(-50%, -50%);
     --cutscene-spin-duration: 1s;
     scale: 2.5;
     visibility: visible;
@@ -3313,12 +3255,14 @@ body {
 }
 
 .spinF {
-    --cutscene-spin-duration: 0.1s;
+    transform: translate(-50%, -50%);
+    animation: spin 0.1s linear infinite;
 }
 
 .spin-slow {
+    transform: translate(-50%, -50%);
     --cutscene-spin-duration: 4s;
-    transition: --cutscene-spin-duration 0.8s ease-in-out;
+    transition: transform 0.5s ease-in-out, --cutscene-spin-duration 0.8s ease-in-out;
 }
 
 .scale-up-and-vanish {
