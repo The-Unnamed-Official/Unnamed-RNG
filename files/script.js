@@ -21,6 +21,89 @@ const storage = {
 const byId = (id) => document.getElementById(id);
 const $all = (selector, root = document) => Array.from(root.querySelectorAll(selector));
 
+const PERSISTENT_BODY_CLASSES = new Set(["reduced-motion", "potato-mode"]);
+
+function installPersistentBodyClassPreserver() {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  if (installPersistentBodyClassPreserver.__installed) {
+    return;
+  }
+
+  const prototype =
+    typeof HTMLBodyElement !== "undefined"
+      ? HTMLBodyElement.prototype
+      : document.body
+      ? Object.getPrototypeOf(document.body)
+      : null;
+
+  if (!prototype) {
+    return;
+  }
+
+  const descriptor =
+    Object.getOwnPropertyDescriptor(prototype, "className") ||
+    Object.getOwnPropertyDescriptor(Element.prototype, "className");
+
+  if (
+    !descriptor ||
+    descriptor.configurable === false ||
+    typeof descriptor.set !== "function"
+  ) {
+    return;
+  }
+
+  const originalSet = descriptor.set;
+  const originalGet = descriptor.get;
+
+  Object.defineProperty(prototype, "className", {
+    configurable: true,
+    enumerable: descriptor.enumerable ?? false,
+    get:
+      typeof originalGet === "function"
+        ? function getClassName() {
+            return originalGet.call(this);
+          }
+        : function fallbackGetClassName() {
+            const classAttribute = this.getAttribute && this.getAttribute("class");
+            return typeof classAttribute === "string" ? classAttribute : "";
+          },
+    set(value) {
+      if (this === document.body) {
+        const existingPersistent = Array.from(this.classList).filter((className) =>
+          PERSISTENT_BODY_CLASSES.has(className),
+        );
+
+        const normalizedValue = value == null ? "" : String(value);
+        const tokens = normalizedValue
+          .split(/\s+/)
+          .map((token) => token.trim())
+          .filter(Boolean);
+
+        const merged = new Set(tokens);
+        existingPersistent.forEach((className) => merged.add(className));
+
+        originalSet.call(this, Array.from(merged).join(" "));
+        return;
+      }
+
+      originalSet.call(this, value);
+    },
+  });
+
+  installPersistentBodyClassPreserver.__installed = true;
+}
+
+installPersistentBodyClassPreserver();
+
+if (!installPersistentBodyClassPreserver.__installed && document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", installPersistentBodyClassPreserver, {
+    once: true,
+  });
+}
+
 const EVENT_END_TIMESTAMP = 1762614000 * 1000;
 const EVENT_DISCORD_TIMESTAMP_FULL = "<t:1762614000:f>";
 const EVENT_DISCORD_TIMESTAMP_RELATIVE = "<t:1762614000:R>";
@@ -1082,6 +1165,99 @@ function setReducedAnimationsEnabled(enabled) {
 if (reducedAnimationsEnabled) {
   syncReducedAnimationsOnBody(true);
 }
+
+const GRAPHICS_PRESETS = Object.freeze({
+  DEFAULT: "default",
+  REDUCED: "reduced",
+  POTATO: "potato",
+});
+const GRAPHICS_PRESET_STORAGE_KEY = "graphicsPreset";
+const GRAPHICS_PRESET_VALUES = Object.freeze(Object.values(GRAPHICS_PRESETS));
+
+const storedGraphicsPreset = storage.get(GRAPHICS_PRESET_STORAGE_KEY, null);
+let graphicsPreset = GRAPHICS_PRESETS.DEFAULT;
+if (typeof storedGraphicsPreset === "string" && GRAPHICS_PRESET_VALUES.includes(storedGraphicsPreset)) {
+  graphicsPreset = storedGraphicsPreset;
+} else if (reducedAnimationsEnabled) {
+  graphicsPreset = GRAPHICS_PRESETS.REDUCED;
+}
+
+let potatoModeEnabled = graphicsPreset === GRAPHICS_PRESETS.POTATO;
+let pendingPotatoModeState = potatoModeEnabled ? true : null;
+
+function syncPotatoModeOnBody(active) {
+  const body = document.body;
+  if (!body) {
+    pendingPotatoModeState = Boolean(active);
+    return;
+  }
+
+  body.classList.toggle("potato-mode", Boolean(active));
+  pendingPotatoModeState = null;
+}
+
+function setPotatoModeEnabled(enabled) {
+  const next = Boolean(enabled);
+  if (next === potatoModeEnabled && pendingPotatoModeState === null) {
+    if (document.body) {
+      document.body.classList.toggle("potato-mode", next);
+    }
+    return;
+  }
+
+  potatoModeEnabled = next;
+  syncPotatoModeOnBody(potatoModeEnabled);
+}
+
+function isPotatoModeEnabled() {
+  return potatoModeEnabled;
+}
+
+function getGraphicsPreset() {
+  return graphicsPreset;
+}
+
+function applyGraphicsPreset(preset) {
+  switch (preset) {
+    case GRAPHICS_PRESETS.POTATO:
+      setPotatoModeEnabled(true);
+      setReducedAnimationsEnabled(true);
+      break;
+    case GRAPHICS_PRESETS.REDUCED:
+      setPotatoModeEnabled(false);
+      setReducedAnimationsEnabled(true);
+      break;
+    default:
+      setPotatoModeEnabled(false);
+      setReducedAnimationsEnabled(false);
+      break;
+  }
+}
+
+function setGraphicsPreset(preset) {
+  const nextPreset =
+    typeof preset === "string" && GRAPHICS_PRESET_VALUES.includes(preset)
+      ? preset
+      : GRAPHICS_PRESETS.DEFAULT;
+
+  if (nextPreset === graphicsPreset) {
+    applyGraphicsPreset(graphicsPreset);
+    return graphicsPreset;
+  }
+
+  graphicsPreset = nextPreset;
+
+  if (graphicsPreset === GRAPHICS_PRESETS.DEFAULT) {
+    storage.remove(GRAPHICS_PRESET_STORAGE_KEY);
+  } else {
+    storage.set(GRAPHICS_PRESET_STORAGE_KEY, graphicsPreset);
+  }
+
+  applyGraphicsPreset(graphicsPreset);
+  return graphicsPreset;
+}
+
+applyGraphicsPreset(graphicsPreset);
 
 function isEquinoxRarityClass(value) {
   return typeof value === "string" && value === EQUINOX_RARITY_CLASS;
@@ -5829,6 +6005,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (pendingReducedAnimationsState !== null || reducedAnimationsEnabled) {
     const desiredReducedState = pendingReducedAnimationsState !== null ? pendingReducedAnimationsState : reducedAnimationsEnabled;
     syncReducedAnimationsOnBody(desiredReducedState);
+  }
+
+  if (pendingPotatoModeState !== null || potatoModeEnabled) {
+    const desiredPotatoState = pendingPotatoModeState !== null ? pendingPotatoModeState : potatoModeEnabled;
+    syncPotatoModeOnBody(desiredPotatoState);
   }
 
   if (rollButton) {
@@ -18111,21 +18292,121 @@ function registerInterfaceToggleButtons() {
     });
   }
 
-  const toggleReducedAnimationsBtn = document.getElementById("toggleReducedAnimationsBtn");
-  if (toggleReducedAnimationsBtn) {
-    const updateButtonState = () => {
-      const active = isReducedAnimationsEnabled();
-      toggleReducedAnimationsBtn.textContent = active ? "Restore Animations" : "Reduce Animations";
-      toggleReducedAnimationsBtn.setAttribute("aria-pressed", String(active));
+  const graphicsPresetContainer = document.getElementById("graphicsPresetDropdown");
+  const graphicsPresetToggle = document.getElementById("graphicsPresetDropdownToggle");
+  const graphicsPresetMenu = document.getElementById("graphicsPresetDropdownMenu");
+  const graphicsPresetButtons = graphicsPresetMenu
+    ? Array.from(graphicsPresetMenu.querySelectorAll("[data-graphics-preset]"))
+    : [];
+
+  const updateGraphicsPresetControls = () => {
+    const currentPreset = getGraphicsPreset();
+
+    if (graphicsPresetToggle) {
+      let label = "Graphics Preset: Default";
+      if (currentPreset === GRAPHICS_PRESETS.POTATO) {
+        label = "Graphics Preset: Potato";
+      } else if (currentPreset === GRAPHICS_PRESETS.REDUCED) {
+        label = "Graphics Preset: Reduced";
+      }
+      graphicsPresetToggle.textContent = label;
+    }
+
+    graphicsPresetButtons.forEach((button) => {
+      const preset = button.getAttribute("data-graphics-preset");
+      const isActive = preset === currentPreset;
+      button.setAttribute("aria-pressed", String(isActive));
+
+      if (preset === GRAPHICS_PRESETS.POTATO) {
+        button.textContent = isActive ? "Disable Potato Graphics" : "Potato Graphics";
+      } else if (preset === GRAPHICS_PRESETS.REDUCED) {
+        button.textContent = isActive ? "Restore Animations" : "Reduce Animations";
+      } else {
+        button.textContent = isActive ? "Default Graphics (Active)" : "Default Graphics";
+      }
+    });
+  };
+
+  const closeGraphicsPresetMenu = () => {
+    if (!graphicsPresetMenu || !graphicsPresetToggle) {
+      return;
+    }
+
+    if (!graphicsPresetMenu.hidden) {
+      graphicsPresetMenu.hidden = true;
+      graphicsPresetToggle.setAttribute("aria-expanded", "false");
+    }
+  };
+
+  const openGraphicsPresetMenu = () => {
+    if (!graphicsPresetMenu || !graphicsPresetToggle) {
+      return;
+    }
+
+    graphicsPresetMenu.hidden = false;
+    graphicsPresetToggle.setAttribute("aria-expanded", "true");
+  };
+
+  if (graphicsPresetToggle && graphicsPresetMenu && graphicsPresetContainer) {
+    graphicsPresetToggle.addEventListener("click", () => {
+      const expanded = graphicsPresetToggle.getAttribute("aria-expanded") === "true";
+      if (expanded) {
+        closeGraphicsPresetMenu();
+      } else {
+        openGraphicsPresetMenu();
+      }
+    });
+
+    const handleDocumentClick = (event) => {
+      if (!graphicsPresetContainer.contains(event.target)) {
+        closeGraphicsPresetMenu();
+      }
     };
 
-    updateButtonState();
+    document.addEventListener("click", handleDocumentClick);
 
-    toggleReducedAnimationsBtn.addEventListener("click", () => {
-      setReducedAnimationsEnabled(!isReducedAnimationsEnabled());
-      updateButtonState();
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        if (!graphicsPresetMenu.hidden) {
+          closeGraphicsPresetMenu();
+        }
+        graphicsPresetToggle.focus();
+      }
+    };
+
+    graphicsPresetToggle.addEventListener("keydown", handleEscape);
+    graphicsPresetMenu.addEventListener("keydown", handleEscape);
+  }
+
+  document.addEventListener("settingsMenuOpened", closeGraphicsPresetMenu);
+  document.addEventListener("settingsMenuClosed", closeGraphicsPresetMenu);
+
+  if (graphicsPresetButtons.length) {
+    graphicsPresetButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const preset = button.getAttribute("data-graphics-preset");
+        const current = getGraphicsPreset();
+
+        if (preset === GRAPHICS_PRESETS.POTATO) {
+          const nextPreset =
+            current === GRAPHICS_PRESETS.POTATO ? GRAPHICS_PRESETS.DEFAULT : GRAPHICS_PRESETS.POTATO;
+          setGraphicsPreset(nextPreset);
+        } else if (preset === GRAPHICS_PRESETS.REDUCED) {
+          const nextPreset =
+            current === GRAPHICS_PRESETS.REDUCED ? GRAPHICS_PRESETS.DEFAULT : GRAPHICS_PRESETS.REDUCED;
+          setGraphicsPreset(nextPreset);
+        } else {
+          setGraphicsPreset(GRAPHICS_PRESETS.DEFAULT);
+        }
+
+        updateGraphicsPresetControls();
+        closeGraphicsPresetMenu();
+      });
     });
   }
+
+  closeGraphicsPresetMenu();
+  updateGraphicsPresetControls();
 
   const toggleBuffsSwitch = document.getElementById("toggleBuffsSwitch");
   if (toggleBuffsSwitch) {
@@ -20133,12 +20414,14 @@ function registerMenuButtons() {
   if (settingsButton && settingsMenu) {
     settingsButton.addEventListener("click", () => {
       settingsMenu.style.display = "flex";
+      document.dispatchEvent(new CustomEvent("settingsMenuOpened"));
     });
   }
 
   if (closeSettings && settingsMenu) {
     closeSettings.addEventListener("click", () => {
       settingsMenu.style.display = "none";
+      document.dispatchEvent(new CustomEvent("settingsMenuClosed"));
     });
   }
 

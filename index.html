@@ -152,7 +152,52 @@
                             <div class="settings-grid">
                                 <button id="toggleRollDisplayBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll &amp; Display</button>
                                 <button id="toggleRollHistoryBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll History</button>
-                                <button id="toggleReducedAnimationsBtn" class="settings-btn settings-btn--ghost" type="button">Reduce Animations</button>
+                                <div id="graphicsPresetDropdown" class="settings-dropdown">
+                                    <button
+                                        id="graphicsPresetDropdownToggle"
+                                        class="settings-btn settings-btn--ghost settings-dropdown__toggle"
+                                        type="button"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                        aria-controls="graphicsPresetDropdownMenu"
+                                    >
+                                        Graphics Preset
+                                    </button>
+                                    <div
+                                        id="graphicsPresetDropdownMenu"
+                                        class="settings-dropdown__menu"
+                                        role="menu"
+                                        hidden
+                                    >
+                                        <button
+                                            id="defaultGraphicsBtn"
+                                            class="settings-btn settings-btn--ghost settings-dropdown__item"
+                                            type="button"
+                                            data-graphics-preset="default"
+                                            role="menuitem"
+                                        >
+                                            Default Graphics
+                                        </button>
+                                        <button
+                                            id="toggleReducedAnimationsBtn"
+                                            class="settings-btn settings-btn--ghost settings-dropdown__item"
+                                            type="button"
+                                            data-graphics-preset="reduced"
+                                            role="menuitem"
+                                        >
+                                            Reduce Animations
+                                        </button>
+                                        <button
+                                            id="potatoGraphicsBtn"
+                                            class="settings-btn settings-btn--ghost settings-dropdown__item"
+                                            type="button"
+                                            data-graphics-preset="potato"
+                                            role="menuitem"
+                                        >
+                                            Potato Graphics
+                                        </button>
+                                    </div>
+                                </div>
                                 <div class="settings-switch" id="potionBuffsSwitch">
                                     <label class="settings-switch__container" for="toggleBuffsSwitch">
                                         <input type="checkbox" id="toggleBuffsSwitch" class="settings-switch__input" role="switch" aria-checked="true">
