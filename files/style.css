@@ -3,7 +3,7 @@
   --btn-radius-pill: 999px;
   --btn-shadow: 0 6px 18px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.06);
   --btn-shadow-hover: 0 10px 26px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.08);
-  --btn-transition: 220ms cubic-bezier(.2, .7, .2, 1);
+  --btn-transition: 420ms cubic-bezier(.22, .61, .36, 1);
   --btn-focus: 0 0 0 3px color-mix(in oklab, var(--btn-accent, #7aa2ff) 55%, transparent);
 
   /* Base palette */
@@ -95,12 +95,35 @@ input[type="reset"],
   box-shadow: var(--btn-shadow);
   transition: transform var(--btn-transition),
               box-shadow var(--btn-transition),
-              background var(--btn-transition),
-              outline-offset var(--btn-transition);
+              background-position var(--btn-transition),
+              outline-offset var(--btn-transition),
+              filter var(--btn-transition);
   outline: none;
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  background-size: 200% 200%;
+  background-position: 20% 50%;
+  will-change: transform, box-shadow, filter;
+}
+
+button::before,
+input[type="button"]::before,
+input[type="submit"]::before,
+input[type="reset"]::before,
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 20% -10%, rgba(255, 255, 255, 0.55), transparent 55%),
+    radial-gradient(circle at 80% 120%, rgba(255, 155, 95, 0.45), transparent 60%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: translate3d(0, 30%, 0);
+  transition: opacity var(--btn-transition), transform var(--btn-transition);
+  pointer-events: none;
 }
 
 /* Hover/Active interactions */
@@ -109,9 +132,11 @@ input[type="button"]:hover,
 input[type="submit"]:hover,
 input[type="reset"]:hover,
 .btn:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--btn-shadow-hover);
-  background: var(--btn-bg-hover);
+    transform: translateY(-4px) scale(1.015);
+    box-shadow: var(--btn-shadow-hover), 0 18px 32px rgba(12, 18, 42, 0.28);
+    background: var(--btn-bg-hover);
+    background-position: 85% 30%;
+    filter: brightness(1.02) saturate(1.1);
 }
 
 button:active,
@@ -119,7 +144,21 @@ input[type="button"]:active,
 input[type="submit"]:active,
 input[type="reset"]:active,
 .btn:active {
-  transform: translateY(0) scale(.995);
+  transform: translateY(0) scale(.992);
+}
+
+button:hover::before,
+button:focus-visible::before,
+input[type="button"]:hover::before,
+input[type="button"]:focus-visible::before,
+input[type="submit"]:hover::before,
+input[type="submit"]:focus-visible::before,
+input[type="reset"]:hover::before,
+input[type="reset"]:focus-visible::before,
+.btn:hover::before,
+.btn:focus-visible::before {
+  opacity: 0.65;
+  transform: translate3d(0, 0, 0);
 }
 
 /* Focus ring */
@@ -679,6 +718,7 @@ body.equinox-pulse-active :is(
     width: auto;
     z-index: 99999;
     opacity: 0.35;
+    perspective: 1400px;
     transition: opacity 0.33s ease-in-out, transform 0.33s ease-in-out;
 }
 
@@ -686,6 +726,21 @@ body.equinox-pulse-active :is(
 .version:focus-within {
     opacity: 0.96;
     transform: translate(-50%, -12px);
+}
+
+.version:hover .version__card,
+.version:focus-within .version__card {
+    transform: translate3d(0, -16px, 60px) rotateX(6deg) scale(1.015);
+    box-shadow:
+        0 36px 68px rgba(8, 17, 24, 0.75),
+        inset 0 1px 0 rgba(210, 244, 255, 0.32);
+    filter: brightness(1.05) saturate(1.08);
+}
+
+.version:hover .version__card::before,
+.version:focus-within .version__card::before {
+    opacity: 0.35;
+    transform: translate3d(0, 0, -40px) scale(1.02);
 }
 
 .version__card {
@@ -711,6 +766,24 @@ body.equinox-pulse-active :is(
     letter-spacing: 0.06em;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
     overflow: visible;
+    transform-style: preserve-3d;
+    transition: transform 0.85s cubic-bezier(0.22, 0.61, 0.36, 1),
+        box-shadow 0.85s cubic-bezier(0.22, 0.61, 0.36, 1),
+        filter 0.85s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.version__card::before {
+    content: "";
+    position: absolute;
+    inset: -12%;
+    border-radius: 38px;
+    background: conic-gradient(from 120deg, rgba(86, 162, 255, 0.22), rgba(255, 145, 98, 0.2), rgba(86, 162, 255, 0.22));
+    opacity: 0;
+    transform: translate3d(0, 24px, -80px) scale(1.08);
+    transition: opacity 0.9s cubic-bezier(0.22, 0.61, 0.36, 1),
+        transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+    pointer-events: none;
+    z-index: 0;
 }
 
 .version__card::after {
@@ -722,6 +795,8 @@ body.equinox-pulse-active :is(
         linear-gradient(150deg, rgba(255, 184, 119, 0.18), rgba(122, 82, 255, 0.14));
     opacity: 0.75;
     pointer-events: none;
+    mix-blend-mode: screen;
+    animation: versionCardSheen 8s ease-in-out infinite;
 }
 
 .version__card > * {
@@ -736,6 +811,15 @@ body.equinox-pulse-active :is(
     letter-spacing: 0.16em;
     text-align: center;
     color: #fdf9ff;
+    transition: transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1),
+        text-shadow 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
+    transform-origin: center;
+}
+
+.version__title:hover,
+.version__title:focus-visible {
+    transform: translate3d(0, -8px, 0) scale(1.02);
+    text-shadow: 0 18px 40px rgba(12, 18, 38, 0.6);
 }
 
 .version__chips {
@@ -767,8 +851,27 @@ body.equinox-pulse-active :is(
         inset 0 1px 0 rgba(255, 255, 255, 0.28),
         0 18px 28px rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(22px);
-    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    transition:
+        transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
+        box-shadow 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
+        border-color 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
+        background-position 1.2s ease;
     cursor: help;
+    background-size: 220% 220%;
+    background-position: 30% 50%;
+    transform-style: preserve-3d;
+}
+
+.version__chip::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(130deg, rgba(255, 255, 255, 0.35), transparent 65%);
+    opacity: 0;
+    transform: translate3d(0, 20%, 0);
+    transition: opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+    pointer-events: none;
 }
 
 .version__chip[hidden] {
@@ -788,16 +891,28 @@ body.equinox-pulse-active :is(
 
 .version__chip:hover,
 .version__chip:focus-visible {
-    transform: translateY(-3px);
-    border-color: rgba(255, 255, 255, 0.36);
+    transform: translateY(-8px) scale(1.03) rotateX(8deg);
+    border-color: rgba(255, 255, 255, 0.42);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.36),
-        0 20px 36px rgba(0, 0, 0, 0.5);
+        inset 0 1px 0 rgba(255, 255, 255, 0.4),
+        0 26px 48px rgba(0, 0, 0, 0.55);
+    background-position: 70% 30%;
+}
+
+.version__chip:hover .version__value,
+.version__chip:focus-visible .version__value {
+    transform: translate3d(0, -4px, 20px);
 }
 
 .version__chip:focus-visible {
     outline: 2px solid rgba(120, 180, 255, 0.6);
     outline-offset: 4px;
+}
+
+.version__chip:hover::before,
+.version__chip:focus-visible::before {
+    opacity: 0.55;
+    transform: translate3d(0, 0, 0);
 }
 
 .version__chip--event {
@@ -843,6 +958,7 @@ body.equinox-pulse-active :is(
     text-shadow: 0 8px 18px rgba(0, 0, 0, 0.4);
     overflow-wrap: anywhere;
     text-align: center;
+    transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .version__chip--event .version__eyebrow {
@@ -4049,6 +4165,10 @@ body.flashing {
     font-family: "Poppins", "Segoe UI", sans-serif;
     text-align: left;
     overflow: visible;
+    transform-style: preserve-3d;
+    transition: transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1),
+        box-shadow 0.75s cubic-bezier(0.22, 0.61, 0.36, 1),
+        filter 0.75s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .creator-card::after,
@@ -4093,7 +4213,7 @@ body.flashing {
 .creator-card::after {
     background: linear-gradient(140deg, rgba(255, 255, 255, 0.12), transparent 65%);
     opacity: 0;
-    transition: opacity 180ms ease-in-out;
+    transition: opacity 480ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .creator-card:hover::after,
@@ -4103,7 +4223,7 @@ body.flashing {
 
 .creator-card:focus-visible {
     box-shadow:
-        0 18px 32px rgba(8, 12, 28, 0.55),
+        0 32px 60px rgba(8, 12, 28, 0.6),
         0 0 0 3px rgba(120, 176, 255, 0.55);
 }
 
@@ -4146,7 +4266,7 @@ body.flashing {
 .creator-card:focus-visible .creator-card__avatar::before {
     background-image: url("images/unnamed_pfp_deco_active.png");
     opacity: 1;
-    transform: scale(1.02);
+    transform: translate3d(0, -6px, 30px) scale(1.06);
     z-index: 1110;
 }
 
@@ -4176,9 +4296,27 @@ body.flashing {
     color: rgba(185, 206, 255, 0.85);
 }
 
-.creator-card:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 22px 40px rgba(8, 12, 28, 0.6);
+.creator-card:hover,
+.creator-card:focus-visible {
+    transform: translate3d(0, -10px, 30px) rotateX(6deg) scale(1.02);
+    box-shadow: 0 32px 60px rgba(8, 12, 28, 0.6), 0 0 60px rgba(86, 162, 255, 0.2);
+    filter: brightness(1.04) saturate(1.05);
+}
+
+.creator-card:hover .creator-card__glow,
+.creator-card:focus-visible .creator-card__glow {
+    animation: creatorGlowOrbit 6s ease-in-out infinite;
+}
+
+.creator-card:hover .creator-card__title,
+.creator-card:focus-visible .creator-card__title {
+    text-shadow: 0 10px 30px rgba(30, 42, 92, 0.6);
+    transform: translate3d(0, -3px, 0);
+}
+
+.creator-card__title {
+    transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
+        text-shadow 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 @media (max-width: 640px) {
@@ -7700,6 +7838,13 @@ body.flashing {
     font-weight: 600;
     margin: 0;
     color: color-mix(in srgb, #c8d8ff 82%, #fff 18%);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transform-origin: left center;
+    transition: transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1),
+        text-shadow 0.75s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .achievements-section__subtitle {
@@ -7708,6 +7853,73 @@ body.flashing {
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: rgba(199, 215, 255, 0.75);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transform-origin: left center;
+    transition: transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1),
+        text-shadow 0.75s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.achievements-section__title::after,
+.achievements-section__subtitle::after {
+    content: "";
+    display: inline-block;
+    width: 42px;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(120, 180, 255, 0.65), rgba(255, 160, 110, 0.55));
+    transform: scaleX(0.2);
+    transform-origin: left center;
+    transition: transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.75s cubic-bezier(0.22, 0.61, 0.36, 1);
+    opacity: 0.4;
+}
+
+.achievements-section__title:hover,
+.achievements-section__title:focus-visible,
+.achievements-section__subtitle:hover,
+.achievements-section__subtitle:focus-visible {
+    transform: translate3d(0, -6px, 0) scale(1.01);
+    text-shadow: 0 16px 38px rgba(12, 18, 38, 0.55);
+}
+
+.achievements-section__title:hover::after,
+.achievements-section__title:focus-visible::after,
+.achievements-section__subtitle:hover::after,
+.achievements-section__subtitle:focus-visible::after {
+    transform: scaleX(1);
+    opacity: 1;
+}
+
+@keyframes versionCardSheen {
+    0% {
+        opacity: 0.6;
+        transform: translate3d(-6px, 0, 0) rotate(0deg);
+    }
+    50% {
+        opacity: 0.85;
+        transform: translate3d(6px, -4px, 0) rotate(1deg);
+    }
+    100% {
+        opacity: 0.6;
+        transform: translate3d(-6px, 0, 0) rotate(0deg);
+    }
+}
+
+@keyframes creatorGlowOrbit {
+    0% {
+        opacity: 0.75;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+    50% {
+        opacity: 0.95;
+        transform: translate3d(8px, -10px, 0) scale(1.08);
+    }
+    100% {
+        opacity: 0.75;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
 }
 
 .achievements-section__note {
