@@ -694,8 +694,8 @@ body.equinox-pulse-active :is(
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
-    padding: 22px 26px 26px;
+    gap: 12px;
+    padding: 22px 26px 42px;
     width: min(50vw, 440px);
     border-radius: 30px;
     background:
@@ -739,11 +739,13 @@ body.equinox-pulse-active :is(
 }
 
 .version__chips {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 14px;
-    transform: translateY(-6px);
+    margin-top: -28px;
+    padding: 0 18px 18px;
     flex-wrap: wrap;
 }
 
