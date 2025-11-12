@@ -2646,20 +2646,48 @@ body {
     }
 }
 
-.cutsceneStar,
-.starShenvii,
-.cutsceneStarBig,
-.cutsceneStarSmall {
+.cutsceneStar {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    top: 30%;
+    left: 40%;
     scale: 0;
     pointer-events: none;
-    transition: scale 0.5s ease-in, --cutscene-spin-duration 0.6s ease-in-out;
+    transition: scale 0.5s ease-in;
     transform-origin: center;
-    --cutscene-spin-duration: 9s;
-    animation: spin1 var(--cutscene-spin-duration) linear infinite;
+    animation: spin1 9s linear infinite;
+}
+
+.starShenvii {
+    position: absolute;
+    top: 30%;
+    left: 40%;
+    scale: 0;
+    pointer-events: none;
+    transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
+}
+
+.cutsceneStarBig {
+    position: absolute;
+    top: 30%;
+    left: 40%;
+    scale: 0;
+    pointer-events: none;
+    transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 9s linear infinite;
+}
+
+.cutsceneStarSmall {
+    position: absolute;
+    top: 30%;
+    left: 40%;
+    scale: 0;
+    pointer-events: none;
+    transition: scale 0.5s ease-in;
+    transform-origin: center;
+    animation: spin1 linear infinite;
 }
 
 .descended-cutscene {
@@ -3128,7 +3156,7 @@ body {
 
 .spin {
     transform: translate(-50%, -50%);
-    --cutscene-spin-duration: 1s;
+    animation: spin 1s linear infinite;
     scale: 2.5;
     visibility: visible;
     transition: scale 0.5s ease-in;
@@ -3141,8 +3169,8 @@ body {
 
 .spin-slow {
     transform: translate(-50%, -50%);
-    --cutscene-spin-duration: 4s;
-    transition: transform 0.5s ease-in-out, --cutscene-spin-duration 0.8s ease-in-out;
+    animation-duration: 4s;
+    transition: transform 0.5s ease-in-out, animation-duration 0.5s ease-in-out;
 }
 
 .scale-up-and-vanish {
