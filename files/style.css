@@ -1081,14 +1081,13 @@ body {
         radial-gradient(52% 42% at 82% 18%, rgba(102, 176, 255, 0.22), transparent 72%);
     opacity: 0.88;
     mix-blend-mode: screen;
-    z-index: -2;
+    z-index: 1;
 }
 
 .halloween-overlay {
     position: fixed;
     inset: 0;
     pointer-events: none;
-    z-index: -1;
 }
 
 .halloween-overlay__snow {
@@ -1096,9 +1095,9 @@ body {
     inset: -18vh 0 -6vh;
     background-repeat: repeat;
     background-image:
-        radial-gradient(4px 4px at 28px 32px, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 64%),
-        radial-gradient(3px 3px at 88px 134px, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0) 60%),
-        radial-gradient(3.4px 3.4px at 156px 70px, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 68%);
+        radial-gradient(10px 10px at 28px 32px, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 64%),
+        radial-gradient(9px 9px at 88px 134px, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0) 60%),
+        radial-gradient(9.4px 9.4px at 156px 70px, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 68%);
     background-size: 240px 240px, 320px 320px, 240px 240px;
     background-position: 0 0, 0 0, 0 0;
     opacity: 0.7;
