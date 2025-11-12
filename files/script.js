@@ -638,9 +638,10 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     description: "Secure a stockpile of top-tier luck brews for your next session.",
     rewards: Object.freeze({
       potions: Object.freeze({
-        [DESCENDED_POTION_ID]: 130,
-        masteryElixir: 60,
-        boundlessPotion: 30,
+        [DESCENDED_POTION_ID]: 500,
+        luckyPotion: 2000,
+        speedPotion: 2000,
+        fortunePotion3: 100,
       }),
     }),
     bannerImage: "files/images/descendedBundleBanner.png",
@@ -656,9 +657,8 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
       "Retired Halloween stock, restocked with core potions for ongoing adventures.",
     rewards: Object.freeze({
       potions: Object.freeze({
-        luckyPotion: 2000,
-        speedPotion: 2000,
-        fortunePotion3: 100,
+        bloodyPotion: 50,
+        pumpkinPotion: 30,
       }),
     }),
     bannerImage: "files/images/halloweenBundleBanner.png",
