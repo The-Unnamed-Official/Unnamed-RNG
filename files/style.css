@@ -76,6 +76,83 @@ body.reduced-motion .rollButton-progress {
   transition: none !important;
 }
 
+body.potato-mode {
+  --btn-transition: 0ms linear;
+  background: #050505 !important;
+  color: #e5e5e5;
+}
+
+body.potato-mode *,
+body.potato-mode *::before,
+body.potato-mode *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  animation-delay: 0ms !important;
+  transition: none !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+body.potato-mode button::before,
+body.potato-mode button::after,
+body.potato-mode .btn::before,
+body.potato-mode .btn::after {
+  content: none !important;
+}
+
+body.potato-mode img,
+body.potato-mode canvas,
+body.potato-mode video {
+  image-rendering: pixelated;
+  filter: grayscale(1) brightness(0.85) contrast(0.9) !important;
+}
+
+body.potato-mode .halloween-overlay,
+body.potato-mode .halloween-backdrop,
+body.potato-mode #fireworksCanvas,
+body.potato-mode .loading-animation,
+body.potato-mode .particle-system,
+body.potato-mode #starContainer,
+body.potato-mode #squareContainer,
+body.potato-mode .oppHeartContainer,
+body.potato-mode .black-hole {
+  display: none !important;
+}
+
+body.potato-mode .settings-panel,
+body.potato-mode .settings-section,
+body.potato-mode .stats-panel,
+body.potato-mode .achievements-panel,
+body.potato-mode .inventory,
+body.potato-mode .historySection,
+body.potato-mode .version__card {
+  background: #111 !important;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+
+body.potato-mode .settings-btn,
+body.potato-mode .settings-switch,
+body.potato-mode .inventory-group__clear,
+body.potato-mode .inventory-delete-btn,
+body.potato-mode .cutsceneSkipBtb,
+body.potato-mode .rarity-button,
+body.potato-mode .stat-card,
+body.potato-mode .achievement-item,
+body.potato-mode .achievement-itemC,
+body.potato-mode .achievement-itemEvent,
+body.potato-mode .achievement-itemInv,
+body.potato-mode .achievement-itemR,
+body.potato-mode .achievement-itemTitle {
+  background: #181818 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+body.potato-mode .settings-dropdown__menu {
+  background: #121212 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
 /* Base button apply: native buttons and common classes */
 button,
 input[type="button"],
@@ -2223,6 +2300,55 @@ body {
 .settings-btn--ghost {
     background: rgba(18, 18, 32, 0.65);
     border-color: rgba(184, 160, 255, 0.18);
+}
+
+.settings-dropdown {
+    position: relative;
+}
+
+.settings-dropdown__toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.settings-dropdown__toggle::after {
+    content: "\25BE";
+    font-size: 0.9rem;
+    opacity: 0.8;
+    transition: transform 0.2s ease;
+}
+
+.settings-dropdown__toggle[aria-expanded="true"]::after {
+    transform: rotate(180deg);
+}
+
+.settings-dropdown__menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 0;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: rgba(16, 18, 36, 0.96);
+    border: 1px solid rgba(255, 194, 140, 0.22);
+    border-radius: 12px;
+    box-shadow: 0 18px 36px rgba(6, 10, 24, 0.45);
+    backdrop-filter: blur(16px) saturate(140%);
+    z-index: 20;
+}
+
+.settings-dropdown__item {
+    width: 100%;
+}
+
+.settings-dropdown__item[aria-pressed="true"] {
+    background: linear-gradient(135deg, rgba(255, 190, 140, 0.42), rgba(150, 108, 236, 0.42));
+    border-color: rgba(255, 214, 180, 0.58);
 }
 
 .settings-switch {
