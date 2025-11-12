@@ -692,6 +692,21 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     limitLabel: "Max 10 purchases",
     limitReachedActionLabel: "Limit Reached",
   }),
+  Object.freeze({
+    id: "potionTransactionWinterFest",
+    name: "Winter Fest Potion Bundle",
+    priceUsd: 1.5,
+    description:
+      "Celebrate the chill with a mix of powerful brews for your next adventure.",
+    rewards: Object.freeze({
+      potions: Object.freeze({
+        boundlessPotion: 5,
+        hellishPotion: 3,
+        masteryElixir: 30,
+      }),
+    }),
+    bannerImage: "files/images/winterFestBundle.png",
+  }),
 ]);
 
 const POTION_TRANSACTION_CHECKOUT_URLS = Object.freeze({
@@ -699,6 +714,7 @@ const POTION_TRANSACTION_CHECKOUT_URLS = Object.freeze({
   potionTransactionDescended: "https://buy.stripe.com/9B69AV0kd3EXdHN53S3AY01",
   potionTransactionHalloweenFrights: "https://buy.stripe.com/6oU6oJeb33EX5bh0NC3AY03",
   potionTransactionHasty: "https://buy.stripe.com/14A28t2slgrJ5bh9k83AY06",
+  potionTransactionWinterFest: "https://buy.stripe.com/00wfZj4At6R97jp67W3AY07",
 });
 
 const POTION_TRANSACTION_PURCHASE_COUNTS_KEY = "potionTransactionPurchaseCounts";
@@ -5299,7 +5315,11 @@ const ACHIEVEMENTS = [
     requiredEventBucket: "eventS25",
     unobtainable: true,
   },
-  { name: "It's SPOOKY season!", requiredEventBucket: "eventTitleHalloween25", unobtainable: true },
+  {
+    name: "It's SPOOKY season!",
+    requiredEventBucket: "eventTitleHalloween25",
+    unobtainable: true,
+  },
   { name: "Seasonal Tourist", minEventTitleCount: 1 },
   { name: "Event!", minDistinctEventBuckets: 1 },
   { name: "Event Explorer", minDistinctEventBuckets: 3 },
