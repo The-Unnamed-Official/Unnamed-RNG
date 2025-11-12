@@ -689,7 +689,7 @@ body.equinox-pulse-active :is(
 }
 
 .version__card {
-    --accent-light: rgba(255, 161, 76, 0.58);
+    --accent-light: var(--halloween-header-gradient);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -699,13 +699,13 @@ body.equinox-pulse-active :is(
     width: min(80vw, 540px);
     border-radius: 30px;
     background:
-        radial-gradient(circle at 12% 18%, rgba(255, 137, 92, 0.45), transparent 52%),
-        radial-gradient(circle at 88% 12%, rgba(120, 86, 255, 0.45), transparent 58%),
-        linear-gradient(160deg, rgba(33, 16, 62, 0.94), rgba(12, 8, 28, 0.92));
-    border: 1px solid rgba(255, 163, 92, 0.32);
+        radial-gradient(circle at 12% 18%, rgba(92, 252, 255, 0.45), transparent 52%),
+        radial-gradient(circle at 88% 12%, rgba(86, 162, 255, 0.45), transparent 58%),
+        linear-gradient(160deg, rgba(16, 43, 62, 0.94), rgba(8, 24, 28, 0.92));
+    border: 1px solid rgba(92, 209, 255, 0.32);
     box-shadow:
-        0 26px 48px rgba(8, 8, 24, 0.6),
-        inset 0 1px 0 rgba(255, 238, 210, 0.28);
+        0 26px 48px rgba(8, 17, 24, 0.6),
+        inset 0 1px 0 rgba(210, 244, 255, 0.28);
     backdrop-filter: blur(44px);
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -2553,13 +2553,11 @@ body {
     font-size: 74px;
     font-weight: bold;
     color: #fff;
-    background: linear-gradient(140deg, #ff7a18, #a855f7 60%, #6419ff 100%);
+    background: var(--halloween-modal-gradient);
     border: none;
     top: -2.5%;
     border-radius: 50%;
-    box-shadow:
-        0 10px 32px rgba(144, 48, 255, 0.42),
-        0 0 26px rgba(255, 140, 56, 0.55);
+    box-shadow: var(--halloween-modal-shadow);
     cursor: pointer;
     perspective: 1000px;
     transform-style: preserve-3d;
@@ -2574,7 +2572,6 @@ body {
     left: -100%;
     width: 300%;
     height: 100%;
-    background: rgba(255, 255, 255, 0.3);
     transform: skewX(-90deg);
     transition: left 0.5s ease;
     z-index: 1;
@@ -2586,16 +2583,12 @@ body {
 
 #startButton:hover {
     transform: scale(1.075) rotateX(0deg) rotateY(0deg);
-    background: linear-gradient(140deg, #ffa048, #b779ff 58%, #6d28ff 100%);
-    box-shadow:
-        0 16px 36px rgba(121, 47, 255, 0.55),
-        0 0 40px rgba(255, 174, 86, 0.65);
+    background: var(--halloween-header-gradient);
+    box-shadow: var(--halloween-header-shadow);
 }
 
 #startButton:active {
     transform: scale(0.95) rotateX(15deg) rotateY(15deg);
-    background: linear-gradient(140deg, #ff8430, #8b5cf6 65%, #4c1d95 100%);
-    box-shadow: 0px 5px 18px rgba(84, 28, 156, 0.8);
 }
 
 
