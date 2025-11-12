@@ -17159,53 +17159,17 @@ function rollRarity() {
       titles: ["Mythical", "Dude"]
     },
     {
-      type: "Pumpkin Hollow [1 in 3,110]",
-      class: "pumpkinhollowBgImg",
-      chance: 0.03215434083,
-      titles: ["Mythical", "Dude"]
-    },
-    {
-      type: "The Scarecrow's Sigil [1 in 1,031]",
-      class: "thescarecrowssigilBgImg",
-      chance: 0.09699321047,
-      titles: ["Stalking", "Hay"]
-    },
-    {
-      type: "Hollow Hill Manor [1 in 10,031]",
-      class: "hollowhillmanorBgImg",
-      chance: 0.0099690958,
-      titles: ["Haunted", "Ghoul"]
-    },
-    {
-      type: "The Phantom Moon [1 in 10,031]",
-      class: "thephantommoonBgImg",
-      chance: 0.0099690958,
-      titles: ["Gravity", "Alive"]
-    },
-    {
-      type: "The Void's Veil [1 in 10,031]",
-      class: "thevoidsveilBgImg",
-      chance: 0.0099690958,
-      titles: ["Mystic", "Aliens"]
-    },
-    {
-      type: "Wailing Shade [1 in 31,010]",
-      class: "wailingshadeBgImg",
-      chance: 0.0032247662,
-      titles: ["Haunt", "Pray"]
-    },
-    {
       type: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]",
       class: "alienBgImg",
       chance: 0.00015293279,
       titles: ["Catien", "Another Species"]
     },
-    {
-      type: "Malvoryn [1 in 666,666]",
-      class: "malvorynBgImg",
-      chance: 0.00015000015,
-      titles: ["The Deep Dark", "The One Who Broke The World", "Disaster", "Chaos", "The Broken One"]
-    }
+    // {
+    //   type: "Malvoryn [1 in 666,666]",
+    //   class: "malvorynBgImg",
+    //   chance: 0.00015000015,
+    //   titles: ["The Deep Dark", "The One Who Broke The World", "Disaster", "Chaos", "The Broken One"]
+    // }
   ];
 
   const {
