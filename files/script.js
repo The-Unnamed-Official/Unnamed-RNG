@@ -789,6 +789,9 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
       }),
     }),
     bannerImage: "files/images/winterFestBundle.png",
+    maxPurchases: 5,
+    limitLabel: "Max 5 purchases",
+    limitReachedActionLabel: "Limit Reached",
   }),
 ]);
 

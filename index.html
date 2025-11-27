@@ -35,8 +35,8 @@
         <div class="version__chips" role="group" aria-label="Game metadata">
             <span class="version__chip version__chip--number" role="text">
                 <span class="version__eyebrow">Version</span>
-                <span class="version__value">1.4.01</span>
-                <span class="version__detail">1.4.01_RELEASE</span>
+                <span class="version__value">1.4.1</span>
+                <span class="version__detail">1.4.1_RELEASE</span>
             </span>
 
             <span
@@ -150,7 +150,19 @@
                         <section class="settings-section">
                             <h4 class="settings-section__title">Interface</h4>
                             <div class="settings-grid">
-                                <button id="toggleRollDisplayBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll &amp; Display</button>
+                                <div class="settings-switch" id="potionBuffsSwitch">
+                                    <label class="settings-switch__container" for="toggleBuffsSwitch">
+                                        <input type="checkbox" id="toggleBuffsSwitch" class="settings-switch__input" role="switch" aria-checked="true">
+                                        <span class="settings-switch__visual" aria-hidden="true">
+                                            <span class="settings-switch__track"></span>
+                                            <span class="settings-switch__thumb"></span>
+                                        </span>
+                                        <span class="settings-switch__text">
+                                            <span class="settings-switch__title">Potion Buffs</span>
+                                            <span class="settings-switch__status" id="toggleBuffsStatus">Enabled</span>
+                                        </span>
+                                    </label>
+                                </div>
                                 <button id="toggleRollHistoryBtn" class="settings-btn settings-btn--ghost" type="button">Hide Roll History</button>
                                 <div id="graphicsPresetDropdown" class="settings-dropdown">
                                     <button
@@ -197,19 +209,6 @@
                                             Potato Graphics
                                         </button>
                                     </div>
-                                </div>
-                                <div class="settings-switch" id="potionBuffsSwitch">
-                                    <label class="settings-switch__container" for="toggleBuffsSwitch">
-                                        <input type="checkbox" id="toggleBuffsSwitch" class="settings-switch__input" role="switch" aria-checked="true">
-                                        <span class="settings-switch__visual" aria-hidden="true">
-                                            <span class="settings-switch__track"></span>
-                                            <span class="settings-switch__thumb"></span>
-                                        </span>
-                                        <span class="settings-switch__text">
-                                            <span class="settings-switch__title">Potion Buffs</span>
-                                            <span class="settings-switch__status" id="toggleBuffsStatus">Enabled</span>
-                                        </span>
-                                    </label>
                                 </div>
                             </div>
                         </section>
@@ -725,6 +724,7 @@
         </div>
 
         <div class="inventory-controls" role="group" aria-label="Inventory controls">
+            <button id="toggleRollDisplayBtn" class="roll-display__button" type="button">Hide Roll &amp; Display</button>
             <button id="toggleInventoryBtn" class="inventory-controls__button" type="button">Show Inventory</button>
             <button id="potionCraftingButton" class="potion-controls__button" type="button">Potion Crafting</button>
         </div>
