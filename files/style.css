@@ -4131,6 +4131,11 @@ body {
     background-size: cover;
 }
 
+.rngmasterBgImg {
+    background: url(backgrounds/rngmaster.png);
+    background-size: cover;
+}
+
 .astraldBgImg {
     background: url(backgrounds/astrald.gif);
     background-size: cover;
@@ -5385,6 +5390,19 @@ body.flashing {
   --group-bg-a: rgba(70, 32, 82, 0.72);
   --group-bg-b: rgba(32, 14, 46, 0.92);
   --group-border: rgba(220, 160, 255, 0.32);
+}
+
+.inventory-group--og {
+  --group-bg-a: rgba(20, 32, 82, 0.72);
+  --group-bg-b: rgba(52, 14, 46, 0.92);
+  --group-border: rgba(120, 160, 255, 0.32);
+}
+
+.inventory-group--og .inventory-delete-btn--overlay {
+  --inventory-text-gradient: radial-gradient(circle at 20% 20%, rgba(52, 14, 46, 0.92), rgba(20, 32, 82, 0.72) 45%, #ffc764 85%);
+  --inventory-text-gradient-hover: radial-gradient(circle at 20% 20%, rgba(20, 32, 82, 0.72), #ffc764 45%, rgba(52, 14, 46, 0.92) 85%);
+  --inventory-text-gradient-size: 220% 220%;
+  --inventory-text-gradient-animation: inventory-text-pan 3s ease-in-out infinite;
 }
 
 .inventory-group--mastery {
@@ -7386,6 +7404,15 @@ body.flashing {
 
 .transcendent {
     background: linear-gradient(120deg, #12d9ff, #00ffc8, #2c6fff);
+    background-size: 250%;
+    animation: transcendent-shift 5s ease-in-out infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.goodOldDays {
+    background: linear-gradient(120deg, #000000, #555555, #ffffff);
     background-size: 250%;
     animation: transcendent-shift 5s ease-in-out infinite;
     -webkit-background-clip: text;

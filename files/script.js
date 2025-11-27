@@ -1421,6 +1421,7 @@ let skipCutscene100K = true;
 let skipCutscene1M = true;
 let skipCutsceneTranscendent = true;
 let skipCutsceneHalloween25 = true;
+let skipCutsceneOG = true;
 let cooldownBuffActive = cooldownTime < BASE_COOLDOWN_TIME;
 let rollDisplayHiddenByUser = false;
 let cutsceneHidRollDisplay = false;
@@ -4265,7 +4266,9 @@ const STOPPABLE_AUDIO_IDS = [
   "wailingshadeAudio",
   "alienAudio",
   "destitAudio",
-  "unknownAudio"
+  "unknownAudio",
+  "rngmasterAudio",
+  "sovAudio"
 ];
 
 const STOPPABLE_AUDIO_SET = new Set(STOPPABLE_AUDIO_IDS);
@@ -4294,6 +4297,7 @@ const RARITY_BUCKET_LABELS = {
   transcendent: "Transcendent",
   special: "Special",
   theDescended: "The Descended",
+  goodOldDays: "Good Old Days",
 };
 
 // Update this set with the active event buckets (e.g., 'eventTitle') when seasonal events are running.
@@ -4860,6 +4864,10 @@ const rarityCategories = {
     "destitBgImg",
     "unknownBgImg",
   ],
+  goodOldDays: [
+    "rngmasterBgImg",
+    "sovBgImg",
+  ]
 };
 
 const RARITY_CLASS_BUCKET_MAP = Object.freeze(
@@ -4886,6 +4894,8 @@ const RARITY_LABEL_CLASS_MAP = {
   fircraBgImg: "eventTitleNew25",
   destitBgImg: "theDescended",
   unknownBgImg: "theDescended",
+  rngmasterBgImg: "goodOldDays",
+  sovBgImg: "goodOldDays",
   pumpkinBgImg: "eventTitleHalloween24",
   norstaBgImg: "eventTitleXmas24",
   sanclaBgImg: "eventTitleXmas24",
@@ -5065,6 +5075,12 @@ const CUTSCENE_SKIP_SETTINGS = [
     label: "Skip Halloween 2025 Title Cutscenes",
     buttonId: "toggleCutsceneHalloween25",
   },
+  {
+    key: "skipCutsceneOG",
+    labelId: "OGTxt",
+    label: "Skip Good Old Days Title Cutscenes",
+    buttonId: "toggleCutsceneOG",
+  },
 ];
 
 const CUTSCENE_STATE_SETTERS = {
@@ -5074,6 +5090,7 @@ const CUTSCENE_STATE_SETTERS = {
   skipCutscene1M: (value) => { skipCutscene1M = value; },
   skipCutsceneTranscendent: (value) => { skipCutsceneTranscendent = value; },
   skipCutsceneHalloween25: (value) => { skipCutsceneHalloween25 = value; },
+  skipCutsceneOG: (value) => { skipCutsceneOG = value; },
 };
 
 const CUTSCENE_STATE_GETTERS = {
@@ -5083,6 +5100,7 @@ const CUTSCENE_STATE_GETTERS = {
   skipCutscene1M: () => skipCutscene1M,
   skipCutsceneTranscendent: () => skipCutsceneTranscendent,
   skipCutsceneHalloween25: () => skipCutsceneHalloween25,
+  skipCutsceneOG: () => skipCutsceneOG,
 };
 
 function updateCutsceneSkipDisplay(
@@ -5102,7 +5120,7 @@ function updateCutsceneSkipDisplay(
   }
 }
 
-const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "transcendent", "special", "theDescended"]);
+const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "transcendent", "special", "theDescended", "goodOldDays"]);
 
 function normalizeInventoryRecord(raw) {
   if (raw == null) {
@@ -5455,11 +5473,9 @@ const ACHIEVEMENTS = [
   { name: "Master of your Mind", requiredTitle: "Mastermind [1 in 110,010]", requiredRarityClass: "mastermindBgImg" },
   { name: "The Descendant", requiredTitle: "Descended Title [1 in ƐƐƐ]", requiredRarityClass: "destitBgImg" },
   { name: "The Unknown", requiredTitle: "UnKnOwN [1 in ᔦᔦᔦ]", requiredRarityClass: "unknownBgImg" },
-  {
-    name: "T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈",
-    requiredTitle: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]",
-    requiredRarityClass: "alienBgImg",
-  },
+  { name: "T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈", requiredTitle: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]", requiredRarityClass: "alienBgImg" },
+  { name: "The OG Way", requiredTitle: "RNG Master [1 in GoodOldDays]", requiredRarityClass: "rngmasterBgImg" },
+  { name: "Good Times...", requiredTitle: "Sovereign [1 in GoodOldDays]", requiredRarityClass: "sovBgImg" },
   // Event exclusives
   {
     name: "Spooky Spectator",
@@ -6557,6 +6573,8 @@ function registerRollButtonHandler() {
     rarity.type === "Wailing Shade [1 in 31,010]" ||
     rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" ||
     rarity.type === "Malvoryn [1 in 666,666]" ||
+    rarity.type === "RNG Master [1 in GoodOldDays]" ||
+    rarity.type === "Sovereign [1 in GoodOldDays]" ||
     isDescendedTitleType(rarity.type)
   ) {
     const resultContainer = byId("result");
@@ -6583,6 +6601,10 @@ function registerRollButtonHandler() {
       gargantuaAudio.play();
     } else if (rarity.type === "Heart [1 in ♡♡♡]") {
       bigSuspenceAudio.play();
+    } else if (rarity.type === 'RNG Master [1 in GoodOldDays]') {
+      rngmasterAudio.play();
+    } else if (rarity.type === 'Sovereign [1 in GoodOldDays]') {
+      sovAudio.play();
     } else if (rarity.type === "Qbear [1 in 35,555]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]") {
@@ -8539,6 +8561,64 @@ function registerRollButtonHandler() {
         rollCount1++;
         titleCont.style.visibility = "visible";
         qbearAudio.play();
+      }
+    } else if (rarity.type === 'RNG Master [1 in GoodOldDays]') {
+      if (skipCutsceneOG) {
+        document.body.className = "blackBg";
+        disableChange();
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 14500); // Wait for 14.5 seconds
+      } else {
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+      }
+    } else if (rarity.type === 'Sovereign [1 in GoodOldDays]') {
+      if (skipCutsceneOG) {
+        document.body.className = "blackBg";
+        disableChange();
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+          }, 100);
+          enableChange();
+        }, 11300); // Wait for 11.3 seconds
+      } else {
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
       }
     } else if (rarity.type === "Light [1 in 29,979]") {
       if (skipCutscene100K) {
@@ -17306,6 +17386,16 @@ function rollRarity() {
       chance: 0.005,
       titles: ["Timeless", "Chronos", "Temporal", "Abyssal", "Infinite", "Endless", "Fractured", "Paradoxical", "Rifted", "Eternal"],
     },
+    { type: 'RNG Master [1 in GoodOldDays]',
+      class: 'rngmasterBgImg',
+      chance: 0.00029900014,
+      titles: ["RNG: Master of All Masters", "I miss the old times..."]
+    },
+    { type: 'Sovereign [1 in GoodOldDays]',
+      class: 'sovBgImg',
+      chance: 0.0009,
+      titles: ['Twilight: Iridescent Memory', 'Glitch', 'Arcane: Dark', 'Exotic: Apex', 'Ethereal', 'Stormal: Hurricane', 'Matrix', 'Arcane: Legacy', 'Starscourge', 'Sailor: Flying Dutchman']
+    },
     {
       type: "Unnamed [1 in 30,303]",
       class: "unnamedBgImg",
@@ -18059,7 +18149,8 @@ function normalizeRarityBucket(rarityClass) {
 
   if (cls === "special") return "special";
   if (cls === "theDescended") return "theDescended";
-  if (["under100", "under1k", "under10k", "under100k", "under1m", "transcendent", "special", "theDescended"].includes(cls)) {
+  if (cls === "goodOldDays") return "goodOldDays";
+  if (["under100", "under1k", "under10k", "under100k", "under1m", "transcendent", "special", "theDescended", "goodOldDays"].includes(cls)) {
     return cls;
   }
 
@@ -18081,6 +18172,7 @@ function normalizeRarityBucket(rarityClass) {
         normalizedLabel === "transcendent" ||
         normalizedLabel === "special" ||
         normalizedLabel === "theDescended" ||
+        normalizedLabel === "goodOldDays" ||
         normalizedLabel.startsWith("under")
       ) {
         return normalizedLabel;
@@ -18585,6 +18677,8 @@ const backgroundDetails = {
   wailingshadeBgImg: { image: "files/backgrounds/wailingshade.gif", audio: "wailingshadeAudio" },
   destitBgImg: { image: "files/backgrounds/destit.png", audio: "destitAudio" },
   unknownBgImg: { image: "files/backgrounds/unknown.png", audio: "unknownAudio" },
+  rngmasterBgImg: { image: "files/backgrounds/rngmaster.png", audio: "rngmasterAudio" },
+  sovBgImg: { image: "files/backgrounds/sovereign.png", audio: "sovAudio" },
   froBgImg: { image: "files/backgrounds/fro.png", audio: "froAudio" },
   mysBgImg: { image: "files/backgrounds/mys.png", audio: "mysAudio" },
   forgBgImg: { image: "files/backgrounds/forg.png", audio: "forgAudio" },
@@ -18872,43 +18966,47 @@ function getLockedItemsMap() {
 function getRaritySortRank(item) {
   const bucket = normalizeRarityBucket(item && item.rarityClass);
 
-  if (bucket === "special" || bucket === "theDescended") {
+  if (bucket === "goodOldDays") {
     return 0;
   }
 
-  if (bucket === "transcendent") {
+  if (bucket === "special" || bucket === "theDescended") {
     return 1;
   }
 
-  if (bucket && bucket.startsWith("event")) {
+  if (bucket === "transcendent") {
     return 2;
   }
 
-  if (bucket === "under1m") {
+  if (bucket && bucket.startsWith("event")) {
     return 3;
   }
 
-  if (bucket === "under100k") {
+  if (bucket === "under1m") {
     return 4;
   }
 
-  if (bucket === "under10k") {
+  if (bucket === "under100k") {
     return 5;
   }
 
-  if (bucket === "under1k") {
+  if (bucket === "under10k") {
     return 6;
   }
 
-  if (bucket === "under100") {
+  if (bucket === "under1k") {
     return 7;
   }
 
-  if (bucket) {
+  if (bucket === "under100") {
     return 8;
   }
 
-  return 9;
+  if (bucket) {
+    return 9;
+  }
+
+  return 10;
 }
 
 function getSortedInventoryEntries(lockedItems = getLockedItemsMap()) {
@@ -21135,6 +21233,7 @@ function registerRarityDeletionButtons() {
     ["deleteAllTranscendentButton", "transcendent"],
     ["deleteAllSpecialButton", "special"],
     ["deleteAllTheDescendedButton", "theDescended"],
+    ["deleteAllGoodOldDaysButton", "goodOldDays"],
   ];
 
   buttonMappings.forEach(([id, bucket]) => {
@@ -21254,7 +21353,9 @@ function getClassForRarity(rarity) {
       "The Void's Veil [1 in 10,031]": 'eventTitleHalloween25',
       "The Phantom Moon [1 in 10,031]": 'eventTitleHalloween25',
       "Descended Title [1 in ƐƐƐ]": 'theDescended',
-      "UnKnOwN [1 in ᔦᔦᔦ]": 'theDescended'
+      "UnKnOwN [1 in ᔦᔦᔦ]": 'theDescended',
+      "RNG Master [1 in GoodOldDays]": 'goodOldDays',
+      "Sovereign [1 in GoodOldDays]": 'goodOldDays',
   };
 
   return rarityClasses[rarity] || null;
@@ -21723,13 +21824,17 @@ document
   .getElementById("deleteAllNebulaButton")
   .addEventListener("click", () => deleteAllByRarity("nebulaBgImg"));
 document
+  .getElementById("deleteAllRNGMasterButton")
+  .addEventListener("click", () => deleteAllByRarity("rngmasterBgImg"));
+document
+  .getElementById("deleteAllSovereignButton")
+  .addEventListener("click", () => deleteAllByRarity("sovBgImg"));
+document
   .getElementById("deleteAllDescendedTitleButton")
   .addEventListener("click", () => deleteAllByRarity("destitBgImg"));
-
 document
   .getElementById("deleteAllUnknownTitleButton")
   .addEventListener("click", () => deleteAllByRarity("unknownBgImg"));
-
 document
   .getElementById("deleteAllTheDescendedButton")
   .addEventListener("click", () => {
@@ -21738,8 +21843,16 @@ document
       deleteAllByRarity(rarityClass);
     });
   });
-
-
+document
+  .getElementById("deleteAllGoodOldDaysButton")
+  .addEventListener("click", () => {
+    renderInventory();
+    const ogRarities = [
+      "rngmasterBgImg",
+      "sovBgImg",
+    ];
+    ogRarities.forEach(rarity => deleteAllByRarity(rarity));
+});
 document
   .getElementById("deleteAllUnder1mButton")
   .addEventListener("click", () => {
@@ -21751,7 +21864,7 @@ document
       "astraldBgImg",
       "mastermindBgImg",
       "alienBgImg",
-      "malvorynBgImg"
+      "malvorynBgImg",
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
 });

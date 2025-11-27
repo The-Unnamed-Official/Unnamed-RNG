@@ -222,6 +222,7 @@
                                 <button id="toggleCutscene100K" class="cutsceneSkipBtb" data-tier="mastery" type="button"><span id="100KTxt" class="under100k">Skip Mastery Cutscenes</span></button>
                                 <button id="toggleCutscene1M" class="cutsceneSkipBtb" data-tier="supreme" type="button"><span id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</span></button>
                                 <button id="toggleCutsceneTranscendent" class="cutsceneSkipBtb" data-tier="transcendent" type="button"><span id="transcendentTxt" class="transcendent">Skip Transcendent Cutscenes</span></button>
+                                <button id="toggleCutsceneOG" class="cutsceneSkipBtb" data-tier="goodOldDays" type="button"><span id="OGTxt" class="goodOldDays">Skip Good Old Days Cutscenes</span></button>
                                 <!-- <button id="toggleCutsceneHalloween25" class="cutsceneSkipBtb" data-tier="event-halloween25" type="button"><span id="halloween25Txt" class="event-halloween25">Skip Halloween 2025 Title Cutscenes</span></button> -->
                             </div>
                         </section>
@@ -455,6 +456,8 @@
                             <div class="achievement-itemTitle" data-title="Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" data-name="T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈">T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈</div>
                             <div class="achievement-itemTitle" data-title="Descended Title [1 in ƐƐƐ]" data-name="The Descendant">The Descendant</div>
                             <div class="achievement-itemTitle" data-title="UnKnOwN [1 in ᔦᔦᔦ]" data-name="The Unknown">The Unknown</div>
+                            <div class="achievement-itemTitle" data-title="RNG Master [1 in GoodOldDays]" data-name="The OG Way">The OG Way</div>
+                            <div class="achievement-itemTitle" data-title="Sovereign [1 in GoodOldDays]" data-name="Good Times...">Good Times...</div>
                         </div>
                     </section>
 
@@ -892,35 +895,6 @@
                                 </div>
                             </section>
 
-                            <section class="inventory-group inventory-group--special">
-                                <div class="inventory-group__header">
-                                    <h4 class="inventory-group__title">Special Titles</h4>
-                                    <button id="deleteAllSpecialButton" class="inventory-group__clear" type="button"><span class="special">Clear Special</span></button>
-                                </div>
-                                <div class="inventory-group__grid">
-                                    <button id="deleteAllVeilButton" class="inventory-delete-btn" type="button" title="Delete All Veil"><span class="special">Veil</span></button>
-                                    <button id="deleteAllExperimentButton" class="inventory-delete-btn" type="button" title="Delete All Experiment"><span class="special">Experiment</span></button>
-                                    <button id="deleteAllAbominationButton" class="inventory-delete-btn" type="button" title="Delete All Abomination"><span class="special">Abomination</span></button>
-                                    <button id="deleteAllIridocyclitisVeilButton" class="inventory-delete-btn" type="button" title="Delete All Iridocyclitis Veil"><span class="special">Iridocyclitis Veil</span></button>
-                                    <button id="deleteAllBlindGTButton" class="inventory-delete-btn" type="button" title="Delete All BlindGT"><span class="special">BlindGT</span></button>
-                                    <button id="deleteAllMSFUButton" class="inventory-delete-btn" type="button" title="Delete All MSFU"><span class="special">MSFU</span></button>
-                                    <button id="deleteAllOrbButton" class="inventory-delete-btn" type="button" title="Delete All Orb"><span class="special">Orb</span></button>
-                                    <button id="deleteAllFireCrazeButton" class="inventory-delete-btn" type="button" title="Delete All FireCraze"><span class="special">FireCraze</span></button>
-                                    <button id="deleteAllShenviiButton" class="inventory-delete-btn" type="button" title="Delete All sʜeɴvɪ✞∞"><span class="special">sʜeɴvɪ✞∞</span></button>
-                                </div>
-                            </section>
-
-                            <section class="inventory-group inventory-group--descended">
-                                <div class="inventory-group__header">
-                                    <h4 class="inventory-group__title"><span class="theDescended">The Descended</span></h4>
-                                    <button id="deleteAllTheDescendedButton" class="inventory-group__clear" type="button"><span class="theDescended">Clear The Descended</span></button>
-                                </div>
-                                <div class="inventory-group__grid">
-                                    <button id="deleteAllDescendedTitleButton" class="inventory-delete-btn" type="button" title="Delete All Descended Title"><span class="theDescended">Descended Title</span></button>
-                                    <button id="deleteAllUnknownTitleButton" class="inventory-delete-btn" type="button" title="Delete All UnKnOwN"><span class="theDescended">UnKnOwN</span></button>
-                                </div>
-                            </section>
-
                             <section class="inventory-group inventory-group--mastery">
                                 <div class="inventory-group__header">
                                     <h4 class="inventory-group__title">Mastery Titles</h4>
@@ -963,6 +937,24 @@
                                 </div>
                             </section>
 
+                            <section class="inventory-group inventory-group--special">
+                                <div class="inventory-group__header">
+                                    <h4 class="inventory-group__title">Special Titles</h4>
+                                    <button id="deleteAllSpecialButton" class="inventory-group__clear" type="button"><span class="special">Clear Special</span></button>
+                                </div>
+                                <div class="inventory-group__grid">
+                                    <button id="deleteAllVeilButton" class="inventory-delete-btn" type="button" title="Delete All Veil"><span class="special">Veil</span></button>
+                                    <button id="deleteAllExperimentButton" class="inventory-delete-btn" type="button" title="Delete All Experiment"><span class="special">Experiment</span></button>
+                                    <button id="deleteAllAbominationButton" class="inventory-delete-btn" type="button" title="Delete All Abomination"><span class="special">Abomination</span></button>
+                                    <button id="deleteAllIridocyclitisVeilButton" class="inventory-delete-btn" type="button" title="Delete All Iridocyclitis Veil"><span class="special">Iridocyclitis Veil</span></button>
+                                    <button id="deleteAllBlindGTButton" class="inventory-delete-btn" type="button" title="Delete All BlindGT"><span class="special">BlindGT</span></button>
+                                    <button id="deleteAllMSFUButton" class="inventory-delete-btn" type="button" title="Delete All MSFU"><span class="special">MSFU</span></button>
+                                    <button id="deleteAllOrbButton" class="inventory-delete-btn" type="button" title="Delete All Orb"><span class="special">Orb</span></button>
+                                    <button id="deleteAllFireCrazeButton" class="inventory-delete-btn" type="button" title="Delete All FireCraze"><span class="special">FireCraze</span></button>
+                                    <button id="deleteAllShenviiButton" class="inventory-delete-btn" type="button" title="Delete All sʜeɴvɪ✞∞"><span class="special">sʜeɴvɪ✞∞</span></button>
+                                </div>
+                            </section>
+
                             <section class="inventory-group inventory-group--transcendent">
                                 <div class="inventory-group__header">
                                     <h4 class="inventory-group__title">Transcendent Titles</h4>
@@ -973,6 +965,28 @@
                                     <button id="deleteAllGingerButton" class="inventory-delete-btn" type="button" title="Delete All Ginger"><span class="transcendent">Ginger</span></button>
                                     <button id="deleteAllH1diButton" class="inventory-delete-btn" type="button" title="Delete All H1di"><span class="transcendent h1di-flash">H1di</span></button>
                                     <button id="deleteAllEquinoxButton" class="inventory-delete-btn" type="button" title="Delete All 『Equinox』"><span class="transcendent equinox-flash">『Equinox』</span></button>
+                                </div>
+                            </section>
+
+                            <section class="inventory-group inventory-group--descended">
+                                <div class="inventory-group__header">
+                                    <h4 class="inventory-group__title"><span class="theDescended">The Descended</span></h4>
+                                    <button id="deleteAllTheDescendedButton" class="inventory-group__clear" type="button"><span class="theDescended">Clear The Descended</span></button>
+                                </div>
+                                <div class="inventory-group__grid">
+                                    <button id="deleteAllDescendedTitleButton" class="inventory-delete-btn" type="button" title="Delete All Descended Title"><span class="theDescended">Descended Title</span></button>
+                                    <button id="deleteAllUnknownTitleButton" class="inventory-delete-btn" type="button" title="Delete All UnKnOwN"><span class="theDescended">UnKnOwN</span></button>
+                                </div>
+                            </section>
+
+                            <section class="inventory-group inventory-group--og">
+                                <div class="inventory-group__header">
+                                    <h4 class="inventory-group__title">Good Old Days Titles</h4>
+                                    <button id="deleteAllGoodOldDaysButton" class="inventory-group__clear" type="button">Clear Good Old Days Titles</button>
+                                </div>
+                                <div class="inventory-group__grid">
+                                    <button id="deleteAllRNGMasterButton" class="inventory-delete-btn" type="button" title="Delete All RNG Master">RNG Master</button>
+                                    <button id="deleteAllSovereignButton" class="inventory-delete-btn" type="button" title="Delete All Sovereign">Sovereign</button>
                                 </div>
                             </section>
                         </div>
@@ -1014,6 +1028,8 @@
     <audio preload="none" id="glitchedAudio" src="files/sounds_and_music/glitched.mp3" loop></audio>
     <audio preload="none" id="mastermindAudio" src="files/sounds_and_music/mastermind.mp3" loop></audio>
     <audio preload="none" id="alienAudio" src="files/sounds_and_music/alien.mp3" loop></audio>
+    <audio preload="none" id="rngmasterAudio" src="files/sounds_and_music/rngmaster.mp3" loop></audio>
+    <audio preload="none" id="sovAudio" src="files/sounds_and_music/sovereign.ogg" loop></audio>
     <audio preload="none" id="expOpeningAudio" src="files/sounds_and_music/exp_opening.mp3"></audio>
     <audio preload="none" id="plabreAudio" src="files/sounds_and_music/plabre.mp3" loop></audio>
     <audio preload="none" id="isekailofiAudio" src="files/sounds_and_music/isekailofi.mp3" loop></audio>
@@ -1078,7 +1094,6 @@
     <audio preload="none" id="pumpkinAudio" src="files/sounds_and_music/pumpkin.mp3" loop></audio>
     <audio preload="none" id="overtureAudio" src="files/sounds_and_music/overture.ogg" loop></audio>
     <audio preload="none" id="impeachedAudio" src="files/sounds_and_music/impeached.ogg" loop></audio>
-    <audio preload="none" id="rngmasterAudio" src="files/sounds_and_music/rngmaster.mp3" loop></audio>
     <audio preload="none" id="crazeAudio" src="files/sounds_and_music/firecraze.mp3" loop></audio>
     <audio preload="none" id="iriAudio" src="files/sounds_and_music/iri.mp3" loop></audio>
     <audio preload="none" id="demsoAudio" src="files/sounds_and_music/demso.mp3" loop></audio>
