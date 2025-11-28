@@ -4432,7 +4432,7 @@ body.flashing {
 .creator-card:focus-visible .creator-card__avatar::before {
     background-image: url("images/unnamed_pfp_deco_active.png");
     opacity: 1;
-    transform: translate3d(0, -6px, 30px) scale(1.06);
+    transform: translate3d(0, 0, 30px) scale(1.06);
     z-index: 1110;
 }
 
@@ -5502,7 +5502,7 @@ body.flashing {
 .potion-controls__button {
     border: none;
     border-radius: 6px;
-    right: 280px;
+    right: 450px;
     padding: 10px 16px;
     font-weight: 600;
     letter-spacing: 0.03em;
@@ -5526,7 +5526,7 @@ body.flashing {
 .roll-display__button {
     border: none;
     border-radius: 6px;
-    right: 125px;
+    right: -15px;
     padding: 10px 16px;
     font-weight: 600;
     letter-spacing: 0.03em;
