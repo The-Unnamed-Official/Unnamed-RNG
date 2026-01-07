@@ -812,7 +812,7 @@ const POTION_TRANSACTION_CHECKOUT_URLS = Object.freeze({
 });
 
 const POTION_TRANSACTION_PURCHASE_COUNTS_KEY = "potionTransactionPurchaseCounts";
-const POTION_TRANSACTION_PURCHASE_RESET_KEY = "potionTransactionPurchaseReset_v1_4";
+const POTION_TRANSACTION_PURCHASE_RESET_KEY = "potionTransactionPurchaseReset_v1_4_2";
 
 function normalizePotionTransactionPurchaseCounts(raw) {
   if (!raw || typeof raw !== "object") {
@@ -17563,7 +17563,7 @@ function rollRarity() {
       type: "Impeached [1 in 101,010]",
       class: "impeachedBgImg",
       chance: 0.00099,
-      titles: ["Bloodlust", "Starscourge: Radiant, Symphony", "Bleeding: The Secret of Common", "Diaboli: The Secret of Divinus", "Surge: Infinity Overlord"],
+      titles: ["Bloodlust", "Starscourge: Radiant", "Symphony", "Bleeding: The Secret of Common", "Diaboli: The Secret of Divinus", "Surge: Infinity Overlord"],
     },
     {
       type: "Celestial Chorus [1 in 202,020]",
