@@ -792,6 +792,14 @@ const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
     maxPurchases: 5,
     limitLabel: "Max 5 purchases",
     limitReachedActionLabel: "Limit Reached",
+    promotion: Object.freeze({
+      maxUses: 1,
+      priceLabel: "Free",
+      actionLabel: "Claim for Free",
+      badgeText: "First claim free",
+      usedBadgeText: "Free claim used",
+      instantFulfillment: true,
+    }),
   }),
 ]);
 
@@ -804,7 +812,7 @@ const POTION_TRANSACTION_CHECKOUT_URLS = Object.freeze({
 });
 
 const POTION_TRANSACTION_PURCHASE_COUNTS_KEY = "potionTransactionPurchaseCounts";
-const POTION_TRANSACTION_PURCHASE_RESET_KEY = "potionTransactionPurchaseReset_v1_4";
+const POTION_TRANSACTION_PURCHASE_RESET_KEY = "potionTransactionPurchaseReset_v1_4_2";
 
 function normalizePotionTransactionPurchaseCounts(raw) {
   if (!raw || typeof raw !== "object") {
@@ -939,8 +947,10 @@ function getPotionTransactionState(transaction) {
   const promoMaxUses = promotion && Number.isFinite(promotion.maxUses)
     ? Math.max(0, Math.trunc(promotion.maxUses))
     : 0;
+  const promoHasCheckout = Boolean(promotion && typeof promotion.checkoutUrl === "string");
+  const promoInstantFulfillment = Boolean(promotion && promotion.instantFulfillment);
   const promoActive = Boolean(
-    promotion && purchaseCount < promoMaxUses && typeof promotion.checkoutUrl === "string"
+    promotion && purchaseCount < promoMaxUses && (promoHasCheckout || promoInstantFulfillment)
   );
 
   let basePriceLabel = "";
@@ -991,7 +1001,7 @@ function getPotionTransactionState(transaction) {
     }
   }
 
-  const actionDisabled = limitReached || !checkoutUrl;
+  const actionDisabled = limitReached || (!checkoutUrl && !(promoActive && promoInstantFulfillment));
 
   return {
     purchaseCount,
@@ -999,6 +1009,7 @@ function getPotionTransactionState(transaction) {
     remainingPurchases,
     limitReached,
     promoActive,
+    instantFulfillment: promoActive && promoInstantFulfillment,
     priceLabel,
     checkoutUrl,
     actionLabel,
@@ -1399,8 +1410,30 @@ if (inventorySortMode !== storedInventorySortMode) {
     storage.set(INVENTORY_SORT_MODE_KEY, inventorySortMode);
   }
 }
-let rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
-let rollCount1 = parseInt(localStorage.getItem("rollCount1")) || 0;
+const storedRollCount = parseInt(localStorage.getItem("rollCount")) || 0;
+const storedRollCount1 = parseInt(localStorage.getItem("rollCount1")) || 0;
+let rollCount = Math.max(storedRollCount, storedRollCount1);
+let rollCount1 = rollCount;
+
+function syncRollCounts() {
+  rollCount1 = rollCount;
+}
+
+function setRollCounts(nextCount) {
+  const parsed = Math.max(0, Math.trunc(Number(nextCount)));
+  rollCount = Number.isFinite(parsed) ? parsed : 0;
+  syncRollCounts();
+}
+
+function incrementRollCounts(increment = 1) {
+  const parsed = Math.max(0, Math.trunc(Number(increment)));
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    syncRollCounts();
+    return;
+  }
+  rollCount += parsed;
+  syncRollCounts();
+}
 const BASE_COOLDOWN_TIME = 500;
 let cooldownTime = BASE_COOLDOWN_TIME;
 let equippedItem = normalizeEquippedItemRecord(storage.get("equippedItem", null));
@@ -1410,6 +1443,9 @@ let autoRollInterval = null;
 let autoRollActive = false;
 let autoRollLastExecution = null;
 const AUTO_ROLL_UNLOCK_ROLLS = 1000;
+const AUTO_ROLL_REQUIRED_POTION_IDS = ["hastePotion1"];
+const AUTO_ROLL_REQUIRED_LUCKY_POTION_IDS = ["luckyPotion"];
+const AUTO_ROLL_PERMANENT_UNLOCK_KEY = "autoRollPermanentUnlocked";
 let audioVolume = 1;
 let rollAudioVolume = 1;
 let cutsceneAudioVolume = 1;
@@ -1466,6 +1502,62 @@ let rollButtonCooldownContext = "default";
 let rollButtonProgressArmed = false;
 let rollButtonManualCooldownUntil = 0;
 let rollButtonManualEnableTimeoutId = null;
+
+function playOverlappingRollAudio(audio, basePlay = null) {
+  if (!audio) {
+    return null;
+  }
+
+  if (!document.body) {
+    return typeof basePlay === "function" ? basePlay() : null;
+  }
+
+  const clone = audio.cloneNode(true);
+  clone.removeAttribute("id");
+  clone.dataset.rollOverlapClone = "true";
+  clone.volume = audio.volume;
+  clone.muted = audio.muted;
+  clone.preload = "auto";
+  clone.currentTime = 0;
+
+  document.body.appendChild(clone);
+
+  const playAttempt = clone.play();
+  const finalize = () => {
+    if (clone.isConnected) {
+      clone.remove();
+    }
+  };
+
+  clone.addEventListener("ended", finalize, { once: true });
+  clone.addEventListener("pause", finalize, { once: true });
+
+  if (playAttempt && typeof playAttempt.catch === "function") {
+    playAttempt.catch(() => {
+      finalize();
+    });
+  }
+
+  return playAttempt || null;
+}
+
+function enableRollAudioOverlap() {
+  ROLL_AUDIO_IDS.forEach((id) => {
+    const audio = getAudioElement(id);
+    if (!audio || audio.dataset.rollOverlapEnabled === "true") {
+      return;
+    }
+
+    audio.dataset.rollOverlapEnabled = "true";
+    const basePlay = audio.play.bind(audio);
+    audio.play = () => {
+      if (!audio.paused && !audio.ended && audio.currentTime > 0) {
+        return playOverlappingRollAudio(audio, basePlay);
+      }
+      return basePlay();
+    };
+  });
+}
 
 function recordRollCooldownDuration(context, duration) {
   if (typeof duration !== "number" || !Number.isFinite(duration) || duration <= 0) {
@@ -1603,6 +1695,7 @@ function adjustPotionCount(id, delta) {
 
   potionInventory = { ...potionInventory, [id]: next };
   savePotionInventory();
+  updateAutoRollAvailability();
 }
 
 function summarizeInventoryForPotions(lockedItems = getLockedItemsMap()) {
@@ -1690,6 +1783,13 @@ function canCraftPotion(potion, summary = summarizeInventoryForPotions()) {
   const costClasses = cost.classes || {};
   const costTitles = Array.isArray(cost.titles) ? cost.titles : [];
   const costPotions = cost.potions || {};
+  const rollRequirement = Number.isFinite(potion.rollRequirement)
+    ? Math.max(0, Math.trunc(potion.rollRequirement))
+    : 0;
+
+  if (rollRequirement > 0 && rollCount < rollRequirement) {
+    return false;
+  }
 
   return hasSufficientClassResources(costClasses, summary)
     && hasSufficientTitleResources(costTitles, summary)
@@ -1816,6 +1916,7 @@ function craftPotion(potionId) {
   adjustPotionCount(potion.id, 1);
   renderPotionInventory();
   renderPotionCrafting();
+  updateAutoRollAvailability();
 }
 
 function getRequirementLabel(rarityClass) {
@@ -2323,6 +2424,11 @@ function redirectToPotionTransactionCheckout(transaction, stateOverride = null) 
     return;
   }
 
+  if (state.promoActive && state.instantFulfillment) {
+    processPotionTransaction(transaction);
+    return;
+  }
+
   const checkoutUrl = buildCheckoutUrl(state.checkoutUrl, transaction.id);
 
   if (!checkoutUrl) {
@@ -2668,7 +2774,7 @@ function purchasePotionTransaction(transactionId) {
     return;
   }
 
-  if (!state.checkoutUrl) {
+  if (!state.checkoutUrl && !(state.promoActive && state.instantFulfillment)) {
     showPotionTransactionStatus("Checkout is currently unavailable.", "error");
     return;
   }
@@ -2869,9 +2975,13 @@ function renderPotionCrafting() {
 
     const effect = document.createElement("div");
     effect.className = "potion-card__effect";
-    effect.textContent = potion.type === POTION_TYPES.LUCK
-      ? `${formatPercentage(potion.effectPercent, true)} Luck`
-      : `${formatPercentage(potion.effectPercent, true)} Speed`;
+    if (typeof potion.effectLabel === "string" && potion.effectLabel.trim().length > 0) {
+      effect.textContent = potion.effectLabel;
+    } else {
+      effect.textContent = potion.type === POTION_TYPES.LUCK
+        ? `${formatPercentage(potion.effectPercent, true)} Luck`
+        : `${formatPercentage(potion.effectPercent, true)} Speed`;
+    }
 
     const duration = document.createElement("div");
     duration.className = "potion-card__duration";
@@ -2955,6 +3065,16 @@ function renderPotionCrafting() {
         costList.appendChild(li);
       });
 
+      if (Number.isFinite(potion.rollRequirement) && potion.rollRequirement > 0) {
+        const li = document.createElement("li");
+        li.className = "potion-card__cost-item";
+        if (rollCount < potion.rollRequirement) {
+          li.classList.add("potion-card__cost-item--insufficient");
+        }
+        li.textContent = `${potion.rollRequirement.toLocaleString()} rolls required`;
+        costList.appendChild(li);
+      }
+
       if (!costList.children.length) {
         const li = document.createElement("li");
         li.className = "potion-card__cost-item";
@@ -3015,6 +3135,9 @@ function renderPotionInventory() {
   list.innerHTML = "";
 
   POTION_DEFINITIONS.forEach((potion) => {
+    if (potion && potion.showInInventory === false) {
+      return;
+    }
     const count = getPotionCount(potion.id);
     const item = document.createElement("li");
     item.className = "potion-inventory__item";
@@ -3354,9 +3477,19 @@ function formatPercentage(value, includeSign = false) {
   return `${formatted}%`;
 }
 
+function formatLuckValueFromPercent(totalPercent) {
+  const value = Number.isFinite(totalPercent) ? Math.max(0, totalPercent / 100) : 0;
+  const useFraction = !Number.isInteger(value);
+  return value.toLocaleString("en-US", {
+    minimumFractionDigits: useFraction ? 1 : 0,
+    maximumFractionDigits: useFraction ? 1 : 0,
+  });
+}
+
 function updateLuckStatDisplay() {
   const valueElement = byId("luckStatValue");
-  if (!valueElement) {
+  const compactValueElement = byId("luckValueDisplay");
+  if (!valueElement && !compactValueElement) {
     return;
   }
 
@@ -3366,9 +3499,20 @@ function updateLuckStatDisplay() {
   const potionEffective = buffsDisabled
     ? getActivePotionLuckBonusPercent(isBuffToggleExempt)
     : potionTotal;
-  const total = permanentEffective + potionEffective;
+  const total = permanentEffective + potionEffective + 100;
 
-  valueElement.textContent = formatPercentage(total, true);
+  const formattedValue = formatLuckValueFromPercent(total);
+  if (valueElement) {
+    valueElement.textContent = formattedValue;
+  }
+  if (compactValueElement) {
+    compactValueElement.textContent = formattedValue;
+  }
+
+  const percentElement = byId("luckStatPercent");
+  if (percentElement) {
+    percentElement.textContent = formatPercentage(total, true);
+  }
 
   const breakdownElement = byId("luckStatBreakdown");
   if (breakdownElement) {
@@ -4252,6 +4396,7 @@ const STOPPABLE_AUDIO_IDS = [
   "crazeAudio",
   "shenviiAudio",
   "qbearAudio",
+  "xbearAudio",
   "estbunAudio",
   "esteggAudio",
   "isekailofiAudio",
@@ -4827,6 +4972,7 @@ const rarityCategories = {
     "tuonBgImg",
     "astblaBgImg",
     "qbearBgImg",
+    "xbearBgImg",
     "lightBgImg",
     "blodBgImg",
     "nebulaBgImg",
@@ -4938,8 +5084,9 @@ const LOADING_SEQUENCE = [
       if (mutated) {
         storage.set("inventory", normalizedInventory);
       }
-      rollCount = parseInt(localStorage.getItem("rollCount")) || 0;
-      rollCount1 = parseInt(localStorage.getItem("rollCount1")) || 0;
+      const storedRollCount = parseInt(localStorage.getItem("rollCount")) || 0;
+      const storedRollCount1 = parseInt(localStorage.getItem("rollCount1")) || 0;
+      setRollCounts(Math.max(storedRollCount, storedRollCount1));
     },
   },
   {
@@ -5474,6 +5621,8 @@ const ACHIEVEMENTS = [
   { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]", requiredRarityClass: "polarrBgImg" },
   { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 170,017]", requiredRarityClass: "mythicwallBgImg" },
   { name: "Master of your Mind", requiredTitle: "Mastermind [1 in 110,010]", requiredRarityClass: "mastermindBgImg" },
+  { name: "Befriended", requiredTitle: "Qbear : Xbear [1 in 71,110]", requiredRarityClass: "xbearBgImg" },
+  { name: "Comeback", requiredTitle: "Qbear [1 in 35,555]", requiredRarityClass: "qbearBgImg" },
   { name: "The Descendant", requiredTitle: "Descended Title [1 in ƐƐƐ]", requiredRarityClass: "destitBgImg" },
   { name: "The Unknown", requiredTitle: "UnKnOwN [1 in ᔦᔦᔦ]", requiredRarityClass: "unknownBgImg" },
   { name: "T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈", requiredTitle: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]", requiredRarityClass: "alienBgImg" },
@@ -5777,6 +5926,14 @@ function seekAudioWhenReady(audio, time) {
 }
 
 function stopAllAudio(options = {}) {
+  const overlappingRollAudio = document.querySelectorAll("audio[data-roll-overlap-clone=\"true\"]");
+  overlappingRollAudio.forEach((audio) => {
+    if (typeof audio.pause === "function") {
+      audio.pause();
+    }
+    audio.remove();
+  });
+
   const preserveIds = new Set();
 
   if (options) {
@@ -6156,14 +6313,15 @@ function updateRollDisplays() {
 
   const rawDisplay = byId("rollCountDisplay1");
   if (rawDisplay) {
-    rawDisplay.textContent = rollCount1 + 1;
+    rawDisplay.textContent = rollCount1;
   }
 }
 
 function updateRollCount(increment = 1) {
   if (increment) {
-    rollCount += increment;
-    rollCount1 += increment + 1;
+    incrementRollCounts(increment);
+  } else {
+    syncRollCounts();
   }
   updateRollDisplays();
   updateAutoRollAvailability();
@@ -6445,7 +6603,7 @@ function registerRollButtonHandler() {
   updateAchievementsList();
 
   if (rollCount < 1) {
-    rollCount++;
+    incrementRollCounts();
   }
 
   let rarity = rollRarity();
@@ -6480,12 +6638,13 @@ function registerRollButtonHandler() {
   }
   const rollCountDisplayRaw = byId("rollCountDisplay1");
   if (rollCountDisplayRaw) {
-    rollCountDisplayRaw.textContent = rollCount1 + 1;
+    rollCountDisplayRaw.textContent = rollCount1;
   }
 
   if (
     rarity.type === "Cursed Mirage [1 in 11,111]" ||
     rarity.type === "Qbear [1 in 35,555]" ||
+    rarity.type === "Qbear : Xbear [1 in 71,110]" ||
     rarity.type === "Wandering Spirit [1 in 150]" ||
     rarity.type === "Frozen Fate [1 in 200]" ||
     rarity.type === "Mysterious Echo [1 in 300]" ||
@@ -6609,6 +6768,8 @@ function registerRollButtonHandler() {
     } else if (rarity.type === 'Sovereign [1 in GoodOldDays]') {
       sovAudio.play();
     } else if (rarity.type === "Qbear [1 in 35,555]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Qbear : Xbear [1 in 71,110]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]") {
       hugeSuspenceAudio.play();
@@ -6812,8 +6973,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
       } else {
         silcarAudio.play();
@@ -7076,8 +7236,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -7177,8 +7336,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             arcAudio.play();
           }, 100);
@@ -7191,8 +7349,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         arcAudio.play();
       }
@@ -7264,8 +7421,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           expAudio.play();
         }, 100);
@@ -7395,8 +7551,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             hypernovaAudio.play();
           }, 100);
@@ -7409,8 +7564,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         hypernovaAudio.play();
       }
@@ -7538,8 +7692,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             nebulaAudio.play();
           }, 100);
@@ -7552,8 +7705,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         nebulaAudio.play();
       }
@@ -7680,8 +7832,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             astraldAudio.play();
           }, 100);
@@ -7694,8 +7845,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         astraldAudio.play();
       }
@@ -7822,8 +7972,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             alienAudio.play();
           }, 100);
@@ -7836,8 +7985,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         alienAudio.play();
       }
@@ -7964,8 +8112,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             mastermindAudio.play();
           }, 100);
@@ -7978,8 +8125,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         mastermindAudio.play();
       }
@@ -8003,8 +8149,7 @@ function registerRollButtonHandler() {
               preservePendingAutoEquip: true,
             });
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             if (container) {
               container.style.visibility = "visible";
             }
@@ -8115,8 +8260,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -8245,8 +8389,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             harvAudio.play();
           }, 100);
@@ -8259,8 +8402,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         harvAudio.play();
       }
@@ -8388,8 +8530,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             tuonAudio.play();
           }, 100);
@@ -8402,10 +8543,165 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         tuonAudio.play();
+      }
+    } else if (rarity.type === "Qbear : Xbear [1 in 71,110]") {
+      if (skipCutscene100K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-pink";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+      
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "pink-star",
+            "blue-star",
+            "red-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "△";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            incrementRollCounts();
+            titleCont.style.visibility = "visible";
+            xbearAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        incrementRollCounts();
+        titleCont.style.visibility = "visible";
+        xbearAudio.play();
       }
     } else if (rarity.type === "Qbear [1 in 35,555]") {
       if (skipCutscene100K) {
@@ -8546,8 +8842,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             qbearAudio.play();
           }, 100);
@@ -8560,8 +8855,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         qbearAudio.play();
       }
@@ -8578,8 +8872,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
           }, 100);
           enableChange();
@@ -8590,8 +8883,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
       }
     } else if (rarity.type === 'Sovereign [1 in GoodOldDays]') {
@@ -8607,8 +8899,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
           }, 100);
           enableChange();
@@ -8619,8 +8910,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
       }
     } else if (rarity.type === "Light [1 in 29,979]") {
@@ -8762,8 +9052,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             lightAudio.play();
           }, 100);
@@ -8776,8 +9065,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         lightAudio.play();
       }
@@ -8920,8 +9208,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             x1staAudio.play();
           }, 100);
@@ -8934,8 +9221,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         x1staAudio.play();
       }
@@ -9062,8 +9348,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           iriAudio.play();
         }, 100);
@@ -9192,8 +9477,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           shenviiAudio.play();
         }, 100);
@@ -9323,8 +9607,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             lubjubAudio.play();
           }, 100);
@@ -9337,8 +9620,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         lubjubAudio.play();
       }
@@ -9466,8 +9748,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             radAudio.play();
           }, 100);
@@ -9480,8 +9761,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         radAudio.play();
       }
@@ -9609,8 +9889,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             blodAudio.play();
           }, 100);
@@ -9623,8 +9902,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         blodAudio.play();
       }
@@ -9751,8 +10029,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           blindAudio.play();
         }, 100);
@@ -9882,8 +10159,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             shaAudio.play();
           }, 100);
@@ -9896,8 +10172,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         shaAudio.play();
       }
@@ -10023,8 +10298,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             overtureAudio.play();
           }, 100);
@@ -10037,8 +10311,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         overtureAudio.play();
       }
@@ -10161,8 +10434,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             celAudio.play();
           }, 100);
@@ -10175,8 +10447,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         celAudio.play();
       }
@@ -10300,8 +10571,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
 
             if (typeof hugeSuspenceAudio?.pause === "function") {
@@ -10339,8 +10609,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
 
         if (typeof malvorynAudio?.pause === "function") {
@@ -10473,8 +10742,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             devilAudio.play();
           }, 100);
@@ -10487,8 +10755,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         devilAudio.play();
       }
@@ -10559,8 +10826,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             demsoAudio.play();
           }, 100);
@@ -10573,8 +10839,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         demsoAudio.play();
       }
@@ -10645,8 +10910,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             astredAudio.play();
           }, 100);
@@ -10659,8 +10923,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         astredAudio.play();
       }
@@ -10751,8 +11014,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           heartAudio.play();
         }, 100);
@@ -10926,15 +11188,14 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           esteggAudio.play();
         }, 100);
         enableChange();
       }, 10750); // Wait for 10.75 seconds
     } else if (rarity.type === "MythicWall [1 in 170,017]") {
-      if (skipCutscene100K) {
+      if (skipCutscene1M) {
         document.body.className = "blackBg";
         disableChange();
 
@@ -11123,8 +11384,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             mythicwallAudio.play();
           }, 100);
@@ -11137,8 +11397,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         mythicwallAudio.play();
       }
@@ -11367,8 +11626,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           estbunAudio.play();
         }, 100);
@@ -11492,8 +11750,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             thescarecrowssigilAudio.play();
           }, 100);
@@ -11506,8 +11763,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         thescarecrowssigilAudio.play();
       }
@@ -11650,8 +11906,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             pumpkinhollowAudio.play();
           }, 100);
@@ -11664,8 +11919,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         pumpkinhollowAudio.play();
       }
@@ -11865,8 +12119,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             hollowhillmanorAudio.play();
           }, 100);
@@ -11879,8 +12132,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         hollowhillmanorAudio.play();
       }
@@ -12059,8 +12311,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             thephantommoonAudio.play();
           }, 100);
@@ -12073,8 +12324,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         thephantommoonAudio.play();
       }
@@ -12252,8 +12502,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             thevoidsveilAudio.play();
           }, 100);
@@ -12266,8 +12515,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         thevoidsveilAudio.play();
       }
@@ -12461,8 +12709,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             wailingshadeAudio.play();
           }, 100);
@@ -12475,8 +12722,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         wailingshadeAudio.play();
       }
@@ -12547,8 +12793,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             hellAudio.play();
           }, 100);
@@ -12561,8 +12806,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         hellAudio.play();
       }
@@ -12631,8 +12875,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -12676,8 +12919,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
           }, 100);
           enableChange();
@@ -12688,8 +12930,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
       }
     } else if (rarity.type === "H1di [1 in 9,890,089]") {
@@ -12699,8 +12940,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
       } else {
         document.body.className = "blackBg";
@@ -12773,8 +13013,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -12903,8 +13142,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           orbAudio.play();
         }, 100);
@@ -13032,8 +13270,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           crazeAudio.play();
         }, 100);
@@ -13098,8 +13335,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -13220,8 +13456,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             astblaAudio.play();
           }, 100);
@@ -13234,8 +13469,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         astblaAudio.play();
       }
@@ -13305,8 +13539,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -13355,8 +13588,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
           }, 100);
           enableChange();
@@ -13367,8 +13599,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
       }
     } else if (rarity.type === "MSFU [1 in 333/333rd]") {
@@ -13430,7 +13661,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
+          incrementRollCounts();
           msfuAudio.play();
           titleCont.style.visibility = "visible";
         }, 100);
@@ -13489,8 +13720,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             memAudio.play();
           }, 100);
@@ -13503,8 +13733,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         memAudio.play();
       }
@@ -13561,8 +13790,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             oblAudio.play();
           }, 100);
@@ -13575,8 +13803,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         oblAudio.play();
       }
@@ -13680,8 +13907,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             eonbreakAudio.play();
           }, 100);
@@ -13694,8 +13920,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         eonbreakAudio.play();
       }
@@ -13737,8 +13962,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             isekaiAudio.play();
           }, 100);
@@ -13751,8 +13975,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         isekaiAudio.play();
       }
@@ -13763,8 +13986,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
       } else {
         disableChange();
@@ -13831,8 +14053,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -13899,8 +14120,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             isekailofiAudio.play();
           }, 100);
@@ -13913,8 +14133,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         isekailofiAudio.play();
       }
@@ -13956,8 +14175,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             emerAudio.play();
           }, 100);
@@ -13970,8 +14188,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         emerAudio.play();
       }
@@ -14013,8 +14230,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             samuraiAudio.play();
           }, 100);
@@ -14027,8 +14243,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         samuraiAudio.play();
       }
@@ -14070,8 +14285,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             contAudio.play();
           }, 100);
@@ -14084,8 +14298,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         contAudio.play();
       }
@@ -14127,8 +14340,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
           }, 100);
           enableChange();
@@ -14139,8 +14351,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
       }
     } else if (rarity.type === "Phantom Stride [1 in 990]") {
@@ -14196,8 +14407,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             phaAudio.play();
           }, 100);
@@ -14210,8 +14420,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         phaAudio.play();
       }
@@ -14356,8 +14565,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             unnamedAudio.play();
           }, 100);
@@ -14370,8 +14578,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         unnamedAudio.play();
       }
@@ -14494,8 +14701,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             gingerAudio.play();
           }, 100);
@@ -14508,8 +14714,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         gingerAudio.play();
       }
@@ -14632,8 +14837,7 @@ function registerRollButtonHandler() {
             updateRollingHistory(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             curAudio.play();
           }, 100);
@@ -14646,8 +14850,7 @@ function registerRollButtonHandler() {
         updateRollingHistory(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         curAudio.play();
       }
@@ -14769,8 +14972,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           waveAudio.play();
         }, 100);
@@ -14894,8 +15096,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           scorchingAudio.play();
         }, 100);
@@ -15019,8 +15220,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           beachAudio.play();
         }, 100);
@@ -15144,8 +15344,7 @@ function registerRollButtonHandler() {
           updateRollingHistory(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           tidalwaveAudio.play();
         }, 100);
@@ -15247,8 +15446,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             celdawAudio.play();
           }, 100);
@@ -15261,8 +15459,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         celdawAudio.play();
       }
@@ -15407,8 +15604,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
-            rollCount++;
-            rollCount1++;
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             fatreAudio.play();
           }, 100);
@@ -15421,8 +15617,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
-        rollCount++;
-        rollCount1++;
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         fatreAudio.play();
       }
@@ -15439,8 +15634,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           geezerAudio.play();
           setTimeout(() => {
             titleCont.style.visibility = "visible";
@@ -15509,8 +15703,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
-          rollCount++;
-          rollCount1++;
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
           polarrAudio.play();
         }, 100);
@@ -15554,6 +15747,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             unstoppableAudio.play();
           }, 100);
@@ -15566,6 +15760,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+            incrementRollCounts();
         titleCont.style.visibility = "visible";
         unstoppableAudio.play();
       }
@@ -15607,6 +15802,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             wanspiAudio.play();
           }, 100);
@@ -15619,6 +15815,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         wanspiAudio.play();
       }
@@ -15660,6 +15857,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             spectralAudio.play();
           }, 100);
@@ -15672,6 +15870,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         spectralAudio.play();
       }
@@ -15713,6 +15912,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            ncrementRollCounts();
             titleCont.style.visibility = "visible";
             starfallAudio.play();
           }, 100);
@@ -15725,6 +15925,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         starfallAudio.play();
       }
@@ -15766,6 +15967,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             curartAudio.play();
           }, 100);
@@ -15778,6 +15980,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         curartAudio.play();
       }
@@ -15819,6 +16022,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             forgAudio.play();
           }, 100);
@@ -15831,6 +16035,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         forgAudio.play();
       }
@@ -15872,6 +16077,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             forgAudio.play();
           }, 100);
@@ -15884,6 +16090,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         forgAudio.play();
       }
@@ -15925,6 +16132,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             mysAudio.play();
           }, 100);
@@ -15937,6 +16145,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         mysAudio.play();
       }
@@ -15978,6 +16187,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             froAudio.play();
           }, 100);
@@ -15990,6 +16200,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         froAudio.play();
       }
@@ -16032,6 +16243,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             shadAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -16044,6 +16256,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         shadAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -16086,6 +16299,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             nighAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -16098,6 +16312,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         nighAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -16139,6 +16354,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             voiAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -16151,6 +16367,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         voiAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -16192,6 +16409,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             silAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -16204,6 +16422,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         silAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -16245,6 +16464,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             ghoAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -16257,6 +16477,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         ghoAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -16298,6 +16519,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             endAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -16310,6 +16532,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         endAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -16351,6 +16574,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             abysAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -16363,6 +16587,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         abysAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -16403,6 +16628,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             darAudio.play();
           }, 100);
@@ -16415,6 +16641,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         froAudio.play();
       }
@@ -16455,6 +16682,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             twiligAudio.play();
           }, 100);
@@ -16467,6 +16695,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         froAudio.play();
       }
@@ -16507,6 +16736,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             ethpulAudio.play();
           }, 100);
@@ -16519,6 +16749,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         froAudio.play();
       }
@@ -16559,6 +16790,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             eniAudio.play();
           }, 100);
@@ -16571,6 +16803,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         eniAudio.play();
       }
@@ -16611,6 +16844,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             fearAudio.play();
           }, 100);
@@ -16623,6 +16857,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         fearAudio.play();
       }
@@ -16663,6 +16898,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+          incrementRollCounts();
             titleCont.style.visibility = "visible";
             hauAudio.play();
           }, 100);
@@ -16675,6 +16911,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         hauntAudio.play();
       }
@@ -16715,6 +16952,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             lostsAudio.play();
           }, 100);
@@ -16727,6 +16965,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         lostsAudio.play();
       }
@@ -16767,6 +17006,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             titleCont.style.visibility = "visible";
             foundsAudio.play();
           }, 100);
@@ -16779,6 +17019,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         titleCont.style.visibility = "visible";
         foundsAudio.play();
       }
@@ -16820,6 +17061,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             hauntAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -16832,6 +17074,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         hauntAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -16873,6 +17116,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             ethAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -16885,6 +17129,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         ethAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -16926,6 +17171,7 @@ function registerRollButtonHandler() {
             displayResult(title, rarity.type);
             changeBackground(rarity.class);
             setRollButtonEnabled(true);
+            incrementRollCounts();
             serAudio.play();
             titleCont.style.visibility = "visible";
           }, 100);
@@ -16938,6 +17184,7 @@ function registerRollButtonHandler() {
         displayResult(title, rarity.type);
         changeBackground(rarity.class);
         setRollButtonEnabled(true);
+        incrementRollCounts();
         serAudio.play();
         titleCont.style.visibility = "visible";
       }
@@ -16998,6 +17245,7 @@ function registerRollButtonHandler() {
           displayResult(title, rarity.type);
           changeBackground(rarity.class);
           setRollButtonEnabled(true);
+          incrementRollCounts();
           titleCont.style.visibility = "visible";
         }, 100);
         enableChange();
@@ -17008,8 +17256,7 @@ function registerRollButtonHandler() {
     displayResult(title, rarity.type);
     updateRollingHistory(title, rarity.type);
     changeBackground(rarity.class);
-    rollCount++;
-    rollCount1++;
+    incrementRollCounts();
     setTimeout(() => {
       setRollButtonEnabled(true);
     }, cooldownTime);
@@ -17427,7 +17674,7 @@ function rollRarity() {
       type: "Impeached [1 in 101,010]",
       class: "impeachedBgImg",
       chance: 0.00099,
-      titles: ["Bloodlust", "Starscourge: Radiant, Symphony", "Bleeding: The Secret of Common", "Diaboli: The Secret of Divinus", "Surge: Infinity Overlord"],
+      titles: ["Bloodlust", "Starscourge: Radiant", "Symphony", "Bleeding: The Secret of Common", "Diaboli: The Secret of Divinus", "Surge: Infinity Overlord"],
     },
     {
       type: "Celestial Chorus [1 in 202,020]",
@@ -17554,6 +17801,18 @@ function rollRarity() {
       class: "alienBgImg",
       chance: 0.00015293279,
       titles: ["Catien", "Another Species"]
+    },
+    {
+      type: "Qbear [1 in 35,555]",
+      class: "qbearBgImg",
+      chance: 0.00281254394,
+      titles: ["Qbear", "Risky Gato", "Samurai Gato", "Gato: Wew"],
+    },
+    {
+      type: "Qbear : Xbear [1 in 71,110]",
+      class: "xbearBgImg",
+      chance: 0.00140627197,
+      titles: ["Xbear", "Chosen Qbear", "Q", "QQ"],
     },
     // {
     //   type: "Malvoryn [1 in 666,666]",
@@ -18724,6 +18983,7 @@ const backgroundDetails = {
   crazeBgImg: { image: "files/backgrounds/firecraze.png", audio: "crazeAudio" },
   shenviiBgImg: { image: "files/backgrounds/shenvii.gif", audio: "shenviiAudio" },
   qbearBgImg: { image: "files/backgrounds/qbear.png", audio: "qbearAudio" },
+  xbearBgImg: { image: "files/backgrounds/xbear.png", audio: "xbearAudio" },
   isekailofiBgImg: { image: "files/backgrounds/isekailofi.png", audio: "isekailofiAudio" },
   equinoxBgImg: { image: "files/backgrounds/equinox.gif", audio: "equinoxAudio" },
   waveBgImg: { image: "files/backgrounds/wave.png", audio: "waveAudio" },
@@ -20824,6 +21084,7 @@ function setupAudioControls() {
   }
 
   setSliderMutedState(audioVolume === 0);
+  enableRollAudioOverlap();
 }
 
 function updateAudioElements() {
@@ -20881,14 +21142,28 @@ function initializeAutoRollControls() {
   }
 
   autoRollButtonElement.addEventListener("click", () => {
-    if (!isAutoRollUnlocked()) {
+    if (isAutoRollPermanentlyUnlocked()) {
+      if (autoRollActive) {
+        stopAutoRoll();
+      } else {
+        startAutoRoll();
+      }
       return;
     }
 
-    if (autoRollActive) {
-      stopAutoRoll();
-    } else {
-      startAutoRoll();
+    if (canUnlockAutoRoll()) {
+      AUTO_ROLL_REQUIRED_POTION_IDS.forEach((potionId) => {
+        if (getPotionCount(potionId) > 0) {
+          adjustPotionCount(potionId, -1);
+        }
+      });
+      AUTO_ROLL_REQUIRED_LUCKY_POTION_IDS.forEach((potionId) => {
+        if (getPotionCount(potionId) > 0) {
+          adjustPotionCount(potionId, -1);
+        }
+      });
+      unlockAutoRollPermanently();
+      updateAutoRollAvailability();
     }
   });
 
@@ -20987,8 +21262,31 @@ function stopAutoRoll() {
   updateAutoRollAvailability();
 }
 
+function hasAutoRollHastePotion() {
+  return AUTO_ROLL_REQUIRED_POTION_IDS.some((potionId) => getPotionCount(potionId) > 0);
+}
+
+function hasAutoRollLuckyPotion() {
+  return AUTO_ROLL_REQUIRED_LUCKY_POTION_IDS.some((potionId) => getPotionCount(potionId) > 0);
+}
+
+function isAutoRollPermanentlyUnlocked() {
+  return storage.get(AUTO_ROLL_PERMANENT_UNLOCK_KEY, false) === true;
+}
+
+function unlockAutoRollPermanently() {
+  storage.set(AUTO_ROLL_PERMANENT_UNLOCK_KEY, true);
+}
+
+function canUnlockAutoRoll() {
+  return !isAutoRollPermanentlyUnlocked()
+    && rollCount >= AUTO_ROLL_UNLOCK_ROLLS
+    && hasAutoRollHastePotion()
+    && hasAutoRollLuckyPotion();
+}
+
 function isAutoRollUnlocked() {
-  return rollCount >= AUTO_ROLL_UNLOCK_ROLLS;
+  return isAutoRollPermanentlyUnlocked();
 }
 
 function ensureAutoRollButtonReference() {
@@ -21004,8 +21302,11 @@ function updateAutoRollAvailability() {
     return;
   }
 
-  const unlocked = isAutoRollUnlocked();
-  if (!unlocked) {
+  const hasRolls = rollCount >= AUTO_ROLL_UNLOCK_ROLLS;
+  const hasHastePotion = hasAutoRollHastePotion();
+  const hasLuckyPotion = hasAutoRollLuckyPotion();
+  const permanentlyUnlocked = isAutoRollPermanentlyUnlocked();
+  if (!permanentlyUnlocked && !(hasRolls && hasHastePotion && hasLuckyPotion)) {
     if (autoRollInterval) {
       clearTimeout(autoRollInterval);
       autoRollInterval = null;
@@ -21016,13 +21317,32 @@ function updateAutoRollAvailability() {
     button.classList.add("locked");
     button.classList.remove("on");
     button.classList.add("off");
-    button.textContent = `Auto Roll: Locked (${AUTO_ROLL_UNLOCK_ROLLS.toLocaleString()} rolls required)`;
+    const requirements = [];
+    if (!hasRolls) {
+      requirements.push(`${AUTO_ROLL_UNLOCK_ROLLS.toLocaleString()} rolls required`);
+    }
+    if (!hasHastePotion) {
+      requirements.push("1 Haste Potion required");
+    }
+    if (!hasLuckyPotion) {
+      requirements.push("1 Lucky Potion required");
+    }
+    button.textContent = `Auto Roll: Locked (${requirements.join(" and ")})`;
     localStorage.setItem("autoRollEnabled", "false");
     return;
   }
 
   button.disabled = false;
   button.classList.remove("locked");
+  if (!permanentlyUnlocked) {
+    autoRollActive = false;
+    button.textContent = "Auto Roll: Unlock";
+    button.classList.remove("on");
+    button.classList.add("off");
+    localStorage.setItem("autoRollEnabled", "false");
+    return;
+  }
+
   if (autoRollActive) {
     button.textContent = "Auto Roll: On";
     button.classList.add("on");
@@ -21330,6 +21650,7 @@ function getClassForRarity(rarity) {
       'Unfair [1 in ###]': 'under100k',
       'GD Addict [1 in ###]': 'under10k',
       'Qbear [1 in 35,555]': 'under100k',
+      'Qbear : Xbear [1 in 71,110]': 'under100k',
       'Light [1 in 29,979]': 'under100k',
       'X1sta [1 in 230,444]': 'under1m',
       'sʜeɴvɪ✞∞ [1 in 77,777/7th]': 'special',
@@ -21648,6 +21969,9 @@ document
 document
   .getElementById("deleteAllQbearButton")
   .addEventListener("click", () => deleteAllByRarity("qbearImgBg"));
+document
+  .getElementById("deleteAllQbearXbearButton")
+  .addEventListener("click", () => deleteAllByRarity("xbearImgBg"));
 
 
 document
@@ -21667,6 +21991,7 @@ document
       "tuonBgImg",
       "astblaBgImg",
       "qbearImgBg",
+      "xbearImgBg",
       "lightImgBg",
       "hypernovaBgImg",
       "nebulaBgImg",

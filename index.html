@@ -35,8 +35,8 @@
         <div class="version__chips" role="group" aria-label="Game metadata">
             <span class="version__chip version__chip--number" role="text">
                 <span class="version__eyebrow">Version</span>
-                <span class="version__value">1.4.1</span>
-                <span class="version__detail">1.4.1_RELEASE</span>
+                <span class="version__value">1.4.2</span>
+                <span class="version__detail">1.4.2_RELEASE</span>
             </span>
 
             <span
@@ -261,7 +261,7 @@
                         </div>
                         <div class="stat-card stat-card--luck">
                             <span class="stat-label">Luck Bonus</span>
-                            <span class="stat-value" id="luckStatValue">+0%</span>
+                            <span class="stat-value" id="luckStatValue">0</span>
                             <span class="stat-card__hint" id="luckStatBreakdown">Permanent: +0%</span>
                         </div>
                     </div>
@@ -452,6 +452,8 @@
                             <div class="achievement-itemTitle" data-title="Polarr [1 in 50,000,000,000]" data-name="Polar Lights">Polar Lights</div>
                             <div class="achievement-itemTitle" data-title="MythicWall [1 in 170,017]" data-name="Mythical Gamer!!!!">Mythical Gamer!!!!</div>
                             <div class="achievement-itemTitle" data-title="Mastermind [1 in 110,010]" data-name="Master of your Mind">Master of your Mind</div>
+                            <div class="achievement-itemTitle" data-title="Qbear [1 in 35,555]" data-name="Comeback">Comeback</div>
+                            <div class="achievement-itemTitle" data-title="Qbear : Xbear [1 in 71,110]" data-name="Befriended">Befriended</div>
                             <div class="achievement-itemTitle" data-title="Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]" data-name="T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈">T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈</div>
                             <div class="achievement-itemTitle" data-title="Descended Title [1 in ƐƐƐ]" data-name="The Descendant">The Descendant</div>
                             <div class="achievement-itemTitle" data-title="UnKnOwN [1 in ᔦᔦᔦ]" data-name="The Unknown">The Unknown</div>
@@ -677,7 +679,8 @@
         
         <div class="container1">
             <div class="rollsCount">
-                <h3 class="count">Rolls: <a class="totalCount" id="rollCountDisplay">NaN</a></h3>
+                <h3 class="count rollsCount__item">Rolls: <a class="totalCount" id="rollCountDisplay">NaN</a></h3>
+                <h3 class="count rollsCount__item rollsCount__luck">Luck: <span id="luckValueDisplay">0</span></h3>
             </div>
             <button id="achievementsButton" class="orange-button">Achievements</button>
             <button id="statsButton" class="orange-button">Stats</button>
@@ -726,7 +729,7 @@
         <div class="inventory-controls" role="group" aria-label="Inventory controls">
             <button id="toggleRollDisplayBtn" class="roll-display__button" type="button">Hide Roll &amp; Display</button>
             <button id="toggleInventoryBtn" class="inventory-controls__button" type="button">Show Inventory</button>
-            <button id="potionCraftingButton" class="potion-controls__button" type="button">Potion Crafting</button>
+            <button id="potionCraftingButton" class="potion-controls__button" type="button">Crafting Menu</button>
         </div>
 
         <div class="inventory">
@@ -883,6 +886,7 @@
                                     <button id="deleteAllTuonButton" class="inventory-delete-btn" type="button" title="Delete All Tuon">Tuon</button>
                                     <button id="deleteAllNebulaButton" class="inventory-delete-btn" type="button" title="Delete All Nebula">Nebula</button>
                                     <button id="deleteAllDevilsHeartButton" class="inventory-delete-btn" type="button" title="Delete All Devil's Heart">Devil's Heart</button>
+                                    <button id="deleteAllQbearXbearButton" class="inventory-delete-btn" type="button" title="Delete All Qbear : Xbear">Qbear : Xbear</button>
                                     <button id="deleteAllArcanePulseButton" class="inventory-delete-btn" type="button" title="Delete All Arcane Pulse">Arcane Pulse</button>
                                 </div>
                             </section>
@@ -1126,6 +1130,7 @@
     <audio preload="none" id="astblaAudio" src="files/sounds_and_music/astbla.mp3" loop></audio>
     <audio preload="none" id="astredAudio" src="files/sounds_and_music/astred.mp3" loop></audio>
     <audio preload="none" id="qbearAudio" src="files/sounds_and_music/qbear.mp3" loop></audio>
+    <audio preload="none" id="xbearAudio" src="files/sounds_and_music/xbear.mp3" loop></audio>
     <audio preload="none" id="lightAudio" src="files/sounds_and_music/light.mp3" loop></audio>
     <audio preload="none" id="gingerAudio" src="files/sounds_and_music/ginger.mp3" loop></audio>
     <audio preload="none" id="esteggAudio" src="files/sounds_and_music/estegg.mp3" loop></audio>
