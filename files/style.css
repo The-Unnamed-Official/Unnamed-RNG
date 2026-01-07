@@ -1843,7 +1843,17 @@ body {
   flex-direction: row;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  width: 100%;
+}
+
+.container1 .rollsCount__item {
+  flex: 1;
+}
+
+.container1 .rollsCount__luck {
+  text-align: right;
 }
 
 .container1 .count {
