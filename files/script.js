@@ -698,6 +698,23 @@ const POTION_DEFINITIONS = [
       titles: [],
     },
   },
+  {
+    id: AUTO_ROLL_UNLOCK_POTION_ID,
+    name: "Auto Roll",
+    image: "files/images/SpeedPotion.png",
+    type: POTION_TYPES.SPEED,
+    effectPercent: 0,
+    durationSeconds: 0,
+    effectLabel: "Unlock Auto Roll permanently",
+    durationDisplay: `Requires ${AUTO_ROLL_UNLOCK_ROLLS.toLocaleString()} rolls`,
+    rollRequirement: AUTO_ROLL_UNLOCK_ROLLS,
+    showInInventory: false,
+    craftCost: {
+      classes: {},
+      titles: [],
+      potions: { luckyPotion: 1, hastePotion1: 1 },
+    },
+  },
 ];
 
 const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
@@ -1445,6 +1462,8 @@ let autoRollLastExecution = null;
 const AUTO_ROLL_UNLOCK_ROLLS = 1000;
 const AUTO_ROLL_REQUIRED_POTION_IDS = ["hastePotion1"];
 const AUTO_ROLL_REQUIRED_LUCKY_POTION_IDS = ["luckyPotion"];
+const AUTO_ROLL_UNLOCK_POTION_ID = "autoRollUnlock";
+const AUTO_ROLL_PERMANENT_UNLOCK_KEY = "autoRollPermanentUnlocked";
 let audioVolume = 1;
 let rollAudioVolume = 1;
 let cutsceneAudioVolume = 1;
@@ -1501,6 +1520,58 @@ let rollButtonCooldownContext = "default";
 let rollButtonProgressArmed = false;
 let rollButtonManualCooldownUntil = 0;
 let rollButtonManualEnableTimeoutId = null;
+
+function playOverlappingRollAudio(audio) {
+  if (!audio) {
+    return null;
+  }
+
+  const clone = audio.cloneNode(true);
+  clone.removeAttribute("id");
+  clone.dataset.rollOverlapClone = "true";
+  clone.volume = audio.volume;
+  clone.muted = audio.muted;
+  clone.preload = "auto";
+  clone.currentTime = 0;
+
+  document.body.appendChild(clone);
+
+  const playAttempt = clone.play();
+  const finalize = () => {
+    if (clone.isConnected) {
+      clone.remove();
+    }
+  };
+
+  clone.addEventListener("ended", finalize, { once: true });
+  clone.addEventListener("pause", finalize, { once: true });
+
+  if (playAttempt && typeof playAttempt.catch === "function") {
+    playAttempt.catch(() => {
+      finalize();
+    });
+  }
+
+  return playAttempt || null;
+}
+
+function enableRollAudioOverlap() {
+  ROLL_AUDIO_IDS.forEach((id) => {
+    const audio = getAudioElement(id);
+    if (!audio || audio.dataset.rollOverlapEnabled === "true") {
+      return;
+    }
+
+    audio.dataset.rollOverlapEnabled = "true";
+    const basePlay = audio.play.bind(audio);
+    audio.play = () => {
+      if (!audio.paused && !audio.ended && audio.currentTime > 0) {
+        return playOverlappingRollAudio(audio);
+      }
+      return basePlay();
+    };
+  });
+}
 
 function recordRollCooldownDuration(context, duration) {
   if (typeof duration !== "number" || !Number.isFinite(duration) || duration <= 0) {
@@ -1722,10 +1793,21 @@ function canCraftPotion(potion, summary = summarizeInventoryForPotions()) {
     return false;
   }
 
+  if (potion.id === AUTO_ROLL_UNLOCK_POTION_ID && isAutoRollPermanentlyUnlocked()) {
+    return false;
+  }
+
   const cost = potion.craftCost || {};
   const costClasses = cost.classes || {};
   const costTitles = Array.isArray(cost.titles) ? cost.titles : [];
   const costPotions = cost.potions || {};
+  const rollRequirement = Number.isFinite(potion.rollRequirement)
+    ? Math.max(0, Math.trunc(potion.rollRequirement))
+    : 0;
+
+  if (rollRequirement > 0 && rollCount < rollRequirement) {
+    return false;
+  }
 
   return hasSufficientClassResources(costClasses, summary)
     && hasSufficientTitleResources(costTitles, summary)
@@ -1849,9 +1931,14 @@ function craftPotion(potionId) {
     return;
   }
 
-  adjustPotionCount(potion.id, 1);
+  if (potion.id === AUTO_ROLL_UNLOCK_POTION_ID) {
+    unlockAutoRollPermanently();
+  } else {
+    adjustPotionCount(potion.id, 1);
+  }
   renderPotionInventory();
   renderPotionCrafting();
+  updateAutoRollAvailability();
 }
 
 function getRequirementLabel(rarityClass) {
@@ -2910,9 +2997,13 @@ function renderPotionCrafting() {
 
     const effect = document.createElement("div");
     effect.className = "potion-card__effect";
-    effect.textContent = potion.type === POTION_TYPES.LUCK
-      ? `${formatPercentage(potion.effectPercent, true)} Luck`
-      : `${formatPercentage(potion.effectPercent, true)} Speed`;
+    if (typeof potion.effectLabel === "string" && potion.effectLabel.trim().length > 0) {
+      effect.textContent = potion.effectLabel;
+    } else {
+      effect.textContent = potion.type === POTION_TYPES.LUCK
+        ? `${formatPercentage(potion.effectPercent, true)} Luck`
+        : `${formatPercentage(potion.effectPercent, true)} Speed`;
+    }
 
     const duration = document.createElement("div");
     duration.className = "potion-card__duration";
@@ -2996,6 +3087,16 @@ function renderPotionCrafting() {
         costList.appendChild(li);
       });
 
+      if (Number.isFinite(potion.rollRequirement) && potion.rollRequirement > 0) {
+        const li = document.createElement("li");
+        li.className = "potion-card__cost-item";
+        if (rollCount < potion.rollRequirement) {
+          li.classList.add("potion-card__cost-item--insufficient");
+        }
+        li.textContent = `${potion.rollRequirement.toLocaleString()} rolls required`;
+        costList.appendChild(li);
+      }
+
       if (!costList.children.length) {
         const li = document.createElement("li");
         li.className = "potion-card__cost-item";
@@ -3014,6 +3115,9 @@ function renderPotionCrafting() {
     craftButton.disabled = !craftable;
     if (potion.craftingDisabled) {
       craftButton.textContent = "Unavailable";
+      craftButton.setAttribute("aria-disabled", "true");
+    } else if (potion.id === AUTO_ROLL_UNLOCK_POTION_ID && isAutoRollPermanentlyUnlocked()) {
+      craftButton.textContent = "Unlocked";
       craftButton.setAttribute("aria-disabled", "true");
     } else {
       craftButton.textContent = craftable ? "Craft" : "Needs Resources";
@@ -3056,6 +3160,9 @@ function renderPotionInventory() {
   list.innerHTML = "";
 
   POTION_DEFINITIONS.forEach((potion) => {
+    if (potion && potion.showInInventory === false) {
+      return;
+    }
     const count = getPotionCount(potion.id);
     const item = document.createElement("li");
     item.className = "potion-inventory__item";
@@ -5844,6 +5951,14 @@ function seekAudioWhenReady(audio, time) {
 }
 
 function stopAllAudio(options = {}) {
+  const overlappingRollAudio = document.querySelectorAll("audio[data-roll-overlap-clone=\"true\"]");
+  overlappingRollAudio.forEach((audio) => {
+    if (typeof audio.pause === "function") {
+      audio.pause();
+    }
+    audio.remove();
+  });
+
   const preserveIds = new Set();
 
   if (options) {
@@ -20994,6 +21109,7 @@ function setupAudioControls() {
   }
 
   setSliderMutedState(audioVolume === 0);
+  enableRollAudioOverlap();
 }
 
 function updateAudioElements() {
@@ -21165,7 +21281,18 @@ function hasAutoRollLuckyPotion() {
   return AUTO_ROLL_REQUIRED_LUCKY_POTION_IDS.some((potionId) => getPotionCount(potionId) > 0);
 }
 
+function isAutoRollPermanentlyUnlocked() {
+  return storage.get(AUTO_ROLL_PERMANENT_UNLOCK_KEY, false) === true;
+}
+
+function unlockAutoRollPermanently() {
+  storage.set(AUTO_ROLL_PERMANENT_UNLOCK_KEY, true);
+}
+
 function isAutoRollUnlocked() {
+  if (isAutoRollPermanentlyUnlocked()) {
+    return true;
+  }
   return rollCount >= AUTO_ROLL_UNLOCK_ROLLS && hasAutoRollHastePotion() && hasAutoRollLuckyPotion();
 }
 
@@ -21185,7 +21312,8 @@ function updateAutoRollAvailability() {
   const hasRolls = rollCount >= AUTO_ROLL_UNLOCK_ROLLS;
   const hasHastePotion = hasAutoRollHastePotion();
   const hasLuckyPotion = hasAutoRollLuckyPotion();
-  const unlocked = hasRolls && hasHastePotion && hasLuckyPotion;
+  const permanentlyUnlocked = isAutoRollPermanentlyUnlocked();
+  const unlocked = permanentlyUnlocked || (hasRolls && hasHastePotion && hasLuckyPotion);
   if (!unlocked) {
     if (autoRollInterval) {
       clearTimeout(autoRollInterval);
