@@ -4305,7 +4305,7 @@ const RARITY_BUCKET_LABELS = {
 };
 
 // Update this set with the active event buckets (e.g., 'eventTitle') when seasonal events are running.
-const ACTIVE_EVENT_BUCKETS = new Set(['']);
+const ACTIVE_EVENT_BUCKETS = new Set([]);
 
 function isEventBucketActive(bucket) {
   return typeof bucket === "string" && ACTIVE_EVENT_BUCKETS.has(bucket);
