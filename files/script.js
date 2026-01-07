@@ -1443,6 +1443,7 @@ let autoRollInterval = null;
 let autoRollActive = false;
 let autoRollLastExecution = null;
 const AUTO_ROLL_UNLOCK_ROLLS = 1000;
+const AUTO_ROLL_REQUIRED_POTION_IDS = ["hastePotion1", "hastePotion2", "hastePotion3"];
 let audioVolume = 1;
 let rollAudioVolume = 1;
 let cutsceneAudioVolume = 1;
@@ -1636,6 +1637,7 @@ function adjustPotionCount(id, delta) {
 
   potionInventory = { ...potionInventory, [id]: next };
   savePotionInventory();
+  updateAutoRollAvailability();
 }
 
 function summarizeInventoryForPotions(lockedItems = getLockedItemsMap()) {
@@ -21078,8 +21080,12 @@ function stopAutoRoll() {
   updateAutoRollAvailability();
 }
 
+function hasAutoRollHastePotion() {
+  return AUTO_ROLL_REQUIRED_POTION_IDS.some((potionId) => getPotionCount(potionId) > 0);
+}
+
 function isAutoRollUnlocked() {
-  return rollCount >= AUTO_ROLL_UNLOCK_ROLLS;
+  return rollCount >= AUTO_ROLL_UNLOCK_ROLLS && hasAutoRollHastePotion();
 }
 
 function ensureAutoRollButtonReference() {
@@ -21095,7 +21101,9 @@ function updateAutoRollAvailability() {
     return;
   }
 
-  const unlocked = isAutoRollUnlocked();
+  const hasRolls = rollCount >= AUTO_ROLL_UNLOCK_ROLLS;
+  const hasHastePotion = hasAutoRollHastePotion();
+  const unlocked = hasRolls && hasHastePotion;
   if (!unlocked) {
     if (autoRollInterval) {
       clearTimeout(autoRollInterval);
@@ -21107,7 +21115,14 @@ function updateAutoRollAvailability() {
     button.classList.add("locked");
     button.classList.remove("on");
     button.classList.add("off");
-    button.textContent = `Auto Roll: Locked (${AUTO_ROLL_UNLOCK_ROLLS.toLocaleString()} rolls required)`;
+    const requirements = [];
+    if (!hasRolls) {
+      requirements.push(`${AUTO_ROLL_UNLOCK_ROLLS.toLocaleString()} rolls required`);
+    }
+    if (!hasHastePotion) {
+      requirements.push("1 Haste Potion required");
+    }
+    button.textContent = `Auto Roll: Locked (${requirements.join(" and ")})`;
     localStorage.setItem("autoRollEnabled", "false");
     return;
   }
