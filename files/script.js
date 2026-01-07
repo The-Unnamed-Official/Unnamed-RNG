@@ -698,23 +698,6 @@ const POTION_DEFINITIONS = [
       titles: [],
     },
   },
-  {
-    id: AUTO_ROLL_UNLOCK_POTION_ID,
-    name: "Auto Roll",
-    image: "files/images/SpeedPotion.png",
-    type: POTION_TYPES.SPEED,
-    effectPercent: 0,
-    durationSeconds: 0,
-    effectLabel: "Unlock Auto Roll permanently",
-    durationDisplay: `Requires ${AUTO_ROLL_UNLOCK_ROLLS.toLocaleString()} rolls`,
-    rollRequirement: AUTO_ROLL_UNLOCK_ROLLS,
-    showInInventory: false,
-    craftCost: {
-      classes: {},
-      titles: [],
-      potions: { luckyPotion: 1, hastePotion1: 1 },
-    },
-  },
 ];
 
 const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
@@ -1796,10 +1779,6 @@ function canCraftPotion(potion, summary = summarizeInventoryForPotions()) {
     return false;
   }
 
-  if (potion.id === AUTO_ROLL_UNLOCK_POTION_ID && isAutoRollPermanentlyUnlocked()) {
-    return false;
-  }
-
   const cost = potion.craftCost || {};
   const costClasses = cost.classes || {};
   const costTitles = Array.isArray(cost.titles) ? cost.titles : [];
@@ -1934,11 +1913,7 @@ function craftPotion(potionId) {
     return;
   }
 
-  if (potion.id === AUTO_ROLL_UNLOCK_POTION_ID) {
-    unlockAutoRollPermanently();
-  } else {
-    adjustPotionCount(potion.id, 1);
-  }
+  adjustPotionCount(potion.id, 1);
   renderPotionInventory();
   renderPotionCrafting();
   updateAutoRollAvailability();
@@ -3118,9 +3093,6 @@ function renderPotionCrafting() {
     craftButton.disabled = !craftable;
     if (potion.craftingDisabled) {
       craftButton.textContent = "Unavailable";
-      craftButton.setAttribute("aria-disabled", "true");
-    } else if (potion.id === AUTO_ROLL_UNLOCK_POTION_ID && isAutoRollPermanentlyUnlocked()) {
-      craftButton.textContent = "Unlocked";
       craftButton.setAttribute("aria-disabled", "true");
     } else {
       craftButton.textContent = craftable ? "Craft" : "Needs Resources";
