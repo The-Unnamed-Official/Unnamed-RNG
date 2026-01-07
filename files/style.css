@@ -4090,6 +4090,18 @@ body {
     object-fit: contain;
 }
 
+.sovBgImg {
+    background: url(backgrounds/sovereign.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.xbearBgImg {
+    background: url(backgrounds/xbear.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 .lightBgImg {
     background: url(backgrounds/light.png);
     background-size: cover;

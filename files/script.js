@@ -4252,6 +4252,7 @@ const STOPPABLE_AUDIO_IDS = [
   "crazeAudio",
   "shenviiAudio",
   "qbearAudio",
+  "xbearAudio",
   "estbunAudio",
   "esteggAudio",
   "isekailofiAudio",
@@ -4304,7 +4305,7 @@ const RARITY_BUCKET_LABELS = {
 };
 
 // Update this set with the active event buckets (e.g., 'eventTitle') when seasonal events are running.
-const ACTIVE_EVENT_BUCKETS = new Set([]);
+const ACTIVE_EVENT_BUCKETS = new Set(['']);
 
 function isEventBucketActive(bucket) {
   return typeof bucket === "string" && ACTIVE_EVENT_BUCKETS.has(bucket);
@@ -4827,6 +4828,7 @@ const rarityCategories = {
     "tuonBgImg",
     "astblaBgImg",
     "qbearBgImg",
+    "xbearBgImg",
     "lightBgImg",
     "blodBgImg",
     "nebulaBgImg",
@@ -5474,6 +5476,8 @@ const ACHIEVEMENTS = [
   { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]", requiredRarityClass: "polarrBgImg" },
   { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 170,017]", requiredRarityClass: "mythicwallBgImg" },
   { name: "Master of your Mind", requiredTitle: "Mastermind [1 in 110,010]", requiredRarityClass: "mastermindBgImg" },
+  { name: "Befriended", requiredTitle: "Qbear : Xbear [1 in 71,110]", requiredRarityClass: "xbearBgImg" },
+  { name: "Comeback", requiredTitle: "Qbear [1 in 35,555]", requiredRarityClass: "qbearBgImg" },
   { name: "The Descendant", requiredTitle: "Descended Title [1 in ƐƐƐ]", requiredRarityClass: "destitBgImg" },
   { name: "The Unknown", requiredTitle: "UnKnOwN [1 in ᔦᔦᔦ]", requiredRarityClass: "unknownBgImg" },
   { name: "T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈", requiredTitle: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]", requiredRarityClass: "alienBgImg" },
@@ -6486,6 +6490,7 @@ function registerRollButtonHandler() {
   if (
     rarity.type === "Cursed Mirage [1 in 11,111]" ||
     rarity.type === "Qbear [1 in 35,555]" ||
+    rarity.type === "Qbear : Xbear [1 in 71,110]" ||
     rarity.type === "Wandering Spirit [1 in 150]" ||
     rarity.type === "Frozen Fate [1 in 200]" ||
     rarity.type === "Mysterious Echo [1 in 300]" ||
@@ -6609,6 +6614,8 @@ function registerRollButtonHandler() {
     } else if (rarity.type === 'Sovereign [1 in GoodOldDays]') {
       sovAudio.play();
     } else if (rarity.type === "Qbear [1 in 35,555]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "Qbear : Xbear [1 in 71,110]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]") {
       hugeSuspenceAudio.play();
@@ -8406,6 +8413,164 @@ function registerRollButtonHandler() {
         rollCount1++;
         titleCont.style.visibility = "visible";
         tuonAudio.play();
+      }
+    } else if (rarity.type === "Qbear : Xbear [1 in 71,110]") {
+      if (skipCutscene100K) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-pink";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+      
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-blue";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "pink-star",
+            "blue-star",
+            "red-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "△";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            rollCount++;
+            rollCount1++;
+            titleCont.style.visibility = "visible";
+            xbearAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        rollCount++;
+        rollCount1++;
+        titleCont.style.visibility = "visible";
+        xbearAudio.play();
       }
     } else if (rarity.type === "Qbear [1 in 35,555]") {
       if (skipCutscene100K) {
@@ -10934,7 +11099,7 @@ function registerRollButtonHandler() {
         enableChange();
       }, 10750); // Wait for 10.75 seconds
     } else if (rarity.type === "MythicWall [1 in 170,017]") {
-      if (skipCutscene100K) {
+      if (skipCutscene1M) {
         document.body.className = "blackBg";
         disableChange();
 
@@ -17555,6 +17720,18 @@ function rollRarity() {
       chance: 0.00015293279,
       titles: ["Catien", "Another Species"]
     },
+    {
+      type: "Qbear [1 in 35,555]",
+      class: "qbearBgImg",
+      chance: 0.00281254394,
+      titles: ["Qbear", "Risky Gato", "Samurai Gato", "Gato: Wew"],
+    },
+    {
+      type: "Qbear : Xbear [1 in 71,110]",
+      class: "xbearBgImg",
+      chance: 0.00140627197,
+      titles: ["Xbear", "Chosen Qbear", "Q", "QQ"],
+    },
     // {
     //   type: "Malvoryn [1 in 666,666]",
     //   class: "malvorynBgImg",
@@ -18724,6 +18901,7 @@ const backgroundDetails = {
   crazeBgImg: { image: "files/backgrounds/firecraze.png", audio: "crazeAudio" },
   shenviiBgImg: { image: "files/backgrounds/shenvii.gif", audio: "shenviiAudio" },
   qbearBgImg: { image: "files/backgrounds/qbear.png", audio: "qbearAudio" },
+  xbearBgImg: { image: "files/backgrounds/xbear.png", audio: "xbearAudio" },
   isekailofiBgImg: { image: "files/backgrounds/isekailofi.png", audio: "isekailofiAudio" },
   equinoxBgImg: { image: "files/backgrounds/equinox.gif", audio: "equinoxAudio" },
   waveBgImg: { image: "files/backgrounds/wave.png", audio: "waveAudio" },
@@ -21330,6 +21508,7 @@ function getClassForRarity(rarity) {
       'Unfair [1 in ###]': 'under100k',
       'GD Addict [1 in ###]': 'under10k',
       'Qbear [1 in 35,555]': 'under100k',
+      'Qbear : Xbear [1 in 71,110]': 'under100k',
       'Light [1 in 29,979]': 'under100k',
       'X1sta [1 in 230,444]': 'under1m',
       'sʜeɴvɪ✞∞ [1 in 77,777/7th]': 'special',
@@ -21648,6 +21827,9 @@ document
 document
   .getElementById("deleteAllQbearButton")
   .addEventListener("click", () => deleteAllByRarity("qbearImgBg"));
+document
+  .getElementById("deleteAllQbearXbearButton")
+  .addEventListener("click", () => deleteAllByRarity("xbearImgBg"));
 
 
 document
@@ -21667,6 +21849,7 @@ document
       "tuonBgImg",
       "astblaBgImg",
       "qbearImgBg",
+      "xbearImgBg",
       "lightImgBg",
       "hypernovaBgImg",
       "nebulaBgImg",
