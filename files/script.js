@@ -1462,6 +1462,7 @@ let autoRollLastExecution = null;
 const AUTO_ROLL_UNLOCK_ROLLS = 1000;
 const AUTO_ROLL_REQUIRED_POTION_IDS = ["hastePotion1"];
 const AUTO_ROLL_REQUIRED_LUCKY_POTION_IDS = ["luckyPotion"];
+const AUTO_ROLL_UNLOCK_POTION_ID = "autoRollUnlock";
 const AUTO_ROLL_PERMANENT_UNLOCK_KEY = "autoRollPermanentUnlocked";
 let audioVolume = 1;
 let rollAudioVolume = 1;
@@ -21166,28 +21167,14 @@ function initializeAutoRollControls() {
   }
 
   autoRollButtonElement.addEventListener("click", () => {
-    if (isAutoRollPermanentlyUnlocked()) {
-      if (autoRollActive) {
-        stopAutoRoll();
-      } else {
-        startAutoRoll();
-      }
+    if (!isAutoRollUnlocked()) {
       return;
     }
 
-    if (canUnlockAutoRoll()) {
-      AUTO_ROLL_REQUIRED_POTION_IDS.forEach((potionId) => {
-        if (getPotionCount(potionId) > 0) {
-          adjustPotionCount(potionId, -1);
-        }
-      });
-      AUTO_ROLL_REQUIRED_LUCKY_POTION_IDS.forEach((potionId) => {
-        if (getPotionCount(potionId) > 0) {
-          adjustPotionCount(potionId, -1);
-        }
-      });
-      unlockAutoRollPermanently();
-      updateAutoRollAvailability();
+    if (autoRollActive) {
+      stopAutoRoll();
+    } else {
+      startAutoRoll();
     }
   });
 
@@ -21302,15 +21289,11 @@ function unlockAutoRollPermanently() {
   storage.set(AUTO_ROLL_PERMANENT_UNLOCK_KEY, true);
 }
 
-function canUnlockAutoRoll() {
-  return !isAutoRollPermanentlyUnlocked()
-    && rollCount >= AUTO_ROLL_UNLOCK_ROLLS
-    && hasAutoRollHastePotion()
-    && hasAutoRollLuckyPotion();
-}
-
 function isAutoRollUnlocked() {
-  return isAutoRollPermanentlyUnlocked();
+  if (isAutoRollPermanentlyUnlocked()) {
+    return true;
+  }
+  return rollCount >= AUTO_ROLL_UNLOCK_ROLLS && hasAutoRollHastePotion() && hasAutoRollLuckyPotion();
 }
 
 function ensureAutoRollButtonReference() {
@@ -21330,7 +21313,8 @@ function updateAutoRollAvailability() {
   const hasHastePotion = hasAutoRollHastePotion();
   const hasLuckyPotion = hasAutoRollLuckyPotion();
   const permanentlyUnlocked = isAutoRollPermanentlyUnlocked();
-  if (!permanentlyUnlocked && !(hasRolls && hasHastePotion && hasLuckyPotion)) {
+  const unlocked = permanentlyUnlocked || (hasRolls && hasHastePotion && hasLuckyPotion);
+  if (!unlocked) {
     if (autoRollInterval) {
       clearTimeout(autoRollInterval);
       autoRollInterval = null;
@@ -21358,15 +21342,6 @@ function updateAutoRollAvailability() {
 
   button.disabled = false;
   button.classList.remove("locked");
-  if (!permanentlyUnlocked) {
-    autoRollActive = false;
-    button.textContent = "Auto Roll: Unlock";
-    button.classList.remove("on");
-    button.classList.add("off");
-    localStorage.setItem("autoRollEnabled", "false");
-    return;
-  }
-
   if (autoRollActive) {
     button.textContent = "Auto Roll: On";
     button.classList.add("on");
