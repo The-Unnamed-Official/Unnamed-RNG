@@ -1144,7 +1144,7 @@ body.equinox-pulse-active :is(
   position: absolute;
   bottom: 10px;
   left: 10px;
-  width: 355px;
+  width: 300px;
   display: inline-block;
   color: #fff;
   padding: 14px 14px 12px;
@@ -1781,8 +1781,8 @@ body {
 .container1 {
   position: absolute;
   bottom: 10px;
-  left: 383px;
-  width: 250px;
+  left: 320px !important;
+  width: 350px;
   min-height: 185px;            /* keep your height target but allow content growth */
   display: inline-block;
   padding: 14px 14px 16px;
@@ -1840,9 +1840,10 @@ body {
   padding: 0;
   color: #ffffff;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .container1 .count {
