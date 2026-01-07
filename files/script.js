@@ -3406,7 +3406,8 @@ function formatLuckValueFromPercent(totalPercent) {
 
 function updateLuckStatDisplay() {
   const valueElement = byId("luckStatValue");
-  if (!valueElement) {
+  const compactValueElement = byId("luckValueDisplay");
+  if (!valueElement && !compactValueElement) {
     return;
   }
 
@@ -3418,7 +3419,13 @@ function updateLuckStatDisplay() {
     : potionTotal;
   const total = permanentEffective + potionEffective;
 
-  valueElement.textContent = formatLuckValueFromPercent(total);
+  const formattedValue = formatLuckValueFromPercent(total);
+  if (valueElement) {
+    valueElement.textContent = formattedValue;
+  }
+  if (compactValueElement) {
+    compactValueElement.textContent = formattedValue;
+  }
 
   const percentElement = byId("luckStatPercent");
   if (percentElement) {
