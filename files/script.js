@@ -3416,7 +3416,7 @@ function updateLuckStatDisplay() {
   const potionEffective = buffsDisabled
     ? getActivePotionLuckBonusPercent(isBuffToggleExempt)
     : potionTotal;
-  const total = permanentEffective + potionEffective;
+  const total = permanentEffective + potionEffective + 100;
 
   valueElement.textContent = formatLuckValueFromPercent(total);
 

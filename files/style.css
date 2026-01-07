@@ -8251,6 +8251,14 @@ body.flashing {
     font-variant-numeric: tabular-nums;
 }
 
+.stat-card__percentHint {
+    position: relative;
+    margin: 0;
+    color: rgba(218, 228, 255, 0.75);
+    font-size: 0.98rem;
+    line-height: 1.4;
+}
+
 .stat-card__hint {
     position: relative;
     margin: 0;
