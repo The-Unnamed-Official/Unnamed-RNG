@@ -1498,7 +1498,7 @@ body {
   grid-template-columns: 1fr;
   grid-template-rows: auto 1fr auto;
   align-items: center;
-  justify-items: center;
+  justify-items: start;
   gap: clamp(16px, 3vh, 26px);
   padding: clamp(4px, 1vh, 8px) 0 0;
 }
@@ -1523,7 +1523,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  justify-self: center;
+  justify-self: start;
   width: min(100%, 666px);
   min-height: clamp(56px, 8vh, 68px);
   padding: clamp(14px, 2.8vh, 18px) clamp(22px, 5vw, 32px);
@@ -1839,6 +1839,10 @@ body {
   margin: 0 0 8px 0;
   padding: 0;
   color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 .container1 .count {
@@ -3456,6 +3460,8 @@ body {
     margin-top: 20px;
     font-size: 24px;
     font-weight: bold;
+    text-align: left;
+    width: 100%;
 }
 
 .tuonBgImg {
