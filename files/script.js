@@ -3395,6 +3395,15 @@ function formatPercentage(value, includeSign = false) {
   return `${formatted}%`;
 }
 
+function formatLuckValueFromPercent(totalPercent) {
+  const value = Number.isFinite(totalPercent) ? Math.max(0, totalPercent / 100) : 0;
+  const useFraction = !Number.isInteger(value);
+  return value.toLocaleString("en-US", {
+    minimumFractionDigits: useFraction ? 1 : 0,
+    maximumFractionDigits: useFraction ? 1 : 0,
+  });
+}
+
 function updateLuckStatDisplay() {
   const valueElement = byId("luckStatValue");
   if (!valueElement) {
@@ -3409,7 +3418,12 @@ function updateLuckStatDisplay() {
     : potionTotal;
   const total = permanentEffective + potionEffective;
 
-  valueElement.textContent = formatPercentage(total, true);
+  valueElement.textContent = formatLuckValueFromPercent(total);
+
+  const percentElement = byId("luckStatPercent");
+  if (percentElement) {
+    percentElement.textContent = formatPercentage(total, true);
+  }
 
   const breakdownElement = byId("luckStatBreakdown");
   if (breakdownElement) {
