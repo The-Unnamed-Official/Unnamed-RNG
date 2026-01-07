@@ -698,6 +698,23 @@ const POTION_DEFINITIONS = [
       titles: [],
     },
   },
+  {
+    id: AUTO_ROLL_UNLOCK_POTION_ID,
+    name: "Auto Roll",
+    image: "files/images/SpeedPotion.png",
+    type: POTION_TYPES.SPEED,
+    effectPercent: 0,
+    durationSeconds: 0,
+    effectLabel: "Unlock Auto Roll permanently",
+    durationDisplay: `Requires ${AUTO_ROLL_UNLOCK_ROLLS.toLocaleString()} rolls`,
+    rollRequirement: AUTO_ROLL_UNLOCK_ROLLS,
+    showInInventory: false,
+    craftCost: {
+      classes: {},
+      titles: [],
+      potions: { luckyPotion: 1, hastePotion1: 1 },
+    },
+  },
 ];
 
 const POTION_TRANSACTION_DEFINITIONS = Object.freeze([
@@ -1779,10 +1796,21 @@ function canCraftPotion(potion, summary = summarizeInventoryForPotions()) {
     return false;
   }
 
+  if (potion.id === AUTO_ROLL_UNLOCK_POTION_ID && isAutoRollPermanentlyUnlocked()) {
+    return false;
+  }
+
   const cost = potion.craftCost || {};
   const costClasses = cost.classes || {};
   const costTitles = Array.isArray(cost.titles) ? cost.titles : [];
   const costPotions = cost.potions || {};
+  const rollRequirement = Number.isFinite(potion.rollRequirement)
+    ? Math.max(0, Math.trunc(potion.rollRequirement))
+    : 0;
+
+  if (rollRequirement > 0 && rollCount < rollRequirement) {
+    return false;
+  }
 
   return hasSufficientClassResources(costClasses, summary)
     && hasSufficientTitleResources(costTitles, summary)
@@ -1906,9 +1934,14 @@ function craftPotion(potionId) {
     return;
   }
 
-  adjustPotionCount(potion.id, 1);
+  if (potion.id === AUTO_ROLL_UNLOCK_POTION_ID) {
+    unlockAutoRollPermanently();
+  } else {
+    adjustPotionCount(potion.id, 1);
+  }
   renderPotionInventory();
   renderPotionCrafting();
+  updateAutoRollAvailability();
 }
 
 function getRequirementLabel(rarityClass) {
@@ -2967,9 +3000,13 @@ function renderPotionCrafting() {
 
     const effect = document.createElement("div");
     effect.className = "potion-card__effect";
-    effect.textContent = potion.type === POTION_TYPES.LUCK
-      ? `${formatPercentage(potion.effectPercent, true)} Luck`
-      : `${formatPercentage(potion.effectPercent, true)} Speed`;
+    if (typeof potion.effectLabel === "string" && potion.effectLabel.trim().length > 0) {
+      effect.textContent = potion.effectLabel;
+    } else {
+      effect.textContent = potion.type === POTION_TYPES.LUCK
+        ? `${formatPercentage(potion.effectPercent, true)} Luck`
+        : `${formatPercentage(potion.effectPercent, true)} Speed`;
+    }
 
     const duration = document.createElement("div");
     duration.className = "potion-card__duration";
@@ -3053,6 +3090,16 @@ function renderPotionCrafting() {
         costList.appendChild(li);
       });
 
+      if (Number.isFinite(potion.rollRequirement) && potion.rollRequirement > 0) {
+        const li = document.createElement("li");
+        li.className = "potion-card__cost-item";
+        if (rollCount < potion.rollRequirement) {
+          li.classList.add("potion-card__cost-item--insufficient");
+        }
+        li.textContent = `${potion.rollRequirement.toLocaleString()} rolls required`;
+        costList.appendChild(li);
+      }
+
       if (!costList.children.length) {
         const li = document.createElement("li");
         li.className = "potion-card__cost-item";
@@ -3071,6 +3118,9 @@ function renderPotionCrafting() {
     craftButton.disabled = !craftable;
     if (potion.craftingDisabled) {
       craftButton.textContent = "Unavailable";
+      craftButton.setAttribute("aria-disabled", "true");
+    } else if (potion.id === AUTO_ROLL_UNLOCK_POTION_ID && isAutoRollPermanentlyUnlocked()) {
+      craftButton.textContent = "Unlocked";
       craftButton.setAttribute("aria-disabled", "true");
     } else {
       craftButton.textContent = craftable ? "Craft" : "Needs Resources";
@@ -3113,6 +3163,9 @@ function renderPotionInventory() {
   list.innerHTML = "";
 
   POTION_DEFINITIONS.forEach((potion) => {
+    if (potion && potion.showInInventory === false) {
+      return;
+    }
     const count = getPotionCount(potion.id);
     const item = document.createElement("li");
     item.className = "potion-inventory__item";
