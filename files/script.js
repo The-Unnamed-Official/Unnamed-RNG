@@ -578,15 +578,15 @@ const POTION_DEFINITIONS = [
     image: "files/images/BoundlessPotion.png",
     buffImage: "files/images/BoundlessBuff.png",
     type: POTION_TYPES.LUCK,
-    effectPercent: 10000000,
+    effectPercent: 1000000,
     durationSeconds: 31536000,
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
     disableWithToggle: true,
     craftCost: {
-      classes: {},
+      classes: { commonBgImg: 1000 },
       titles: [],
-      potions: { luckyPotion: 1 },
+      potions: { luckyPotion: 800, basicPotion: 20, decentPotion: 10 },
     },
   },
   {
