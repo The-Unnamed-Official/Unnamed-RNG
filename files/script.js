@@ -22144,9 +22144,6 @@ document
 document
   .getElementById("deleteAllQbearButton")
   .addEventListener("click", () => deleteAllByRarity("qbearImgBg"));
-document
-  .getElementById("deleteAllQbearXbearButton")
-  .addEventListener("click", () => deleteAllByRarity("xbearImgBg"));
 
 
 document
