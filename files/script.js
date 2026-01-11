@@ -578,15 +578,15 @@ const POTION_DEFINITIONS = [
     image: "files/images/BoundlessPotion.png",
     buffImage: "files/images/BoundlessBuff.png",
     type: POTION_TYPES.LUCK,
-    effectPercent: 1000000,
+    effectPercent: 10000000,
     durationSeconds: 31536000,
     durationDisplay: "Duration: Next Roll",
     consumeOnRoll: true,
     disableWithToggle: true,
     craftCost: {
-      classes: { commonBgImg: 1000 },
+      classes: {},
       titles: [],
-      potions: { luckyPotion: 800, basicPotion: 20, decentPotion: 10 },
+      potions: { luckyPotion: 1 },
     },
   },
   {
@@ -4397,6 +4397,7 @@ const STOPPABLE_AUDIO_IDS = [
   "shenviiAudio",
   "qbearAudio",
   "xbearAudio",
+  "orbitalAudio",
   "estbunAudio",
   "esteggAudio",
   "isekailofiAudio",
@@ -4972,7 +4973,6 @@ const rarityCategories = {
     "tuonBgImg",
     "astblaBgImg",
     "qbearBgImg",
-    "xbearBgImg",
     "lightBgImg",
     "blodBgImg",
     "nebulaBgImg",
@@ -4985,6 +4985,7 @@ const rarityCategories = {
     "x1staBgImg",
     "gregBgImg",
     "mintllieBgImg",
+    "xbearBgImg",
     "geezerBgGif",
     "polarrBgImg",
     "astraldBgImg",
@@ -4993,6 +4994,7 @@ const rarityCategories = {
   ],
   transcendent: [
     "silcarBgImg",
+    "orbitalBgImg",
     "gingerBgImg",
     "h1diBgImg",
     "equinoxBgImg",
@@ -5621,8 +5623,9 @@ const ACHIEVEMENTS = [
   { name: "Polar Lights", requiredTitle: "Polarr [1 in 50,000,000,000]", requiredRarityClass: "polarrBgImg" },
   { name: "Mythical Gamer!!!!", requiredTitle: "MythicWall [1 in 170,017]", requiredRarityClass: "mythicwallBgImg" },
   { name: "Master of your Mind", requiredTitle: "Mastermind [1 in 110,010]", requiredRarityClass: "mastermindBgImg" },
-  { name: "Befriended", requiredTitle: "Qbear : Xbear [1 in 71,110]", requiredRarityClass: "xbearBgImg" },
+  { name: "Befriended", requiredTitle: "Qbear : Xbear [1 in 213,330]", requiredRarityClass: "xbearBgImg" },
   { name: "Comeback", requiredTitle: "Qbear [1 in 35,555]", requiredRarityClass: "qbearBgImg" },
+  { name: "Space Time Traveler", requiredTitle: "O R B I T A L [1 in 1,738,000]", requiredRarityClass: "orbitalBgImg" },
   { name: "The Descendant", requiredTitle: "Descended Title [1 in ƐƐƐ]", requiredRarityClass: "destitBgImg" },
   { name: "The Unknown", requiredTitle: "UnKnOwN [1 in ᔦᔦᔦ]", requiredRarityClass: "unknownBgImg" },
   { name: "T̴̻͐͆h̶̠̄e̶̦͐̽ ̶̱͠Ă̵̪̠͝ĺ̸̠̪͑i̴̱͆̎ê̸̦͙n̴͖̍͋ ̸̖͌͗Í̷̫̓s̶͕͑ ̴̨̻̌H̶̪̝̍͊ë̸͍r̷̯͇̍ẹ̵͋̈", requiredTitle: "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]", requiredRarityClass: "alienBgImg" },
@@ -6644,7 +6647,7 @@ function registerRollButtonHandler() {
   if (
     rarity.type === "Cursed Mirage [1 in 11,111]" ||
     rarity.type === "Qbear [1 in 35,555]" ||
-    rarity.type === "Qbear : Xbear [1 in 71,110]" ||
+    rarity.type === "Qbear : Xbear [1 in 213,330]" ||
     rarity.type === "Wandering Spirit [1 in 150]" ||
     rarity.type === "Frozen Fate [1 in 200]" ||
     rarity.type === "Mysterious Echo [1 in 300]" ||
@@ -6737,6 +6740,7 @@ function registerRollButtonHandler() {
     rarity.type === "Malvoryn [1 in 666,666]" ||
     rarity.type === "RNG Master [1 in GoodOldDays]" ||
     rarity.type === "Sovereign [1 in GoodOldDays]" ||
+    rarity.type === "O R B I T A L [1 in 1,738,000]" ||
     isDescendedTitleType(rarity.type)
   ) {
     const resultContainer = byId("result");
@@ -6769,7 +6773,7 @@ function registerRollButtonHandler() {
       sovAudio.play();
     } else if (rarity.type === "Qbear [1 in 35,555]") {
       hugeSuspenceAudio.play();
-    } else if (rarity.type === "Qbear : Xbear [1 in 71,110]") {
+    } else if (rarity.type === "Qbear : Xbear [1 in 213,330]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Alien [1 in 6̴̩͚͂5̶̯̝̓3̷̝̎,̸̝̞̽͑8̸̨̛͜8̴͕̔̑2̴͉̦̇]") {
       hugeSuspenceAudio.play();
@@ -6822,6 +6826,8 @@ function registerRollButtonHandler() {
     } else if (rarity.type === "Overture [1 in 25,641]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Light [1 in 29,979]") {
+      hugeSuspenceAudio.play();
+    } else if (rarity.type === "O R B I T A L [1 in 1,738,000]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "X1sta [1 in 230,444]") {
       hugeSuspenceAudio.play();
@@ -6958,7 +6964,7 @@ function registerRollButtonHandler() {
     } else if (rarity.type === "MSFU [1 in 333/333rd]") {
       msfuAudio.play();
     } else if (rarity.type == "Silly Car :3 [1 in 1,000,000]") {
-      if (!skipCutsceneTranscendent) {
+      if (skipCutsceneTranscendent) {
         if (typeof silcarAudio?.pause === "function") {
           try {
             silcarAudio.pause();
@@ -8547,8 +8553,8 @@ function registerRollButtonHandler() {
         titleCont.style.visibility = "visible";
         tuonAudio.play();
       }
-    } else if (rarity.type === "Qbear : Xbear [1 in 71,110]") {
-      if (skipCutscene100K) {
+    } else if (rarity.type === "Qbear : Xbear [1 in 213,330]") {
+      if (skipCutscene1M) {
         document.body.className = "blackBg";
         disableChange();
         startAnimationA5();
@@ -9224,6 +9230,162 @@ function registerRollButtonHandler() {
         incrementRollCounts();
         titleCont.style.visibility = "visible";
         x1staAudio.play();
+      }
+    } else if (rarity.type === "O R B I T A L [1 in 1,738,000]") {
+      if (skipCutsceneTranscendent) {
+        document.body.className = "blackBg";
+        disableChange();
+        startAnimationA5();
+      
+        const container1 = document.getElementById("squareContainer");
+        const container = document.getElementById("starContainer");
+      
+        function createSquare() {
+          const square = document.createElement("div");
+          square.className = "animated-square-purple";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+      
+        function createSquare2() {
+          const square = document.createElement("div");
+          square.className = "animated-square-red";
+  
+          square.style.left = Math.random() * 100 + "vw";
+          square.style.top = Math.random() * 100 + "vh";
+  
+          container1.appendChild(square);
+  
+          square.addEventListener("animationend", () => {
+            square.remove();
+          });
+        }
+  
+        const squareInterval = setInterval(() => {
+          createSquare();
+          createSquare2();
+        }, 50);
+  
+        setTimeout(() => {
+          clearInterval(squareInterval);
+        }, 9350); // Stop after 9.35 seconds
+      
+        for (let i = 0; i < 133; i++) {
+          const star = document.createElement("span");
+      
+          const starClasses = [
+            "purple-star",
+            "red-star",
+            "black-star"
+          ];
+          star.className = starClasses[Math.floor(Math.random() * starClasses.length)];
+      
+          star.innerHTML = "◯";
+          star.style.left = Math.random() * 100 + "vw";
+      
+          const randomX = (Math.random() - 0.25) * 20 + "vw";
+          star.style.setProperty("--randomX", randomX);
+      
+          const randomRotation = (Math.random() - 0.5) * 720 + "deg";
+          star.style.setProperty("--randomRotation", randomRotation);
+      
+          star.style.animationDelay = i * 0.08 + "s";
+      
+          container.appendChild(star);
+      
+          star.addEventListener("animationend", () => {
+            star.remove();
+          });
+        }
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 7500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 7750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 8500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 8750);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 9500);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10000);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10100);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10175);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10250);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10325);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10400);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10475);
+      
+        setTimeout(function () {
+          document.body.className = "whiteFlash";
+        }, 10550);
+      
+        setTimeout(function () {
+          document.body.className = "blackBg";
+        }, 10625);
+      
+        setTimeout(() => {
+          document.body.className = "whiteFlash";
+          setTimeout(() => {
+            document.body.className = rarity.class;
+            addToInventory(title, rarity.class);
+            displayResult(title, rarity.type);
+            updateRollingHistory(title, rarity.type);
+            changeBackground(rarity.class);
+            setRollButtonEnabled(true);
+            incrementRollCounts();
+            titleCont.style.visibility = "visible";
+            orbitalAudio.play();
+          }, 100);
+          enableChange();
+        }, 10750); // Wait for 10.75 seconds
+      } else {
+        hugeSuspenceAudio.pause();
+        addToInventory(title, rarity.class);
+        displayResult(title, rarity.type);
+        updateRollingHistory(title, rarity.type);
+        changeBackground(rarity.class);
+        setRollButtonEnabled(true);
+        incrementRollCounts();
+        titleCont.style.visibility = "visible";
+        orbitalAudio.play();
       }
     } else if (rarity.type === "Iridocyclitis Veil [1 in 5,000/50th]") {
       document.body.className = "blackBg";
@@ -12934,7 +13096,7 @@ function registerRollButtonHandler() {
         titleCont.style.visibility = "visible";
       }
     } else if (rarity.type === "H1di [1 in 9,890,089]") {
-      if (!skipCutsceneTranscendent) {
+      if (skipCutsceneTranscendent) {
         addToInventory(title, rarity.class);
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
@@ -13980,7 +14142,7 @@ function registerRollButtonHandler() {
         isekaiAudio.play();
       }
     } else if (rarity.type === "『Equinox』 [1 in 25,000,000]") {
-      if (!skipCutsceneTranscendent) {
+      if (skipCutsceneTranscendent) {
         addToInventory(title, rarity.class);
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
@@ -17809,10 +17971,16 @@ function rollRarity() {
       titles: ["Qbear", "Risky Gato", "Samurai Gato", "Gato: Wew"],
     },
     {
-      type: "Qbear : Xbear [1 in 71,110]",
+      type: "Qbear : Xbear [1 in 213,330]",
       class: "xbearBgImg",
       chance: 0.00140627197,
       titles: ["Xbear", "Chosen Qbear", "Q", "QQ"],
+    },
+    {
+      type: "O R B I T A L [1 in 1,738,000]",
+      class: "orbitalBgImg",
+      chance: 0.00005753739,
+      titles: ["Crispy", "Orbs", "Pads"],
     },
     // {
     //   type: "Malvoryn [1 in 666,666]",
@@ -18984,6 +19152,7 @@ const backgroundDetails = {
   shenviiBgImg: { image: "files/backgrounds/shenvii.gif", audio: "shenviiAudio" },
   qbearBgImg: { image: "files/backgrounds/qbear.png", audio: "qbearAudio" },
   xbearBgImg: { image: "files/backgrounds/xbear.png", audio: "xbearAudio" },
+  orbitalBgImg: { image: "files/backgrounds/orbital.png", audio: "orbitalAudio" },
   isekailofiBgImg: { image: "files/backgrounds/isekailofi.png", audio: "isekailofiAudio" },
   equinoxBgImg: { image: "files/backgrounds/equinox.gif", audio: "equinoxAudio" },
   waveBgImg: { image: "files/backgrounds/wave.png", audio: "waveAudio" },
@@ -21650,7 +21819,7 @@ function getClassForRarity(rarity) {
       'Unfair [1 in ###]': 'under100k',
       'GD Addict [1 in ###]': 'under10k',
       'Qbear [1 in 35,555]': 'under100k',
-      'Qbear : Xbear [1 in 71,110]': 'under100k',
+      'Qbear : Xbear [1 in 213,330]': 'under100k',
       'Light [1 in 29,979]': 'under100k',
       'X1sta [1 in 230,444]': 'under1m',
       'sʜeɴvɪ✞∞ [1 in 77,777/7th]': 'special',
@@ -21845,6 +22014,12 @@ document
 document
   .getElementById("deleteAllTidalWaveButton")
   .addEventListener("click", () => deleteAllByRarity("tidalwaveBgImg"));
+document
+  .getElementById("deleteAllOrbitalButton")
+  .addEventListener("click", () => deleteAllByRarity("orbitalBgImg"));
+document
+  .getElementById("deleteAllXbearButton")
+  .addEventListener("click", () => deleteAllByRarity("xbearlBgImg"));
 
 
 document
@@ -22188,6 +22363,7 @@ document
     const raritiesUnder10k = [
       "impeachedBgImg",
       "celestialchorusBgImg",
+      "xbearBgImg",
       "x1staBgImg",
       "astraldBgImg",
       "mastermindBgImg",
