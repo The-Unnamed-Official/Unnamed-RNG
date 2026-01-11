@@ -4091,6 +4091,12 @@ body {
     object-fit: contain;
 }
 
+.orbitalBgImg {
+    background: url(backgrounds/orbital.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
 .shenviiBgImg {
     background: url(backgrounds/shenvii.gif);
     background-size: cover;
