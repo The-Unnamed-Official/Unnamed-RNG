@@ -8540,224 +8540,223 @@ body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
   }
 }
 
-/* Placeholder classes for new title backgrounds */
-.under1kpebbleBgImg {
+.pebbleBgImg {
     background: url(backgrounds/pebble.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1kcinderBgImg {
+.cinderBgImg {
     background: url(backgrounds/cinder.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1kbreezeBgImg {
+.breezeBgImg {
     background: url(backgrounds/breeze.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1kdewdropBgImg {
+.FaultedBgImg {
     background: url(backgrounds/dewdrop.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1klanternBgImg {
+.lanternBgImg {
     background: url(backgrounds/lantern.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1kmeadowBgImg {
+.meadowBgImg {
     background: url(backgrounds/meadow.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1kkindlingBgImg {
+.kindlingBgImg {
     background: url(backgrounds/kindling.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10kfootstepBgImg {
+.footstepBgImg {
     background: url(backgrounds/footstep.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10kmurmurBgImg {
+.murmurBgImg {
     background: url(backgrounds/murmur.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10kraindropBgImg {
+.raindropBgImg {
     background: url(backgrounds/raindrop.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10kwillowBgImg {
+.willowBgImg {
     background: url(backgrounds/willow.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10kemberBgImg {
+.emberBgImg {
     background: url(backgrounds/ember.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10ktangleBgImg {
+.tangleBgImg {
     background: url(backgrounds/tangle.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10kdrizzleBgImg {
+.drizzleBgImg {
     background: url(backgrounds/drizzle.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100khearthBgImg {
+.hearthBgImg {
     background: url(backgrounds/hearth.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100klanewayBgImg {
+.lanewayBgImg {
     background: url(backgrounds/laneway.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kpollenBgImg {
+.pollenBgImg {
     background: url(backgrounds/pollen.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100ksundialBgImg {
+.sundialBgImg {
     background: url(backgrounds/sundial.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kbrookBgImg {
+.brookBgImg {
     background: url(backgrounds/brook.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kbrackenBgImg {
+.brackenBgImg {
     background: url(backgrounds/bracken.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100khollowBgImg {
+.hollowBgImg {
     background: url(backgrounds/hollow.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kthicketBgImg {
+.thicketBgImg {
     background: url(backgrounds/thicket.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kfableBgImg {
+.fableBgImg {
     background: url(backgrounds/fable.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kcavernBgImg {
+.cavernBgImg {
     background: url(backgrounds/cavern.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100ktimberBgImg {
+.timberBgImg {
     background: url(backgrounds/timber.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kharborBgImg {
+.harborBgImg {
     background: url(backgrounds/harbor.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kgroveBgImg {
+.groveBgImg {
     background: url(backgrounds/grove.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kechoesBgImg {
+.echoesBgImg {
     background: url(backgrounds/echoes.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100klanternlightBgImg {
+.lanternlightBgImg {
     background: url(backgrounds/lanternlight.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kashfallBgImg {
+.ashfallBgImg {
     background: url(backgrounds/ashfall.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kwanderBgImg {
+.wanderBgImg {
     background: url(backgrounds/wander.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kcompassBgImg {
+.compassBgImg {
     background: url(backgrounds/compass.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kdriftwoodBgImg {
+.driftwoodBgImg {
     background: url(backgrounds/driftwood.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kfireflyBgImg {
+.fireflyBgImg {
     background: url(backgrounds/firefly.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kgraniteBgImg {
+.graniteBgImg {
     background: url(backgrounds/granite.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kmistfallBgImg {
+.mistfallBgImg {
     background: url(backgrounds/mistfall.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under100kwayfarerBgImg {
+.wayfarerBgImg {
     background: url(backgrounds/wayfarer.png);
     background-size: cover;
     object-fit: contain;
@@ -8769,313 +8768,313 @@ body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
     object-fit: contain;
 }
 
-.under1mrustleBgImg {
+.rustleBgImg {
     background: url(backgrounds/rustle.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mfootprintBgImg {
+.footprintBgImg {
     background: url(backgrounds/footprint.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mwildwoodBgImg {
+.wildwoodBgImg {
     background: url(backgrounds/wildwood.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1movergrowthBgImg {
+.overgrowthBgImg {
     background: url(backgrounds/overgrowth.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mstonewallBgImg {
+.stonewallBgImg {
     background: url(backgrounds/stonewall.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mmoonriseBgImg {
+.moonriseBgImg {
     background: url(backgrounds/moonrise.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mseaboundBgImg {
+.seaboundBgImg {
     background: url(backgrounds/seabound.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mridgewayBgImg {
+.ridgewayBgImg {
     background: url(backgrounds/ridgeway.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mduststormBgImg {
+.duststormBgImg {
     background: url(backgrounds/duststorm.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mnorthwindBgImg {
+.northwindBgImg {
     background: url(backgrounds/northwind.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1msunstoneBgImg {
+.sunstoneBgImg {
     background: url(backgrounds/sunstone.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mwellspringBgImg {
+.wellspringBgImg {
     background: url(backgrounds/wellspring.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mdeepwaterBgImg {
+.deepwaterBgImg {
     background: url(backgrounds/deepwater.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mskylineBgImg {
+.skylineBgImg {
     background: url(backgrounds/skyline.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mironwoodBgImg {
+.ironwoodBgImg {
     background: url(backgrounds/ironwood.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mwildfireBgImg {
+.wildfireBgImg {
     background: url(backgrounds/wildfire.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mhighlandBgImg {
+.highlandBgImg {
     background: url(backgrounds/highland.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mnightfallBgImg {
-    background: url(backgrounds/nightfall.png);
+.nightfallerBgImg {
+    background: url(backgrounds/nightfaller.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mthunderBgImg {
+.thunderBgImg {
     background: url(backgrounds/thunder.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mshorelineBgImg {
+.shorelineBgImg {
     background: url(backgrounds/shoreline.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mmarinerBgImg {
+.marinerBgImg {
     background: url(backgrounds/mariner.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under1mevergreenBgImg {
+.evergreenBgImg {
     background: url(backgrounds/evergreen.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mheadstoneBgImg {
+.headstoneBgImg {
     background: url(backgrounds/headstone.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mredwoodBgImg {
+.redwoodBgImg {
     background: url(backgrounds/redwood.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mmonsoonBgImg {
+.monsoonBgImg {
     background: url(backgrounds/monsoon.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10msandstormBgImg {
+.sandstormBgImg {
     background: url(backgrounds/sandstorm.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mhinterlandBgImg {
+.hinterlandBgImg {
     background: url(backgrounds/hinterland.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mblizzardBgImg {
+.blizzardBgImg {
     background: url(backgrounds/blizzard.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mstonegateBgImg {
+.stonegateBgImg {
     background: url(backgrounds/stonegate.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mwildlandsBgImg {
+.wildlandsBgImg {
     background: url(backgrounds/wildlands.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mtidefallBgImg {
+.tidefallBgImg {
     background: url(backgrounds/tidefall.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mgoldleafBgImg {
+.goldleafBgImg {
     background: url(backgrounds/goldleaf.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mravenwoodBgImg {
+.ravenwoodBgImg {
     background: url(backgrounds/ravenwood.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mstormfrontBgImg {
+.stormfrontBgImg {
     background: url(backgrounds/stormfront.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mironcladBgImg {
+.ironcladBgImg {
     background: url(backgrounds/ironclad.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mfrostbiteBgImg {
+.frostbiteBgImg {
     background: url(backgrounds/frostbite.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mshadowfallBgImg {
+.shadowfallBgImg {
     background: url(backgrounds/shadowfall.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10msunbreakBgImg {
+.sunbreakBgImg {
     background: url(backgrounds/sunbreak.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mwindwardBgImg {
+.windwardBgImg {
     background: url(backgrounds/windward.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mearthboundBgImg {
+.earthboundBgImg {
     background: url(backgrounds/earthbound.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mhighwaterBgImg {
+.highwaterBgImg {
     background: url(backgrounds/highwater.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mgraveyardBgImg {
+.graveyardBgImg {
     background: url(backgrounds/graveyard.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mblackridgeBgImg {
+.blackridgeBgImg {
     background: url(backgrounds/blackridge.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mlongwinterBgImg {
+.longwinterBgImg {
     background: url(backgrounds/longwinter.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mnorthstarBgImg {
+.northstarBgImg {
     background: url(backgrounds/northstar.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mfirestormBgImg {
+.firestormBgImg {
     background: url(backgrounds/firestorm.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mdreadwoodBgImg {
+.dreadwoodBgImg {
     background: url(backgrounds/dreadwood.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mstoneheartBgImg {
+.stoneheartBgImg {
     background: url(backgrounds/stoneheart.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mlastlightBgImg {
+.lastlightBgImg {
     background: url(backgrounds/lastlight.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mdeadwindBgImg {
+.deadwindBgImg {
     background: url(backgrounds/deadwind.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mfinalhourBgImg {
+.finalhourBgImg {
     background: url(backgrounds/finalhour.png);
     background-size: cover;
     object-fit: contain;
 }
 
-.under10mworldendBgImg {
+.worldendBgImg {
     background: url(backgrounds/worldend.png);
     background-size: cover;
     object-fit: contain;
