@@ -6669,6 +6669,169 @@ function updateAchievementsList() {
   });
 }
 
+const NEW_TITLE_CUTSCENE_CLASS_SET = new Set([
+  "footstepBgImg",
+  "murmurBgImg",
+  "raindropBgImg",
+  "willowBgImg",
+  "emberBgImg",
+  "tangleBgImg",
+  "drizzleBgImg",
+  "hearthBgImg",
+  "lanewayBgImg",
+  "pollenBgImg",
+  "sundialBgImg",
+  "brookBgImg",
+  "brackenBgImg",
+  "hollowBgImg",
+  "thicketBgImg",
+  "fableBgImg",
+  "cavernBgImg",
+  "timberBgImg",
+  "harborBgImg",
+  "groveBgImg",
+  "echoesBgImg",
+  "lanternlightBgImg",
+  "ashfallBgImg",
+  "wanderBgImg",
+  "compassBgImg",
+  "driftwoodBgImg",
+  "fireflyBgImg",
+  "graniteBgImg",
+  "mistfallBgImg",
+  "wayfarerBgImg",
+  "crosswindBgImg",
+  "rustleBgImg",
+  "footprintBgImg",
+  "wildwoodBgImg",
+  "overgrowthBgImg",
+  "stonewallBgImg",
+  "moonriseBgImg",
+  "seaboundBgImg",
+  "ridgewayBgImg",
+  "duststormBgImg",
+  "northwindBgImg",
+  "sunstoneBgImg",
+  "wellspringBgImg",
+  "deepwaterBgImg",
+  "skylineBgImg",
+  "ironwoodBgImg",
+  "wildfireBgImg",
+  "highlandBgImg",
+  "nightfallBgImg",
+  "thunderBgImg",
+  "shorelineBgImg",
+  "marinerBgImg",
+  "evergreenBgImg",
+  "headstoneBgImg",
+  "redwoodBgImg",
+  "monsoonBgImg",
+  "sandstormBgImg",
+  "hinterlandBgImg",
+  "blizzardBgImg",
+  "stonegateBgImg",
+  "wildlandsBgImg",
+  "tidefallBgImg",
+  "goldleafBgImg",
+  "ravenwoodBgImg",
+  "stormfrontBgImg",
+  "ironcladBgImg",
+  "frostbiteBgImg",
+  "shadowfallBgImg",
+  "sunbreakBgImg",
+  "windwardBgImg",
+  "earthboundBgImg",
+  "highwaterBgImg",
+  "graveyardBgImg",
+  "blackridgeBgImg",
+  "longwinterBgImg",
+  "northstarBgImg",
+  "firestormBgImg",
+  "dreadwoodBgImg",
+  "stoneheartBgImg",
+  "lastlightBgImg",
+  "deadwindBgImg",
+  "finalhourBgImg",
+  "worldendBgImg",
+]);
+
+function getNewTitleCutsceneConfig(rarityClass) {
+  if (!NEW_TITLE_CUTSCENE_CLASS_SET.has(rarityClass)) {
+    return null;
+  }
+
+  const bucket = normalizeRarityBucket(rarityClass);
+
+  if (bucket === "under10k") {
+    return { shouldPlay: skipCutscene10K, suspenseAudioId: "suspenseAudio", durationMs: 4200 };
+  }
+
+  if (bucket === "under100k") {
+    return { shouldPlay: skipCutscene100K, suspenseAudioId: "bigSuspenceAudio", durationMs: 5600 };
+  }
+
+  if (bucket === "under1m") {
+    return { shouldPlay: skipCutscene1M, suspenseAudioId: "hugeSuspenceAudio", durationMs: 6800 };
+  }
+
+  if (bucket === "transcendent") {
+    return { shouldPlay: skipCutsceneTranscendent, suspenseAudioId: "hugeSuspenceAudio", durationMs: 7600 };
+  }
+
+  return null;
+}
+
+function finalizeRolledTitle(rarity, title, titleCont) {
+  addToInventory(title, rarity.class);
+  updateRollingHistory(title, rarity.type);
+  displayResult(title, rarity.type);
+  changeBackground(rarity.class);
+  setRollButtonEnabled(true);
+  incrementRollCounts();
+
+  if (titleCont) {
+    titleCont.style.visibility = "visible";
+  }
+}
+
+function stopAndResetAudioById(audioId) {
+  if (!audioId) {
+    return;
+  }
+
+  const audio = getAudioElement(audioId);
+  if (!audio) {
+    return;
+  }
+
+  audio.pause();
+  audio.currentTime = 0;
+}
+
+function runNewTitleTierCutscene({ rarity, title, titleCont, config }) {
+  if (!config || !config.shouldPlay) {
+    finalizeRolledTitle(rarity, title, titleCont);
+    return;
+  }
+
+  disableChange();
+
+  setTimeout(() => {
+    document.body.className = "blackBg";
+  }, 80);
+
+  setTimeout(() => {
+    document.body.className = "whiteFlash";
+  }, Math.max(100, config.durationMs - 220));
+
+  setTimeout(() => {
+    stopAndResetAudioById(config.suspenseAudioId);
+    document.body.className = rarity.class;
+    finalizeRolledTitle(rarity, title, titleCont);
+    enableChange();
+  }, config.durationMs);
+}
+
 function registerRollButtonHandler() {
   const rollButtonElement = document.getElementById("rollButton");
   if (!rollButtonElement) {
@@ -6836,6 +6999,7 @@ function registerRollButtonHandler() {
     rarity.type === "RNG Master [1 in GoodOldDays]" ||
     rarity.type === "Sovereign [1 in GoodOldDays]" ||
     rarity.type === "O R B I T A L [1 in 1,738,000]" ||
+    NEW_TITLE_CUTSCENE_CLASS_SET.has(rarity.class) ||
     isDescendedTitleType(rarity.type)
   ) {
     const resultContainer = byId("result");
@@ -6848,7 +7012,14 @@ function registerRollButtonHandler() {
     }
     hideRollDisplayForCutscene(titleCont);
 
-    if (rarity.type === "Fright [1 in 1,075]") {
+    const newTitleCutsceneConfig = getNewTitleCutsceneConfig(rarity.class);
+
+    if (newTitleCutsceneConfig) {
+      const suspenseAudio = getAudioElement(newTitleCutsceneConfig.suspenseAudioId);
+      if (suspenseAudio) {
+        suspenseAudio.play();
+      }
+    } else if (rarity.type === "Fright [1 in 1,075]") {
       frightAudio.play();
     } else if (isDescendedTitleType(rarity.type)) {
       if (rarity.type === UNKNOWN_TITLE_TYPE) {
@@ -14559,6 +14730,13 @@ function registerRollButtonHandler() {
         titleCont.style.visibility = "visible";
         contAudio.play();
       }
+    } else if (newTitleCutsceneConfig) {
+      runNewTitleTierCutscene({
+        rarity,
+        title,
+        titleCont,
+        config: newTitleCutsceneConfig,
+      });
     } else if (rarity.type === "Fright [1 in 1,075]") {
       if (skipCutscene10K) {
         document.body.className = "blackBg";
@@ -23111,6 +23289,107 @@ document
       'shenviiBgImg'
     ];
     raritiesUnder10k.forEach(rarity => deleteAllByRarity(rarity));
+});
+
+[
+  ["deleteAllPebbleButton", "pebbleBgImg"],
+  ["deleteAllCinderButton", "cinderBgImg"],
+  ["deleteAllBreezeButton", "breezeBgImg"],
+  ["deleteAllDewdropButton", "dewdropBgImg"],
+  ["deleteAllLanternButton", "lanternBgImg"],
+  ["deleteAllMeadowButton", "meadowBgImg"],
+  ["deleteAllKindlingButton", "kindlingBgImg"],
+  ["deleteAllFootstepButton", "footstepBgImg"],
+  ["deleteAllMurmurButton", "murmurBgImg"],
+  ["deleteAllRaindropButton", "raindropBgImg"],
+  ["deleteAllWillowButton", "willowBgImg"],
+  ["deleteAllEmberButton", "emberBgImg"],
+  ["deleteAllTangleButton", "tangleBgImg"],
+  ["deleteAllDrizzleButton", "drizzleBgImg"],
+  ["deleteAllHearthButton", "hearthBgImg"],
+  ["deleteAllLanewayButton", "lanewayBgImg"],
+  ["deleteAllPollenButton", "pollenBgImg"],
+  ["deleteAllSundialButton", "sundialBgImg"],
+  ["deleteAllBrookButton", "brookBgImg"],
+  ["deleteAllBrackenButton", "brackenBgImg"],
+  ["deleteAllHollowButton", "hollowBgImg"],
+  ["deleteAllThicketButton", "thicketBgImg"],
+  ["deleteAllFableButton", "fableBgImg"],
+  ["deleteAllCavernButton", "cavernBgImg"],
+  ["deleteAllTimberButton", "timberBgImg"],
+  ["deleteAllHarborButton", "harborBgImg"],
+  ["deleteAllGroveButton", "groveBgImg"],
+  ["deleteAllEchoesButton", "echoesBgImg"],
+  ["deleteAllLanternlightButton", "lanternlightBgImg"],
+  ["deleteAllAshfallButton", "ashfallBgImg"],
+  ["deleteAllWanderButton", "wanderBgImg"],
+  ["deleteAllCompassButton", "compassBgImg"],
+  ["deleteAllDriftwoodButton", "driftwoodBgImg"],
+  ["deleteAllFireflyButton", "fireflyBgImg"],
+  ["deleteAllGraniteButton", "graniteBgImg"],
+  ["deleteAllMistfallButton", "mistfallBgImg"],
+  ["deleteAllWayfarerButton", "wayfarerBgImg"],
+  ["deleteAllGregButton", "gregBgImg"],
+  ["deleteAllMintllieButton", "mintllieBgImg"],
+  ["deleteAllGeezerButton", "geezerBgGif"],
+  ["deleteAllPolarrButton", "polarrBgImg"],
+  ["deleteAllCrosswindButton", "crosswindBgImg"],
+  ["deleteAllRustleButton", "rustleBgImg"],
+  ["deleteAllFootprintButton", "footprintBgImg"],
+  ["deleteAllWildwoodButton", "wildwoodBgImg"],
+  ["deleteAllOvergrowthButton", "overgrowthBgImg"],
+  ["deleteAllStonewallButton", "stonewallBgImg"],
+  ["deleteAllMoonriseButton", "moonriseBgImg"],
+  ["deleteAllSeaboundButton", "seaboundBgImg"],
+  ["deleteAllRidgewayButton", "ridgewayBgImg"],
+  ["deleteAllDuststormButton", "duststormBgImg"],
+  ["deleteAllNorthwindButton", "northwindBgImg"],
+  ["deleteAllSunstoneButton", "sunstoneBgImg"],
+  ["deleteAllWellspringButton", "wellspringBgImg"],
+  ["deleteAllDeepwaterButton", "deepwaterBgImg"],
+  ["deleteAllSkylineButton", "skylineBgImg"],
+  ["deleteAllIronwoodButton", "ironwoodBgImg"],
+  ["deleteAllWildfireButton", "wildfireBgImg"],
+  ["deleteAllHighlandButton", "highlandBgImg"],
+  ["deleteAllNightfallSupremeButton", "nightfallBgImg"],
+  ["deleteAllThunderButton", "thunderBgImg"],
+  ["deleteAllShorelineButton", "shorelineBgImg"],
+  ["deleteAllMarinerButton", "marinerBgImg"],
+  ["deleteAllEvergreenButton", "evergreenBgImg"],
+  ["deleteAllHeadstoneButton", "headstoneBgImg"],
+  ["deleteAllRedwoodButton", "redwoodBgImg"],
+  ["deleteAllMonsoonButton", "monsoonBgImg"],
+  ["deleteAllSandstormButton", "sandstormBgImg"],
+  ["deleteAllHinterlandButton", "hinterlandBgImg"],
+  ["deleteAllBlizzardButton", "blizzardBgImg"],
+  ["deleteAllStonegateButton", "stonegateBgImg"],
+  ["deleteAllWildlandsButton", "wildlandsBgImg"],
+  ["deleteAllTidefallButton", "tidefallBgImg"],
+  ["deleteAllGoldleafButton", "goldleafBgImg"],
+  ["deleteAllRavenwoodButton", "ravenwoodBgImg"],
+  ["deleteAllStormfrontButton", "stormfrontBgImg"],
+  ["deleteAllIroncladButton", "ironcladBgImg"],
+  ["deleteAllFrostbiteButton", "frostbiteBgImg"],
+  ["deleteAllShadowfallButton", "shadowfallBgImg"],
+  ["deleteAllSunbreakButton", "sunbreakBgImg"],
+  ["deleteAllWindwardButton", "windwardBgImg"],
+  ["deleteAllEarthboundButton", "earthboundBgImg"],
+  ["deleteAllHighwaterButton", "highwaterBgImg"],
+  ["deleteAllGraveyardButton", "graveyardBgImg"],
+  ["deleteAllBlackridgeButton", "blackridgeBgImg"],
+  ["deleteAllLongwinterButton", "longwinterBgImg"],
+  ["deleteAllNorthstarButton", "northstarBgImg"],
+  ["deleteAllFirestormButton", "firestormBgImg"],
+  ["deleteAllDreadwoodButton", "dreadwoodBgImg"],
+  ["deleteAllStoneheartButton", "stoneheartBgImg"],
+  ["deleteAllLastlightButton", "lastlightBgImg"],
+  ["deleteAllDeadwindButton", "deadwindBgImg"],
+  ["deleteAllFinalhourButton", "finalhourBgImg"],
+  ["deleteAllWorldendButton", "worldendBgImg"],
+].forEach(([buttonId, rarityClass]) => {
+  document
+    .getElementById(buttonId)
+    ?.addEventListener("click", () => deleteAllByRarity(rarityClass));
 });
 
 function createParticle(minRadius, maxRadius, minSize, maxSize, speed, rotationRange) {
