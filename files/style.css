@@ -8539,3 +8539,544 @@ body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
     padding: 10px 12px;
   }
 }
+
+/* Placeholder classes for new title backgrounds */
+.under1kpebbleBgImg {
+    background: url(backgrounds/pebble.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1kcinderBgImg {
+    background: url(backgrounds/cinder.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1kbreezeBgImg {
+    background: url(backgrounds/breeze.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1kdewdropBgImg {
+    background: url(backgrounds/dewdrop.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1klanternBgImg {
+    background: url(backgrounds/lantern.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1kmeadowBgImg {
+    background: url(backgrounds/meadow.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1kkindlingBgImg {
+    background: url(backgrounds/kindling.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10kfootstepBgImg {
+    background: url(backgrounds/footstep.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10kmurmurBgImg {
+    background: url(backgrounds/murmur.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10kraindropBgImg {
+    background: url(backgrounds/raindrop.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10kwillowBgImg {
+    background: url(backgrounds/willow.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10kemberBgImg {
+    background: url(backgrounds/ember.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10ktangleBgImg {
+    background: url(backgrounds/tangle.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10kdrizzleBgImg {
+    background: url(backgrounds/drizzle.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100khearthBgImg {
+    background: url(backgrounds/hearth.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100klanewayBgImg {
+    background: url(backgrounds/laneway.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kpollenBgImg {
+    background: url(backgrounds/pollen.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100ksundialBgImg {
+    background: url(backgrounds/sundial.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kbrookBgImg {
+    background: url(backgrounds/brook.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kbrackenBgImg {
+    background: url(backgrounds/bracken.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100khollowBgImg {
+    background: url(backgrounds/hollow.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kthicketBgImg {
+    background: url(backgrounds/thicket.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kfableBgImg {
+    background: url(backgrounds/fable.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kcavernBgImg {
+    background: url(backgrounds/cavern.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100ktimberBgImg {
+    background: url(backgrounds/timber.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kharborBgImg {
+    background: url(backgrounds/harbor.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kgroveBgImg {
+    background: url(backgrounds/grove.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kechoesBgImg {
+    background: url(backgrounds/echoes.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100klanternlightBgImg {
+    background: url(backgrounds/lanternlight.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kashfallBgImg {
+    background: url(backgrounds/ashfall.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kwanderBgImg {
+    background: url(backgrounds/wander.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kcompassBgImg {
+    background: url(backgrounds/compass.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kdriftwoodBgImg {
+    background: url(backgrounds/driftwood.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kfireflyBgImg {
+    background: url(backgrounds/firefly.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kgraniteBgImg {
+    background: url(backgrounds/granite.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kmistfallBgImg {
+    background: url(backgrounds/mistfall.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under100kwayfarerBgImg {
+    background: url(backgrounds/wayfarer.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mcrosswindBgImg {
+    background: url(backgrounds/crosswind.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mrustleBgImg {
+    background: url(backgrounds/rustle.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mfootprintBgImg {
+    background: url(backgrounds/footprint.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mwildwoodBgImg {
+    background: url(backgrounds/wildwood.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1movergrowthBgImg {
+    background: url(backgrounds/overgrowth.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mstonewallBgImg {
+    background: url(backgrounds/stonewall.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mmoonriseBgImg {
+    background: url(backgrounds/moonrise.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mseaboundBgImg {
+    background: url(backgrounds/seabound.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mridgewayBgImg {
+    background: url(backgrounds/ridgeway.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mduststormBgImg {
+    background: url(backgrounds/duststorm.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mnorthwindBgImg {
+    background: url(backgrounds/northwind.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1msunstoneBgImg {
+    background: url(backgrounds/sunstone.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mwellspringBgImg {
+    background: url(backgrounds/wellspring.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mdeepwaterBgImg {
+    background: url(backgrounds/deepwater.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mskylineBgImg {
+    background: url(backgrounds/skyline.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mironwoodBgImg {
+    background: url(backgrounds/ironwood.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mwildfireBgImg {
+    background: url(backgrounds/wildfire.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mhighlandBgImg {
+    background: url(backgrounds/highland.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mnightfallBgImg {
+    background: url(backgrounds/nightfall.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mthunderBgImg {
+    background: url(backgrounds/thunder.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mshorelineBgImg {
+    background: url(backgrounds/shoreline.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mmarinerBgImg {
+    background: url(backgrounds/mariner.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under1mevergreenBgImg {
+    background: url(backgrounds/evergreen.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mheadstoneBgImg {
+    background: url(backgrounds/headstone.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mredwoodBgImg {
+    background: url(backgrounds/redwood.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mmonsoonBgImg {
+    background: url(backgrounds/monsoon.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10msandstormBgImg {
+    background: url(backgrounds/sandstorm.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mhinterlandBgImg {
+    background: url(backgrounds/hinterland.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mblizzardBgImg {
+    background: url(backgrounds/blizzard.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mstonegateBgImg {
+    background: url(backgrounds/stonegate.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mwildlandsBgImg {
+    background: url(backgrounds/wildlands.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mtidefallBgImg {
+    background: url(backgrounds/tidefall.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mgoldleafBgImg {
+    background: url(backgrounds/goldleaf.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mravenwoodBgImg {
+    background: url(backgrounds/ravenwood.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mstormfrontBgImg {
+    background: url(backgrounds/stormfront.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mironcladBgImg {
+    background: url(backgrounds/ironclad.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mfrostbiteBgImg {
+    background: url(backgrounds/frostbite.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mshadowfallBgImg {
+    background: url(backgrounds/shadowfall.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10msunbreakBgImg {
+    background: url(backgrounds/sunbreak.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mwindwardBgImg {
+    background: url(backgrounds/windward.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mearthboundBgImg {
+    background: url(backgrounds/earthbound.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mhighwaterBgImg {
+    background: url(backgrounds/highwater.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mgraveyardBgImg {
+    background: url(backgrounds/graveyard.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mblackridgeBgImg {
+    background: url(backgrounds/blackridge.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mlongwinterBgImg {
+    background: url(backgrounds/longwinter.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mnorthstarBgImg {
+    background: url(backgrounds/northstar.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mfirestormBgImg {
+    background: url(backgrounds/firestorm.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mdreadwoodBgImg {
+    background: url(backgrounds/dreadwood.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mstoneheartBgImg {
+    background: url(backgrounds/stoneheart.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mlastlightBgImg {
+    background: url(backgrounds/lastlight.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mdeadwindBgImg {
+    background: url(backgrounds/deadwind.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mfinalhourBgImg {
+    background: url(backgrounds/finalhour.png);
+    background-size: cover;
+    object-fit: contain;
+}
+
+.under10mworldendBgImg {
+    background: url(backgrounds/worldend.png);
+    background-size: cover;
+    object-fit: contain;
+}
