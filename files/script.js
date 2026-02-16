@@ -6762,63 +6762,6 @@ const NEW_TIER_TITLE_DEFINITIONS = Object.freeze([
   Object.freeze({ type: "Worldend [1 in 75,000,000]", class: "worldendBgImg", bucket: "transcendent", titles: ["Worldend I", "Worldend II", "Worldend III"] }),
 ]);
 
-const NEW_TITLE_CUTSCENE_CLASS_SET = new Set(
-  NEW_TIER_TITLE_DEFINITIONS.map(({ class: rarityClass }) => rarityClass),
-);
-
-const NEW_TITLE_RARITY_CLASS_MAP = Object.freeze(
-  NEW_TIER_TITLE_DEFINITIONS.reduce((acc, { type, bucket }) => {
-    acc[type] = bucket;
-    return acc;
-  }, {}),
-);
-
-const NEW_TITLE_SUBTITLE_TO_MAIN_TYPE_MAP = Object.freeze(
-  NEW_TIER_TITLE_DEFINITIONS.reduce((acc, { type, titles }) => {
-    titles.forEach((subtitle) => {
-      acc[subtitle] = type;
-    });
-    return acc;
-  }, {}),
-);
-
-const NEW_TITLE_CLASS_TO_MAIN_TYPE_MAP = Object.freeze(
-  NEW_TIER_TITLE_DEFINITIONS.reduce((acc, { class: rarityClass, type }) => {
-    acc[rarityClass] = type;
-    return acc;
-  }, {}),
-);
-
-function getNewTitleCutsceneConfig(rarityClass) {
-  if (!NEW_TITLE_CUTSCENE_CLASS_SET.has(rarityClass)) {
-    return null;
-  }
-
-  const bucket = normalizeRarityBucket(rarityClass);
-
-  if (bucket === "under1k") {
-    return { shouldPlay: skipCutscene1K, suspenseAudioId: null, durationMs: 3000 };
-  }
-
-  if (bucket === "under10k") {
-    return { shouldPlay: skipCutscene10K, suspenseAudioId: "suspenseAudio", durationMs: 4200 };
-  }
-
-  if (bucket === "under100k") {
-    return { shouldPlay: skipCutscene100K, suspenseAudioId: "bigSuspenceAudio", durationMs: 5600 };
-  }
-
-  if (bucket === "under1m") {
-    return { shouldPlay: skipCutscene1M, suspenseAudioId: "hugeSuspenceAudio", durationMs: 6800 };
-  }
-
-  if (bucket === "transcendent") {
-    return { shouldPlay: skipCutsceneTranscendent, suspenseAudioId: "hugeSuspenceAudio", durationMs: 7600 };
-  }
-
-  return null;
-}
-
 function finalizeRolledTitle(rarity, title, titleCont) {
   addToInventory(title, rarity.class);
   updateRollingHistory(title, rarity.type);
@@ -7037,7 +6980,96 @@ function registerRollButtonHandler() {
     rarity.type === "RNG Master [1 in GoodOldDays]" ||
     rarity.type === "Sovereign [1 in GoodOldDays]" ||
     rarity.type === "O R B I T A L [1 in 1,738,000]" ||
-    NEW_TITLE_CUTSCENE_CLASS_SET.has(rarity.class) ||
+    rarity.type === "Pebble [1 in 186]" ||
+    rarity.type === "Cinder [1 in 243]" ||
+    rarity.type === "Breeze [1 in 317]" ||
+    rarity.type === "Faulted [1 in 404]" ||
+    rarity.type === "Lantern [1 in 512]" ||
+    rarity.type === "Meadow [1 in 777]" ||
+    rarity.type === "Kindling [1 in 999]" ||
+    rarity.type === "Footstep [1 in 1,203]" ||
+    rarity.type === "Murmur [1 in 2,020]" ||
+    rarity.type === "Raindrop [1 in 3,333]" ||
+    rarity.type === "Willow [1 in 4,096]" ||
+    rarity.type === "Ember [1 in 5,005]" ||
+    rarity.type === "Tangle [1 in 6,789]" ||
+    rarity.type === "Drizzle [1 in 8,080]" ||
+    rarity.type === "Hearth [1 in 10,001]" ||
+    rarity.type === "Laneway [1 in 12,121]" ||
+    rarity.type === "Pollen [1 in 15,015]" ||
+    rarity.type === "Sundial [1 in 16,384]" ||
+    rarity.type === "Brook [1 in 20,002]" ||
+    rarity.type === "Bracken [1 in 22,222]" ||
+    rarity.type === "Hollow [1 in 24,680]" ||
+    rarity.type === "Thicket [1 in 27,382]" ||
+    rarity.type === "Fable [1 in 30,003]" ||
+    rarity.type === "Cavern [1 in 33,333]" ||
+    rarity.type === "Timber [1 in 36,036]" ||
+    rarity.type === "Harbor [1 in 40,004]" ||
+    rarity.type === "Grove [1 in 44,444]" ||
+    rarity.type === "Echoes [1 in 48,048]" ||
+    rarity.type === "Lanternlight [1 in 50,505]" ||
+    rarity.type === "Ashfall [1 in 55,555]" ||
+    rarity.type === "Wander [1 in 60,006]" ||
+    rarity.type === "Compass [1 in 65,065]" ||
+    rarity.type === "Driftwood [1 in 70,007]" ||
+    rarity.type === "Firefly [1 in 75,075]" ||
+    rarity.type === "Granite [1 in 80,808]" ||
+    rarity.type === "Mistfall [1 in 88,888]" ||
+    rarity.type === "Wayfarer [1 in 99,999]" ||
+    rarity.type === "Crosswind [1 in 111,111]" ||
+    rarity.type === "Rustle [1 in 123,321]" ||
+    rarity.type === "Footprint [1 in 135,791]" ||
+    rarity.type === "Wildwood [1 in 160,160]" ||
+    rarity.type === "Overgrowth [1 in 180,180]" ||
+    rarity.type === "Stonewall [1 in 200,200]" ||
+    rarity.type === "Moonrise [1 in 222,222]" ||
+    rarity.type === "Seabound [1 in 246,246]" ||
+    rarity.type === "Ridgeway [1 in 270,270]" ||
+    rarity.type === "Duststorm [1 in 300,300]" ||
+    rarity.type === "Northwind [1 in 333,333]" ||
+    rarity.type === "Sunstone [1 in 360,360]" ||
+    rarity.type === "Wellspring [1 in 400,400]" ||
+    rarity.type === "Deepwater [1 in 444,444]" ||
+    rarity.type === "Skyline [1 in 500,500]" ||
+    rarity.type === "Ironwood [1 in 555,555]" ||
+    rarity.type === "Wildfire [1 in 600,600]" ||
+    rarity.type === "Highland [1 in 650,650]" ||
+    rarity.type === "Nightfaller [1 in 700,700]" ||
+    rarity.type === "Thunder [1 in 750,750]" ||
+    rarity.type === "Shoreline [1 in 800,800]" ||
+    rarity.type === "Mariner [1 in 888,888]" ||
+    rarity.type === "Evergreen [1 in 999,999]" ||
+    rarity.type === "Headstone [1 in 1,200,000]" ||
+    rarity.type === "Redwood [1 in 1,500,001]" ||
+    rarity.type === "Monsoon [1 in 1,800,008]" ||
+    rarity.type === "Sandstorm [1 in 2,100,007]" ||
+    rarity.type === "Hinterland [1 in 2,400,024]" ||
+    rarity.type === "Blizzard [1 in 2,700,027]" ||
+    rarity.type === "Stonegate [1 in 3,000,030]" ||
+    rarity.type === "Wildlands [1 in 3,300,033]" ||
+    rarity.type === "Tidefall [1 in 3,600,036]" ||
+    rarity.type === "Goldleaf [1 in 3,900,039]" ||
+    rarity.type === "Ravenwood [1 in 4,200,042]" ||
+    rarity.type === "Stormfront [1 in 4,500,045]" ||
+    rarity.type === "Ironclad [1 in 4,800,048]" ||
+    rarity.type === "Frostbite [1 in 5,100,051]" ||
+    rarity.type === "Shadowfall [1 in 5,400,054]" ||
+    rarity.type === "Sunbreak [1 in 5,700,057]" ||
+    rarity.type === "Windward [1 in 6,000,060]" ||
+    rarity.type === "Earthbound [1 in 6,300,063]" ||
+    rarity.type === "Highwater [1 in 6,600,066]" ||
+    rarity.type === "Graveyard [1 in 6,900,069]" ||
+    rarity.type === "Blackridge [1 in 7,200,072]" ||
+    rarity.type === "Longwinter [1 in 7,350,073]" ||
+    rarity.type === "Northstar [1 in 7,400,074]" ||
+    rarity.type === "Firestorm [1 in 7,450,074]" ||
+    rarity.type === "Dreadwood [1 in 7,480,074]" ||
+    rarity.type === "Stoneheart [1 in 7,490,001]" ||
+    rarity.type === "Lastlight [1 in 7,495,005]" ||
+    rarity.type === "Deadwind [1 in 7,498,008]" ||
+    rarity.type === "Finalhour [1 in 7,499,500]" ||
+    rarity.type === "Worldend [1 in 75,000,000]" ||
     isDescendedTitleType(rarity.type)
   ) {
     const resultContainer = byId("result");
@@ -7050,13 +7082,115 @@ function registerRollButtonHandler() {
     }
     hideRollDisplayForCutscene(titleCont);
 
-    const newTitleCutsceneConfig = getNewTitleCutsceneConfig(rarity.class);
-
-    if (newTitleCutsceneConfig) {
-      const suspenseAudio = getAudioElement(newTitleCutsceneConfig.suspenseAudioId);
-      if (suspenseAudio) {
-        suspenseAudio.play();
-      }
+    if (
+    rarity.type === "Pebble [1 in 186]" ||
+    rarity.type === "Cinder [1 in 243]" ||
+    rarity.type === "Breeze [1 in 317]" ||
+    rarity.type === "Faulted [1 in 404]" ||
+    rarity.type === "Lantern [1 in 512]" ||
+    rarity.type === "Meadow [1 in 777]" ||
+    rarity.type === "Kindling [1 in 999]"
+    ) {
+      scareSuspenceAudio.play();
+    }
+    else if (
+    rarity.type === "Footstep [1 in 1,203]" ||
+    rarity.type === "Murmur [1 in 2,020]" ||
+    rarity.type === "Raindrop [1 in 3,333]" ||
+    rarity.type === "Willow [1 in 4,096]" ||
+    rarity.type === "Ember [1 in 5,005]" ||
+    rarity.type === "Tangle [1 in 6,789]" ||
+    rarity.type === "Drizzle [1 in 8,080]"
+    ) {
+      suspenseAudio.play();
+    }
+    else if (
+    rarity.type === "Hearth [1 in 10,001]" ||
+    rarity.type === "Laneway [1 in 12,121]" ||
+    rarity.type === "Pollen [1 in 15,015]" ||
+    rarity.type === "Sundial [1 in 16,384]" ||
+    rarity.type === "Brook [1 in 20,002]" ||
+    rarity.type === "Bracken [1 in 22,222]" ||
+    rarity.type === "Hollow [1 in 24,680]" ||
+    rarity.type === "Thicket [1 in 27,382]" ||
+    rarity.type === "Fable [1 in 30,003]" ||
+    rarity.type === "Cavern [1 in 33,333]" ||
+    rarity.type === "Timber [1 in 36,036]" ||
+    rarity.type === "Harbor [1 in 40,004]" ||
+    rarity.type === "Grove [1 in 44,444]" ||
+    rarity.type === "Echoes [1 in 48,048]" ||
+    rarity.type === "Lanternlight [1 in 50,505]" ||
+    rarity.type === "Ashfall [1 in 55,555]" ||
+    rarity.type === "Wander [1 in 60,006]" ||
+    rarity.type === "Compass [1 in 65,065]" ||
+    rarity.type === "Driftwood [1 in 70,007]" ||
+    rarity.type === "Firefly [1 in 75,075]" ||
+    rarity.type === "Granite [1 in 80,808]" ||
+    rarity.type === "Mistfall [1 in 88,888]" ||
+    rarity.type === "Wayfarer [1 in 99,999]"
+    ) {
+      bigSuspenceAudio.play();
+    }
+    else if (
+    rarity.type === "Crosswind [1 in 111,111]" ||
+    rarity.type === "Rustle [1 in 123,321]" ||
+    rarity.type === "Footprint [1 in 135,791]" ||
+    rarity.type === "Wildwood [1 in 160,160]" ||
+    rarity.type === "Overgrowth [1 in 180,180]" ||
+    rarity.type === "Stonewall [1 in 200,200]" ||
+    rarity.type === "Moonrise [1 in 222,222]" ||
+    rarity.type === "Seabound [1 in 246,246]" ||
+    rarity.type === "Ridgeway [1 in 270,270]" ||
+    rarity.type === "Duststorm [1 in 300,300]" ||
+    rarity.type === "Northwind [1 in 333,333]" ||
+    rarity.type === "Sunstone [1 in 360,360]" ||
+    rarity.type === "Wellspring [1 in 400,400]" ||
+    rarity.type === "Deepwater [1 in 444,444]" ||
+    rarity.type === "Skyline [1 in 500,500]" ||
+    rarity.type === "Ironwood [1 in 555,555]" ||
+    rarity.type === "Wildfire [1 in 600,600]" ||
+    rarity.type === "Highland [1 in 650,650]" ||
+    rarity.type === "Nightfaller [1 in 700,700]" ||
+    rarity.type === "Thunder [1 in 750,750]" ||
+    rarity.type === "Shoreline [1 in 800,800]" ||
+    rarity.type === "Mariner [1 in 888,888]" ||
+    rarity.type === "Evergreen [1 in 999,999]"
+    ) {
+      hugeSuspenceAudio.play();
+    }
+    else if (
+    rarity.type === "Headstone [1 in 1,200,000]" ||
+    rarity.type === "Redwood [1 in 1,500,001]" ||
+    rarity.type === "Monsoon [1 in 1,800,008]" ||
+    rarity.type === "Sandstorm [1 in 2,100,007]" ||
+    rarity.type === "Hinterland [1 in 2,400,024]" ||
+    rarity.type === "Blizzard [1 in 2,700,027]" ||
+    rarity.type === "Stonegate [1 in 3,000,030]" ||
+    rarity.type === "Wildlands [1 in 3,300,033]" ||
+    rarity.type === "Tidefall [1 in 3,600,036]" ||
+    rarity.type === "Goldleaf [1 in 3,900,039]" ||
+    rarity.type === "Ravenwood [1 in 4,200,042]" ||
+    rarity.type === "Stormfront [1 in 4,500,045]" ||
+    rarity.type === "Ironclad [1 in 4,800,048]" ||
+    rarity.type === "Frostbite [1 in 5,100,051]" ||
+    rarity.type === "Shadowfall [1 in 5,400,054]" ||
+    rarity.type === "Sunbreak [1 in 5,700,057]" ||
+    rarity.type === "Windward [1 in 6,000,060]" ||
+    rarity.type === "Earthbound [1 in 6,300,063]" ||
+    rarity.type === "Highwater [1 in 6,600,066]" ||
+    rarity.type === "Graveyard [1 in 6,900,069]" ||
+    rarity.type === "Blackridge [1 in 7,200,072]" ||
+    rarity.type === "Longwinter [1 in 7,350,073]" ||
+    rarity.type === "Northstar [1 in 7,400,074]" ||
+    rarity.type === "Firestorm [1 in 7,450,074]" ||
+    rarity.type === "Dreadwood [1 in 7,480,074]" ||
+    rarity.type === "Stoneheart [1 in 7,490,001]" ||
+    rarity.type === "Lastlight [1 in 7,495,005]" ||
+    rarity.type === "Deadwind [1 in 7,498,008]" ||
+    rarity.type === "Finalhour [1 in 7,499,500]" ||
+    rarity.type === "Worldend [1 in 75,000,000]"
+    ) {
+      hugeSuspenceAudio.play();
     } else if (rarity.type === "Fright [1 in 1,075]") {
       frightAudio.play();
     } else if (isDescendedTitleType(rarity.type)) {
@@ -14768,12 +14902,135 @@ function registerRollButtonHandler() {
         titleCont.style.visibility = "visible";
         contAudio.play();
       }
-    } else if (newTitleCutsceneConfig) {
+    } else if (
+    rarity.type === "Pebble [1 in 186]" ||
+    rarity.type === "Cinder [1 in 243]" ||
+    rarity.type === "Breeze [1 in 317]" ||
+    rarity.type === "Faulted [1 in 404]" ||
+    rarity.type === "Lantern [1 in 512]" ||
+    rarity.type === "Meadow [1 in 777]" ||
+    rarity.type === "Kindling [1 in 999]"
+    ) {
       runNewTitleTierCutscene({
         rarity,
         title,
         titleCont,
-        config: newTitleCutsceneConfig,
+        config: { shouldPlay: skipCutscene1K, suspenseAudioId: null, durationMs: 3000 },
+      });
+    } else if (
+    rarity.type === "Footstep [1 in 1,203]" ||
+    rarity.type === "Murmur [1 in 2,020]" ||
+    rarity.type === "Raindrop [1 in 3,333]" ||
+    rarity.type === "Willow [1 in 4,096]" ||
+    rarity.type === "Ember [1 in 5,005]" ||
+    rarity.type === "Tangle [1 in 6,789]" ||
+    rarity.type === "Drizzle [1 in 8,080]"
+    ) {
+      runNewTitleTierCutscene({
+        rarity,
+        title,
+        titleCont,
+        config: { shouldPlay: skipCutscene10K, suspenseAudioId: "suspenseAudio", durationMs: 4200 },
+      });
+    } else if (
+    rarity.type === "Hearth [1 in 10,001]" ||
+    rarity.type === "Laneway [1 in 12,121]" ||
+    rarity.type === "Pollen [1 in 15,015]" ||
+    rarity.type === "Sundial [1 in 16,384]" ||
+    rarity.type === "Brook [1 in 20,002]" ||
+    rarity.type === "Bracken [1 in 22,222]" ||
+    rarity.type === "Hollow [1 in 24,680]" ||
+    rarity.type === "Thicket [1 in 27,382]" ||
+    rarity.type === "Fable [1 in 30,003]" ||
+    rarity.type === "Cavern [1 in 33,333]" ||
+    rarity.type === "Timber [1 in 36,036]" ||
+    rarity.type === "Harbor [1 in 40,004]" ||
+    rarity.type === "Grove [1 in 44,444]" ||
+    rarity.type === "Echoes [1 in 48,048]" ||
+    rarity.type === "Lanternlight [1 in 50,505]" ||
+    rarity.type === "Ashfall [1 in 55,555]" ||
+    rarity.type === "Wander [1 in 60,006]" ||
+    rarity.type === "Compass [1 in 65,065]" ||
+    rarity.type === "Driftwood [1 in 70,007]" ||
+    rarity.type === "Firefly [1 in 75,075]" ||
+    rarity.type === "Granite [1 in 80,808]" ||
+    rarity.type === "Mistfall [1 in 88,888]" ||
+    rarity.type === "Wayfarer [1 in 99,999]"
+    ) {
+      runNewTitleTierCutscene({
+        rarity,
+        title,
+        titleCont,
+        config: { shouldPlay: skipCutscene100K, suspenseAudioId: "bigSuspenceAudio", durationMs: 5600 },
+      });
+    } else if (
+    rarity.type === "Crosswind [1 in 111,111]" ||
+    rarity.type === "Rustle [1 in 123,321]" ||
+    rarity.type === "Footprint [1 in 135,791]" ||
+    rarity.type === "Wildwood [1 in 160,160]" ||
+    rarity.type === "Overgrowth [1 in 180,180]" ||
+    rarity.type === "Stonewall [1 in 200,200]" ||
+    rarity.type === "Moonrise [1 in 222,222]" ||
+    rarity.type === "Seabound [1 in 246,246]" ||
+    rarity.type === "Ridgeway [1 in 270,270]" ||
+    rarity.type === "Duststorm [1 in 300,300]" ||
+    rarity.type === "Northwind [1 in 333,333]" ||
+    rarity.type === "Sunstone [1 in 360,360]" ||
+    rarity.type === "Wellspring [1 in 400,400]" ||
+    rarity.type === "Deepwater [1 in 444,444]" ||
+    rarity.type === "Skyline [1 in 500,500]" ||
+    rarity.type === "Ironwood [1 in 555,555]" ||
+    rarity.type === "Wildfire [1 in 600,600]" ||
+    rarity.type === "Highland [1 in 650,650]" ||
+    rarity.type === "Nightfaller [1 in 700,700]" ||
+    rarity.type === "Thunder [1 in 750,750]" ||
+    rarity.type === "Shoreline [1 in 800,800]" ||
+    rarity.type === "Mariner [1 in 888,888]" ||
+    rarity.type === "Evergreen [1 in 999,999]"
+    ) {
+      runNewTitleTierCutscene({
+        rarity,
+        title,
+        titleCont,
+        config: { shouldPlay: skipCutscene1M, suspenseAudioId: "hugeSuspenceAudio", durationMs: 6800 },
+      });
+    } else if (
+    rarity.type === "Headstone [1 in 1,200,000]" ||
+    rarity.type === "Redwood [1 in 1,500,001]" ||
+    rarity.type === "Monsoon [1 in 1,800,008]" ||
+    rarity.type === "Sandstorm [1 in 2,100,007]" ||
+    rarity.type === "Hinterland [1 in 2,400,024]" ||
+    rarity.type === "Blizzard [1 in 2,700,027]" ||
+    rarity.type === "Stonegate [1 in 3,000,030]" ||
+    rarity.type === "Wildlands [1 in 3,300,033]" ||
+    rarity.type === "Tidefall [1 in 3,600,036]" ||
+    rarity.type === "Goldleaf [1 in 3,900,039]" ||
+    rarity.type === "Ravenwood [1 in 4,200,042]" ||
+    rarity.type === "Stormfront [1 in 4,500,045]" ||
+    rarity.type === "Ironclad [1 in 4,800,048]" ||
+    rarity.type === "Frostbite [1 in 5,100,051]" ||
+    rarity.type === "Shadowfall [1 in 5,400,054]" ||
+    rarity.type === "Sunbreak [1 in 5,700,057]" ||
+    rarity.type === "Windward [1 in 6,000,060]" ||
+    rarity.type === "Earthbound [1 in 6,300,063]" ||
+    rarity.type === "Highwater [1 in 6,600,066]" ||
+    rarity.type === "Graveyard [1 in 6,900,069]" ||
+    rarity.type === "Blackridge [1 in 7,200,072]" ||
+    rarity.type === "Longwinter [1 in 7,350,073]" ||
+    rarity.type === "Northstar [1 in 7,400,074]" ||
+    rarity.type === "Firestorm [1 in 7,450,074]" ||
+    rarity.type === "Dreadwood [1 in 7,480,074]" ||
+    rarity.type === "Stoneheart [1 in 7,490,001]" ||
+    rarity.type === "Lastlight [1 in 7,495,005]" ||
+    rarity.type === "Deadwind [1 in 7,498,008]" ||
+    rarity.type === "Finalhour [1 in 7,499,500]" ||
+    rarity.type === "Worldend [1 in 75,000,000]"
+    ) {
+      runNewTitleTierCutscene({
+        rarity,
+        title,
+        titleCont,
+        config: { shouldPlay: skipCutsceneTranscendent, suspenseAudioId: "hugeSuspenceAudio", durationMs: 7600 },
       });
     } else if (rarity.type === "Fright [1 in 1,075]") {
       if (skipCutscene10K) {
