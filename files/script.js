@@ -6669,91 +6669,125 @@ function updateAchievementsList() {
   });
 }
 
-const NEW_TITLE_CUTSCENE_CLASS_SET = new Set([
-  "footstepBgImg",
-  "murmurBgImg",
-  "raindropBgImg",
-  "willowBgImg",
-  "emberBgImg",
-  "tangleBgImg",
-  "drizzleBgImg",
-  "hearthBgImg",
-  "lanewayBgImg",
-  "pollenBgImg",
-  "sundialBgImg",
-  "brookBgImg",
-  "brackenBgImg",
-  "hollowBgImg",
-  "thicketBgImg",
-  "fableBgImg",
-  "cavernBgImg",
-  "timberBgImg",
-  "harborBgImg",
-  "groveBgImg",
-  "echoesBgImg",
-  "lanternlightBgImg",
-  "ashfallBgImg",
-  "wanderBgImg",
-  "compassBgImg",
-  "driftwoodBgImg",
-  "fireflyBgImg",
-  "graniteBgImg",
-  "mistfallBgImg",
-  "wayfarerBgImg",
-  "crosswindBgImg",
-  "rustleBgImg",
-  "footprintBgImg",
-  "wildwoodBgImg",
-  "overgrowthBgImg",
-  "stonewallBgImg",
-  "moonriseBgImg",
-  "seaboundBgImg",
-  "ridgewayBgImg",
-  "duststormBgImg",
-  "northwindBgImg",
-  "sunstoneBgImg",
-  "wellspringBgImg",
-  "deepwaterBgImg",
-  "skylineBgImg",
-  "ironwoodBgImg",
-  "wildfireBgImg",
-  "highlandBgImg",
-  "nightfallBgImg",
-  "thunderBgImg",
-  "shorelineBgImg",
-  "marinerBgImg",
-  "evergreenBgImg",
-  "headstoneBgImg",
-  "redwoodBgImg",
-  "monsoonBgImg",
-  "sandstormBgImg",
-  "hinterlandBgImg",
-  "blizzardBgImg",
-  "stonegateBgImg",
-  "wildlandsBgImg",
-  "tidefallBgImg",
-  "goldleafBgImg",
-  "ravenwoodBgImg",
-  "stormfrontBgImg",
-  "ironcladBgImg",
-  "frostbiteBgImg",
-  "shadowfallBgImg",
-  "sunbreakBgImg",
-  "windwardBgImg",
-  "earthboundBgImg",
-  "highwaterBgImg",
-  "graveyardBgImg",
-  "blackridgeBgImg",
-  "longwinterBgImg",
-  "northstarBgImg",
-  "firestormBgImg",
-  "dreadwoodBgImg",
-  "stoneheartBgImg",
-  "lastlightBgImg",
-  "deadwindBgImg",
-  "finalhourBgImg",
-  "worldendBgImg",
+const NEW_TIER_TITLE_DEFINITIONS = Object.freeze([
+  Object.freeze({ type: "Pebble [1 in 186]", class: "pebbleBgImg", bucket: "under1k", titles: ["Pebble I", "Pebble II", "Pebble III"] }),
+  Object.freeze({ type: "Cinder [1 in 243]", class: "cinderBgImg", bucket: "under1k", titles: ["Cinder I", "Cinder II", "Cinder III"] }),
+  Object.freeze({ type: "Breeze [1 in 317]", class: "breezeBgImg", bucket: "under1k", titles: ["Breeze I", "Breeze II", "Breeze III"] }),
+  Object.freeze({ type: "Faulted [1 in 404]", class: "FaultedBgImg", bucket: "under1k", titles: ["Dewdrop I", "Faulted II", "Faulted III"] }),
+  Object.freeze({ type: "Lantern [1 in 512]", class: "lanternBgImg", bucket: "under1k", titles: ["Lantern I", "Lantern II", "Lantern III"] }),
+  Object.freeze({ type: "Meadow [1 in 777]", class: "meadowBgImg", bucket: "under1k", titles: ["Meadow I", "Meadow II", "Meadow III"] }),
+  Object.freeze({ type: "Kindling [1 in 999]", class: "kindlingBgImg", bucket: "under1k", titles: ["Kindling I", "Kindling II", "Kindling III"] }),
+  Object.freeze({ type: "Footstep [1 in 1,203]", class: "footstepBgImg", bucket: "under10k", titles: ["Footstep I", "Footstep II", "Footstep III"] }),
+  Object.freeze({ type: "Murmur [1 in 2,020]", class: "murmurBgImg", bucket: "under10k", titles: ["Murmur I", "Murmur II", "Murmur III"] }),
+  Object.freeze({ type: "Raindrop [1 in 3,333]", class: "raindropBgImg", bucket: "under10k", titles: ["Raindrop I", "Raindrop II", "Raindrop III"] }),
+  Object.freeze({ type: "Willow [1 in 4,096]", class: "willowBgImg", bucket: "under10k", titles: ["Willow I", "Willow II", "Willow III"] }),
+  Object.freeze({ type: "Ember [1 in 5,005]", class: "emberBgImg", bucket: "under10k", titles: ["Ember I", "Ember II", "Ember III"] }),
+  Object.freeze({ type: "Tangle [1 in 6,789]", class: "tangleBgImg", bucket: "under10k", titles: ["Tangle I", "Tangle II", "Tangle III"] }),
+  Object.freeze({ type: "Drizzle [1 in 8,080]", class: "drizzleBgImg", bucket: "under10k", titles: ["Drizzle I", "Drizzle II", "Drizzle III"] }),
+  Object.freeze({ type: "Hearth [1 in 10,001]", class: "hearthBgImg", bucket: "under100k", titles: ["Hearth I", "Hearth II", "Hearth III"] }),
+  Object.freeze({ type: "Laneway [1 in 12,121]", class: "lanewayBgImg", bucket: "under100k", titles: ["Laneway I", "Laneway II", "Laneway III"] }),
+  Object.freeze({ type: "Pollen [1 in 15,015]", class: "pollenBgImg", bucket: "under100k", titles: ["Pollen I", "Pollen II", "Pollen III"] }),
+  Object.freeze({ type: "Sundial [1 in 16,384]", class: "sundialBgImg", bucket: "under100k", titles: ["Sundial I", "Sundial II", "Sundial III"] }),
+  Object.freeze({ type: "Brook [1 in 20,002]", class: "brookBgImg", bucket: "under100k", titles: ["Brook I", "Brook II", "Brook III"] }),
+  Object.freeze({ type: "Bracken [1 in 22,222]", class: "brackenBgImg", bucket: "under100k", titles: ["Bracken I", "Bracken II", "Bracken III"] }),
+  Object.freeze({ type: "Hollow [1 in 24,680]", class: "hollowBgImg", bucket: "under100k", titles: ["Hollow I", "Hollow II", "Hollow III"] }),
+  Object.freeze({ type: "Thicket [1 in 27,382]", class: "thicketBgImg", bucket: "under100k", titles: ["Thicket I", "Thicket II", "Thicket III"] }),
+  Object.freeze({ type: "Fable [1 in 30,003]", class: "fableBgImg", bucket: "under100k", titles: ["Fable I", "Fable II", "Fable III"] }),
+  Object.freeze({ type: "Cavern [1 in 33,333]", class: "cavernBgImg", bucket: "under100k", titles: ["Cavern I", "Cavern II", "Cavern III"] }),
+  Object.freeze({ type: "Timber [1 in 36,036]", class: "timberBgImg", bucket: "under100k", titles: ["Timber I", "Timber II", "Timber III"] }),
+  Object.freeze({ type: "Harbor [1 in 40,004]", class: "harborBgImg", bucket: "under100k", titles: ["Harbor I", "Harbor II", "Harbor III"] }),
+  Object.freeze({ type: "Grove [1 in 44,444]", class: "groveBgImg", bucket: "under100k", titles: ["Grove I", "Grove II", "Grove III"] }),
+  Object.freeze({ type: "Echoes [1 in 48,048]", class: "echoesBgImg", bucket: "under100k", titles: ["Echoes I", "Echoes II", "Echoes III"] }),
+  Object.freeze({ type: "Lanternlight [1 in 50,505]", class: "lanternlightBgImg", bucket: "under100k", titles: ["Lanternlight I", "Lanternlight II", "Lanternlight III"] }),
+  Object.freeze({ type: "Ashfall [1 in 55,555]", class: "ashfallBgImg", bucket: "under100k", titles: ["Ashfall I", "Ashfall II", "Ashfall III"] }),
+  Object.freeze({ type: "Wander [1 in 60,006]", class: "wanderBgImg", bucket: "under100k", titles: ["Wander I", "Wander II", "Wander III"] }),
+  Object.freeze({ type: "Compass [1 in 65,065]", class: "compassBgImg", bucket: "under100k", titles: ["Compass I", "Compass II", "Compass III"] }),
+  Object.freeze({ type: "Driftwood [1 in 70,007]", class: "driftwoodBgImg", bucket: "under100k", titles: ["Driftwood I", "Driftwood II", "Driftwood III"] }),
+  Object.freeze({ type: "Firefly [1 in 75,075]", class: "fireflyBgImg", bucket: "under100k", titles: ["Firefly I", "Firefly II", "Firefly III"] }),
+  Object.freeze({ type: "Granite [1 in 80,808]", class: "graniteBgImg", bucket: "under100k", titles: ["Granite I", "Granite II", "Granite III"] }),
+  Object.freeze({ type: "Mistfall [1 in 88,888]", class: "mistfallBgImg", bucket: "under100k", titles: ["Mistfall I", "Mistfall II", "Mistfall III"] }),
+  Object.freeze({ type: "Wayfarer [1 in 99,999]", class: "wayfarerBgImg", bucket: "under100k", titles: ["Wayfarer I", "Wayfarer II", "Wayfarer III"] }),
+  Object.freeze({ type: "Crosswind [1 in 111,111]", class: "crosswindBgImg", bucket: "under1m", titles: ["Crosswind I", "Crosswind II", "Crosswind III"] }),
+  Object.freeze({ type: "Rustle [1 in 123,321]", class: "rustleBgImg", bucket: "under1m", titles: ["Rustle I", "Rustle II", "Rustle III"] }),
+  Object.freeze({ type: "Footprint [1 in 135,791]", class: "footprintBgImg", bucket: "under1m", titles: ["Footprint I", "Footprint II", "Footprint III"] }),
+  Object.freeze({ type: "Wildwood [1 in 160,160]", class: "wildwoodBgImg", bucket: "under1m", titles: ["Wildwood I", "Wildwood II", "Wildwood III"] }),
+  Object.freeze({ type: "Overgrowth [1 in 180,180]", class: "overgrowthBgImg", bucket: "under1m", titles: ["Overgrowth I", "Overgrowth II", "Overgrowth III"] }),
+  Object.freeze({ type: "Stonewall [1 in 200,200]", class: "stonewallBgImg", bucket: "under1m", titles: ["Stonewall I", "Stonewall II", "Stonewall III"] }),
+  Object.freeze({ type: "Moonrise [1 in 222,222]", class: "moonriseBgImg", bucket: "under1m", titles: ["Moonrise I", "Moonrise II", "Moonrise III"] }),
+  Object.freeze({ type: "Seabound [1 in 246,246]", class: "seaboundBgImg", bucket: "under1m", titles: ["Seabound I", "Seabound II", "Seabound III"] }),
+  Object.freeze({ type: "Ridgeway [1 in 270,270]", class: "ridgewayBgImg", bucket: "under1m", titles: ["Ridgeway I", "Ridgeway II", "Ridgeway III"] }),
+  Object.freeze({ type: "Duststorm [1 in 300,300]", class: "duststormBgImg", bucket: "under1m", titles: ["Duststorm I", "Duststorm II", "Duststorm III"] }),
+  Object.freeze({ type: "Northwind [1 in 333,333]", class: "northwindBgImg", bucket: "under1m", titles: ["Northwind I", "Northwind II", "Northwind III"] }),
+  Object.freeze({ type: "Sunstone [1 in 360,360]", class: "sunstoneBgImg", bucket: "under1m", titles: ["Sunstone I", "Sunstone II", "Sunstone III"] }),
+  Object.freeze({ type: "Wellspring [1 in 400,400]", class: "wellspringBgImg", bucket: "under1m", titles: ["Wellspring I", "Wellspring II", "Wellspring III"] }),
+  Object.freeze({ type: "Deepwater [1 in 444,444]", class: "deepwaterBgImg", bucket: "under1m", titles: ["Deepwater I", "Deepwater II", "Deepwater III"] }),
+  Object.freeze({ type: "Skyline [1 in 500,500]", class: "skylineBgImg", bucket: "under1m", titles: ["Skyline I", "Skyline II", "Skyline III"] }),
+  Object.freeze({ type: "Ironwood [1 in 555,555]", class: "ironwoodBgImg", bucket: "under1m", titles: ["Ironwood I", "Ironwood II", "Ironwood III"] }),
+  Object.freeze({ type: "Wildfire [1 in 600,600]", class: "wildfireBgImg", bucket: "under1m", titles: ["Wildfire I", "Wildfire II", "Wildfire III"] }),
+  Object.freeze({ type: "Highland [1 in 650,650]", class: "highlandBgImg", bucket: "under1m", titles: ["Highland I", "Highland II", "Highland III"] }),
+  Object.freeze({ type: "Nightfaller [1 in 700,700]", class: "nightfallerBgImg", bucket: "under1m", titles: ["Nightfaller I", "Nightfaller II", "Nightfaller III"] }),
+  Object.freeze({ type: "Thunder [1 in 750,750]", class: "thunderBgImg", bucket: "under1m", titles: ["Thunder I", "Thunder II", "Thunder III"] }),
+  Object.freeze({ type: "Shoreline [1 in 800,800]", class: "shorelineBgImg", bucket: "under1m", titles: ["Shoreline I", "Shoreline II", "Shoreline III"] }),
+  Object.freeze({ type: "Mariner [1 in 888,888]", class: "marinerBgImg", bucket: "under1m", titles: ["Mariner I", "Mariner II", "Mariner III"] }),
+  Object.freeze({ type: "Evergreen [1 in 999,999]", class: "evergreenBgImg", bucket: "under1m", titles: ["Evergreen I", "Evergreen II", "Evergreen III"] }),
+  Object.freeze({ type: "Headstone [1 in 1,200,000]", class: "headstoneBgImg", bucket: "transcendent", titles: ["Headstone I", "Headstone II", "Headstone III"] }),
+  Object.freeze({ type: "Redwood [1 in 1,500,001]", class: "redwoodBgImg", bucket: "transcendent", titles: ["Redwood I", "Redwood II", "Redwood III"] }),
+  Object.freeze({ type: "Monsoon [1 in 1,800,008]", class: "monsoonBgImg", bucket: "transcendent", titles: ["Monsoon I", "Monsoon II", "Monsoon III"] }),
+  Object.freeze({ type: "Sandstorm [1 in 2,100,007]", class: "sandstormBgImg", bucket: "transcendent", titles: ["Sandstorm I", "Sandstorm II", "Sandstorm III"] }),
+  Object.freeze({ type: "Hinterland [1 in 2,400,024]", class: "hinterlandBgImg", bucket: "transcendent", titles: ["Hinterland I", "Hinterland II", "Hinterland III"] }),
+  Object.freeze({ type: "Blizzard [1 in 2,700,027]", class: "blizzardBgImg", bucket: "transcendent", titles: ["Blizzard I", "Blizzard II", "Blizzard III"] }),
+  Object.freeze({ type: "Stonegate [1 in 3,000,030]", class: "stonegateBgImg", bucket: "transcendent", titles: ["Stonegate I", "Stonegate II", "Stonegate III"] }),
+  Object.freeze({ type: "Wildlands [1 in 3,300,033]", class: "wildlandsBgImg", bucket: "transcendent", titles: ["Wildlands I", "Wildlands II", "Wildlands III"] }),
+  Object.freeze({ type: "Tidefall [1 in 3,600,036]", class: "tidefallBgImg", bucket: "transcendent", titles: ["Tidefall I", "Tidefall II", "Tidefall III"] }),
+  Object.freeze({ type: "Goldleaf [1 in 3,900,039]", class: "goldleafBgImg", bucket: "transcendent", titles: ["Goldleaf I", "Goldleaf II", "Goldleaf III"] }),
+  Object.freeze({ type: "Ravenwood [1 in 4,200,042]", class: "ravenwoodBgImg", bucket: "transcendent", titles: ["Ravenwood I", "Ravenwood II", "Ravenwood III"] }),
+  Object.freeze({ type: "Stormfront [1 in 4,500,045]", class: "stormfrontBgImg", bucket: "transcendent", titles: ["Stormfront I", "Stormfront II", "Stormfront III"] }),
+  Object.freeze({ type: "Ironclad [1 in 4,800,048]", class: "ironcladBgImg", bucket: "transcendent", titles: ["Ironclad I", "Ironclad II", "Ironclad III"] }),
+  Object.freeze({ type: "Frostbite [1 in 5,100,051]", class: "frostbiteBgImg", bucket: "transcendent", titles: ["Frostbite I", "Frostbite II", "Frostbite III"] }),
+  Object.freeze({ type: "Shadowfall [1 in 5,400,054]", class: "shadowfallBgImg", bucket: "transcendent", titles: ["Shadowfall I", "Shadowfall II", "Shadowfall III"] }),
+  Object.freeze({ type: "Sunbreak [1 in 5,700,057]", class: "sunbreakBgImg", bucket: "transcendent", titles: ["Sunbreak I", "Sunbreak II", "Sunbreak III"] }),
+  Object.freeze({ type: "Windward [1 in 6,000,060]", class: "windwardBgImg", bucket: "transcendent", titles: ["Windward I", "Windward II", "Windward III"] }),
+  Object.freeze({ type: "Earthbound [1 in 6,300,063]", class: "earthboundBgImg", bucket: "transcendent", titles: ["Earthbound I", "Earthbound II", "Earthbound III"] }),
+  Object.freeze({ type: "Highwater [1 in 6,600,066]", class: "highwaterBgImg", bucket: "transcendent", titles: ["Highwater I", "Highwater II", "Highwater III"] }),
+  Object.freeze({ type: "Graveyard [1 in 6,900,069]", class: "graveyardBgImg", bucket: "transcendent", titles: ["Graveyard I", "Graveyard II", "Graveyard III"] }),
+  Object.freeze({ type: "Blackridge [1 in 7,200,072]", class: "blackridgeBgImg", bucket: "transcendent", titles: ["Blackridge I", "Blackridge II", "Blackridge III"] }),
+  Object.freeze({ type: "Longwinter [1 in 7,350,073]", class: "longwinterBgImg", bucket: "transcendent", titles: ["Longwinter I", "Longwinter II", "Longwinter III"] }),
+  Object.freeze({ type: "Northstar [1 in 7,400,074]", class: "northstarBgImg", bucket: "transcendent", titles: ["Northstar I", "Northstar II", "Northstar III"] }),
+  Object.freeze({ type: "Firestorm [1 in 7,450,074]", class: "firestormBgImg", bucket: "transcendent", titles: ["Firestorm I", "Firestorm II", "Firestorm III"] }),
+  Object.freeze({ type: "Dreadwood [1 in 7,480,074]", class: "dreadwoodBgImg", bucket: "transcendent", titles: ["Dreadwood I", "Dreadwood II", "Dreadwood III"] }),
+  Object.freeze({ type: "Stoneheart [1 in 7,490,001]", class: "stoneheartBgImg", bucket: "transcendent", titles: ["Stoneheart I", "Stoneheart II", "Stoneheart III"] }),
+  Object.freeze({ type: "Lastlight [1 in 7,495,005]", class: "lastlightBgImg", bucket: "transcendent", titles: ["Lastlight I", "Lastlight II", "Lastlight III"] }),
+  Object.freeze({ type: "Deadwind [1 in 7,498,008]", class: "deadwindBgImg", bucket: "transcendent", titles: ["Deadwind I", "Deadwind II", "Deadwind III"] }),
+  Object.freeze({ type: "Finalhour [1 in 7,499,500]", class: "finalhourBgImg", bucket: "transcendent", titles: ["Finalhour I", "Finalhour II", "Finalhour III"] }),
+  Object.freeze({ type: "Worldend [1 in 75,000,000]", class: "worldendBgImg", bucket: "transcendent", titles: ["Worldend I", "Worldend II", "Worldend III"] }),
 ]);
+
+const NEW_TITLE_CUTSCENE_CLASS_SET = new Set(
+  NEW_TIER_TITLE_DEFINITIONS.map(({ class: rarityClass }) => rarityClass),
+);
+
+const NEW_TITLE_RARITY_CLASS_MAP = Object.freeze(
+  NEW_TIER_TITLE_DEFINITIONS.reduce((acc, { type, bucket }) => {
+    acc[type] = bucket;
+    return acc;
+  }, {}),
+);
+
+const NEW_TITLE_SUBTITLE_TO_MAIN_TYPE_MAP = Object.freeze(
+  NEW_TIER_TITLE_DEFINITIONS.reduce((acc, { type, titles }) => {
+    titles.forEach((subtitle) => {
+      acc[subtitle] = type;
+    });
+    return acc;
+  }, {}),
+);
+
+const NEW_TITLE_CLASS_TO_MAIN_TYPE_MAP = Object.freeze(
+  NEW_TIER_TITLE_DEFINITIONS.reduce((acc, { class: rarityClass, type }) => {
+    acc[rarityClass] = type;
+    return acc;
+  }, {}),
+);
 
 function getNewTitleCutsceneConfig(rarityClass) {
   if (!NEW_TITLE_CUTSCENE_CLASS_SET.has(rarityClass)) {
@@ -6761,6 +6795,10 @@ function getNewTitleCutsceneConfig(rarityClass) {
   }
 
   const bucket = normalizeRarityBucket(rarityClass);
+
+  if (bucket === "under1k") {
+    return { shouldPlay: skipCutscene1K, suspenseAudioId: null, durationMs: 3000 };
+  }
 
   if (bucket === "under10k") {
     return { shouldPlay: skipCutscene10K, suspenseAudioId: "suspenseAudio", durationMs: 4200 };
@@ -20731,6 +20769,22 @@ function getInventorySearchCandidates(item) {
   addTitleCandidates(item.title);
   addTitleCandidates(item.displayTitle);
 
+  const mainTitleFromClass = NEW_TITLE_CLASS_TO_MAIN_TYPE_MAP[item.rarityClass];
+  if (mainTitleFromClass) {
+    addTitleCandidates(mainTitleFromClass);
+  }
+
+  const mainTitleFromSubtitle = NEW_TITLE_SUBTITLE_TO_MAIN_TYPE_MAP[item.title] ||
+    NEW_TITLE_SUBTITLE_TO_MAIN_TYPE_MAP[item.displayTitle];
+  if (mainTitleFromSubtitle) {
+    addTitleCandidates(mainTitleFromSubtitle);
+
+    const definition = NEW_TIER_TITLE_DEFINITIONS.find(({ type }) => type === mainTitleFromSubtitle);
+    if (definition && Array.isArray(definition.titles)) {
+      definition.titles.forEach((subtitle) => addTitleCandidates(subtitle));
+    }
+  }
+
   return candidates;
 }
 
@@ -22691,7 +22745,7 @@ function getClassForRarity(rarity) {
       "Sovereign [1 in GoodOldDays]": 'goodOldDays',
   };
 
-  return rarityClasses[rarity] || null;
+  return rarityClasses[rarity] || NEW_TITLE_RARITY_CLASS_MAP[rarity] || null;
 }
 
 
