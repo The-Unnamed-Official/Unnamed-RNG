@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Unnamed's RNG - 1.5</title>
-    <script src="https://kit.fontawesome.com/fe85db6219.js" crossorigin="anonymous"></script>
+    <title>Unnamed's RNG - v1.5</title>
+    <script src="https://kit.fontawesome.com/f34561342c.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="files/style.css">
     <link rel="icon" type="image/png" sizes="16x16" href="/Unnamed-RNG/files/images/favicon-16.png">
@@ -16,16 +16,6 @@
     <link rel="icon" type="image/png" sizes="500x500" href="/Unnamed-RNG/files/images/favicon-500.png">
 </head>
 <body>
-  <div class="halloween-backdrop" aria-hidden="true">
-    <div class="halloween-overlay halloween-overlay--ground">
-      <div class="halloween-overlay__ground"></div>
-    </div>
-  </div>
-  <div class="halloween-overlay halloween-overlay--snow" aria-hidden="true">
-    <div class="halloween-overlay__snow halloween-overlay__snow--back"></div>
-    <div class="halloween-overlay__snow halloween-overlay__snow--mid"></div>
-    <div class="halloween-overlay__snow halloween-overlay__snow--front"></div>
-  </div>
   <div id="flashLayer" aria-hidden="true"></div>
 
     <div class="version" role="status" aria-live="polite">
@@ -35,8 +25,8 @@
         <div class="version__chips" role="group" aria-label="Game metadata">
             <span class="version__chip version__chip--number" role="text">
                 <span class="version__eyebrow">Version</span>
-                <span class="version__value">1.5</span>
-                <span class="version__detail">1.5_RELEASE</span>
+                <span class="version__value">v1.5</span>
+                <span class="version__detail">v1.5_RELEASE</span>
             </span>
 
             <span
@@ -59,10 +49,25 @@
     <div id="menuScreen">
         <button id="startButton"><i class="fa-solid fa-play"></i></button>
     </div>
-    <div id="loadingScreen">
-        <div class="loading-content">
-            <div class="loading-animation"></div>
-            <p class="loadTxt">Loading assets..</p>
+    <div id="loadingScreen" aria-hidden="true">
+        <div class="loading-content" role="status" aria-live="polite">
+            <p class="loading-kicker">Starting session</p>
+            <h2 class="loading-title">Unnamed's RNG</h2>
+            <div
+                class="loading-progress"
+                role="progressbar"
+                aria-label="Game loading progress"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="0"
+            >
+                <span id="loadingProgressBar" class="loading-progress__bar"></span>
+            </div>
+            <div class="loading-meta">
+                <p class="loadTxt" id="loadingStatusText">Waiting for start</p>
+                <span class="loading-percent" id="loadingPercentText">0%</span>
+            </div>
+            <p class="loading-detail" id="loadingDetailText">Ready when you are.</p>
         </div>
     </div>
 
@@ -215,28 +220,26 @@
 
                         <section class="settings-section">
                             <h4 class="settings-section__title">Cutscene Skip</h4>
-                            <div id="rarityChecklistC" class="settings-chip-group">
-                                <button id="toggleCutscene1K" class="cutsceneSkipBtb" data-tier="decent" type="button"><span id="1KTxt" class="under1kT">Skip Decent Cutscenes</span></button>
-                                <button id="toggleCutscene10K" class="cutsceneSkipBtb" data-tier="grand" type="button"><span id="10KTxt" class="under10kT">Skip Grand Cutscenes</span></button>
-                                <button id="toggleCutscene100K" class="cutsceneSkipBtb" data-tier="mastery" type="button"><span id="100KTxt" class="under100k">Skip Mastery Cutscenes</span></button>
-                                <button id="toggleCutscene1M" class="cutsceneSkipBtb" data-tier="supreme" type="button"><span id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</span></button>
-                                <button id="toggleCutsceneTranscendent" class="cutsceneSkipBtb" data-tier="transcendent" type="button"><span id="transcendentTxt" class="transcendent">Skip Transcendent Cutscenes</span></button>
-                                <button id="toggleCutsceneOG" class="cutsceneSkipBtb" data-tier="goodOldDays" type="button"><span id="OGTxt" class="goodOldDays">Skip Good Old Days Cutscenes</span></button>
-                                <!-- <button id="toggleCutsceneHalloween25" class="cutsceneSkipBtb" data-tier="event-halloween25" type="button"><span id="halloween25Txt" class="event-halloween25">Skip Halloween 2025 Title Cutscenes</span></button> -->
+                            <div id="rarityChecklistC" class="cutscene-threshold-control">
+                                <label class="cutscene-threshold-control__label" for="cutsceneSkipThresholdInput">Skip Below Rarity</label>
+                                <div class="cutscene-threshold-control__input-row">
+                                    <input id="cutsceneSkipThresholdInput" class="cutscene-threshold-control__input" type="text" inputmode="numeric" pattern="[0-9, _\s]*" value="0">
+                                    <button id="resetCutsceneSkipThreshold" class="settings-btn settings-btn--ghost" type="button">Reset</button>
+                                </div>
+                                <p id="cutsceneSkipThresholdStatus" class="cutscene-threshold-control__status">Playing all cutscenes</p>
                             </div>
                         </section>
                     </div>
 
                     <section class="settings-section settings-section--full">
-                        <h4 class="settings-section__title">Auto Delete Rarity</h4>
-                        <div id="rarityChecklist" class="settings-chip-group">
-                            <button class="rarity-button" data-rarity="under100" type="button"><span class="under100T">Basic</span></button>
-                            <button class="rarity-button" data-rarity="under1k" type="button"><span class="under1kT">Decent</span></button>
-                            <button class="rarity-button" data-rarity="under10k" type="button"><span class="under10kT">Grand</span></button>
-                            <button class="rarity-button" data-rarity="under100k" type="button"><span class="under100k">Mastery</span></button>
-                            <button class="rarity-button" data-rarity="under1m" type="button"><span class="under1mBtn">Supreme</span></button>
-                            <button class="rarity-button" data-rarity="transcendent" type="button"><span class="transcendent">Transcendent</span></button>
-                            <button class="rarity-button" data-rarity="special" type="button"><span class="special">Special</span></button>
+                        <h4 class="settings-section__title">Auto Skip Titles</h4>
+                        <div id="rarityChecklist" class="cutscene-threshold-control">
+                            <label class="cutscene-threshold-control__label" for="titleSkipThresholdInput">Skip Titles Below Rarity</label>
+                            <div class="cutscene-threshold-control__input-row">
+                                <input id="titleSkipThresholdInput" class="cutscene-threshold-control__input" type="text" inputmode="numeric" pattern="[0-9, _\s]*" value="0">
+                                <button id="resetTitleSkipThreshold" class="settings-btn settings-btn--ghost" type="button">Reset</button>
+                            </div>
+                            <p id="titleSkipThresholdStatus" class="cutscene-threshold-control__status">Saving all rolled titles</p>
                         </div>
                     </section>
                 </div>
@@ -628,12 +631,15 @@
             <div class="potion-menu__body">
                 <p class="potion-menu__description">Craft potion buffs by exchanging spare titles. Crafted potions are stored in your inventory under the Potions tab.</p>
                 <div class="potion-menu__scroll">
-                    <div class="potion-menu__section">
+                    <div id="potionBundlesSection" class="potion-menu__section potion-menu__section--collapsible potion-menu__section--collapsed">
                         <div class="potion-menu__section-header">
-                            <h4 class="potion-menu__section-title">Potion Transactions</h4>
-                            <p class="potion-menu__section-subtitle">Support the game and instantly stock up on large potion bundles.</p>
+                            <div class="potion-menu__section-heading">
+                                <h4 class="potion-menu__section-title">Potion Transactions</h4>
+                                <button id="togglePotionBundlesButton" class="potion-menu__section-toggle" type="button" aria-expanded="false" aria-controls="potionTransactionList">Show</button>
+                            </div>
+                            <p class="potion-menu__section-subtitle">Claim free potion bundles when they are available.</p>
                         </div>
-                        <div id="potionTransactionList" class="potion-transaction-list" role="list"></div>
+                        <div id="potionTransactionList" class="potion-transaction-list potion-transaction-list--collapsed" role="list" hidden aria-hidden="true"></div>
                     </div>
                     <div id="potionCraftingList" class="potion-menu__grid" role="list"></div>
                 </div>
@@ -651,7 +657,7 @@
             tabindex="-1"
         >
             <div class="potion-transaction-dialog__card" role="document">
-                <h4 id="potionTransactionDialogTitle" class="potion-transaction-dialog__title">Confirm Purchase</h4>
+                <h4 id="potionTransactionDialogTitle" class="potion-transaction-dialog__title">Confirm Claim</h4>
                 <p id="potionTransactionDialogMessage" class="potion-transaction-dialog__message"></p>
                 <p id="potionTransactionDialogSummary" class="potion-transaction-dialog__summary"></p>
                 <div class="potion-transaction-dialog__actions">
@@ -667,7 +673,7 @@
                         class="potion-transaction-dialog__button potion-transaction-dialog__button--confirm"
                         type="button"
                     >
-                        Confirm Purchase
+                        Confirm
                     </button>
                 </div>
             </div>
@@ -694,7 +700,7 @@
             <button class="creator-card" type="button" onclick="showPopupCopyTxt(event)" aria-haspopup="menu" aria-expanded="false">
                 <span class="creator-card__glow" aria-hidden="true"></span>
                 <span class="creator-card__avatar">
-                    <img src="files/images/unnamed_pfp.png" alt="Profile picture for Unnamed" loading="lazy">
+                    <img src="https://cdn.discordapp.com/avatars/611204110955446301/4d225e189693d170f4e5c342fb25d152.webp?size=128" alt="Profile picture for Unnamed" loading="lazy">
                 </span>
                 <span class="creator-card__meta">
                     <span class="creator-card__label">Game created by</span>
@@ -1100,6 +1106,16 @@
             </div>
         </div>
         <div id="potionSpawnLayer" class="potion-spawn-layer" aria-live="polite"></div>
+        <div id="devCommandPrompt" class="dev-command-prompt" aria-hidden="true" hidden>
+            <form id="devCommandPromptForm" class="dev-command-prompt__form" autocomplete="off">
+                <label id="devCommandPromptLabel" class="dev-command-prompt__label" for="devCommandPromptInput">Command</label>
+                <div class="dev-command-prompt__row">
+                    <input id="devCommandPromptInput" class="dev-command-prompt__input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+                    <button class="dev-command-prompt__submit" type="submit">Enter</button>
+                </div>
+                <p id="devCommandPromptStatus" class="dev-command-prompt__status" aria-live="polite"></p>
+            </form>
+        </div>
         <div id="buffTray" class="buff-tray" aria-live="polite"></div>
         <button class="fullscreen-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
     </div>
