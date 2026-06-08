@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Unnamed's RNG - 1.4</title>
-    <script src="https://kit.fontawesome.com/fe85db6219.js" crossorigin="anonymous"></script>
+    <title>Unnamed's RNG - v1.5</title>
+    <script src="https://kit.fontawesome.com/f34561342c.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <link rel="stylesheet" href="files/style.css">
     <link rel="icon" type="image/png" sizes="16x16" href="/Unnamed-RNG/files/images/favicon-16.png">
@@ -16,16 +16,6 @@
     <link rel="icon" type="image/png" sizes="500x500" href="/Unnamed-RNG/files/images/favicon-500.png">
 </head>
 <body>
-  <div class="halloween-backdrop" aria-hidden="true">
-    <div class="halloween-overlay halloween-overlay--ground">
-      <div class="halloween-overlay__ground"></div>
-    </div>
-  </div>
-  <div class="halloween-overlay halloween-overlay--snow" aria-hidden="true">
-    <div class="halloween-overlay__snow halloween-overlay__snow--back"></div>
-    <div class="halloween-overlay__snow halloween-overlay__snow--mid"></div>
-    <div class="halloween-overlay__snow halloween-overlay__snow--front"></div>
-  </div>
   <div id="flashLayer" aria-hidden="true"></div>
 
     <div class="version" role="status" aria-live="polite">
@@ -35,8 +25,8 @@
         <div class="version__chips" role="group" aria-label="Game metadata">
             <span class="version__chip version__chip--number" role="text">
                 <span class="version__eyebrow">Version</span>
-                <span class="version__value">1.4.212</span>
-                <span class="version__detail">1.4.212_RELEASE</span>
+                <span class="version__value">v1.5</span>
+                <span class="version__detail">v1.5_RELEASE</span>
             </span>
 
             <span
@@ -59,10 +49,25 @@
     <div id="menuScreen">
         <button id="startButton"><i class="fa-solid fa-play"></i></button>
     </div>
-    <div id="loadingScreen">
-        <div class="loading-content">
-            <div class="loading-animation"></div>
-            <p class="loadTxt">Loading assets..</p>
+    <div id="loadingScreen" aria-hidden="true">
+        <div class="loading-content" role="status" aria-live="polite">
+            <p class="loading-kicker">Starting session</p>
+            <h2 class="loading-title">Unnamed's RNG</h2>
+            <div
+                class="loading-progress"
+                role="progressbar"
+                aria-label="Game loading progress"
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-valuenow="0"
+            >
+                <span id="loadingProgressBar" class="loading-progress__bar"></span>
+            </div>
+            <div class="loading-meta">
+                <p class="loadTxt" id="loadingStatusText">Waiting for start</p>
+                <span class="loading-percent" id="loadingPercentText">0%</span>
+            </div>
+            <p class="loading-detail" id="loadingDetailText">Ready when you are.</p>
         </div>
     </div>
 
@@ -215,28 +220,26 @@
 
                         <section class="settings-section">
                             <h4 class="settings-section__title">Cutscene Skip</h4>
-                            <div id="rarityChecklistC" class="settings-chip-group">
-                                <button id="toggleCutscene1K" class="cutsceneSkipBtb" data-tier="decent" type="button"><span id="1KTxt" class="under1kT">Skip Decent Cutscenes</span></button>
-                                <button id="toggleCutscene10K" class="cutsceneSkipBtb" data-tier="grand" type="button"><span id="10KTxt" class="under10kT">Skip Grand Cutscenes</span></button>
-                                <button id="toggleCutscene100K" class="cutsceneSkipBtb" data-tier="mastery" type="button"><span id="100KTxt" class="under100k">Skip Mastery Cutscenes</span></button>
-                                <button id="toggleCutscene1M" class="cutsceneSkipBtb" data-tier="supreme" type="button"><span id="1MTxt" class="under1mBtn">Skip Supreme Cutscenes</span></button>
-                                <button id="toggleCutsceneTranscendent" class="cutsceneSkipBtb" data-tier="transcendent" type="button"><span id="transcendentTxt" class="transcendent">Skip Transcendent Cutscenes</span></button>
-                                <button id="toggleCutsceneOG" class="cutsceneSkipBtb" data-tier="goodOldDays" type="button"><span id="OGTxt" class="goodOldDays">Skip Good Old Days Cutscenes</span></button>
-                                <!-- <button id="toggleCutsceneHalloween25" class="cutsceneSkipBtb" data-tier="event-halloween25" type="button"><span id="halloween25Txt" class="event-halloween25">Skip Halloween 2025 Title Cutscenes</span></button> -->
+                            <div id="rarityChecklistC" class="cutscene-threshold-control">
+                                <label class="cutscene-threshold-control__label" for="cutsceneSkipThresholdInput">Skip Below Rarity</label>
+                                <div class="cutscene-threshold-control__input-row">
+                                    <input id="cutsceneSkipThresholdInput" class="cutscene-threshold-control__input" type="text" inputmode="numeric" pattern="[0-9, _\s]*" value="0">
+                                    <button id="resetCutsceneSkipThreshold" class="settings-btn settings-btn--ghost" type="button">Reset</button>
+                                </div>
+                                <p id="cutsceneSkipThresholdStatus" class="cutscene-threshold-control__status">Playing all cutscenes</p>
                             </div>
                         </section>
                     </div>
 
                     <section class="settings-section settings-section--full">
-                        <h4 class="settings-section__title">Auto Delete Rarity</h4>
-                        <div id="rarityChecklist" class="settings-chip-group">
-                            <button class="rarity-button" data-rarity="under100" type="button"><span class="under100T">Basic</span></button>
-                            <button class="rarity-button" data-rarity="under1k" type="button"><span class="under1kT">Decent</span></button>
-                            <button class="rarity-button" data-rarity="under10k" type="button"><span class="under10kT">Grand</span></button>
-                            <button class="rarity-button" data-rarity="under100k" type="button"><span class="under100k">Mastery</span></button>
-                            <button class="rarity-button" data-rarity="under1m" type="button"><span class="under1mBtn">Supreme</span></button>
-                            <button class="rarity-button" data-rarity="transcendent" type="button"><span class="transcendent">Transcendent</span></button>
-                            <button class="rarity-button" data-rarity="special" type="button"><span class="special">Special</span></button>
+                        <h4 class="settings-section__title">Auto Skip Titles</h4>
+                        <div id="rarityChecklist" class="cutscene-threshold-control">
+                            <label class="cutscene-threshold-control__label" for="titleSkipThresholdInput">Skip Titles Below Rarity</label>
+                            <div class="cutscene-threshold-control__input-row">
+                                <input id="titleSkipThresholdInput" class="cutscene-threshold-control__input" type="text" inputmode="numeric" pattern="[0-9, _\s]*" value="0">
+                                <button id="resetTitleSkipThreshold" class="settings-btn settings-btn--ghost" type="button">Reset</button>
+                            </div>
+                            <p id="titleSkipThresholdStatus" class="cutscene-threshold-control__status">Saving all rolled titles</p>
                         </div>
                     </section>
                 </div>
@@ -628,12 +631,15 @@
             <div class="potion-menu__body">
                 <p class="potion-menu__description">Craft potion buffs by exchanging spare titles. Crafted potions are stored in your inventory under the Potions tab.</p>
                 <div class="potion-menu__scroll">
-                    <div class="potion-menu__section">
+                    <div id="potionBundlesSection" class="potion-menu__section potion-menu__section--collapsible potion-menu__section--collapsed">
                         <div class="potion-menu__section-header">
-                            <h4 class="potion-menu__section-title">Potion Transactions</h4>
-                            <p class="potion-menu__section-subtitle">Support the game and instantly stock up on large potion bundles.</p>
+                            <div class="potion-menu__section-heading">
+                                <h4 class="potion-menu__section-title">Potion Transactions</h4>
+                                <button id="togglePotionBundlesButton" class="potion-menu__section-toggle" type="button" aria-expanded="false" aria-controls="potionTransactionList">Show</button>
+                            </div>
+                            <p class="potion-menu__section-subtitle">Claim free potion bundles when they are available.</p>
                         </div>
-                        <div id="potionTransactionList" class="potion-transaction-list" role="list"></div>
+                        <div id="potionTransactionList" class="potion-transaction-list potion-transaction-list--collapsed" role="list" hidden aria-hidden="true"></div>
                     </div>
                     <div id="potionCraftingList" class="potion-menu__grid" role="list"></div>
                 </div>
@@ -651,7 +657,7 @@
             tabindex="-1"
         >
             <div class="potion-transaction-dialog__card" role="document">
-                <h4 id="potionTransactionDialogTitle" class="potion-transaction-dialog__title">Confirm Purchase</h4>
+                <h4 id="potionTransactionDialogTitle" class="potion-transaction-dialog__title">Confirm Claim</h4>
                 <p id="potionTransactionDialogMessage" class="potion-transaction-dialog__message"></p>
                 <p id="potionTransactionDialogSummary" class="potion-transaction-dialog__summary"></p>
                 <div class="potion-transaction-dialog__actions">
@@ -667,7 +673,7 @@
                         class="potion-transaction-dialog__button potion-transaction-dialog__button--confirm"
                         type="button"
                     >
-                        Confirm Purchase
+                        Confirm
                     </button>
                 </div>
             </div>
@@ -694,7 +700,7 @@
             <button class="creator-card" type="button" onclick="showPopupCopyTxt(event)" aria-haspopup="menu" aria-expanded="false">
                 <span class="creator-card__glow" aria-hidden="true"></span>
                 <span class="creator-card__avatar">
-                    <img src="files/images/unnamed_pfp.png" alt="Profile picture for Unnamed" loading="lazy">
+                    <img src="https://cdn.discordapp.com/avatars/611204110955446301/4d225e189693d170f4e5c342fb25d152.webp?size=128" alt="Profile picture for Unnamed" loading="lazy">
                 </span>
                 <span class="creator-card__meta">
                     <span class="creator-card__label">Game created by</span>
@@ -827,6 +833,13 @@
                                     <button id="deleteAllSpectralGlareButton" class="inventory-delete-btn" type="button" title="Delete All Spectral Glare">Spectral Glare</button>
                                     <button id="deleteAllPhantomStrideButton" class="inventory-delete-btn" type="button" title="Delete All Phantom Stride">Phantom Stride</button>
                                     <button id="deleteAllContortionsButton" class="inventory-delete-btn" type="button" title="Delete All Contortions">Contortions</button>
+                                    <button id="deleteAllPebbleButton" class="inventory-delete-btn" type="button" title="Delete All Pebble">Pebble</button>
+                                    <button id="deleteAllCinderButton" class="inventory-delete-btn" type="button" title="Delete All Cinder">Cinder</button>
+                                    <button id="deleteAllBreezeButton" class="inventory-delete-btn" type="button" title="Delete All Breeze">Breeze</button>
+                                    <button id="deleteAllDewdropButton" class="inventory-delete-btn" type="button" title="Delete All Dewdrop">Dewdrop</button>
+                                    <button id="deleteAllLanternButton" class="inventory-delete-btn" type="button" title="Delete All Lantern">Lantern</button>
+                                    <button id="deleteAllMeadowButton" class="inventory-delete-btn" type="button" title="Delete All Meadow">Meadow</button>
+                                    <button id="deleteAllKindlingButton" class="inventory-delete-btn" type="button" title="Delete All Kindling">Kindling</button>
                                 </div>
                             </section>
 
@@ -863,6 +876,13 @@
                                     <button id="deleteAllEnigmaticDreamButton" class="inventory-delete-btn" type="button" title="Delete All Enigmatic Dream">Enigmatic Dream</button>
                                     <button id="deleteAllGrimDestinyButton" class="inventory-delete-btn" type="button" title="Delete All Grim Destiny">Grim Destiny</button>
                                     <button id="deleteAllDemonSoulButton" class="inventory-delete-btn" type="button" title="Delete All Demon Soul">Demon Soul</button>
+                                    <button id="deleteAllFootstepButton" class="inventory-delete-btn" type="button" title="Delete All Footstep">Footstep</button>
+                                    <button id="deleteAllMurmurButton" class="inventory-delete-btn" type="button" title="Delete All Murmur">Murmur</button>
+                                    <button id="deleteAllRaindropButton" class="inventory-delete-btn" type="button" title="Delete All Raindrop">Raindrop</button>
+                                    <button id="deleteAllWillowButton" class="inventory-delete-btn" type="button" title="Delete All Willow">Willow</button>
+                                    <button id="deleteAllEmberButton" class="inventory-delete-btn" type="button" title="Delete All Ember">Ember</button>
+                                    <button id="deleteAllTangleButton" class="inventory-delete-btn" type="button" title="Delete All Tangle">Tangle</button>
+                                    <button id="deleteAllDrizzleButton" class="inventory-delete-btn" type="button" title="Delete All Drizzle">Drizzle</button>
                                 </div>
                             </section>
 
@@ -888,6 +908,29 @@
                                     <button id="deleteAllNebulaButton" class="inventory-delete-btn" type="button" title="Delete All Nebula">Nebula</button>
                                     <button id="deleteAllDevilsHeartButton" class="inventory-delete-btn" type="button" title="Delete All Devil's Heart">Devil's Heart</button>
                                     <button id="deleteAllArcanePulseButton" class="inventory-delete-btn" type="button" title="Delete All Arcane Pulse">Arcane Pulse</button>
+                                    <button id="deleteAllHearthButton" class="inventory-delete-btn" type="button" title="Delete All Hearth">Hearth</button>
+                                    <button id="deleteAllLanewayButton" class="inventory-delete-btn" type="button" title="Delete All Laneway">Laneway</button>
+                                    <button id="deleteAllPollenButton" class="inventory-delete-btn" type="button" title="Delete All Pollen">Pollen</button>
+                                    <button id="deleteAllSundialButton" class="inventory-delete-btn" type="button" title="Delete All Sundial">Sundial</button>
+                                    <button id="deleteAllBrookButton" class="inventory-delete-btn" type="button" title="Delete All Brook">Brook</button>
+                                    <button id="deleteAllBrackenButton" class="inventory-delete-btn" type="button" title="Delete All Bracken">Bracken</button>
+                                    <button id="deleteAllHollowButton" class="inventory-delete-btn" type="button" title="Delete All Hollow">Hollow</button>
+                                    <button id="deleteAllThicketButton" class="inventory-delete-btn" type="button" title="Delete All Thicket">Thicket</button>
+                                    <button id="deleteAllFableButton" class="inventory-delete-btn" type="button" title="Delete All Fable">Fable</button>
+                                    <button id="deleteAllCavernButton" class="inventory-delete-btn" type="button" title="Delete All Cavern">Cavern</button>
+                                    <button id="deleteAllTimberButton" class="inventory-delete-btn" type="button" title="Delete All Timber">Timber</button>
+                                    <button id="deleteAllHarborButton" class="inventory-delete-btn" type="button" title="Delete All Harbor">Harbor</button>
+                                    <button id="deleteAllGroveButton" class="inventory-delete-btn" type="button" title="Delete All Grove">Grove</button>
+                                    <button id="deleteAllEchoesButton" class="inventory-delete-btn" type="button" title="Delete All Echoes">Echoes</button>
+                                    <button id="deleteAllLanternlightButton" class="inventory-delete-btn" type="button" title="Delete All Lanternlight">Lanternlight</button>
+                                    <button id="deleteAllAshfallButton" class="inventory-delete-btn" type="button" title="Delete All Ashfall">Ashfall</button>
+                                    <button id="deleteAllWanderButton" class="inventory-delete-btn" type="button" title="Delete All Wander">Wander</button>
+                                    <button id="deleteAllCompassButton" class="inventory-delete-btn" type="button" title="Delete All Compass">Compass</button>
+                                    <button id="deleteAllDriftwoodButton" class="inventory-delete-btn" type="button" title="Delete All Driftwood">Driftwood</button>
+                                    <button id="deleteAllFireflyButton" class="inventory-delete-btn" type="button" title="Delete All Firefly">Firefly</button>
+                                    <button id="deleteAllGraniteButton" class="inventory-delete-btn" type="button" title="Delete All Granite">Granite</button>
+                                    <button id="deleteAllMistfallButton" class="inventory-delete-btn" type="button" title="Delete All Mistfall">Mistfall</button>
+                                    <button id="deleteAllWayfarerButton" class="inventory-delete-btn" type="button" title="Delete All Wayfarer">Wayfarer</button>
                                 </div>
                             </section>
                             
@@ -906,6 +949,33 @@
                                     <button id="deleteAllX1staButton" class="inventory-delete-btn" type="button" title="Delete All X1sta">X1sta</button>
                                     <button id="deleteAllAlienButton" class="inventory-delete-btn" type="button" title="Delete All Alien">Alien</button>
                                     <button id="deleteAllMalvorynButton" class="inventory-delete-btn" type="button" title="Delete All Malvoryn">Malvoryn</button>
+                                    <button id="deleteAllGregButton" class="inventory-delete-btn" type="button" title="Delete All Greg">Greg</button>
+                                    <button id="deleteAllMintllieButton" class="inventory-delete-btn" type="button" title="Delete All Mintllie">Mintllie</button>
+                                    <button id="deleteAllGeezerButton" class="inventory-delete-btn" type="button" title="Delete All Geezer">Geezer</button>
+                                    <button id="deleteAllPolarrButton" class="inventory-delete-btn" type="button" title="Delete All Polarr">Polarr</button>
+                                    <button id="deleteAllCrosswindButton" class="inventory-delete-btn" type="button" title="Delete All Crosswind">Crosswind</button>
+                                    <button id="deleteAllRustleButton" class="inventory-delete-btn" type="button" title="Delete All Rustle">Rustle</button>
+                                    <button id="deleteAllFootprintButton" class="inventory-delete-btn" type="button" title="Delete All Footprint">Footprint</button>
+                                    <button id="deleteAllWildwoodButton" class="inventory-delete-btn" type="button" title="Delete All Wildwood">Wildwood</button>
+                                    <button id="deleteAllOvergrowthButton" class="inventory-delete-btn" type="button" title="Delete All Overgrowth">Overgrowth</button>
+                                    <button id="deleteAllStonewallButton" class="inventory-delete-btn" type="button" title="Delete All Stonewall">Stonewall</button>
+                                    <button id="deleteAllMoonriseButton" class="inventory-delete-btn" type="button" title="Delete All Moonrise">Moonrise</button>
+                                    <button id="deleteAllSeaboundButton" class="inventory-delete-btn" type="button" title="Delete All Seabound">Seabound</button>
+                                    <button id="deleteAllRidgewayButton" class="inventory-delete-btn" type="button" title="Delete All Ridgeway">Ridgeway</button>
+                                    <button id="deleteAllDuststormButton" class="inventory-delete-btn" type="button" title="Delete All Duststorm">Duststorm</button>
+                                    <button id="deleteAllNorthwindButton" class="inventory-delete-btn" type="button" title="Delete All Northwind">Northwind</button>
+                                    <button id="deleteAllSunstoneButton" class="inventory-delete-btn" type="button" title="Delete All Sunstone">Sunstone</button>
+                                    <button id="deleteAllWellspringButton" class="inventory-delete-btn" type="button" title="Delete All Wellspring">Wellspring</button>
+                                    <button id="deleteAllDeepwaterButton" class="inventory-delete-btn" type="button" title="Delete All Deepwater">Deepwater</button>
+                                    <button id="deleteAllSkylineButton" class="inventory-delete-btn" type="button" title="Delete All Skyline">Skyline</button>
+                                    <button id="deleteAllIronwoodButton" class="inventory-delete-btn" type="button" title="Delete All Ironwood">Ironwood</button>
+                                    <button id="deleteAllWildfireButton" class="inventory-delete-btn" type="button" title="Delete All Wildfire">Wildfire</button>
+                                    <button id="deleteAllHighlandButton" class="inventory-delete-btn" type="button" title="Delete All Highland">Highland</button>
+                                    <button id="deleteAllNightfallSupremeButton" class="inventory-delete-btn" type="button" title="Delete All Nightfall (Supreme)">Nightfall (Supreme)</button>
+                                    <button id="deleteAllThunderButton" class="inventory-delete-btn" type="button" title="Delete All Thunder">Thunder</button>
+                                    <button id="deleteAllShorelineButton" class="inventory-delete-btn" type="button" title="Delete All Shoreline">Shoreline</button>
+                                    <button id="deleteAllMarinerButton" class="inventory-delete-btn" type="button" title="Delete All Mariner">Mariner</button>
+                                    <button id="deleteAllEvergreenButton" class="inventory-delete-btn" type="button" title="Delete All Evergreen">Evergreen</button>
                                 </div>
                             </section>
 
@@ -938,6 +1008,36 @@
                                     <button id="deleteAllOrbitalButton" class="inventory-delete-btn" type="button" title="Delete All O R B I T A L"><span class="transcendent">O R B I T A L</span></button>
                                     <button id="deleteAllH1diButton" class="inventory-delete-btn" type="button" title="Delete All H1di"><span class="transcendent h1di-flash">H1di</span></button>
                                     <button id="deleteAllEquinoxButton" class="inventory-delete-btn" type="button" title="Delete All 『Equinox』"><span class="transcendent equinox-flash">『Equinox』</span></button>
+                                    <button id="deleteAllHeadstoneButton" class="inventory-delete-btn" type="button" title="Delete All Headstone"><span class="transcendent">Headstone</span></button>
+                                    <button id="deleteAllRedwoodButton" class="inventory-delete-btn" type="button" title="Delete All Redwood"><span class="transcendent">Redwood</span></button>
+                                    <button id="deleteAllMonsoonButton" class="inventory-delete-btn" type="button" title="Delete All Monsoon"><span class="transcendent">Monsoon</span></button>
+                                    <button id="deleteAllSandstormButton" class="inventory-delete-btn" type="button" title="Delete All Sandstorm"><span class="transcendent">Sandstorm</span></button>
+                                    <button id="deleteAllHinterlandButton" class="inventory-delete-btn" type="button" title="Delete All Hinterland"><span class="transcendent">Hinterland</span></button>
+                                    <button id="deleteAllBlizzardButton" class="inventory-delete-btn" type="button" title="Delete All Blizzard"><span class="transcendent">Blizzard</span></button>
+                                    <button id="deleteAllStonegateButton" class="inventory-delete-btn" type="button" title="Delete All Stonegate"><span class="transcendent">Stonegate</span></button>
+                                    <button id="deleteAllWildlandsButton" class="inventory-delete-btn" type="button" title="Delete All Wildlands"><span class="transcendent">Wildlands</span></button>
+                                    <button id="deleteAllTidefallButton" class="inventory-delete-btn" type="button" title="Delete All Tidefall"><span class="transcendent">Tidefall</span></button>
+                                    <button id="deleteAllGoldleafButton" class="inventory-delete-btn" type="button" title="Delete All Goldleaf"><span class="transcendent">Goldleaf</span></button>
+                                    <button id="deleteAllRavenwoodButton" class="inventory-delete-btn" type="button" title="Delete All Ravenwood"><span class="transcendent">Ravenwood</span></button>
+                                    <button id="deleteAllStormfrontButton" class="inventory-delete-btn" type="button" title="Delete All Stormfront"><span class="transcendent">Stormfront</span></button>
+                                    <button id="deleteAllIroncladButton" class="inventory-delete-btn" type="button" title="Delete All Ironclad"><span class="transcendent">Ironclad</span></button>
+                                    <button id="deleteAllFrostbiteButton" class="inventory-delete-btn" type="button" title="Delete All Frostbite"><span class="transcendent">Frostbite</span></button>
+                                    <button id="deleteAllShadowfallButton" class="inventory-delete-btn" type="button" title="Delete All Shadowfall"><span class="transcendent">Shadowfall</span></button>
+                                    <button id="deleteAllSunbreakButton" class="inventory-delete-btn" type="button" title="Delete All Sunbreak"><span class="transcendent">Sunbreak</span></button>
+                                    <button id="deleteAllWindwardButton" class="inventory-delete-btn" type="button" title="Delete All Windward"><span class="transcendent">Windward</span></button>
+                                    <button id="deleteAllEarthboundButton" class="inventory-delete-btn" type="button" title="Delete All Earthbound"><span class="transcendent">Earthbound</span></button>
+                                    <button id="deleteAllHighwaterButton" class="inventory-delete-btn" type="button" title="Delete All Highwater"><span class="transcendent">Highwater</span></button>
+                                    <button id="deleteAllGraveyardButton" class="inventory-delete-btn" type="button" title="Delete All Graveyard"><span class="transcendent">Graveyard</span></button>
+                                    <button id="deleteAllBlackridgeButton" class="inventory-delete-btn" type="button" title="Delete All Blackridge"><span class="transcendent">Blackridge</span></button>
+                                    <button id="deleteAllLongwinterButton" class="inventory-delete-btn" type="button" title="Delete All Longwinter"><span class="transcendent">Longwinter</span></button>
+                                    <button id="deleteAllNorthstarButton" class="inventory-delete-btn" type="button" title="Delete All Northstar"><span class="transcendent">Northstar</span></button>
+                                    <button id="deleteAllFirestormButton" class="inventory-delete-btn" type="button" title="Delete All Firestorm"><span class="transcendent">Firestorm</span></button>
+                                    <button id="deleteAllDreadwoodButton" class="inventory-delete-btn" type="button" title="Delete All Dreadwood"><span class="transcendent">Dreadwood</span></button>
+                                    <button id="deleteAllStoneheartButton" class="inventory-delete-btn" type="button" title="Delete All Stoneheart"><span class="transcendent">Stoneheart</span></button>
+                                    <button id="deleteAllLastlightButton" class="inventory-delete-btn" type="button" title="Delete All Lastlight"><span class="transcendent">Lastlight</span></button>
+                                    <button id="deleteAllDeadwindButton" class="inventory-delete-btn" type="button" title="Delete All Deadwind"><span class="transcendent">Deadwind</span></button>
+                                    <button id="deleteAllFinalhourButton" class="inventory-delete-btn" type="button" title="Delete All Finalhour"><span class="transcendent">Finalhour</span></button>
+                                    <button id="deleteAllWorldendButton" class="inventory-delete-btn" type="button" title="Delete All Worldend"><span class="transcendent">Worldend</span></button>
                                 </div>
                             </section>
 
@@ -1006,6 +1106,16 @@
             </div>
         </div>
         <div id="potionSpawnLayer" class="potion-spawn-layer" aria-live="polite"></div>
+        <div id="devCommandPrompt" class="dev-command-prompt" aria-hidden="true" hidden>
+            <form id="devCommandPromptForm" class="dev-command-prompt__form" autocomplete="off">
+                <label id="devCommandPromptLabel" class="dev-command-prompt__label" for="devCommandPromptInput">Command</label>
+                <div class="dev-command-prompt__row">
+                    <input id="devCommandPromptInput" class="dev-command-prompt__input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false">
+                    <button class="dev-command-prompt__submit" type="submit">Enter</button>
+                </div>
+                <p id="devCommandPromptStatus" class="dev-command-prompt__status" aria-live="polite"></p>
+            </form>
+        </div>
         <div id="buffTray" class="buff-tray" aria-live="polite"></div>
         <button class="fullscreen-btn" onclick="toggleFullscreen()"><i class="fa-solid fa-expand"></i></button>
     </div>
@@ -1138,6 +1248,89 @@
     <audio preload="none" id="gingerAudio" src="files/sounds_and_music/ginger.mp3" loop></audio>
     <audio preload="none" id="esteggAudio" src="files/sounds_and_music/estegg.mp3" loop></audio>
     <audio preload="none" id="estbunAudio" src="files/sounds_and_music/estbun.mp3" loop></audio>
+    <audio preload="none" id="footstepAudio" src="files/sounds_and_music/footstep.mp3" loop></audio>
+    <audio preload="none" id="murmurAudio" src="files/sounds_and_music/murmur.mp3" loop></audio>
+    <audio preload="none" id="raindropAudio" src="files/sounds_and_music/raindrop.mp3" loop></audio>
+    <audio preload="none" id="willowAudio" src="files/sounds_and_music/willow.mp3" loop></audio>
+    <audio preload="none" id="emberAudio" src="files/sounds_and_music/ember.mp3" loop></audio>
+    <audio preload="none" id="tangleAudio" src="files/sounds_and_music/tangle.mp3" loop></audio>
+    <audio preload="none" id="drizzleAudio" src="files/sounds_and_music/drizzle.mp3" loop></audio>
+    <audio preload="none" id="hearthAudio" src="files/sounds_and_music/hearth.mp3" loop></audio>
+    <audio preload="none" id="lanewayAudio" src="files/sounds_and_music/laneway.mp3" loop></audio>
+    <audio preload="none" id="pollenAudio" src="files/sounds_and_music/pollen.mp3" loop></audio>
+    <audio preload="none" id="sundialAudio" src="files/sounds_and_music/sundial.mp3" loop></audio>
+    <audio preload="none" id="brookAudio" src="files/sounds_and_music/brook.mp3" loop></audio>
+    <audio preload="none" id="brackenAudio" src="files/sounds_and_music/bracken.mp3" loop></audio>
+    <audio preload="none" id="hollowAudio" src="files/sounds_and_music/hollow.mp3" loop></audio>
+    <audio preload="none" id="thicketAudio" src="files/sounds_and_music/thicket.mp3" loop></audio>
+    <audio preload="none" id="fableAudio" src="files/sounds_and_music/fable.mp3" loop></audio>
+    <audio preload="none" id="cavernAudio" src="files/sounds_and_music/cavern.mp3" loop></audio>
+    <audio preload="none" id="timberAudio" src="files/sounds_and_music/timber.mp3" loop></audio>
+    <audio preload="none" id="harborAudio" src="files/sounds_and_music/harbor.mp3" loop></audio>
+    <audio preload="none" id="groveAudio" src="files/sounds_and_music/grove.mp3" loop></audio>
+    <audio preload="none" id="echoesAudio" src="files/sounds_and_music/echoes.mp3" loop></audio>
+    <audio preload="none" id="lanternlightAudio" src="files/sounds_and_music/lanternlight.mp3" loop></audio>
+    <audio preload="none" id="ashfallAudio" src="files/sounds_and_music/ashfall.mp3" loop></audio>
+    <audio preload="none" id="wanderAudio" src="files/sounds_and_music/wander.mp3" loop></audio>
+    <audio preload="none" id="compassAudio" src="files/sounds_and_music/compass.mp3" loop></audio>
+    <audio preload="none" id="driftwoodAudio" src="files/sounds_and_music/driftwood.mp3" loop></audio>
+    <audio preload="none" id="fireflyAudio" src="files/sounds_and_music/firefly.mp3" loop></audio>
+    <audio preload="none" id="graniteAudio" src="files/sounds_and_music/granite.mp3" loop></audio>
+    <audio preload="none" id="mistfallAudio" src="files/sounds_and_music/mistfall.mp3" loop></audio>
+    <audio preload="none" id="wayfarerAudio" src="files/sounds_and_music/wayfarer.mp3" loop></audio>
+    <audio preload="none" id="crosswindAudio" src="files/sounds_and_music/crosswind.mp3" loop></audio>
+    <audio preload="none" id="rustleAudio" src="files/sounds_and_music/rustle.mp3" loop></audio>
+    <audio preload="none" id="footprintAudio" src="files/sounds_and_music/footprint.mp3" loop></audio>
+    <audio preload="none" id="wildwoodAudio" src="files/sounds_and_music/wildwood.mp3" loop></audio>
+    <audio preload="none" id="overgrowthAudio" src="files/sounds_and_music/overgrowth.mp3" loop></audio>
+    <audio preload="none" id="stonewallAudio" src="files/sounds_and_music/stonewall.mp3" loop></audio>
+    <audio preload="none" id="moonriseAudio" src="files/sounds_and_music/moonrise.mp3" loop></audio>
+    <audio preload="none" id="seaboundAudio" src="files/sounds_and_music/seabound.mp3" loop></audio>
+    <audio preload="none" id="ridgewayAudio" src="files/sounds_and_music/ridgeway.mp3" loop></audio>
+    <audio preload="none" id="duststormAudio" src="files/sounds_and_music/duststorm.mp3" loop></audio>
+    <audio preload="none" id="northwindAudio" src="files/sounds_and_music/northwind.mp3" loop></audio>
+    <audio preload="none" id="sunstoneAudio" src="files/sounds_and_music/sunstone.mp3" loop></audio>
+    <audio preload="none" id="wellspringAudio" src="files/sounds_and_music/wellspring.mp3" loop></audio>
+    <audio preload="none" id="deepwaterAudio" src="files/sounds_and_music/deepwater.mp3" loop></audio>
+    <audio preload="none" id="skylineAudio" src="files/sounds_and_music/skyline.mp3" loop></audio>
+    <audio preload="none" id="ironwoodAudio" src="files/sounds_and_music/ironwood.mp3" loop></audio>
+    <audio preload="none" id="wildfireAudio" src="files/sounds_and_music/wildfire.mp3" loop></audio>
+    <audio preload="none" id="highlandAudio" src="files/sounds_and_music/highland.mp3" loop></audio>
+    <audio preload="none" id="nightfallerAudio" src="files/sounds_and_music/nightfaller.mp3" loop></audio>
+    <audio preload="none" id="thunderAudio" src="files/sounds_and_music/thunder.mp3" loop></audio>
+    <audio preload="none" id="shorelineAudio" src="files/sounds_and_music/shoreline.mp3" loop></audio>
+    <audio preload="none" id="marinerAudio" src="files/sounds_and_music/mariner.mp3" loop></audio>
+    <audio preload="none" id="evergreenAudio" src="files/sounds_and_music/evergreen.mp3" loop></audio>
+    <audio preload="none" id="headstoneAudio" src="files/sounds_and_music/headstone.mp3" loop></audio>
+    <audio preload="none" id="redwoodAudio" src="files/sounds_and_music/redwood.mp3" loop></audio>
+    <audio preload="none" id="monsoonAudio" src="files/sounds_and_music/monsoon.mp3" loop></audio>
+    <audio preload="none" id="sandstormAudio" src="files/sounds_and_music/sandstorm.mp3" loop></audio>
+    <audio preload="none" id="hinterlandAudio" src="files/sounds_and_music/hinterland.mp3" loop></audio>
+    <audio preload="none" id="blizzardAudio" src="files/sounds_and_music/blizzard.mp3" loop></audio>
+    <audio preload="none" id="stonegateAudio" src="files/sounds_and_music/stonegate.mp3" loop></audio>
+    <audio preload="none" id="wildlandsAudio" src="files/sounds_and_music/wildlands.mp3" loop></audio>
+    <audio preload="none" id="tidefallAudio" src="files/sounds_and_music/tidefall.mp3" loop></audio>
+    <audio preload="none" id="goldleafAudio" src="files/sounds_and_music/goldleaf.mp3" loop></audio>
+    <audio preload="none" id="ravenwoodAudio" src="files/sounds_and_music/ravenwood.mp3" loop></audio>
+    <audio preload="none" id="stormfrontAudio" src="files/sounds_and_music/stormfront.mp3" loop></audio>
+    <audio preload="none" id="ironcladAudio" src="files/sounds_and_music/ironclad.mp3" loop></audio>
+    <audio preload="none" id="frostbiteAudio" src="files/sounds_and_music/frostbite.mp3" loop></audio>
+    <audio preload="none" id="shadowfallAudio" src="files/sounds_and_music/shadowfall.mp3" loop></audio>
+    <audio preload="none" id="sunbreakAudio" src="files/sounds_and_music/sunbreak.mp3" loop></audio>
+    <audio preload="none" id="windwardAudio" src="files/sounds_and_music/windward.mp3" loop></audio>
+    <audio preload="none" id="earthboundAudio" src="files/sounds_and_music/earthbound.mp3" loop></audio>
+    <audio preload="none" id="highwaterAudio" src="files/sounds_and_music/highwater.mp3" loop></audio>
+    <audio preload="none" id="graveyardAudio" src="files/sounds_and_music/graveyard.mp3" loop></audio>
+    <audio preload="none" id="blackridgeAudio" src="files/sounds_and_music/blackridge.mp3" loop></audio>
+    <audio preload="none" id="longwinterAudio" src="files/sounds_and_music/longwinter.mp3" loop></audio>
+    <audio preload="none" id="northstarAudio" src="files/sounds_and_music/northstar.mp3" loop></audio>
+    <audio preload="none" id="firestormAudio" src="files/sounds_and_music/firestorm.mp3" loop></audio>
+    <audio preload="none" id="dreadwoodAudio" src="files/sounds_and_music/dreadwood.mp3" loop></audio>
+    <audio preload="none" id="stoneheartAudio" src="files/sounds_and_music/stoneheart.mp3" loop></audio>
+    <audio preload="none" id="lastlightAudio" src="files/sounds_and_music/lastlight.mp3" loop></audio>
+    <audio preload="none" id="deadwindAudio" src="files/sounds_and_music/deadwind.mp3" loop></audio>
+    <audio preload="none" id="finalhourAudio" src="files/sounds_and_music/finalhour.mp3" loop></audio>
+    <audio preload="none" id="worldendAudio" src="files/sounds_and_music/worldend.mp3" loop></audio>
     <!-- <audio preload="none" id="mainAudio" src="files/sounds_and_music/main.mp3" loop></audio> -->
     <!-- <audio preload="none" id="mainAudio" src="files/sounds_and_music/mainEvent.mp3" loop></audio> -->
     <!-- <audio preload="none" id="mainAudio" src="files/sounds_and_music/mainEvent2.mp3" loop></audio> -->
