@@ -125,10 +125,29 @@ const ACTIVE_BUFFS_KEY = "activePotionBuffs";
 const BUFFS_DISABLED_KEY = "buffsDisabled";
 const BUFFS_PAUSE_TIMESTAMP_KEY = "buffsPausedAt";
 const DEV_LUCK_BONUS_KEY = "devLuckBonusValue";
+const DEV_MODE_UNLOCKED_KEY = "devModeUnlocked";
+const GOODBYE_SPOID_STASH_CLAIMED_KEY = "goodbyeSpoidStashClaimed";
 const CUTSCENE_SKIP_THRESHOLD_KEY = "cutsceneSkipRarityThreshold";
 const TITLE_SKIP_THRESHOLD_KEY = "titleSkipRarityThreshold";
 const DEFAULT_CUTSCENE_SKIP_THRESHOLD = 0;
 const DEFAULT_TITLE_SKIP_THRESHOLD = 0;
+const EQUINOX_CUTSCENE_VIDEO_SRC = "files/backgrounds/equinox_cutscene.webm";
+const EQUINOX_CUTSCENE_VIDEO_DURATION_MS = 36000;
+const RARITY_ODDS_OVERRIDES = Object.freeze({
+  "RNG Master [1 in GoodOldDays]": 334448,
+  "Sovereign [1 in GoodOldDays]": 111111,
+});
+const RARITY_CLASS_ALIASES = Object.freeze({
+  FaultedBgImg: "faultedBgImg",
+  dewdropBgImg: "faultedBgImg",
+  jolbeBgImg: "jolbelBgImg",
+  rng_masterBgImg: "rngmasterBgImg",
+  under1mcrosswindBgImg: "crosswindBgImg",
+  nightfallBgImg: "nightfallerBgImg",
+  qbearImgBg: "qbearBgImg",
+  wave: "waveBgImg",
+  xbearlBgImg: "xbearBgImg",
+});
 const DEV_UNLOCK_CODE_HASH = Object.freeze([
   139, 162, 24, 82, 93, 41, 228, 251, 10, 236, 122, 182, 206, 9, 216, 84,
   201, 163, 175, 42, 70, 72, 225, 238, 175, 32, 142, 152, 17, 142, 117, 74,
@@ -209,6 +228,10 @@ let buffTooltipTimerElement = null;
 let activeBuffTooltipCard = null;
 let lastBuffPointerPosition = null;
 let inventoryListHandlersInitialized = false;
+let buffHoverTrackingInitialized = false;
+let pendingBuffHoverFrame = null;
+let cachedRarityDefinitionsForDevGrant = null;
+let rarityDefinitionLookupByTitle = null;
 
 function normalizeAchievementNameList(raw) {
   if (!Array.isArray(raw)) {
@@ -383,18 +406,90 @@ function restoreBuffTooltipForPointer() {
     return;
   }
 
-  const element = document.elementFromPoint(x, y);
-  if (!element) {
-    return;
-  }
-
-  const card = element.closest(".buff-card");
+  const card = getBuffCardAtPoint(x, y);
   if (!card) {
     return;
   }
 
   activeBuffTooltipCard = card;
   showBuffTooltip(card, { clientX: x });
+}
+
+function getBuffCardAtPoint(x, y) {
+  if (!Number.isFinite(x) || !Number.isFinite(y)) {
+    return null;
+  }
+
+  const cards = document.querySelectorAll("#buffTray .buff-card");
+  for (const card of cards) {
+    const rect = card.getBoundingClientRect();
+    if (
+      x >= rect.left &&
+      x <= rect.right &&
+      y >= rect.top &&
+      y <= rect.bottom
+    ) {
+      return card;
+    }
+  }
+
+  return null;
+}
+
+function handleDocumentBuffPointerMove(event) {
+  if (!document.getElementById("buffTray")) {
+    return;
+  }
+
+  lastBuffPointerPosition = { x: event.clientX, y: event.clientY };
+
+  if (pendingBuffHoverFrame !== null) {
+    return;
+  }
+
+  pendingBuffHoverFrame = requestAnimationFrame(() => {
+    pendingBuffHoverFrame = null;
+    const point = lastBuffPointerPosition;
+    if (!point) {
+      return;
+    }
+
+    const card = getBuffCardAtPoint(point.x, point.y);
+    if (!card) {
+      if (activeBuffTooltipCard && activeBuffTooltipCard.classList.contains("buff-card")) {
+        activeBuffTooltipCard = null;
+        hideBuffTooltip();
+      }
+      return;
+    }
+
+    if (activeBuffTooltipCard !== card) {
+      activeBuffTooltipCard = card;
+      showBuffTooltip(card, { clientX: point.x });
+      return;
+    }
+
+    positionBuffTooltip({ clientX: point.x }, card);
+  });
+}
+
+function handleDocumentBuffPointerLeave() {
+  lastBuffPointerPosition = null;
+  if (pendingBuffHoverFrame !== null) {
+    cancelAnimationFrame(pendingBuffHoverFrame);
+    pendingBuffHoverFrame = null;
+  }
+  hideBuffTooltip();
+}
+
+function ensureBuffHoverTracking() {
+  if (buffHoverTrackingInitialized) {
+    return;
+  }
+
+  document.addEventListener("pointermove", handleDocumentBuffPointerMove, { passive: true });
+  document.addEventListener("pointerleave", handleDocumentBuffPointerLeave, { passive: true });
+  buffHoverTrackingInitialized = true;
 }
 
 const POTION_DEFINITIONS = [
@@ -1299,6 +1394,7 @@ function syncBuffPauseState() {
 
 syncBuffPauseState();
 
+let potionDefinitionById = null;
 let potionInventory = normalizePotionInventory(storage.get(POTION_STORAGE_KEY, {}));
 let unlimitedPotionIds = normalizePotionIdSet(storage.get(UNLIMITED_POTION_IDS_KEY, []));
 let activeBuffs = normalizeActiveBuffs(storage.get(ACTIVE_BUFFS_KEY, []));
@@ -1473,15 +1569,19 @@ function syncEquinoxPulseOnBody(active) {
     pendingEquinoxPulseState = active;
     return;
   }
-  body.classList.toggle("equinox-pulse-active", Boolean(active));
+  body.classList.remove("equinox-pulse-active");
+  body.classList.toggle("equinox-mono-shift-active", Boolean(active));
   pendingEquinoxPulseState = null;
 }
 
 function setEquinoxPulseActive(active) {
   const shouldActivate = Boolean(active) && !isReducedAnimationsEnabled();
   if (shouldActivate === equinoxPulseActive && pendingEquinoxPulseState === null) {
-    if (shouldActivate && document.body && !document.body.classList.contains("equinox-pulse-active")) {
-      document.body.classList.add("equinox-pulse-active");
+    if (document.body) {
+      document.body.classList.remove("equinox-pulse-active");
+    }
+    if (shouldActivate && document.body && !document.body.classList.contains("equinox-mono-shift-active")) {
+      document.body.classList.add("equinox-mono-shift-active");
     }
     return;
   }
@@ -1617,6 +1717,10 @@ function incrementRollCounts(increment = 1) {
     syncRollCounts();
     return;
   }
+  if (currentRollGrantedByCommand && parsed === 1) {
+    syncRollCounts();
+    return;
+  }
   rollCount += parsed;
   syncRollCounts();
 }
@@ -1670,6 +1774,8 @@ let pendingCutsceneRarity = null;
 let currentRollRarityForTitleSkip = null;
 let pendingAutoEquipRecord = null;
 let pendingRollLuckValue = null;
+let forcedNextRollTitle = null;
+let currentRollGrantedByCommand = false;
 const rolledRarityBuckets = new Set(storage.get("rolledRarityBuckets", []));
 
 const ROLL_AUDIO_IDS = new Set([
@@ -1892,7 +1998,15 @@ function getPotionDefinition(id) {
     return null;
   }
 
-  return POTION_DEFINITIONS.find((potion) => potion.id === id) || null;
+  if (!potionDefinitionById) {
+    potionDefinitionById = new Map(
+      POTION_DEFINITIONS
+        .filter((potion) => potion && typeof potion.id === "string")
+        .map((potion) => [potion.id, potion])
+    );
+  }
+
+  return potionDefinitionById.get(id) || null;
 }
 
 function hasUnlimitedPotion(id) {
@@ -2208,9 +2322,53 @@ function isRarityClassAffectedByLuck(rarityClass) {
   return Boolean(bucket && bucket !== "under100");
 }
 
+function parsePositiveNumberFromOddsText(value) {
+  const text = String(value || "");
+  let normalized = "";
+  let hasDecimal = false;
+
+  for (const char of text) {
+    if (char >= "0" && char <= "9") {
+      normalized += char;
+    } else if (char === "." && !hasDecimal) {
+      normalized += ".";
+      hasDecimal = true;
+    }
+  }
+
+  if (!/\d/.test(normalized)) {
+    return null;
+  }
+
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function getRarityOddsOverride(rarityType) {
+  if (typeof rarityType !== "string") {
+    return null;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(RARITY_ODDS_OVERRIDES, rarityType)) {
+    return RARITY_ODDS_OVERRIDES[rarityType];
+  }
+
+  const normalizedType = rarityType.trim().toLowerCase();
+  const match = Object.entries(RARITY_ODDS_OVERRIDES).find(
+    ([key]) => key.trim().toLowerCase() === normalizedType
+  );
+
+  return match ? match[1] : null;
+}
+
 function extractDisplayedOddsFromType(rarityType) {
   if (typeof rarityType !== "string") {
     return null;
+  }
+
+  const override = getRarityOddsOverride(rarityType);
+  if (Number.isFinite(override) && override > 0) {
+    return override;
   }
 
   const oddsMatch = rarityType.match(/\[1 in ([^\]]+)\]/i);
@@ -2218,15 +2376,8 @@ function extractDisplayedOddsFromType(rarityType) {
     return null;
   }
 
-  const numericMatch = oddsMatch[1].match(/[\d.,]+/);
-  if (!numericMatch) {
-    return null;
-  }
-
-  const normalized = numericMatch[0].replace(/,/g, "");
-  const parsed = parseFloat(normalized);
-
-  return Number.isFinite(parsed) ? parsed : null;
+  const baseOddsText = oddsMatch[1].split("/")[0];
+  return parsePositiveNumberFromOddsText(baseOddsText);
 }
 
 function extractRollGateMultiplierFromType(rarityType) {
@@ -2244,8 +2395,7 @@ function extractRollGateMultiplierFromType(rarityType) {
     return 1;
   }
 
-  const normalized = gateMatch[1].replace(/,/g, "");
-  const parsed = parseFloat(normalized);
+  const parsed = parsePositiveNumberFromOddsText(gateMatch[1]);
 
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
@@ -2287,6 +2437,101 @@ function getEffectiveSkipOddsForRarity(rarity) {
   }
 
   return null;
+}
+
+function getDisplayedOddsForRarity(rarity) {
+  if (!rarity || typeof rarity !== "object") {
+    return null;
+  }
+
+  const typeOdds = extractDisplayedOddsFromType(rarity.type);
+  if (Number.isFinite(typeOdds) && typeOdds > 0) {
+    return typeOdds;
+  }
+
+  const chancePercent = Number(rarity.chance);
+  if (Number.isFinite(chancePercent) && chancePercent > 0) {
+    const oddsFromChance = 100 / chancePercent;
+    return Number.isFinite(oddsFromChance) && oddsFromChance > 0
+      ? Math.min(Number.MAX_SAFE_INTEGER, oddsFromChance)
+      : null;
+  }
+
+  return null;
+}
+
+function getRarityExactRollProbability(rarity, luckMultiplier, luckThreshold) {
+  if (!rarity || rarity.unobtainable) {
+    return 0;
+  }
+
+  if (!isRarityEligibleForLuck(rarity.type, luckThreshold)) {
+    return 0;
+  }
+
+  const displayedOdds = getDisplayedOddsForRarity(rarity);
+  if (!Number.isFinite(displayedOdds) || displayedOdds <= 0) {
+    return 0;
+  }
+
+  const affected = isRarityClassAffectedByLuck(rarity.class);
+  const multiplier = affected && Number.isFinite(luckMultiplier) && luckMultiplier > 0
+    ? luckMultiplier
+    : 1;
+
+  return Math.min(1, multiplier / displayedOdds);
+}
+
+function getRaritySelectionOdds(rarity) {
+  const effectiveOdds = getEffectiveSkipOddsForRarity(rarity);
+  if (Number.isFinite(effectiveOdds) && effectiveOdds > 0) {
+    return effectiveOdds;
+  }
+
+  const displayedOdds = getDisplayedOddsForRarity(rarity);
+  return Number.isFinite(displayedOdds) && displayedOdds > 0 ? displayedOdds : 0;
+}
+
+function compareRaritiesByRarestFirst(a, b) {
+  return getRaritySelectionOdds(b) - getRaritySelectionOdds(a);
+}
+
+function compareRaritiesByCommonFirst(a, b) {
+  return getRaritySelectionOdds(a) - getRaritySelectionOdds(b);
+}
+
+function rollExactRarityCandidates(candidates, luckMultiplier, luckThreshold) {
+  const winners = [];
+
+  candidates.forEach((rarity) => {
+    const probability = getRarityExactRollProbability(rarity, luckMultiplier, luckThreshold);
+    if (probability > 0 && Math.random() < probability) {
+      winners.push(rarity);
+    }
+  });
+
+  if (!winners.length) {
+    return null;
+  }
+
+  winners.sort(compareRaritiesByRarestFirst);
+  return winners[0];
+}
+
+function getFallbackRarity(candidates, luckThreshold) {
+  const eligible = candidates
+    .filter((rarity) => rarity && !rarity.unobtainable && isRarityEligibleForLuck(rarity.type, luckThreshold))
+    .sort(compareRaritiesByCommonFirst);
+
+  if (eligible.length) {
+    return eligible[0];
+  }
+
+  const rollable = candidates
+    .filter((rarity) => rarity && !rarity.unobtainable)
+    .sort(compareRaritiesByRarestFirst);
+
+  return rollable[0] || null;
 }
 
 function isRarityEligibleForLuck(rarityType, luckThreshold) {
@@ -3521,6 +3766,10 @@ function renderPotionCrafting() {
   }
 }
 
+function canPotionUseForeverDevButton(potion) {
+  return Boolean(potion && !potion.consumeOnRoll);
+}
+
 function renderPotionInventory() {
   const list = byId("potionInventoryList");
   if (!list) {
@@ -3611,6 +3860,17 @@ function renderPotionInventory() {
     actions.appendChild(useButton);
     actions.appendChild(useAllButton);
     actions.appendChild(amountRow);
+
+    if (devModeEnabled && canPotionUseForeverDevButton(potion)) {
+      const foreverButton = document.createElement("button");
+      foreverButton.className = "potion-inventory__forever";
+      foreverButton.type = "button";
+      foreverButton.textContent = "Forever";
+      foreverButton.addEventListener("click", () => {
+        grantForeverPotionBuff(potion);
+      });
+      actions.appendChild(foreverButton);
+    }
 
     const countLabel = document.createElement("div");
     countLabel.className = "potion-inventory__count";
@@ -4001,12 +4261,30 @@ function applySpeedBuffEffects() {
 
 function formatBuffDuration(totalSeconds) {
   const clamped = Math.max(0, Math.floor(totalSeconds));
-  const hours = Math.floor(clamped / 3600);
-  const minutes = Math.floor((clamped % 3600) / 60);
-  const seconds = clamped % 60;
-  return `${hours.toString().padStart(2, "0")}h ${minutes.toString().padStart(2, "0")}m ${seconds
-    .toString()
-    .padStart(2, "0")}s`;
+  const units = [
+    { label: "y", seconds: 365 * 24 * 60 * 60 },
+    { label: "mo", seconds: 30 * 24 * 60 * 60 },
+    { label: "w", seconds: 7 * 24 * 60 * 60 },
+    { label: "d", seconds: 24 * 60 * 60 },
+    { label: "h", seconds: 60 * 60 },
+    { label: "m", seconds: 60 },
+    { label: "s", seconds: 1 },
+  ];
+
+  let remaining = clamped;
+  const parts = [];
+
+  units.forEach(({ label, seconds }) => {
+    const value = Math.floor(remaining / seconds);
+    if (value <= 0) {
+      return;
+    }
+
+    remaining -= value * seconds;
+    parts.push(`${value}${label}`);
+  });
+
+  return parts.length ? parts.join(" ") : "0s";
 }
 
 function isForeverBuffExpiresAt(expiresAt) {
@@ -4021,6 +4299,7 @@ function renderBuffTray() {
     return;
   }
 
+  ensureBuffHoverTracking();
   hideBuffTooltip();
   tray.innerHTML = "";
 
@@ -4046,12 +4325,12 @@ function renderBuffTray() {
         const parsedUses = Number.parseInt(buff.usesRemaining, 10);
         usesRemaining = Number.isFinite(parsedUses) && parsedUses >= 1 ? parsedUses : 1;
       }
-      const timerText = consumeOnRoll
+      const timerText = forever
+        ? "Forever"
+        : consumeOnRoll
         ? usesRemaining > 1
           ? `Next ${usesRemaining} rolls`
           : "Next roll"
-        : forever
-          ? "Forever"
         : formatBuffDuration(remainingSecondsRaw);
       const disableWithToggle = !isBuffToggleExempt(buff);
       return {
@@ -4354,6 +4633,10 @@ function consumeSingleUseBuffs() {
       return;
     }
 
+    if (isForeverBuffExpiresAt(buff.expiresAt)) {
+      return;
+    }
+
     if (buffsDisabled && !isBuffToggleExempt(buff)) {
       return;
     }
@@ -4585,11 +4868,13 @@ function initializePotionFeatures() {
   activeBuffs = normalizeActiveBuffs(storage.get(ACTIVE_BUFFS_KEY, []));
   pruneExpiredBuffs();
   persistActiveBuffs();
-  renderPotionInventory();
-  renderPotionTransactions();
-  renderPotionCrafting();
   updateBuffsSwitchControl();
   refreshBuffEffects();
+  if (isPotionCraftingMenuVisible()) {
+    renderPotionInventory();
+    renderPotionTransactions();
+    renderPotionCrafting();
+  }
   startBuffTicker();
   startPotionTransactionTimerTicker();
   cancelAllPotionSpawns();
@@ -5201,6 +5486,7 @@ function finalizeCutsceneState() {
   clearTimeout(cutsceneFailsafeTimeout);
   cutsceneFailsafeTimeout = null;
   cutsceneActive = false;
+  clearMillionPlusCutscenePaletteFromBody();
   updateEquipToggleButtonsDisabled(false);
   updateInventoryDeleteButtonsDisabled(false);
   ensureBgStack();
@@ -5489,7 +5775,7 @@ const rarityCategories = {
     "pebbleBgImg",
     "cinderBgImg",
     "breezeBgImg",
-    "dewdropBgImg",
+    "faultedBgImg",
     "lanternBgImg",
     "meadowBgImg",
     "kindlingBgImg",
@@ -5728,16 +6014,31 @@ const AUDIO_RESET_OVERRIDES = {
 const audioElementCache = new Map();
 const pendingAudioResetHandlers = new WeakMap();
 
-const STARTUP_IMAGE_PRELOAD_TIMEOUT = 8000;
-const STARTUP_AUDIO_PRELOAD_TIMEOUT = 3500;
+const STARTUP_IMAGE_PRELOAD_TIMEOUT = 1500;
+const STARTUP_AUDIO_PRELOAD_TIMEOUT = 1200;
 const STARTUP_ASSET_CONCURRENCY = 8;
+const STARTUP_AUDIO_PRELOAD_IDS = Object.freeze(["mainAudio", "click"]);
 
 function nextFrame() {
   return new Promise((resolve) => {
+    let settled = false;
+    let timeoutId = null;
+
+    const finish = () => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      clearTimeout(timeoutId);
+      resolve();
+    };
+
+    timeoutId = setTimeout(finish, 50);
+
     if (typeof requestAnimationFrame === "function") {
-      requestAnimationFrame(() => resolve());
+      requestAnimationFrame(finish);
     } else {
-      setTimeout(resolve, 16);
+      finish();
     }
   });
 }
@@ -5785,7 +6086,11 @@ function getAbsoluteAssetSource(source) {
   }
 
   try {
-    return new URL(source, document.baseURI).href;
+    const url = new URL(source, document.baseURI);
+    if (url.origin !== window.location.origin && url.protocol !== "data:") {
+      return "";
+    }
+    return url.href;
   } catch (error) {
     return "";
   }
@@ -5801,17 +6106,23 @@ function collectStartupImageSources() {
   };
 
   document.querySelectorAll("img[src]").forEach((image) => {
+    const rect = image.getBoundingClientRect();
+    const style = window.getComputedStyle(image);
+    const visible = (
+      rect.width > 0 &&
+      rect.height > 0 &&
+      style.display !== "none" &&
+      style.visibility !== "hidden" &&
+      Number.parseFloat(style.opacity || "1") > 0
+    );
+    if (!visible) {
+      return;
+    }
+
     addSource(image.currentSrc || image.getAttribute("src") || image.src);
   });
 
-  POTION_DEFINITIONS.forEach((potion) => {
-    addSource(potion.image);
-    addSource(potion.buffImage);
-  });
-
-  POTION_TRANSACTION_DEFINITIONS.forEach((transaction) => {
-    addSource(transaction.bannerImage);
-  });
+  Object.values(BUFF_ICON_MAP).forEach(addSource);
 
   return Array.from(sources);
 }
@@ -5898,8 +6209,7 @@ async function preloadStartupImages(reportProgress) {
 }
 
 function getStartupAudioElements() {
-  const ids = new Set([...ROLL_AUDIO_IDS, "mainAudio"]);
-  return Array.from(ids)
+  return STARTUP_AUDIO_PRELOAD_IDS
     .map((id) => getAudioElement(id))
     .filter((audio) => audio && audio.src);
 }
@@ -6194,6 +6504,14 @@ function updateTitleSkipThresholdDisplay() {
 }
 
 const QUALIFYING_VAULT_BUCKETS = new Set(["under100k", "under1m", "transcendent", "special", "theDescended", "goodOldDays"]);
+function normalizeRarityClassName(value) {
+  const trimmed = typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  return RARITY_CLASS_ALIASES[trimmed] || trimmed;
+}
 
 function isCommandGrantedInventoryRecord(item) {
   return Boolean(
@@ -6214,14 +6532,19 @@ function normalizeInventoryRecord(raw) {
       return { record: null, mutated: true };
     }
 
-    return {
-      record: {
-        title,
-        rarityClass: "",
-        qualifiesForVault: false,
-      },
-      mutated: true,
+    const rarityClass = inferRarityClassForInventoryTitle(title);
+
+    const bucket = normalizeRarityBucket(rarityClass);
+    const record = {
+      title,
+      rarityClass,
+      qualifiesForVault: QUALIFYING_VAULT_BUCKETS.has(bucket),
     };
+    if (bucket) {
+      record.rarityBucket = bucket;
+    }
+
+    return { record, mutated: true };
   }
 
   if (typeof raw !== "object") {
@@ -6248,17 +6571,23 @@ function normalizeInventoryRecord(raw) {
     return { record: null, mutated: true };
   }
 
+  let rarityClass = "";
   if (typeof record.rarityClass === "string") {
-    const trimmed = record.rarityClass.trim();
-    if (trimmed !== record.rarityClass) {
-      record.rarityClass = trimmed;
+    rarityClass = record.rarityClass.trim();
+    if (rarityClass !== record.rarityClass) {
       mutated = true;
     }
   } else if (record.rarityClass != null) {
-    record.rarityClass = String(record.rarityClass).trim();
+    rarityClass = String(record.rarityClass).trim();
     mutated = true;
-  } else if (record.rarityClass !== "") {
-    record.rarityClass = "";
+  } else {
+    rarityClass = "";
+  }
+
+  const inferredRarityClass = rarityClass || inferRarityClassForInventoryTitle(title);
+  const normalizedRarityClass = normalizeRarityClassName(inferredRarityClass);
+  if (record.rarityClass !== normalizedRarityClass) {
+    record.rarityClass = normalizedRarityClass;
     mutated = true;
   }
 
@@ -6335,14 +6664,19 @@ function normalizeInventoryRecords(records) {
   let mutated = false;
 
   records.forEach((raw) => {
-    const { record, mutated: recordMutated } = normalizeInventoryRecord(raw);
-    if (record) {
-      normalized.push(record);
-    } else {
-      mutated = true;
-    }
+    try {
+      const { record, mutated: recordMutated } = normalizeInventoryRecord(raw);
+      if (record) {
+        normalized.push(record);
+      } else {
+        mutated = true;
+      }
 
-    if (recordMutated) {
+      if (recordMutated) {
+        mutated = true;
+      }
+    } catch (error) {
+      console.warn("Skipping inventory record that could not be migrated.", raw, error);
       mutated = true;
     }
   });
@@ -6945,9 +7279,8 @@ function pauseEquippedAudioForRarity(rarity) {
   const rarityClass = rarity && typeof rarity === "object" ? rarity.class : null;
   const hasEquippableBackground = Boolean(
     rarityClass &&
-    typeof backgroundDetails !== "undefined" &&
-    backgroundDetails &&
-    backgroundDetails[rarityClass]
+    typeof getBackgroundDetailsForRarityClass === "function" &&
+    getBackgroundDetailsForRarityClass(rarityClass)
   );
 
   const shouldResume = !hasEquippableBackground;
@@ -7025,13 +7358,24 @@ function normalizeEquippedItemRecord(raw) {
   }
 
   const { title, rarityClass } = raw;
-  if (typeof title !== "string" || typeof rarityClass !== "string") {
+  if (typeof title !== "string") {
+    return null;
+  }
+
+  const normalizedTitle = title.trim();
+  const normalizedRarityClass = normalizeRarityClassName(
+    typeof rarityClass === "string" && rarityClass.trim()
+      ? rarityClass
+      : inferRarityClassForInventoryTitle(normalizedTitle)
+  );
+
+  if (!normalizedTitle || !normalizedRarityClass) {
     return null;
   }
 
   const record = {
-    title,
-    rarityClass,
+    title: normalizedTitle,
+    rarityClass: normalizedRarityClass,
   };
 
   if (typeof raw.rolledAt === "number" && Number.isFinite(raw.rolledAt)) {
@@ -7709,10 +8053,12 @@ function getNewTitleCutsceneConfig(rarity) {
 }
 
 function finalizeRolledTitle(rarity, title, titleCont) {
-  addToInventory(title, rarity.class);
+  const persisted = addToInventory(title, rarity.class);
   updateRollingHistory(title, rarity.type);
   displayResult(title, rarity.type);
-  changeBackground(rarity.class);
+  if (persisted) {
+    changeBackground(rarity.class, title, { force: true, preservePendingAutoEquip: true });
+  }
   setRollButtonEnabled(true);
   incrementRollCounts();
 
@@ -7759,6 +8105,402 @@ function runNewTitleTierCutscene({ rarity, title, titleCont, config }) {
   }, config.durationMs);
 }
 
+function isFullscreenActive() {
+  return Boolean(
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.msFullscreenElement
+  );
+}
+
+function requestGameFullscreen() {
+  const target = document.documentElement;
+  const request =
+    target?.requestFullscreen ||
+    target?.webkitRequestFullscreen ||
+    target?.msRequestFullscreen;
+
+  if (typeof request !== "function") {
+    return Promise.resolve(false);
+  }
+
+  try {
+    const result = request.call(target);
+    return Promise.resolve(result).then(() => true).catch(() => false);
+  } catch (error) {
+    return Promise.resolve(false);
+  }
+}
+
+function exitGameFullscreen() {
+  const exit =
+    document.exitFullscreen ||
+    document.webkitExitFullscreen ||
+    document.msExitFullscreen;
+
+  if (typeof exit !== "function" || !isFullscreenActive()) {
+    return Promise.resolve(false);
+  }
+
+  try {
+    const result = exit.call(document);
+    return Promise.resolve(result).then(() => true).catch(() => false);
+  } catch (error) {
+    return Promise.resolve(false);
+  }
+}
+
+const MILLION_PLUS_CUTSCENE_MIN_ODDS = 1000000;
+const MILLION_PLUS_CUTSCENE_EXCLUDED_CLASSES = new Set([
+  "silcarBgImg",
+  "gingerBgImg",
+  "orbitalBgImg",
+  "h1diBgImg",
+  "equinoxBgImg",
+]);
+const MILLION_PLUS_CUTSCENE_SYMBOL_SETS = Object.freeze([
+  Object.freeze(["\u2736", "\u2727", "\u2726"]),
+  Object.freeze(["\u25c6", "\u25c7", "\u2739"]),
+  Object.freeze(["\u273a", "\u2737", "\u2726"]),
+  Object.freeze(["\u2738", "\u2736", "\u25c7"]),
+  Object.freeze(["\u2735", "\u2726", "\u2739"]),
+  Object.freeze(["\u2727", "\u25c6", "\u2736"]),
+]);
+
+function createMillionPlusCutscenePalette(colors, symbolIndex = 0) {
+  const resolvedColors = Array.isArray(colors) && colors.length >= 3
+    ? colors.slice(0, 3)
+    : ["#9f7cff", "#5cc8ff", "#ffffff"];
+  const resolvedSymbolIndex = Number.isFinite(symbolIndex)
+    ? Math.abs(Math.trunc(symbolIndex)) % MILLION_PLUS_CUTSCENE_SYMBOL_SETS.length
+    : 0;
+  return Object.freeze({
+    colors: Object.freeze(resolvedColors),
+    symbols: MILLION_PLUS_CUTSCENE_SYMBOL_SETS[resolvedSymbolIndex],
+  });
+}
+
+const MILLION_PLUS_CUTSCENE_PALETTES = Object.freeze([
+  Object.freeze({ colors: ["#9f7cff", "#5cc8ff", "#ffffff"], symbols: ["✶", "✧", "✦"] }),
+  Object.freeze({ colors: ["#ff6f91", "#ffd166", "#f8f9fa"], symbols: ["◆", "◇", "✹"] }),
+  Object.freeze({ colors: ["#45f0b4", "#36a3ff", "#e8fff6"], symbols: ["✺", "✷", "✦"] }),
+  Object.freeze({ colors: ["#ff9f1c", "#ff4040", "#fff7d6"], symbols: ["✸", "✶", "◇"] }),
+  Object.freeze({ colors: ["#d7fc70", "#6ef3ff", "#ffffff"], symbols: ["✦", "✧", "✹"] }),
+  Object.freeze({ colors: ["#c77dff", "#ff8ad8", "#f5f3ff"], symbols: ["✷", "◆", "✶"] }),
+]);
+
+const MILLION_PLUS_CLASS_CUTSCENE_PALETTES = Object.freeze({
+  aboBgImg: createMillionPlusCutscenePalette(["#ff40b7", "#b638ac", "#6c1f5f"], 4),
+  headstoneBgImg: createMillionPlusCutscenePalette(["#6b9494", "#4c592c", "#4e6d6a"], 1),
+  redwoodBgImg: createMillionPlusCutscenePalette(["#594714", "#a68d39", "#936c1f"], 2),
+  monsoonBgImg: createMillionPlusCutscenePalette(["#aa8f7b", "#404f5a", "#58697a"], 3),
+  blindBgImg: createMillionPlusCutscenePalette(["#405959", "#59dcac", "#18714e"], 5),
+  sandstormBgImg: createMillionPlusCutscenePalette(["#f1801d", "#753105", "#a74706"], 1),
+  hinterlandBgImg: createMillionPlusCutscenePalette(["#836e5e", "#c49970", "#85521d"], 1),
+  blizzardBgImg: createMillionPlusCutscenePalette(["#afd3f3", "#5e8ab4", "#88afd3"], 2),
+  stonegateBgImg: createMillionPlusCutscenePalette(["#775936", "#fec690", "#dea988"], 0),
+  wildlandsBgImg: createMillionPlusCutscenePalette(["#7691ac", "#594c2a", "#c3b68c"], 4),
+  tidefallBgImg: createMillionPlusCutscenePalette(["#59727c", "#ccb093", "#284559"], 3),
+  goldleafBgImg: createMillionPlusCutscenePalette(["#ee9300", "#713600", "#a05100"], 0),
+  ravenwoodBgImg: createMillionPlusCutscenePalette(["#2b4b59", "#536f7b", "#82a8b4"], 5),
+  stormfrontBgImg: createMillionPlusCutscenePalette(["#404659", "#917169", "#c8a790"], 4),
+  ironcladBgImg: createMillionPlusCutscenePalette(["#61503e", "#8d7050", "#ad8e6c"], 2),
+  frostbiteBgImg: createMillionPlusCutscenePalette(["#94bcde", "#5483b3", "#2e6293"], 2),
+  shadowfallBgImg: createMillionPlusCutscenePalette(["#404759", "#715253", "#aa7d7b"], 3),
+  sunbreakBgImg: createMillionPlusCutscenePalette(["#e94900", "#8b280f", "#591e12"], 5),
+  windwardBgImg: createMillionPlusCutscenePalette(["#0077d6", "#566735", "#74bfdc"], 4),
+  earthboundBgImg: createMillionPlusCutscenePalette(["#404b6b", "#8b647c", "#d1b196"], 2),
+  highwaterBgImg: createMillionPlusCutscenePalette(["#3a4c62", "#a2643f", "#765544"], 3),
+  graveyardBgImg: createMillionPlusCutscenePalette(["#364d59", "#617a87", "#8db8c4"], 1),
+  blackridgeBgImg: createMillionPlusCutscenePalette(["#152659", "#1d2f59", "#1a2959"], 2),
+  longwinterBgImg: createMillionPlusCutscenePalette(["#376794", "#69a2c3", "#a2cee0"], 1),
+  northstarBgImg: createMillionPlusCutscenePalette(["#5976b0", "#162c59", "#284a8a"], 3),
+  firestormBgImg: createMillionPlusCutscenePalette(["#6f1b00", "#dc4a00", "#ff850d"], 5),
+  dreadwoodBgImg: createMillionPlusCutscenePalette(["#2c5951", "#594219", "#8ba374"], 5),
+  stoneheartBgImg: createMillionPlusCutscenePalette(["#5e493f", "#917261", "#884d30"], 3),
+  lastlightBgImg: createMillionPlusCutscenePalette(["#743e4a", "#592114", "#cd4f1f"], 2),
+  deadwindBgImg: createMillionPlusCutscenePalette(["#627453", "#405940", "#a4a678"], 4),
+  finalhourBgImg: createMillionPlusCutscenePalette(["#70220d", "#c93d00", "#ff950d"], 0),
+  gregBgImg: createMillionPlusCutscenePalette(["#6b654d", "#b19b75", "#fbddb5"], 1),
+  worldendBgImg: createMillionPlusCutscenePalette(["#6a1400", "#cf4700", "#f68f18"], 1),
+  mintllieBgImg: createMillionPlusCutscenePalette(["#fff005", "#592a00", "#ffaa00"], 4),
+  geezerBgGif: createMillionPlusCutscenePalette(["#ffb8da", "#663243", "#db7d8d"], 1),
+  polarrBgImg: createMillionPlusCutscenePalette(["#b5b5fb", "#e7006f", "#ae004b"], 2),
+});
+
+function hashCutsceneKey(value) {
+  const text = String(value || "");
+  let hash = 0;
+  for (let index = 0; index < text.length; index += 1) {
+    hash = (hash * 31 + text.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
+
+function getMillionPlusCutscenePaletteForClass(rarityClass, seed = 0) {
+  const normalizedClass = normalizeRarityClassName(rarityClass);
+  if (
+    normalizedClass &&
+    Object.prototype.hasOwnProperty.call(MILLION_PLUS_CLASS_CUTSCENE_PALETTES, normalizedClass)
+  ) {
+    return MILLION_PLUS_CLASS_CUTSCENE_PALETTES[normalizedClass];
+  }
+
+  const fallbackIndex = Number.isFinite(seed)
+    ? Math.abs(Math.trunc(seed)) % MILLION_PLUS_CUTSCENE_PALETTES.length
+    : 0;
+  return MILLION_PLUS_CUTSCENE_PALETTES[fallbackIndex];
+}
+
+function getMillionPlusMalvorynCutsceneConfig(rarity) {
+  if (!rarity || typeof rarity !== "object") {
+    return null;
+  }
+
+  const normalizedClass = normalizeRarityClassName(rarity.class);
+  if (MILLION_PLUS_CUTSCENE_EXCLUDED_CLASSES.has(normalizedClass)) {
+    return null;
+  }
+
+  const odds = getDisplayedOddsForRarity(rarity);
+  if (!Number.isFinite(odds) || odds < MILLION_PLUS_CUTSCENE_MIN_ODDS) {
+    return null;
+  }
+
+  const hash = hashCutsceneKey(`${rarity.type}|${normalizedClass}`);
+  const palette = getMillionPlusCutscenePaletteForClass(normalizedClass, hash);
+  return {
+    palette,
+    suspenseAudioId: "hugeSuspenceAudio",
+    durationMs: 11000,
+    seed: hash,
+  };
+}
+
+function isMillionPlusMalvorynCutsceneRarity(rarity) {
+  return Boolean(getMillionPlusMalvorynCutsceneConfig(rarity));
+}
+
+function applyMillionPlusCutscenePaletteToBody(palette) {
+  if (!document.body) {
+    return;
+  }
+
+  const colors = palette?.colors || MILLION_PLUS_CUTSCENE_PALETTES[0].colors;
+  const [primary, secondary, tertiary] = colors;
+  document.body.style.setProperty("--million-plus-cutscene-primary", primary);
+  document.body.style.setProperty("--million-plus-cutscene-secondary", secondary);
+  document.body.style.setProperty("--million-plus-cutscene-tertiary", tertiary);
+}
+
+function clearMillionPlusCutscenePaletteFromBody() {
+  if (!document.body) {
+    return;
+  }
+
+  document.body.style.removeProperty("--million-plus-cutscene-primary");
+  document.body.style.removeProperty("--million-plus-cutscene-secondary");
+  document.body.style.removeProperty("--million-plus-cutscene-tertiary");
+}
+
+function setMillionPlusParticleColors(element, palette, colorIndex = 0) {
+  const colors = palette?.colors || MILLION_PLUS_CUTSCENE_PALETTES[0].colors;
+  const primary = colors[colorIndex % colors.length];
+  const secondary = colors[(colorIndex + 1) % colors.length];
+  const tertiary = colors[(colorIndex + 2) % colors.length];
+  element.style.setProperty("--million-plus-primary", primary);
+  element.style.setProperty("--million-plus-secondary", secondary);
+  element.style.setProperty("--million-plus-tertiary", tertiary);
+  element.style.setProperty("--million-plus-glow", primary);
+}
+
+function runMillionPlusMalvorynCutscene({ rarity, title, titleCont, config }) {
+  const resolvedConfig = config || getMillionPlusMalvorynCutsceneConfig(rarity);
+  if (!resolvedConfig) {
+    finalizeRolledTitle(rarity, title, titleCont);
+    return;
+  }
+
+  const palette = resolvedConfig.palette || MILLION_PLUS_CUTSCENE_PALETTES[0];
+  const symbols = Array.isArray(palette.symbols) && palette.symbols.length
+    ? palette.symbols
+    : ["✶", "✧", "✦"];
+  const starContainer = byId("starContainer");
+  const squareContainer = byId("squareContainer");
+  const suspenseAudioId = resolvedConfig.suspenseAudioId || "hugeSuspenceAudio";
+  const suspenseAudio = getAudioElement(suspenseAudioId);
+
+  applyMillionPlusCutscenePaletteToBody(palette);
+  document.body.className = "blackBg";
+  disableChange();
+
+  if (suspenseAudio && typeof suspenseAudio.play === "function") {
+    try {
+      suspenseAudio.currentTime = 0;
+    } catch (error) {
+      /* no-op */
+    }
+    const playAttempt = suspenseAudio.play();
+    if (playAttempt && typeof playAttempt.catch === "function") {
+      playAttempt.catch(() => {});
+    }
+  }
+
+  if (starContainer) {
+    const fragment = document.createDocumentFragment();
+    for (let index = 0; index < 84; index += 1) {
+      const shard = document.createElement("span");
+      const color = palette.colors[index % palette.colors.length];
+      shard.className = "million-plus-cutscene-symbol";
+      shard.textContent = symbols[index % symbols.length];
+      shard.style.left = `${Math.random() * 100}vw`;
+      shard.style.color = color;
+      shard.style.textShadow = `0 0 16px ${color}`;
+      shard.style.setProperty("--randomX", `${(Math.random() - 0.5) * 30}vw`);
+      shard.style.setProperty("--randomRotation", `${(Math.random() - 0.5) * 720}deg`);
+      shard.style.animationDelay = `${(index * 0.065).toFixed(2)}s`;
+      fragment.appendChild(shard);
+      shard.addEventListener("animationend", () => shard.remove(), { once: true });
+    }
+    starContainer.appendChild(fragment);
+  }
+
+  const createFragment = () => {
+    if (!squareContainer) {
+      return;
+    }
+
+    const fragment = document.createElement("div");
+    fragment.className = "malvoryn-fragment";
+    fragment.style.left = `${Math.random() * 100}vw`;
+    fragment.style.top = `${Math.random() * 100}vh`;
+    fragment.style.setProperty("--offsetX", `${(Math.random() - 0.5) * 340}px`);
+    fragment.style.setProperty("--offsetY", `${(Math.random() - 0.5) * 220}px`);
+    fragment.style.setProperty("--fragment-scale", (1.05 + Math.random() * 0.8).toFixed(2));
+    fragment.style.setProperty("--fragment-rotation", `${(Math.random() * 720 - 360).toFixed(0)}deg`);
+    setMillionPlusParticleColors(fragment, palette, Math.floor(Math.random() * palette.colors.length));
+    squareContainer.appendChild(fragment);
+    fragment.addEventListener("animationend", () => fragment.remove(), { once: true });
+  };
+
+  const createRing = () => {
+    if (!squareContainer) {
+      return;
+    }
+
+    const ring = document.createElement("div");
+    ring.className = "malvoryn-ring";
+    ring.style.setProperty("--ring-scale", (1.3 + Math.random() * 0.55).toFixed(2));
+    setMillionPlusParticleColors(ring, palette, Math.floor(Math.random() * palette.colors.length));
+    squareContainer.appendChild(ring);
+    ring.addEventListener("animationend", () => ring.remove(), { once: true });
+  };
+
+  if (squareContainer) {
+    createFragment();
+    createRing();
+  }
+
+  const fragmentInterval = squareContainer
+    ? setInterval(() => {
+        for (let index = 0; index < 3; index += 1) {
+          createFragment();
+        }
+      }, 220)
+    : null;
+  const ringInterval = squareContainer ? setInterval(createRing, 1400) : null;
+
+  const stopIntervals = () => {
+    if (fragmentInterval) {
+      clearInterval(fragmentInterval);
+    }
+    if (ringInterval) {
+      clearInterval(ringInterval);
+    }
+  };
+
+  setTimeout(stopIntervals, 9000);
+
+  // Keep the million-plus cutscene dark until the final reveal flash.
+  setTimeout(() => {
+    document.body.className = "blackBg";
+  }, 10000);
+
+  setTimeout(() => {
+    document.body.className = "whiteFlash";
+    enableChange();
+    setTimeout(() => {
+      stopIntervals();
+      stopAndResetAudioById(suspenseAudioId);
+      document.body.className = rarity.class;
+      finalizeRolledTitle(rarity, title, titleCont);
+      clearMillionPlusCutscenePaletteFromBody();
+    }, 120);
+  }, resolvedConfig.durationMs || 11000);
+}
+
+function runEquinoxVideoCutscene({ rarity, title, titleCont }) {
+  if (!skipCutsceneTranscendent) {
+    finalizeRolledTitle(rarity, title, titleCont);
+    return;
+  }
+
+  disableChange();
+  stopAndResetAudioById("equinoxAudio");
+  const wasFullscreenBeforeCutscene = isFullscreenActive();
+
+  const overlay = document.createElement("div");
+  overlay.className = "equinox-video-cutscene";
+  overlay.setAttribute("aria-hidden", "true");
+
+  const video = document.createElement("video");
+  video.className = "equinox-video-cutscene__video";
+  video.src = EQUINOX_CUTSCENE_VIDEO_SRC;
+  video.preload = "auto";
+  video.autoplay = true;
+  video.playsInline = true;
+  video.volume = typeof audioVolume === "number" && Number.isFinite(audioVolume)
+    ? Math.max(0, Math.min(1, audioVolume))
+    : 1;
+  video.muted = Boolean(isMuted);
+
+  overlay.appendChild(video);
+  document.body.appendChild(overlay);
+  if (!wasFullscreenBeforeCutscene) {
+    requestGameFullscreen();
+  }
+
+  let finished = false;
+  let timeoutId = null;
+
+  const finish = () => {
+    if (finished) {
+      return;
+    }
+
+    finished = true;
+    clearTimeout(timeoutId);
+    video.pause();
+    overlay.remove();
+    if (!wasFullscreenBeforeCutscene) {
+      exitGameFullscreen();
+    }
+    document.body.className = rarity.class;
+    finalizeRolledTitle(rarity, title, titleCont);
+    enableChange();
+  };
+
+  timeoutId = setTimeout(finish, EQUINOX_CUTSCENE_VIDEO_DURATION_MS + 500);
+  video.addEventListener("ended", finish, { once: true });
+
+  const playPromise = video.play();
+  if (playPromise && typeof playPromise.catch === "function") {
+    playPromise.catch(() => {
+      /* Keep the 36s fallback active if the file is added later or autoplay is delayed. */
+    });
+  }
+}
+
 function registerRollButtonHandler() {
   const rollButtonElement = document.getElementById("rollButton");
   if (!rollButtonElement) {
@@ -7790,11 +8532,24 @@ function registerRollButtonHandler() {
   checkAchievements();
   updateAchievementsList();
 
-  if (rollCount < 1) {
+  const forcedRoll = forcedNextRollTitle;
+  forcedNextRollTitle = null;
+  currentRollGrantedByCommand = Boolean(forcedRoll);
+
+  if (forcedRoll) {
+    lastRollPersisted = true;
+    lastRollAutoDeleted = false;
+    lastRollRarityClass = null;
+    currentRollRarityForTitleSkip = null;
+    allowForcedAudioPlayback = false;
+    pendingRollLuckValue = null;
+  }
+
+  if (rollCount < 1 && !currentRollGrantedByCommand) {
     incrementRollCounts();
   }
 
-  let rarity = rollRarity();
+  let rarity = forcedRoll ? forcedRoll.rarity : rollRarity();
   syncCutsceneSkipStateForRarity(rarity);
   pendingCutsceneRarity = rarity;
   currentRollRarityForTitleSkip = rarity;
@@ -7818,7 +8573,7 @@ function registerRollButtonHandler() {
     preserve: preservedAudioIds,
   });
 
-  let title = selectTitle(rarity);
+  let title = forcedRoll ? forcedRoll.title : selectTitle(rarity);
 
   setRollButtonEnabled(false);
 
@@ -8004,6 +8759,7 @@ function registerRollButtonHandler() {
     rarity.type === "Deadwind [1 in 7,498,008]" ||
     rarity.type === "Finalhour [1 in 7,499,500]" ||
     rarity.type === "Worldend [1 in 75,000,000]" ||
+    isMillionPlusMalvorynCutsceneRarity(rarity) ||
     isDescendedTitleType(rarity.type)
   ) {
     const resultContainer = byId("result");
@@ -8023,6 +8779,17 @@ function registerRollButtonHandler() {
 
     hideRollDisplayForCutscene(titleCont);
     scheduleCutsceneCompletionFailsafe(rarity, title, titleCont);
+
+    const millionPlusCutsceneConfig = getMillionPlusMalvorynCutsceneConfig(rarity);
+    if (millionPlusCutsceneConfig) {
+      runMillionPlusMalvorynCutscene({
+        rarity,
+        title,
+        titleCont,
+        config: millionPlusCutsceneConfig,
+      });
+      return;
+    }
 
     if (
     rarity.type === "Pebble [1 in 186]" ||
@@ -8232,7 +8999,7 @@ function registerRollButtonHandler() {
     } else if (rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]") {
       scareSuspenceLofiAudio.play();
     } else if (rarity.type === "『Equinox』 [1 in 25,000,000]") {
-      equinoxAudio.play();
+      stopAndResetAudioById("equinoxAudio");
     } else if (rarity.type === "Ginger [1 in 1,144,141]") {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Emergencies [1 in 500]") {
@@ -8344,7 +9111,7 @@ function registerRollButtonHandler() {
     } else if (rarity.type === "MSFU [1 in 333/333rd]") {
       msfuAudio.play();
     } else if (rarity.type == "Silly Car :3 [1 in 1,000,000]") {
-      if (skipCutsceneTranscendent) {
+      if (!skipCutsceneTranscendent) {
         if (typeof silcarAudio?.pause === "function") {
           try {
             silcarAudio.pause();
@@ -12085,24 +12852,9 @@ function registerRollButtonHandler() {
 
         setTimeout(stopIntervals, 9800);
 
-        const flickerSequence = [
-          { time: 600, className: "whiteFlash" },
-          { time: 1200, className: "blackBg" },
-          { time: 1900, className: "whiteFlash" },
-          { time: 2700, className: "blackBg" },
-          { time: 3600, className: "whiteFlash" },
-          { time: 4500, className: "blackBg" },
-          { time: 5600, className: "whiteFlash" },
-          { time: 6800, className: "blackBg" },
-          { time: 8200, className: "whiteFlash" },
-          { time: 9400, className: "blackBg" },
-        ];
-
-        flickerSequence.forEach((step) => {
-          setTimeout(() => {
-            document.body.className = step.className;
-          }, step.time);
-        });
+        setTimeout(() => {
+          document.body.className = "blackBg";
+        }, 9400);
 
         setTimeout(() => {
           document.body.className = "whiteFlash";
@@ -14476,7 +15228,7 @@ function registerRollButtonHandler() {
         titleCont.style.visibility = "visible";
       }
     } else if (rarity.type === "H1di [1 in 9,890,089]") {
-      if (skipCutsceneTranscendent) {
+      if (!skipCutsceneTranscendent) {
         addToInventory(title, rarity.class);
         updateRollingHistory(title, rarity.type);
         displayResult(title, rarity.type);
@@ -15522,85 +16274,8 @@ function registerRollButtonHandler() {
         isekaiAudio.play();
       }
     } else if (rarity.type === "『Equinox』 [1 in 25,000,000]") {
-      if (skipCutsceneTranscendent) {
-        addToInventory(title, rarity.class);
-        updateRollingHistory(title, rarity.type);
-        displayResult(title, rarity.type);
-        changeBackground(rarity.class);
-        setRollButtonEnabled(true);
-        incrementRollCounts();
-        titleCont.style.visibility = "visible";
-      } else {
-        disableChange();
-
-      setTimeout(() => {
-        document.body.style.backgroundImage = "url('files/backgrounds/equinox_cutscene.gif')";
-        document.body.style.backgroundSize = "cover";
-        document.body.style.backgroundRepeat = "no-repeat";
-        document.body.style.backgroundPosition = "center";
-      }, 1000)
-
-      const container1 = document.getElementById("squareContainer");
-
-      function createCircle(colorClass) {
-        const circle = document.createElement("div");
-        circle.className = `animated-circle-${colorClass}`;
-        circle.style.left = Math.random() * 100 + "vw";
-        circle.style.top = Math.random() * 100 + "vh";
-        container1.appendChild(circle);
-        circle.addEventListener("animationend", () => circle.remove());
-      }
-
-      const container = document.getElementById("starContainer");
-
-      function createStars(colorClass, count) {
-        for (let i = 0; i < count; i++) {
-          const star = document.createElement("span");
-          star.className = `${colorClass}-star`;
-          star.innerHTML = "●";
-          star.style.left = Math.random() * 100 + "vw";
-          star.style.setProperty(
-            "--randomX",
-            (Math.random() - 0.25) * 20 + "vw"
-          );
-          star.style.setProperty(
-            "--randomRotation",
-            (Math.random() - 0.5) * 720 + "deg"
-          );
-          star.style.animationDelay = i * 0.04 + "s";
-          container.appendChild(star);
-          star.addEventListener("animationend", () => star.remove());
-        }
-      }
-
-      createStars("white", 500);
-      createStars("black", 500);
-
-      const circleInterval = setInterval(() => {
-        createCircle("white");
-        createCircle("black");
-      }, 50);
-
-      setTimeout(() => {
-        clearInterval(circleInterval);
-      }, 10500);
-
-      setTimeout(() => {
-        document.body.className = "whiteFlash";
-        document.body.style.backgroundImage = "";
-        setTimeout(() => {
-          document.body.className = rarity.class;
-          addToInventory(title, rarity.class);
-          updateRollingHistory(title, rarity.type);
-          displayResult(title, rarity.type);
-          changeBackground(rarity.class);
-          setRollButtonEnabled(true);
-          incrementRollCounts();
-          titleCont.style.visibility = "visible";
-        }, 100);
-        enableChange();
-      }, 10500); // Wait for 10.5 seconds
-      }
+      runEquinoxVideoCutscene({ rarity, title, titleCont });
+      return;
     } else if (rarity.type === "Isekai ♫ Lo-Fi [1 in 3,000]") {
       if (skipCutscene10K) {
         document.body.className = "blackBg";
@@ -24396,7 +25071,7 @@ function rollRarity() {
     },
     {
       type: "Faulted [1 in 404]",
-      class: "FaultedBgImg",
+      class: "faultedBgImg",
       chance: 0.2475247525,
       titles: ["Dewdrop I", "Faulted II", "Faulted III"],
     },
@@ -24962,19 +25637,6 @@ function rollRarity() {
     activePotionLuckPercent,
   );
   const rollableRarities = rarities.filter((rarity) => !rarity.unobtainable);
-  const adjustedRarities = rollableRarities.map((rarity) => {
-    const affected = isRarityClassAffectedByLuck(rarity.class);
-    const effectiveChance = rarity.chance * (affected ? luckMultiplier : 1);
-    return { ...rarity, effectiveChance };
-  });
-
-  let availableRarities = adjustedRarities.filter((rarity) =>
-    isRarityEligibleForLuck(rarity.type, luckThreshold)
-  );
-
-  if (!availableRarities.length) {
-    availableRarities = adjustedRarities;
-  }
 
   const glitchedRarity = {
     type: "Gl1tch3d [1 in 12,404/40,404th]",
@@ -25061,34 +25723,16 @@ function rollRarity() {
     { gate: 5,     data: veilRarity },
   ];
 
-  for (const { gate, data } of specials) {
-    if (rollCount % gate !== 0) {
-      continue;
-    }
+  const activeSpecialRarities = specials
+    .filter(({ gate }) => rollCount % gate === 0)
+    .map(({ data }) => data);
+  const exactWinner = rollExactRarityCandidates(
+    [...rollableRarities, ...activeSpecialRarities],
+    luckMultiplier,
+    luckThreshold,
+  );
 
-    if (!isRarityEligibleForLuck(data.type, luckThreshold)) {
-      continue;
-    }
-
-    const affected = isRarityClassAffectedByLuck(data.class);
-    const adjustedChance = data.chance * (affected ? luckMultiplier : 1);
-    const clampedChance = Math.min(1, adjustedChance);
-
-    if (Math.random() < clampedChance) {
-      return data;
-    }
-  }
-
-  const total = availableRarities.reduce((sum, r) => sum + r.effectiveChance, 0);
-  let pick = Math.random() * total;
-
-  for (const r of availableRarities) {
-    if ((pick -= r.effectiveChance) <= 0) {
-      return r;
-    }
-  }
-
-  return availableRarities[availableRarities.length - 1];
+  return exactWinner || getFallbackRarity(rollableRarities, luckThreshold) || rollableRarities[0];
 };
 
 function clickSound() {
@@ -25424,6 +26068,10 @@ function extractSpecialRarityDefinitionsFromSource(source) {
 }
 
 function getRarityDefinitionsForDevGrant() {
+  if (cachedRarityDefinitionsForDevGrant) {
+    return cachedRarityDefinitionsForDevGrant;
+  }
+
   const cachedDefinitions =
     typeof globalThis !== "undefined" && Array.isArray(globalThis.__unnamedRngRarityDefinitions)
       ? globalThis.__unnamedRngRarityDefinitions
@@ -25445,7 +26093,7 @@ function getRarityDefinitionsForDevGrant() {
   ];
 
   const seen = new Set();
-  return definitions.filter((definition) => {
+  cachedRarityDefinitionsForDevGrant = definitions.filter((definition) => {
     if (!isDevRarityDefinition(definition)) {
       return false;
     }
@@ -25458,6 +26106,51 @@ function getRarityDefinitionsForDevGrant() {
     seen.add(key);
     return true;
   });
+
+  return cachedRarityDefinitionsForDevGrant;
+}
+
+function addRarityDefinitionLookupEntry(map, key, definition) {
+  const normalizedKey = normalizeDevLookupText(key);
+  if (!normalizedKey || map.has(normalizedKey)) {
+    return;
+  }
+
+  map.set(normalizedKey, definition);
+}
+
+function getRarityDefinitionLookupByTitle() {
+  if (rarityDefinitionLookupByTitle) {
+    return rarityDefinitionLookupByTitle;
+  }
+
+  const lookup = new Map();
+  getRarityDefinitionsForDevGrant().forEach((definition) => {
+    const titles = Array.isArray(definition.titles) && definition.titles.length
+      ? definition.titles
+      : [definition.type];
+
+    addRarityDefinitionLookupEntry(lookup, definition.type, definition);
+    addRarityDefinitionLookupEntry(lookup, getDevRarityDisplayName(definition), definition);
+    titles.forEach((candidate) => addRarityDefinitionLookupEntry(lookup, candidate, definition));
+  });
+
+  rarityDefinitionLookupByTitle = lookup;
+  return rarityDefinitionLookupByTitle;
+}
+
+function findRarityDefinitionForInventoryTitle(title) {
+  const needle = normalizeDevLookupText(title);
+  if (!needle) {
+    return null;
+  }
+
+  return getRarityDefinitionLookupByTitle().get(needle) || null;
+}
+
+function inferRarityClassForInventoryTitle(title) {
+  const definition = findRarityDefinitionForInventoryTitle(title);
+  return normalizeRarityClassName(definition?.class || "");
 }
 
 function getAllDevTitleGrantRecords() {
@@ -25594,6 +26287,120 @@ function grantDevModeUnlockReward() {
   return summary;
 }
 
+function getDevAchievementNameCandidates() {
+  const names = new Set();
+
+  ACHIEVEMENTS.forEach((achievement) => {
+    if (achievement && typeof achievement.name === "string" && achievement.name.trim()) {
+      names.add(achievement.name.trim());
+    }
+  });
+
+  COLLECTOR_ACHIEVEMENTS.forEach((achievement) => {
+    if (achievement && typeof achievement.name === "string" && achievement.name.trim()) {
+      names.add(achievement.name.trim());
+    }
+  });
+
+  $all("[data-name]").forEach((element) => {
+    const name = element.getAttribute("data-name");
+    if (typeof name === "string" && name.trim()) {
+      names.add(name.trim());
+    }
+  });
+
+  unlockedAchievementsCache.forEach((name) => {
+    if (typeof name === "string" && name.trim()) {
+      names.add(name.trim());
+    }
+  });
+
+  return Array.from(names);
+}
+
+function findDevAchievementName(achievementName) {
+  const requested = String(achievementName || "").trim();
+  if (!requested) {
+    return null;
+  }
+
+  const candidates = getDevAchievementNameCandidates();
+  const exactMatch = candidates.find((name) => name === requested);
+  if (exactMatch) {
+    return exactMatch;
+  }
+
+  const lowerMatch = candidates.find((name) => name.toLowerCase() === requested.toLowerCase());
+  if (lowerMatch) {
+    return lowerMatch;
+  }
+
+  const normalizedRequested = normalizeDevLookupText(requested);
+  return candidates.find((name) => normalizeDevLookupText(name) === normalizedRequested) || null;
+}
+
+function getDevAchievementArgument(tokens) {
+  return tokens.slice(1).join(" ").trim();
+}
+
+function grantDevAchievementCommand(achievementName) {
+  const resolvedName = findDevAchievementName(achievementName);
+  if (!resolvedName) {
+    return { ok: false, message: `Unknown achievement: ${achievementName}` };
+  }
+
+  const unlocked = getUnlockedAchievementsSnapshot();
+  if (unlocked.has(resolvedName)) {
+    return { ok: true, message: `${resolvedName} is already unlocked.` };
+  }
+
+  unlockAchievement(resolvedName, unlocked);
+  updateAchievementsList();
+  updateAutoRollAvailability();
+
+  return { ok: true, message: `Unlocked achievement: ${resolvedName}.` };
+}
+
+function removeDevAchievementCommand(achievementName) {
+  const resolvedName = findDevAchievementName(achievementName);
+  if (!resolvedName) {
+    return { ok: false, message: `Unknown achievement: ${achievementName}` };
+  }
+
+  const unlocked = getUnlockedAchievementsSnapshot();
+  if (!unlocked.has(resolvedName)) {
+    return { ok: true, message: `${resolvedName} is not unlocked.` };
+  }
+
+  unlocked.delete(resolvedName);
+  persistUnlockedAchievements(unlocked);
+  updateAchievementsList();
+  updateAutoRollAvailability();
+
+  return { ok: true, message: `Removed achievement: ${resolvedName}.` };
+}
+
+function grantAllDevAchievementsCommand() {
+  const unlocked = getUnlockedAchievementsSnapshot();
+  let added = 0;
+
+  getDevAchievementNameCandidates().forEach((name) => {
+    if (!unlocked.has(name)) {
+      unlocked.add(name);
+      added += 1;
+    }
+  });
+
+  persistUnlockedAchievements(unlocked);
+  updateAchievementsList();
+  updateAutoRollAvailability();
+
+  return {
+    ok: true,
+    message: `Unlocked ${added.toLocaleString("en-US")} achievement${added === 1 ? "" : "s"}.`,
+  };
+}
+
 function normalizeDevLookupText(value) {
   return String(value || "")
     .replace(/\[[^\]]*\]/g, " ")
@@ -25627,6 +26434,9 @@ function findDevSubtitleForDefinition(definition, subtitleName) {
   }
 
   const needle = normalizeDevLookupText(subtitleName);
+  if (!needle) {
+    return null;
+  }
   const titles = Array.isArray(definition.titles) && definition.titles.length
     ? definition.titles
     : [definition.type];
@@ -25643,14 +26453,38 @@ function findDevSubtitleForDefinition(definition, subtitleName) {
   return String(subtitleName || "").trim() || null;
 }
 
+function getDevSubtitleCandidates(definition) {
+  if (!definition) {
+    return [];
+  }
+
+  const titles = Array.isArray(definition.titles) && definition.titles.length
+    ? definition.titles
+    : [definition.type];
+
+  return titles
+    .filter((title) => typeof title === "string" && title.trim())
+    .map((title) => title.trim());
+}
+
+function getRandomDevSubtitleForDefinition(definition) {
+  const titles = getDevSubtitleCandidates(definition);
+  if (!titles.length) {
+    return getDevRarityDisplayName(definition) || definition?.type || "";
+  }
+
+  return titles[Math.floor(Math.random() * titles.length)];
+}
+
 function grantDevTitle(titleName, subtitleName, amount) {
   const definition = findDevRarityDefinition(titleName);
   if (!definition) {
     return { ok: false, message: `Unknown title: ${titleName}` };
   }
 
-  const subtitle = findDevSubtitleForDefinition(definition, subtitleName);
-  if (!subtitle) {
+  const hasExplicitSubtitle = typeof subtitleName === "string" && subtitleName.trim().length > 0;
+  const explicitSubtitle = hasExplicitSubtitle ? findDevSubtitleForDefinition(definition, subtitleName) : null;
+  if (hasExplicitSubtitle && !explicitSubtitle) {
     return { ok: false, message: `Unknown subtitle for ${getDevRarityDisplayName(definition)}.` };
   }
 
@@ -25664,6 +26498,7 @@ function grantDevTitle(titleName, subtitleName, amount) {
   const records = [];
 
   for (let index = 0; index < quantity; index += 1) {
+    const subtitle = explicitSubtitle || getRandomDevSubtitleForDefinition(definition);
     const { record } = normalizeInventoryRecord({
       title: subtitle,
       rarityClass: definition.class,
@@ -25689,7 +26524,39 @@ function grantDevTitle(titleName, subtitleName, amount) {
 
   return {
     ok: true,
-    message: `Granted ${records.length.toLocaleString()} x ${subtitle}.`,
+    message: hasExplicitSubtitle
+      ? `Granted ${records.length.toLocaleString()} x ${explicitSubtitle}.`
+      : `Granted ${records.length.toLocaleString()} random ${getDevRarityDisplayName(definition)} title${records.length === 1 ? "" : "s"}.`,
+  };
+}
+
+function forceNextRollTitleCommand(titleName, subtitleName = "") {
+  const definition = findDevRarityDefinition(titleName);
+  if (!definition) {
+    return { ok: false, message: `Unknown title: ${titleName}` };
+  }
+
+  const hasExplicitSubtitle = typeof subtitleName === "string" && subtitleName.trim().length > 0;
+  const subtitle = hasExplicitSubtitle
+    ? findDevSubtitleForDefinition(definition, subtitleName)
+    : getRandomDevSubtitleForDefinition(definition);
+
+  if (!subtitle) {
+    return { ok: false, message: `Unknown subtitle for ${getDevRarityDisplayName(definition)}.` };
+  }
+
+  forcedNextRollTitle = {
+    rarity: {
+      ...definition,
+      class: normalizeRarityClassName(definition.class),
+      titles: [subtitle],
+    },
+    title: subtitle,
+  };
+
+  return {
+    ok: true,
+    message: `Next roll forced to ${subtitle} (${definition.type}).`,
   };
 }
 
@@ -25762,11 +26629,23 @@ function parseDevDurationMs(parts) {
     d: 24 * 60 * 60 * 1000,
     day: 24 * 60 * 60 * 1000,
     days: 24 * 60 * 60 * 1000,
+    w: 7 * 24 * 60 * 60 * 1000,
+    week: 7 * 24 * 60 * 60 * 1000,
+    weeks: 7 * 24 * 60 * 60 * 1000,
+    mo: 30 * 24 * 60 * 60 * 1000,
+    mos: 30 * 24 * 60 * 60 * 1000,
+    month: 30 * 24 * 60 * 60 * 1000,
+    months: 30 * 24 * 60 * 60 * 1000,
+    y: 365 * 24 * 60 * 60 * 1000,
+    yr: 365 * 24 * 60 * 60 * 1000,
+    yrs: 365 * 24 * 60 * 60 * 1000,
+    year: 365 * 24 * 60 * 60 * 1000,
+    years: 365 * 24 * 60 * 60 * 1000,
   };
 
   let total = 0;
   let matched = false;
-  const leftovers = source.replace(/(\d+(?:\.\d+)?)\s*(milliseconds?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|hr|h|days?|d)\b/gi, (match, amount, unit) => {
+  const leftovers = source.replace(/(\d+(?:\.\d+)?)\s*(milliseconds?|ms|seconds?|secs?|sec|s|minutes?|mins?|min|m|hours?|hrs?|hr|h|days?|d|weeks?|w|months?|mos?|mo|years?|yrs?|yr|y)\b/gi, (match, amount, unit) => {
     const parsedAmount = Number(amount);
     const normalizedUnit = String(unit || "").toLowerCase();
     const multiplier = unitMs[normalizedUnit];
@@ -25879,7 +26758,7 @@ function grantDevBuff(potionName, valueParts) {
 
   const parts = Array.isArray(valueParts) ? valueParts : [];
   if (!parts.length) {
-    return { ok: false, message: 'Use: giveBuff "Potion Name" 1h 20min 50sec, forever, or giveBuff "Basic Potion" 5' };
+    return { ok: false, message: 'Use: giveBuff "Potion Name" Xy Xmo Xw Xd Xh Xmin Xsec/forever/<amount>' };
   }
 
   const consumeOnRoll = Boolean(potion.consumeOnRoll);
@@ -25888,7 +26767,7 @@ function grantDevBuff(potionName, valueParts) {
   const durationMs = !forever && rollAmount === null ? parseDevDurationMs(parts) : null;
 
   if (!forever && rollAmount === null && (!Number.isFinite(durationMs) || durationMs <= 0)) {
-    return { ok: false, message: 'Use: giveBuff "Potion Name" 1h 20min 50sec, forever, or giveBuff "Basic Potion" 5' };
+    return { ok: false, message: 'Use: giveBuff "Potion Name" Xy Xmo Xw Xd Xh Xmin Xsec/forever/<amount>' };
   }
 
   const referenceTime = getDevBuffReferenceTime();
@@ -25909,8 +26788,10 @@ function grantDevBuff(potionName, valueParts) {
   if (consumeOnRoll) {
     const parsedUses = Number.parseInt(buff.usesRemaining, 10);
     const currentUses = Number.isFinite(parsedUses) && parsedUses >= 1 ? parsedUses : 0;
-    addedUses = rollAmount || getDevPotionCommandUses(potion);
-    buff.usesRemaining = Math.min(Number.MAX_SAFE_INTEGER, currentUses + addedUses);
+    addedUses = forever ? Number.MAX_SAFE_INTEGER : rollAmount || getDevPotionCommandUses(potion);
+    buff.usesRemaining = forever
+      ? Number.MAX_SAFE_INTEGER
+      : Math.min(Number.MAX_SAFE_INTEGER, currentUses + addedUses);
   }
 
   persistActiveBuffs();
@@ -25922,7 +26803,9 @@ function grantDevBuff(potionName, valueParts) {
       : ` Expires in ${formatBuffDuration(Math.ceil(durationMs / 1000))}.`;
     return {
       ok: true,
-      message: `Added ${addedUses.toLocaleString()} ${potion.name} roll${addedUses === 1 ? "" : "s"}.${suffix}`,
+      message: forever
+        ? `Added ${potion.name} forever.`
+        : `Added ${addedUses.toLocaleString()} ${potion.name} roll${addedUses === 1 ? "" : "s"}.${suffix}`,
     };
   }
 
@@ -25934,6 +26817,14 @@ function grantDevBuff(potionName, valueParts) {
     ok: true,
     message: `Added ${formatBuffDuration(Math.ceil(durationMs / 1000))} to ${potion.name}.`,
   };
+}
+
+function grantForeverPotionBuff(potion) {
+  if (!canPotionUseForeverDevButton(potion)) {
+    return;
+  }
+
+  grantDevBuff(potion.name, ["forever"]);
 }
 
 function removeDevBuffCompletely(potion) {
@@ -26019,7 +26910,7 @@ function removeDevBuffTime(potionName, durationParts) {
 
   const durationMs = parseDevDurationMs(durationParts);
   if (!Number.isFinite(durationMs) || durationMs <= 0) {
-    return { ok: false, message: 'Use: removeBuff "Potion Name" 1h 20min 50sec or removeBuff "Basic Potion" 5' };
+    return { ok: false, message: 'Use: removeBuff "Potion Name" Xy Xmo Xw Xd Xh Xmin Xsec/forever/<amount>' };
   }
 
   const referenceTime = getDevBuffReferenceTime();
@@ -26194,6 +27085,126 @@ function parseDevCommandLine(input) {
   return { tokens, error: null };
 }
 
+function splitDevCommaSeparatedGroups(input) {
+  const text = String(input || "");
+  const groups = [];
+  let current = "";
+  let quote = null;
+  let escaping = false;
+
+  for (let index = 0; index < text.length; index += 1) {
+    const char = text[index];
+
+    if (escaping) {
+      current += char;
+      escaping = false;
+      continue;
+    }
+
+    if (char === "\\") {
+      current += char;
+      escaping = true;
+      continue;
+    }
+
+    if (quote) {
+      current += char;
+      if (char === quote) {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (char === "\"" || char === "'") {
+      current += char;
+      quote = char;
+      continue;
+    }
+
+    if (char === ",") {
+      const group = current.trim();
+      if (!group) {
+        return { groups: [], error: "Remove empty comma-separated entries." };
+      }
+      groups.push(group);
+      current = "";
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (quote) {
+    return { groups: [], error: "Missing closing quote." };
+  }
+
+  const finalGroup = current.trim();
+  if (finalGroup) {
+    groups.push(finalGroup);
+  }
+
+  return { groups, error: null };
+}
+
+function getDevCommandArgumentText(input) {
+  const text = String(input || "").trim();
+  const match = text.match(/^\S+/);
+  if (!match) {
+    return "";
+  }
+
+  return text.slice(match[0].length).trim();
+}
+
+function parseDevCommandArgumentGroups(input) {
+  const argumentText = getDevCommandArgumentText(input);
+  if (!argumentText) {
+    return { groups: [], error: null };
+  }
+
+  const split = splitDevCommaSeparatedGroups(argumentText);
+  if (split.error) {
+    return { groups: [], error: split.error };
+  }
+
+  const groups = [];
+  for (const group of split.groups) {
+    const parsed = parseDevCommandLine(group);
+    if (parsed.error) {
+      return { groups: [], error: parsed.error };
+    }
+    groups.push(parsed.tokens);
+  }
+
+  return { groups, error: null };
+}
+
+function executeDevBuffGroupCommand(input, handler, usage) {
+  const parsed = parseDevCommandArgumentGroups(input);
+  if (parsed.error) {
+    return { ok: false, message: parsed.error };
+  }
+
+  if (!parsed.groups.length) {
+    return { ok: false, message: usage };
+  }
+
+  const results = [];
+  for (const group of parsed.groups) {
+    const [potionName, ...valueParts] = group;
+    if (!potionName || !valueParts.length) {
+      return { ok: false, message: usage };
+    }
+
+    results.push(handler(potionName, valueParts));
+  }
+
+  return {
+    ok: results.every((result) => result.ok),
+    message: results.map((result) => result.message).join(" "),
+  };
+}
+
 function executeUnlockedDevCommand(input) {
   const { tokens, error } = parseDevCommandLine(input);
   if (error) {
@@ -26214,6 +27225,29 @@ function executeUnlockedDevCommand(input) {
     };
   }
 
+  if (normalizedCommand === "giveallachievements") {
+    if (tokens.length !== 1) {
+      return { ok: false, message: "Use: giveAllAchievements" };
+    }
+    return grantAllDevAchievementsCommand();
+  }
+
+  if (normalizedCommand === "giveachievement") {
+    const achievementName = getDevAchievementArgument(tokens);
+    if (!achievementName) {
+      return { ok: false, message: 'Use: giveAchievement "Achievement Name"' };
+    }
+    return grantDevAchievementCommand(achievementName);
+  }
+
+  if (normalizedCommand === "removeachievement") {
+    const achievementName = getDevAchievementArgument(tokens);
+    if (!achievementName) {
+      return { ok: false, message: 'Use: removeAchievement "Achievement Name"' };
+    }
+    return removeDevAchievementCommand(achievementName);
+  }
+
   if (normalizedCommand === "unlimitedpotions") {
     if (tokens.length !== 1) {
       return { ok: false, message: "Use: unlimitedPotions" };
@@ -26226,10 +27260,20 @@ function executeUnlockedDevCommand(input) {
   }
 
   if (normalizedCommand === "givetitle" || normalizedCommand === "addtitle") {
-    if (tokens.length !== 4) {
-      return { ok: false, message: 'Use: giveTitle "Title" "Subtitle" <amount>' };
+    if (tokens.length < 3) {
+      return { ok: false, message: 'Use: giveTitle "Title" ["Subtitle"] <amount>' };
     }
-    return grantDevTitle(firstArg, secondArg, thirdArg);
+    const amount = tokens[tokens.length - 1];
+    const subtitle = tokens.length > 3 ? tokens.slice(2, -1).join(" ") : "";
+    return grantDevTitle(firstArg, subtitle, amount);
+  }
+
+  if (normalizedCommand === "forcerolltitle") {
+    if (tokens.length < 2) {
+      return { ok: false, message: 'Use: forceRollTitle "Title" ["Subtitle"]' };
+    }
+    const subtitle = tokens.length > 2 ? tokens.slice(2).join(" ") : "";
+    return forceNextRollTitleCommand(firstArg, subtitle);
   }
 
   if (normalizedCommand === "givepotion") {
@@ -26240,17 +27284,19 @@ function executeUnlockedDevCommand(input) {
   }
 
   if (normalizedCommand === "givebuff") {
-    if (tokens.length < 3) {
-      return { ok: false, message: 'Use: giveBuff "Potion Name" 1h 20min 50sec, forever, or giveBuff "Basic Potion" 5' };
-    }
-    return grantDevBuff(firstArg, tokens.slice(2));
+    return executeDevBuffGroupCommand(
+      input,
+      grantDevBuff,
+      'Use: giveBuff "Potion Name" Xy Xmo Xw Xd Xh Xmin Xsec/forever/<amount> | If multiple, seperate by commas: giveBuff "Potion Name" --||--, "Potion Name" --||--'
+    );
   }
 
   if (normalizedCommand === "removebuff") {
-    if (tokens.length < 3) {
-      return { ok: false, message: 'Use: removeBuff "Potion Name" 1h 20min 50sec or removeBuff "Basic Potion" 5' };
-    }
-    return removeDevBuffTime(firstArg, tokens.slice(2));
+    return executeDevBuffGroupCommand(
+      input,
+      removeDevBuffTime,
+      'Use: removeBuff "Potion Name" Xy Xmo Xw Xd Xh Xmin Xsec/forever/<amount> | If multiple, seperate by commas: giveBuff "Potion Name" --||--, "Potion Name" --||--'
+    );
   }
 
   if (normalizedCommand === "setluck") {
@@ -26342,7 +27388,7 @@ const DEV_COMMAND_HISTORY_KEY = "devCommandHistory";
 const DEV_COMMAND_HISTORY_LIMIT = 50;
 
 let devCommandPromptMode = "code";
-let devModeEnabled = false;
+let devModeEnabled = Boolean(storage.get(DEV_MODE_UNLOCKED_KEY, false));
 let devCommandPromptInitialized = false;
 let devCommandHistory = normalizeDevCommandHistory(storage.get(DEV_COMMAND_HISTORY_KEY, []));
 let devCommandHistoryIndex = null;
@@ -26492,7 +27538,10 @@ function setDevCommandPromptVisible(visible) {
   prompt.setAttribute("aria-hidden", visible ? "false" : "true");
 
   if (visible) {
-    if (!devModeEnabled) {
+    if (devModeEnabled) {
+      setDevCommandPromptMode("command");
+      setDevCommandPromptStatus("");
+    } else {
       setDevCommandPromptMode("code");
       setDevCommandPromptStatus("");
     }
@@ -26559,6 +27608,8 @@ async function handleDevCommandPromptSubmit(event) {
     }
 
     devModeEnabled = true;
+    storage.set(DEV_MODE_UNLOCKED_KEY, true);
+    renderPotionInventory();
     const summary = grantDevModeUnlockReward();
     setDevCommandPromptMode("command");
     setDevCommandPromptStatus(
@@ -26638,11 +27689,178 @@ function initializeDevCommandPrompt() {
   });
 
   devCommandPromptInitialized = true;
-  setDevCommandPromptMode("code");
+  setDevCommandPromptMode(devModeEnabled ? "command" : "code");
   setDevCommandPromptVisible(false);
 }
 
 initializeDevCommandPrompt();
+
+const GOODBYE_POTION_REWARDS = Object.freeze({
+  fortuneSpoid1: 1000,
+  fortuneSpoid2: 1000,
+  fortuneSpoid3: 1000,
+  hasteSpoid1: 1000,
+  hasteSpoid2: 1000,
+  hasteSpoid3: 1000,
+});
+
+function isGoodbyeSpoidStashClaimed() {
+  return Boolean(storage.get(GOODBYE_SPOID_STASH_CLAIMED_KEY, false));
+}
+
+function grantGoodbyePotionRewards() {
+  if (isGoodbyeSpoidStashClaimed()) {
+    return { claimed: false, names: "" };
+  }
+
+  Object.entries(GOODBYE_POTION_REWARDS).forEach(([potionId, amount]) => {
+    adjustPotionCount(potionId, amount);
+  });
+
+  renderPotionInventory();
+  renderPotionCrafting();
+  storage.set(GOODBYE_SPOID_STASH_CLAIMED_KEY, true);
+
+  return {
+    claimed: true,
+    names: Object.keys(GOODBYE_POTION_REWARDS)
+      .map((potionId) => getPotionDefinition(potionId)?.name || potionId)
+      .join(", "),
+  };
+}
+
+function ensureGoodbyePopup() {
+  let popup = document.getElementById("goodbyePotionPopup");
+  if (popup) {
+    return popup;
+  }
+
+  popup = document.createElement("div");
+  popup.id = "goodbyePotionPopup";
+  popup.className = "goodbye-popup";
+  popup.hidden = true;
+  popup.setAttribute("role", "dialog");
+  popup.setAttribute("aria-modal", "true");
+  popup.setAttribute("aria-labelledby", "goodbyePotionTitle");
+  popup.innerHTML = `
+    <div class="goodbye-popup__panel" role="button" tabindex="0">
+      <button class="goodbye-popup__close" type="button" aria-label="Close">Close</button>
+      <p class="goodbye-popup__kicker">Goodbye</p>
+      <h2 class="goodbye-popup__title" id="goodbyePotionTitle">Unnamed's RNG</h2>
+      <p class="goodbye-popup__message">Click to claim the spoid stash.</p>
+      <p class="goodbye-popup__status" aria-live="polite"></p>
+    </div>
+  `;
+
+  const panel = popup.querySelector(".goodbye-popup__panel");
+  const closeButton = popup.querySelector(".goodbye-popup__close");
+  const status = popup.querySelector(".goodbye-popup__status");
+
+  const close = () => {
+    popup.hidden = true;
+  };
+
+  const claim = () => {
+    if (popup.dataset.claimed === "true") {
+      if (status) {
+        status.textContent = "The spoid stash has already been claimed.";
+      }
+      return;
+    }
+
+    if (isGoodbyeSpoidStashClaimed()) {
+      popup.dataset.claimed = "true";
+      popup.classList.add("goodbye-popup--claimed");
+      if (status) {
+        status.textContent = "The spoid stash has already been claimed.";
+      }
+      return;
+    }
+
+    const reward = grantGoodbyePotionRewards();
+    popup.dataset.claimed = "true";
+    popup.classList.add("goodbye-popup--claimed");
+    if (status) {
+      status.textContent = reward.claimed
+        ? `Added 1,000 each: ${reward.names}.`
+        : "The spoid stash has already been claimed.";
+    }
+  };
+
+  panel?.addEventListener("click", (event) => {
+    if (event.target.closest(".goodbye-popup__close")) {
+      return;
+    }
+
+    claim();
+  });
+
+  panel?.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    claim();
+  });
+
+  closeButton?.addEventListener("click", close);
+  popup.addEventListener("click", (event) => {
+    if (event.target === popup) {
+      close();
+    }
+  });
+
+  document.body.appendChild(popup);
+  return popup;
+}
+
+function showGoodbyePopup() {
+  const popup = ensureGoodbyePopup();
+  const message = popup.querySelector(".goodbye-popup__message");
+  const status = popup.querySelector(".goodbye-popup__status");
+  const claimed = isGoodbyeSpoidStashClaimed();
+  popup.dataset.claimed = String(claimed);
+  popup.classList.toggle("goodbye-popup--claimed", claimed);
+  if (message) {
+    message.textContent = claimed
+      ? "The spoid stash has already been claimed."
+      : "Click to claim the spoid stash.";
+  }
+  if (status) {
+    status.textContent = "";
+  }
+  popup.hidden = false;
+  popup.querySelector(".goodbye-popup__panel")?.focus();
+}
+
+function initializeVersionTitleGoodbye() {
+  const title = document.querySelector(".version__title");
+  if (!title || title.dataset.goodbyeInitialized === "true") {
+    return;
+  }
+
+  const card = title.closest(".version__card");
+  title.dataset.goodbyeInitialized = "true";
+  title.tabIndex = 0;
+  title.setAttribute("role", "button");
+  title.setAttribute("aria-label", "Unnamed's RNG goodbye message");
+  title.addEventListener("click", showGoodbyePopup);
+  if (card && card.dataset.goodbyeInitialized !== "true") {
+    card.dataset.goodbyeInitialized = "true";
+    card.addEventListener("click", showGoodbyePopup);
+  }
+  title.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+
+    event.preventDefault();
+    showGoodbyePopup();
+  });
+}
+
+initializeVersionTitleGoodbye();
 
 function getCurrentLuckValue() {
   return computeLuckValueFromPercent(getActiveLuckPercentBreakdown().total);
@@ -26682,6 +27900,7 @@ function consumePendingRollLuckSnapshot() {
 
 function addToInventory(title, rarityClass) {
   lastRollRarityClass = rarityClass || null;
+  const commandGranted = Boolean(currentRollGrantedByCommand);
   const rolledAt = typeof rollCount === "number"
     ? rollCount
     : parseInt(localStorage.getItem("rollCount")) || 0;
@@ -26690,14 +27909,14 @@ function addToInventory(title, rarityClass) {
   const bucket = normalizeRarityBucket(rarityClass);
   recordRarityBucketRoll(bucket);
   const pendingLuckOverride = consumePendingRollLuckSnapshot();
-  if (shouldSkipTitleSaveForRarityClass(rarityClass)) {
+  if (!commandGranted && shouldSkipTitleSaveForRarityClass(rarityClass)) {
     lastRollPersisted = false;
     lastRollAutoDeleted = true;
     resumeEquippedAudioAfterCutscene = true;
     return false;
   }
 
-  if (autoDeleteSet.has(bucket)) {
+  if (!commandGranted && autoDeleteSet.has(bucket)) {
     lastRollPersisted = false;
     lastRollAutoDeleted = true;
     resumeEquippedAudioAfterCutscene = true;
@@ -26706,12 +27925,14 @@ function addToInventory(title, rarityClass) {
 
   const excludedRarities = new Set(Array.from(document.querySelectorAll('.rarity-button.active')).map(btn => btn.dataset.rarity));
 
-  for (const category in rarityCategories) {
-    if (excludedRarities.has(category) && rarityCategories[category].includes(rarityClass)) {
-      lastRollPersisted = false;
-      lastRollAutoDeleted = true;
-      resumeEquippedAudioAfterCutscene = true;
-      return false;
+  if (!commandGranted) {
+    for (const category in rarityCategories) {
+      if (excludedRarities.has(category) && rarityCategories[category].includes(rarityClass)) {
+        lastRollPersisted = false;
+        lastRollAutoDeleted = true;
+        resumeEquippedAudioAfterCutscene = true;
+        return false;
+      }
     }
   }
 
@@ -26722,6 +27943,7 @@ function addToInventory(title, rarityClass) {
     rarityClass,
     rolledAt,
     luckValue,
+    givenByCommand: commandGranted,
   });
   if (!newRecord) {
     return false;
@@ -26869,7 +28091,7 @@ function getAutoDeleteSet() {
 
 function normalizeRarityBucket(rarityClass) {
   if (!rarityClass || typeof rarityClass !== "string") return "";
-  const cls = rarityClass.trim();
+  const cls = normalizeRarityClassName(rarityClass);
 
   const prefixMatches = [
     { prefix: "under10me", bucket: "transcendent" },
@@ -27000,9 +28222,10 @@ function deleteAllFromInventory() {
 
 function deleteAllByRarity(rarityClass) {
   const lockedItems = JSON.parse(localStorage.getItem("lockedItems")) || {};
+  const targetClass = normalizeRarityClassName(rarityClass);
 
   inventory = inventory.filter((item) => {
-    return item.rarityClass !== rarityClass || lockedItems[item.title] === true;
+    return normalizeRarityClassName(item.rarityClass) !== targetClass || lockedItems[item.title] === true;
   });
 
   localStorage.setItem("inventory", JSON.stringify(inventory));
@@ -27499,7 +28722,7 @@ const backgroundDetails = {
   polarrBgImg: { image: "files/backgrounds/polarr.png", audio: "polarrAudio" },
   ethershiftBgImg: { image: "files/backgrounds/ether.png", audio: "ethAudio" },
   msfuBgImg: { image: "files/backgrounds/msfu.png", audio: "msfuAudio" },
-  oppBgImg: { image: "files/backgrounds/oppression.jpg", audio: "oppAudio" },
+  oppBgImg: { image: "files/backgrounds/oppre.png", audio: "oppAudio" },
   glitchedBgImg: { image: "files/backgrounds/glitched.gif", audio: "glitchedAudio" },
   astraldBgImg: { image: "files/backgrounds/astrald.gif", audio: "astraldAudio" },
   hypernovaBgImg: { image: "files/backgrounds/hypernova.gif", audio: "hypernovaAudio" },
@@ -27513,7 +28736,7 @@ const backgroundDetails = {
   frogarBgImg: { image: "files/backgrounds/frogar.png", audio: "frogarAudio" },
   cancansymBgImg: { image: "files/backgrounds/cancansym.png", audio: "cancansymAudio" },
   ginharBgImg: { image: "files/backgrounds/ginhar.png", audio: "ginharAudio" },
-  jolbeBgImg: { image: "files/backgrounds/jolbel.png", audio: "jolbelAudio" },
+  jolbelBgImg: { image: "files/backgrounds/jolbel.png", audio: "jolbelAudio" },
   holcheBgImg: { image: "files/backgrounds/holche.png", audio: null },
   cristoBgImg: { image: "files/backgrounds/cristo.png", audio: null },
   harvBgImg: { image: "files/backgrounds/harv.png", audio: "harvAudio" },
@@ -27528,7 +28751,7 @@ const backgroundDetails = {
   pebbleBgImg: { image: "files/backgrounds/pebble.png", audio: null },
   cinderBgImg: { image: "files/backgrounds/cinder.png", audio: null },
   breezeBgImg: { image: "files/backgrounds/breeze.png", audio: null },
-  dewdropBgImg: { image: "files/backgrounds/dewdrop.png", audio: null },
+  faultedBgImg: { image: "files/backgrounds/faulted.png", audio: null },
   lanternBgImg: { image: "files/backgrounds/lantern.png", audio: null },
   meadowBgImg: { image: "files/backgrounds/meadow.png", audio: null },
   kindlingBgImg: { image: "files/backgrounds/kindling.png", audio: null },
@@ -27555,7 +28778,7 @@ const backgroundDetails = {
   echoesBgImg: { image: "files/backgrounds/echoes.png", audio: "echoesAudio" },
   lanternlightBgImg: { image: "files/backgrounds/lanternlight.png", audio: "lanternlightAudio" },
   ashfallBgImg: { image: "files/backgrounds/ashfall.png", audio: "ashfallAudio" },
-  wanderBgImg: { image: "files/backgrounds/wander.png", audio: "wanderAudio" },
+  wanderBgImg: { image: "files/backgrounds/wonder.png", audio: "wanderAudio" },
   compassBgImg: { image: "files/backgrounds/compass.png", audio: "compassAudio" },
   driftwoodBgImg: { image: "files/backgrounds/driftwood.png", audio: "driftwoodAudio" },
   fireflyBgImg: { image: "files/backgrounds/firefly.png", audio: "fireflyAudio" },
@@ -27580,8 +28803,7 @@ const backgroundDetails = {
   ironwoodBgImg: { image: "files/backgrounds/ironwood.png", audio: "ironwoodAudio" },
   wildfireBgImg: { image: "files/backgrounds/wildfire.png", audio: "wildfireAudio" },
   highlandBgImg: { image: "files/backgrounds/highland.png", audio: "highlandAudio" },
-  nightfallBgImg: { image: "files/backgrounds/nightfall.png", audio: "nightfallAudio" },
-  nightfallerBgImg: { image: "files/backgrounds/nightfall.png", audio: "nightfallAudio" },
+  nightfallerBgImg: { image: "files/backgrounds/nightfaller.png", audio: "nightfallerAudio" },
   thunderBgImg: { image: "files/backgrounds/thunder.png", audio: "thunderAudio" },
   shorelineBgImg: { image: "files/backgrounds/shoreline.png", audio: "shorelineAudio" },
   marinerBgImg: { image: "files/backgrounds/mariner.png", audio: "marinerAudio" },
@@ -27606,7 +28828,10 @@ const backgroundDetails = {
   earthboundBgImg: { image: "files/backgrounds/earthbound.png", audio: "earthboundAudio" },
   highwaterBgImg: { image: "files/backgrounds/highwater.png", audio: "highwaterAudio" },
   graveyardBgImg: { image: "files/backgrounds/graveyard.png", audio: "graveyardAudio" },
-  blackridgeBgImg: { image: "files/backgrounds/blackridge.png", audio: "blackridgeAudio" },
+  blackridgeBgImg: {
+    image: "linear-gradient(180deg, #05070d 0%, #111725 48%, #030407 100%)",
+    audio: "blackridgeAudio",
+  },
   longwinterBgImg: { image: "files/backgrounds/longwinter.png", audio: "longwinterAudio" },
   northstarBgImg: { image: "files/backgrounds/northstar.png", audio: "northstarAudio" },
   firestormBgImg: { image: "files/backgrounds/firestorm.png", audio: "firestormAudio" },
@@ -27617,6 +28842,67 @@ const backgroundDetails = {
   finalhourBgImg: { image: "files/backgrounds/finalhour.png", audio: "finalhourAudio" },
   worldendBgImg: { image: "files/backgrounds/worldend.png", audio: "worldendAudio" },
 };
+
+function getBackgroundDetailsForRarityClass(rarityClass) {
+  const normalizedClass = normalizeRarityClassName(rarityClass);
+  if (!normalizedClass) {
+    return null;
+  }
+
+  return backgroundDetails[normalizedClass] || createFallbackBackgroundDetails(normalizedClass);
+}
+
+function createFallbackBackgroundDetails(rarityClass) {
+  const hash = hashCutsceneKey(rarityClass);
+  const hueA = hash % 360;
+  const hueB = (hueA + 42 + (hash % 90)) % 360;
+  return {
+    image: `linear-gradient(145deg, hsl(${hueA} 54% 15%) 0%, hsl(${hueB} 48% 23%) 48%, #05070b 100%)`,
+    audio: null,
+  };
+}
+
+function formatBackgroundImageLayer(source) {
+  const value = typeof source === "string" ? source.trim() : "";
+  if (!value) {
+    return "";
+  }
+
+  if (/^(?:url|linear-gradient|radial-gradient|conic-gradient)\(/i.test(value)) {
+    return value;
+  }
+
+  return `url(${value})`;
+}
+
+function formatBackgroundImageValue(details) {
+  if (!details) {
+    return "";
+  }
+
+  return [formatBackgroundImageLayer(details.image), formatBackgroundImageLayer(details.fallbackImage)]
+    .filter(Boolean)
+    .join(", ");
+}
+
+function registerBackgroundDetailAudioIds() {
+  Object.values(backgroundDetails).forEach((details) => {
+    const audioId = details && typeof details.audio === "string" ? details.audio : "";
+    if (!audioId || STOPPABLE_AUDIO_SET.has(audioId)) {
+      return;
+    }
+
+    STOPPABLE_AUDIO_IDS.push(audioId);
+    STOPPABLE_AUDIO_SET.add(audioId);
+
+    if (!ROLL_AUDIO_IDS.has(audioId) && !MENU_AUDIO_IDS.has(audioId)) {
+      CUTSCENE_AUDIO_IDS.push(audioId);
+      CUTSCENE_AUDIO_SET.add(audioId);
+    }
+  });
+}
+
+registerBackgroundDetailAudioIds();
 
 function triggerScreenShakeByBucket(bucket) {
   // Map rarity buckets to shake classes
@@ -27897,6 +29183,15 @@ function setupInventorySearchControls() {
   searchInput.addEventListener("search", handleInput);
 }
 
+function isPotionCraftingMenuVisible() {
+  const menu = byId("potionCraftingMenu");
+  if (!menu) {
+    return false;
+  }
+
+  return getComputedStyle(menu).display !== "none";
+}
+
 function disableChange() {
   isChangeEnabled = false;
   cutsceneActive = true;
@@ -28152,7 +29447,9 @@ function buildInventoryListItem(existingElement, item, originalIndex, lockedItem
 
   const rolledElement = dropdownMenu.querySelector(".info-sub__rolled");
   if (rolledElement) {
-    rolledElement.textContent = `Rolled at: ${rolledText}`;
+    rolledElement.textContent = isCommandGrantedInventoryRecord(item)
+      ? "Rolled by command"
+      : `Rolled at: ${rolledText}`;
   }
 
   const luckElement = dropdownMenu.querySelector(".info-sub__luck");
@@ -28377,8 +29674,9 @@ function renderInventory() {
   });
 
   updatePagination();
-  checkAchievements();
-  renderPotionCrafting();
+  if (isPotionCraftingMenuVisible()) {
+    renderPotionCrafting();
+  }
 }
 
 function toggleLock(itemTitle, listItem, lockButton) {
@@ -29311,6 +30609,8 @@ function registerMenuButtons() {
   if (potionButton && potionMenu) {
     potionButton.addEventListener("click", () => {
       potionMenu.style.display = "flex";
+      renderPotionInventory();
+      renderPotionTransactions();
       renderPotionCrafting();
     });
   }
@@ -30042,10 +31342,81 @@ function initializePlayTimeTracker() {
 
 const rollingHistory = [];
 
+function findRarityDefinitionForHistory(rarity) {
+  if (
+    rarity &&
+    typeof rarity === "object" &&
+    typeof rarity.type === "string" &&
+    typeof rarity.class === "string" &&
+    rarity.class.trim()
+  ) {
+    return rarity;
+  }
+
+  const rarityType = typeof rarity === "object"
+    ? String(rarity?.type || "").trim()
+    : String(rarity || "").trim();
+  if (!rarityType) {
+    return null;
+  }
+
+  const normalizedType = normalizeDevLookupText(rarityType);
+  return (
+    getRarityDefinitionsForDevGrant().find((definition) => {
+      if (!definition || typeof definition.type !== "string") {
+        return false;
+      }
+
+      return definition.type === rarityType || normalizeDevLookupText(definition.type) === normalizedType;
+    }) || null
+  );
+}
+
+function getHistoryBucketFromOdds(rarity) {
+  const odds = getDisplayedOddsForRarity(rarity);
+  if (!Number.isFinite(odds) || odds <= 0) {
+    return "";
+  }
+
+  if (odds < 100) return "under100";
+  if (odds < 1000) return "under1k";
+  if (odds < 10000) return "under10k";
+  if (odds < 100000) return "under100k";
+  if (odds < 1000000) return "under1m";
+  return "transcendent";
+}
+
+function getHistoryRarityInfo(rarity) {
+  const definition = findRarityDefinitionForHistory(rarity);
+  const label = typeof rarity === "string"
+    ? rarity
+    : String(definition?.type || rarity?.type || "");
+  const rarityClass = typeof definition?.class === "string" ? definition.class : "";
+  const bucket = normalizeRarityBucket(rarityClass) || getHistoryBucketFromOdds(definition);
+  const labelClasses = rarityClass ? getLabelClassForRarity(rarityClass, bucket) : [bucket].filter(Boolean);
+  const legacyClass = getClassForRarity(label);
+  const classes = new Set(labelClasses.filter(Boolean));
+
+  if (legacyClass) {
+    classes.add(legacyClass);
+  }
+
+  return {
+    label,
+    rarityClass,
+    labelClasses: Array.from(classes),
+  };
+}
+
 function updateRollingHistory(title, rarity) {
     const historyList = document.getElementById('historyList');
+    if (!historyList) {
+        return;
+    }
 
-    rollingHistory.unshift({ title, rarity });
+    const rarityInfo = getHistoryRarityInfo(rarity);
+
+    rollingHistory.unshift({ title, rarity: rarityInfo.label, rarityClass: rarityInfo.rarityClass });
 
     if (rollingHistory.length > 10) {
         rollingHistory.pop();
@@ -30058,9 +31429,15 @@ function updateRollingHistory(title, rarity) {
         entryText.classList.add('history-entry-text');
         entryText.textContent = `${roll.rarity} - ${roll.title}`;
 
-        const rarityClass = getClassForRarity(roll.rarity);
-        if (rarityClass) {
-            entryText.classList.add(rarityClass);
+        const rollRarityInfo = getHistoryRarityInfo({
+            type: roll.rarity,
+            class: roll.rarityClass,
+        });
+        if (rollRarityInfo.rarityClass) {
+            entryText.dataset.rarityClass = rollRarityInfo.rarityClass;
+        }
+        if (rollRarityInfo.labelClasses.length) {
+            entryText.classList.add(...rollRarityInfo.labelClasses);
         }
 
         listItem.appendChild(entryText);
@@ -30745,7 +32122,7 @@ document
   ["deleteAllPebbleButton", "pebbleBgImg"],
   ["deleteAllCinderButton", "cinderBgImg"],
   ["deleteAllBreezeButton", "breezeBgImg"],
-  ["deleteAllDewdropButton", "dewdropBgImg"],
+  ["deleteAllDewdropButton", "faultedBgImg"],
   ["deleteAllLanternButton", "lanternBgImg"],
   ["deleteAllMeadowButton", "meadowBgImg"],
   ["deleteAllKindlingButton", "kindlingBgImg"],
@@ -31133,12 +32510,13 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
 
   const force = Boolean(normalizedOptions.force);
   const preservePendingAutoEquip = Boolean(normalizedOptions.preservePendingAutoEquip);
+  const normalizedRarityClass = normalizeRarityClassName(rarityClass);
 
   if (!force && (!isChangeEnabled || !lastRollPersisted)) {
     return;
   }
 
-  const details = backgroundDetails[rarityClass];
+  const details = getBackgroundDetailsForRarityClass(normalizedRarityClass);
   if (!details) return;
 
   const shouldSkipAudioUpdate = !force && resumeEquippedAudioAfterCutscene && pausedEquippedAudioState && pausedEquippedAudioState.element;
@@ -31156,12 +32534,12 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
 
   try {
     // Update the body class so existing rarity-based styling keeps working.
-    if (__currentBgClass !== rarityClass) {
+    if (__currentBgClass !== normalizedRarityClass) {
       if (__currentBgClass) {
         document.body.classList.remove(__currentBgClass);
       }
-      document.body.classList.add(rarityClass);
-      __currentBgClass = rarityClass;
+      document.body.classList.add(normalizedRarityClass);
+      __currentBgClass = normalizedRarityClass;
     }
 
     // Prepare the stack
@@ -31171,10 +32549,9 @@ function changeBackground(rarityClass, itemTitle, options = {}) {
     const nextLayer = __bgActive === 0 ? __bgLayerB : __bgLayerA;
     const currLayer = __bgActive === 0 ? __bgLayerA : __bgLayerB;
 
-    // Point to the file URL (string or template is ok)
-    nextLayer.style.backgroundImage = `url(${details.image})`;
+    nextLayer.style.backgroundImage = formatBackgroundImageValue(details);
 
-    const bucket = normalizeRarityBucket(rarityClass);
+    const bucket = normalizeRarityBucket(normalizedRarityClass);
     triggerScreenShakeByBucket(bucket);
 
     // Trigger the crossfade on the next animation frame to ensure style is applied
