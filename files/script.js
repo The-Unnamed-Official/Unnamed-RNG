@@ -5935,6 +5935,7 @@ const rarityCategories = {
     "deadwindBgImg",
     "finalhourBgImg",
     "worldendBgImg",
+    "zeefirBgImg",
 
   ],
   special: [
@@ -8020,6 +8021,7 @@ const NEW_TITLE_CUTSCENE_CLASS_SET = new Set([
   "deadwindBgImg",
   "finalhourBgImg",
   "worldendBgImg",
+  "zeefirBgImg",
 ]);
 
 function getNewTitleCutsceneConfig(rarity) {
@@ -8223,6 +8225,7 @@ const MILLION_PLUS_CLASS_CUTSCENE_PALETTES = Object.freeze({
   finalhourBgImg: createMillionPlusCutscenePalette(["#70220d", "#c93d00", "#ff950d"], 0),
   gregBgImg: createMillionPlusCutscenePalette(["#6b654d", "#b19b75", "#fbddb5"], 1),
   worldendBgImg: createMillionPlusCutscenePalette(["#6a1400", "#cf4700", "#f68f18"], 1),
+  zeefirBgImg: createMillionPlusCutscenePalette(["#6a0000", "#cf0e00", "#f62718"], 3),
   mintllieBgImg: createMillionPlusCutscenePalette(["#fff005", "#592a00", "#ffaa00"], 4),
   geezerBgGif: createMillionPlusCutscenePalette(["#ffb8da", "#663243", "#db7d8d"], 1),
   polarrBgImg: createMillionPlusCutscenePalette(["#b5b5fb", "#e7006f", "#ae004b"], 2),
@@ -8759,6 +8762,7 @@ function registerRollButtonHandler() {
     rarity.type === "Deadwind [1 in 7,498,008]" ||
     rarity.type === "Finalhour [1 in 7,499,500]" ||
     rarity.type === "Worldend [1 in 75,000,000]" ||
+    rarity.type === "Zeefir [1 in 27,777,272]" ||
     isMillionPlusMalvorynCutsceneRarity(rarity) ||
     isDescendedTitleType(rarity.type)
   ) {
@@ -8897,7 +8901,8 @@ function registerRollButtonHandler() {
     rarity.type === "Lastlight [1 in 7,495,005]" ||
     rarity.type === "Deadwind [1 in 7,498,008]" ||
     rarity.type === "Finalhour [1 in 7,499,500]" ||
-    rarity.type === "Worldend [1 in 75,000,000]"
+    rarity.type === "Worldend [1 in 75,000,000]" ||
+    rarity.type === "Zeefir [1 in 27,777,272]"
     ) {
       hugeSuspenceAudio.play();
     } else if (rarity.type === "Fright [1 in 1,075]") {
@@ -25586,6 +25591,12 @@ function rollRarity() {
       titles: ["Finalhour I", "Finalhour II", "Finalhour III"],
     },
     {
+      type: "Zeefir [1 in 27,777,272]",
+      class: "zeefirBgImg",
+      chance: 0.000003600065549993534282272211612429,
+      titles: ["Zeefire", "Zeefir", "Kirk Lover"],
+    },
+    {
       type: "Worldend [1 in 75,000,000]",
       class: "worldendBgImg",
       chance: 0.00000133333,
@@ -28841,6 +28852,7 @@ const backgroundDetails = {
   deadwindBgImg: { image: "files/backgrounds/deadwind.png", audio: "deadwindAudio" },
   finalhourBgImg: { image: "files/backgrounds/finalhour.png", audio: "finalhourAudio" },
   worldendBgImg: { image: "files/backgrounds/worldend.png", audio: "worldendAudio" },
+  zeefirBgImg: { image: "files/backgrounds/zeefir.png", audio: "zeefirAudio" },
 };
 
 function getBackgroundDetailsForRarityClass(rarityClass) {
@@ -31700,6 +31712,9 @@ document
   .getElementById("deleteAllEquinoxButton")
   .addEventListener("click", () => deleteAllByRarity("equinoxBgImg"));
 document
+  .getElementById("deleteAllZeefirButton")
+  .addEventListener("click", () => deleteAllByRarity("zeefirBgImg"));
+document
   .getElementById("deleteAllGingerButton")
   .addEventListener("click", () => deleteAllByRarity("gingerBgImg"));
 document
@@ -32213,6 +32228,7 @@ document
   ["deleteAllDeadwindButton", "deadwindBgImg"],
   ["deleteAllFinalhourButton", "finalhourBgImg"],
   ["deleteAllWorldendButton", "worldendBgImg"],
+  ["deleteAllZeefirButton", "zeefirBgImg"],
 ].forEach(([buttonId, rarityClass]) => {
   document
     .getElementById(buttonId)
