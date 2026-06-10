@@ -9259,3 +9259,9 @@ body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
     background-size: cover;
     object-fit: contain;
 }
+
+.zeefirBgImg {
+    background: url(backgrounds/zeefir.png);
+    background-size: cover;
+    object-fit: contain;
+}
