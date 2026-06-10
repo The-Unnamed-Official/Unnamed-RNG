@@ -67,12 +67,13 @@ body.reduced-motion .loading-progress__bar::after {
   transition: none !important;
 }
 
-body.reduced-motion.equinox-pulse-active {
+body.reduced-motion.equinox-mono-shift-active {
   animation: none !important;
+  filter: grayscale(1) contrast(1.05) !important;
 }
 
-body.reduced-motion.equinox-pulse-active::before,
-body.reduced-motion.equinox-pulse-active::after {
+body.reduced-motion.equinox-mono-shift-active::before,
+body.reduced-motion.equinox-mono-shift-active::after {
   animation: none !important;
   content: none;
 }
@@ -376,224 +377,47 @@ button:hover::after,
   opacity: .35;
 }
 
-/* Equinox pulse global celebration */
-body.equinox-pulse-active {
+/* Equinox monochrome shift */
+body.equinox-mono-shift-active {
   position: relative;
-  animation: equinoxBodyPulse 1.2s ease-in-out infinite;
+  animation: equinoxMonoShift 5.2s ease-in-out infinite;
+  will-change: filter;
 }
 
-body.equinox-pulse-active::before,
-body.equinox-pulse-active::after {
+body.equinox-mono-shift-active::before {
   content: "";
   position: fixed;
-  inset: -14%;
+  inset: 0;
   pointer-events: none;
-  border-radius: 50%;
-  mix-blend-mode: screen;
-  opacity: .18;
   z-index: 4;
-  animation: equinoxBodyAura 1.6s ease-in-out infinite;
-}
-
-body.equinox-pulse-active::before {
   background:
-    radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.25) 0%, rgba(255, 255, 255, 0.3) 45%, rgba(0,0,0,0) 78%),
-    radial-gradient(circle at 15% 25%, rgba(0, 0, 0, 0.22) 0%, rgba(0,0,0,0) 58%),
-    radial-gradient(circle at 82% 70%, rgba(0, 0, 0, 0.24) 0%, rgba(0,0,0,0) 65%);
+    linear-gradient(115deg, rgba(255, 255, 255, 0.08), transparent 35%, rgba(0, 0, 0, 0.12) 68%, transparent),
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 5px);
+  mix-blend-mode: soft-light;
+  opacity: 0.26;
+  animation: equinoxMonoSweep 6.8s ease-in-out infinite;
 }
 
-body.equinox-pulse-active::after {
-  inset: -18%;
-  background: conic-gradient(from 0deg, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.22), rgba(0, 0, 0, 0.12), rgba(255, 255, 255, 0.1));
-  filter: blur(18px);
-  opacity: .12;
-  animation-direction: reverse;
-}
-
-@keyframes equinoxBodyPulse {
+@keyframes equinoxMonoShift {
   0%, 100% {
-    filter: brightness(1) saturate(1);
+    filter: grayscale(1) contrast(1.08) brightness(1);
   }
-  45% {
-    filter: brightness(1.06) saturate(1.05);
+  48% {
+    filter: grayscale(1) contrast(1.22) brightness(0.92) invert(1);
   }
-  72% {
-    filter: brightness(1.1) saturate(1.08);
-  }
-}
-
-@keyframes equinoxBodyAura {
-  0% {
-    opacity: .14;
-    scale: 1;
-  }
-  35% {
-    opacity: .26;
-    scale: 1.05;
-  }
-  62% {
-    opacity: .22;
-    scale: 1.08;
-  }
-  100% {
-    opacity: .14;
-    scale: 1;
+  66% {
+    filter: grayscale(1) contrast(1.16) brightness(1.04) invert(0.78);
   }
 }
 
-@keyframes equinoxUIPulse {
+@keyframes equinoxMonoSweep {
   0%, 100% {
-    scale: 1;
-    translate: 0 0;
-    filter: brightness(1) saturate(1);
-    box-shadow: 0 0 0 rgba(255, 255, 255, 0.24);
+    opacity: 0.16;
+    transform: translate3d(-4%, 0, 0);
   }
-  32% {
-    scale: 1.07;
-    translate: 0 -3px;
-    filter: brightness(1.06) saturate(1.05);
-    box-shadow: 0 14px 28px rgba(255, 255, 255, 0.28);
-  }
-  64% {
-    scale: 0.97;
-    translate: 0 2px;
-    filter: brightness(1.03) saturate(1.02);
-    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.24);
-  }
-}
-
-@keyframes equinoxUIPulseFallback {
-  0%, 100% {
-    filter: brightness(1) saturate(1);
-    box-shadow: 0 0 0 rgba(0, 0, 0, 0.2);
-  }
-  35% {
-    filter: brightness(1.06) saturate(1.05);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
-  }
-  70% {
-    filter: brightness(1.03) saturate(1.02);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.2);
-  }
-}
-
-body.equinox-pulse-active :is(
-    button,
-    .settings-btn,
-    .inventory-delete-btn,
-    .inventory-group__clear,
-    .rarity-button,
-    .settings-chip-group button
-  ) {
-  animation: equinoxUIPulse 0.45s ease-in-out infinite;
-  transform-origin: center;
-  will-change: scale, translate, filter, box-shadow;
-}
-
-@supports not (scale: 1) {
-  body.equinox-pulse-active :is(
-      button,
-      .settings-btn,
-      .inventory-delete-btn,
-      .inventory-group__clear,
-      .rarity-button,
-      .settings-chip-group button
-    ) {
-    animation: equinoxUIPulseFallback 0.45s ease-in-out infinite;
-  }
-}
-
-body.equinox-pulse-active :is(
-    #result,
-    .roll-result-card,
-    .roll-result-card__header,
-    .roll-result-card__title,
-    .roll-result-card__status,
-    .roll-result-card__badge,
-    .stats-menu,
-    .stats-panel,
-    .stats-panel *,
-    .stat-card,
-    .achievements-menu,
-    .achievements-panel,
-    .achievements-panel *,
-    .achievement-item,
-    .achievement-itemT,
-    .settings-menu,
-    .settings-panel,
-    .settings-panel *,
-    .settings-section,
-    .settings-section__title,
-    .settings-grid,
-    .settings-audio,
-    .settings-audio__controls,
-    .settings-audio__slider,
-    .inventory,
-    .inventory-actions,
-    .inventory-group,
-    .inventory-group__header,
-    .inventory-group__title,
-    #inventoryList,
-    .rollsCount,
-    .container,
-    .container1,
-    .topBar,
-    .topBar *,
-    .version,
-    .version *,
-    .rButton,
-    #rollBtn,
-    #roll-button,
-  ) {
-  animation: equinoxUIPulse 0.6s ease-in-out infinite;
-  transform-origin: center;
-  will-change: scale, translate, filter, box-shadow;
-}
-
-@supports not (scale: 1) {
-  body.equinox-pulse-active :is(
-      #result,
-      .roll-result-card,
-      .roll-result-card__header,
-      .roll-result-card__title,
-      .roll-result-card__status,
-      .roll-result-card__badge,
-      .stats-menu,
-      .stats-panel,
-      .stats-panel *,
-      .stat-card,
-      .achievements-menu,
-      .achievements-panel,
-      .achievements-panel *,
-      .achievement-item,
-      .achievement-itemT,
-      .settings-menu,
-      .settings-panel,
-      .settings-panel *,
-      .settings-section,
-      .settings-section__title,
-      .settings-grid,
-      .settings-audio,
-      .settings-audio__controls,
-      .settings-audio__slider,
-      .inventory,
-      .inventory-actions,
-      .inventory-group,
-      .inventory-group__header,
-      .inventory-group__title,
-      #inventoryList,
-      .rollsCount,
-      .container,
-      .container1,
-      .topBar,
-      .topBar *,
-      .version,
-      .version *,
-      .rButton,
-      #rollBtn,
-      #roll-button,
-    ) {
-    animation: equinoxUIPulseFallback 0.6s ease-in-out infinite;
+  50% {
+    opacity: 0.34;
+    transform: translate3d(4%, 0, 0);
   }
 }
 
@@ -820,9 +644,10 @@ body.equinox-pulse-active :is(
     flex-direction: column;
     align-items: center;
     width: auto;
-    z-index: 99999;
+    z-index: 10000020;
     opacity: 0.35;
     perspective: 1400px;
+    pointer-events: none;
     transition: opacity 0.33s ease-in-out, transform 0.33s ease-in-out;
 }
 
@@ -915,6 +740,7 @@ body.equinox-pulse-active :is(
     letter-spacing: 0.16em;
     text-align: center;
     color: #fdf9ff;
+    cursor: pointer;
     transition: transform 0.8s cubic-bezier(0.22, 0.61, 0.36, 1),
         text-shadow 0.8s cubic-bezier(0.22, 0.61, 0.36, 1);
     transform-origin: center;
@@ -3939,7 +3765,8 @@ body {
     object-fit: contain;
 }
 
-.jolbelBgImg {
+.jolbelBgImg,
+.jolbeBgImg {
     background: url(backgrounds/jolbel.png);
     background-size: cover;
     object-fit: contain;
@@ -4158,7 +3985,13 @@ body.griCutsceneBgImg {
 }
 
 body.blackBg {
-    background: #000000 !important;
+    background:
+        radial-gradient(
+            circle at center,
+            color-mix(in srgb, var(--million-plus-cutscene-primary, #000000) 18%, #000000) 0%,
+            #000000 58%,
+            color-mix(in srgb, var(--million-plus-cutscene-secondary, #000000) 10%, #000000) 100%
+        ) !important;
 }
 
 .whiteFlash {
@@ -4166,7 +3999,12 @@ body.blackBg {
 }
 
 body.whiteFlash {
-    background: #ffffff !important;
+    background:
+        radial-gradient(
+            circle at center,
+            color-mix(in srgb, var(--million-plus-cutscene-tertiary, #ffffff) 34%, #ffffff) 0%,
+            color-mix(in srgb, var(--million-plus-cutscene-primary, #ffffff) 48%, #ffffff) 100%
+        ) !important;
 }
 
 @keyframes flashBg {
@@ -5832,8 +5670,10 @@ body.flashing {
     background-position: center;
     color: #f5f7ff;
     display: none;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 14px;
     z-index: 1000000000;
 }
 
@@ -5930,6 +5770,44 @@ body.flashing {
     font-size: 0.9rem;
     line-height: 1.35;
     letter-spacing: 0;
+}
+
+.loading-warning {
+    width: min(520px, 100%);
+    padding: 0 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    color: rgba(255, 232, 194, 0.92);
+    line-height: 1.35;
+    text-align: center;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+    opacity: 0;
+    transform: translateY(18px);
+    animation: loadingWarningIntro 900ms cubic-bezier(0.22, 0.61, 0.36, 1) 180ms forwards;
+}
+
+.loading-warning strong {
+    color: #fff5df;
+    font-size: 0.82rem;
+    letter-spacing: 0;
+    text-transform: uppercase;
+}
+
+.loading-warning span {
+    color: rgba(255, 239, 210, 0.86);
+    font-size: 0.86rem;
+}
+
+@keyframes loadingWarningIntro {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes loadingBarSheen {
@@ -6787,7 +6665,8 @@ body.flashing {
 
 .potion-inventory__use,
 .potion-inventory__use-all,
-.potion-inventory__use-amount {
+.potion-inventory__use-amount,
+.potion-inventory__forever {
     width: 100%;
     border: none;
     border-radius: 10px;
@@ -6841,9 +6720,17 @@ body.flashing {
     box-shadow: 0 10px 24px rgba(255, 207, 112, 0.28);
 }
 
+.potion-inventory__forever {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #c6f6ff, #f3d7ff);
+    color: #172035;
+    box-shadow: 0 10px 24px rgba(198, 246, 255, 0.28);
+}
+
 .potion-inventory__use:disabled,
 .potion-inventory__use-all:disabled,
-.potion-inventory__use-amount:disabled {
+.potion-inventory__use-amount:disabled,
+.potion-inventory__forever:disabled {
     cursor: not-allowed;
     opacity: 0.5;
     box-shadow: none;
@@ -6853,7 +6740,8 @@ body.flashing {
 
 .potion-inventory__use:not(:disabled):hover,
 .potion-inventory__use-all:not(:disabled):hover,
-.potion-inventory__use-amount:not(:disabled):hover {
+.potion-inventory__use-amount:not(:disabled):hover,
+.potion-inventory__forever:not(:disabled):hover {
     transform: translateY(-1px);
 }
 
@@ -6961,6 +6849,7 @@ body.flashing {
     align-items: flex-end;
     justify-content: flex-end;
     z-index: 100020;
+    pointer-events: none;
 }
 
 .dev-command-prompt {
@@ -7047,6 +6936,96 @@ body.flashing {
     color: #bdf6ce;
 }
 
+.goodbye-popup {
+    position: fixed;
+    inset: 0;
+    z-index: 10000040;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgba(3, 6, 13, 0.68);
+}
+
+.goodbye-popup[hidden] {
+    display: none;
+}
+
+.goodbye-popup__panel {
+    width: min(420px, 100%);
+    border: 1px solid rgba(188, 214, 255, 0.34);
+    border-radius: 8px;
+    background: rgba(9, 15, 27, 0.96);
+    box-shadow:
+        0 24px 60px rgba(0, 0, 0, 0.48),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    color: #f4f8ff;
+    cursor: pointer;
+    padding: 24px;
+    position: relative;
+    text-align: center;
+}
+
+.goodbye-popup__panel:focus-visible {
+    outline: 3px solid rgba(132, 178, 255, 0.72);
+    outline-offset: 4px;
+}
+
+.goodbye-popup__close {
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    border: 1px solid rgba(208, 224, 255, 0.22);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #f4f8ff;
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 6px 9px;
+}
+
+.goodbye-popup__kicker {
+    margin: 0 0 8px;
+    color: rgba(210, 224, 255, 0.72);
+    font-size: 0.76rem;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.goodbye-popup__title {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.55rem;
+    letter-spacing: 0;
+}
+
+.goodbye-popup__message,
+.goodbye-popup__status {
+    margin: 12px 0 0;
+    color: rgba(236, 242, 255, 0.82);
+    font-size: 0.92rem;
+    line-height: 1.45;
+}
+
+.goodbye-popup--claimed .goodbye-popup__message {
+    color: #bdf6ce;
+}
+
+.equinox-video-cutscene {
+    position: fixed;
+    inset: 0;
+    z-index: 10000030;
+    background: #000;
+    overflow: hidden;
+}
+
+.equinox-video-cutscene__video {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
 .buff-card {
     display: flex;
     flex-direction: column;
@@ -7058,6 +7037,7 @@ body.flashing {
     border: none;
     box-shadow: none;
     position: relative;
+    pointer-events: none;
 }
 
 .buff-card--disabled {
@@ -7088,7 +7068,7 @@ body.flashing {
     padding: 3px;
     box-sizing: border-box;
     z-index: 200;
-    cursor: pointer;
+    cursor: default;
 }
 
 .buff-card__effect {
@@ -7253,11 +7233,15 @@ body.flashing {
     width: 22px;
     height: 22px;
     border-radius: 50%;
-    background: radial-gradient(circle at center, rgba(164, 118, 255, 0.95), rgba(42, 4, 83, 0));
+    background: radial-gradient(
+        circle at center,
+        var(--million-plus-primary, rgba(164, 118, 255, 0.95)),
+        color-mix(in srgb, var(--million-plus-secondary, #2a0453) 28%, transparent)
+    );
     pointer-events: none;
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.25);
-    filter: drop-shadow(0 0 8px rgba(129, 88, 255, 0.7));
+    filter: drop-shadow(0 0 8px var(--million-plus-glow, rgba(129, 88, 255, 0.7)));
     mix-blend-mode: screen;
     animation: malvorynFragment 3.4s ease-out forwards;
 }
@@ -7284,12 +7268,12 @@ body.flashing {
     width: 32vmin;
     height: 32vmin;
     border-radius: 50%;
-    border: 2px solid rgba(160, 118, 255, 0.4);
+    border: 2px solid color-mix(in srgb, var(--million-plus-primary, #a076ff) 55%, transparent);
     pointer-events: none;
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.3);
     mix-blend-mode: screen;
-    filter: drop-shadow(0 0 20px rgba(128, 90, 255, 0.6));
+    filter: drop-shadow(0 0 20px color-mix(in srgb, var(--million-plus-glow, #805aff) 70%, transparent));
     animation: malvorynRing 4.4s ease-out forwards;
 }
 
@@ -7298,8 +7282,37 @@ body.flashing {
     position: absolute;
     inset: 12%;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(90, 30, 180, 0.35) 0%, rgba(15, 5, 30, 0) 70%);
+    background: radial-gradient(
+        circle,
+        color-mix(in srgb, var(--million-plus-secondary, #5a1eb4) 42%, transparent) 0%,
+        transparent 70%
+    );
     opacity: 0.6;
+}
+
+.million-plus-cutscene-symbol {
+    position: absolute;
+    font-size: clamp(32px, 5vw, 68px);
+    font-weight: 900;
+    line-height: 1;
+    opacity: 1;
+    pointer-events: none;
+    animation: millionPlusSymbolRise 5.4s ease-out forwards;
+    will-change: transform, opacity;
+}
+
+@keyframes millionPlusSymbolRise {
+    0% {
+        opacity: 0;
+        transform: translate3d(0, 20vh, 0) scale(0.55) rotate(0deg);
+    }
+    18% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translate3d(var(--randomX, 0vw), -88vh, 0) scale(1.22) rotate(var(--randomRotation, 360deg));
+    }
 }
 
 @keyframes malvorynRing {
@@ -8723,8 +8736,9 @@ body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
     object-fit: contain;
 }
 
-.FaultedBgImg {
-    background: url(backgrounds/dewdrop.png);
+.FaultedBgImg,
+.faultedBgImg {
+    background: url(backgrounds/faulted.png);
     background-size: cover;
     object-fit: contain;
 }
@@ -8886,7 +8900,7 @@ body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
 }
 
 .wanderBgImg {
-    background: url(backgrounds/wander.png);
+    background: url(backgrounds/wonder.png);
     background-size: cover;
     object-fit: contain;
 }
@@ -8927,6 +8941,7 @@ body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
     object-fit: contain;
 }
 
+.crosswindBgImg,
 .under1mcrosswindBgImg {
     background: url(backgrounds/crosswind.png);
     background-size: cover;
@@ -9186,7 +9201,7 @@ body.shake-xl { animation: screenShakeXL 1000ms ease-in-out; }
 }
 
 .blackridgeBgImg {
-    background: url(backgrounds/blackridge.png);
+    background: linear-gradient(180deg, #05070d 0%, #111725 48%, #030407 100%);
     background-size: cover;
     object-fit: contain;
 }
